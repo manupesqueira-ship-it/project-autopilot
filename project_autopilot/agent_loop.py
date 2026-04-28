@@ -4,11 +4,11 @@ import argparse
 
 from cost_controller import CostController
 from evidence_collector import collect_evidence
-from openai_supervisor import BudgetBlocked, MissingOpenAICredentials, OpenAISupervisor
+from openai_supervisor import BudgetBlocked, MissingOpenAICredentials, OpenAIRequestError, OpenAISupervisor
 from project_loader import ensure_project_dirs, load_project, read_project_control
 from prompt_builder import build_builder_prompt
 from qa_reviewer import generate_correction_prompt, review_with_openai
-from state_manager import load_state, record_blocker, save_state, write_iteration_log
+from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
 from telegram_alerts import send_alert
 
 
@@ -34,6 +34,38 @@ def run(project_id: str, dry_run: bool = False, cycle: bool = False) -> int:
         record_blocker(project, f"Autopilot blocked: {type(exc).__name__}", body)
         alert = send_alert(project.project_id, type(exc).__name__, str(exc), enabled=project.telegram_enabled)
         print(f"Blocked: {exc}. Telegram: {alert.reason}")
+        return 2
+    except OpenAIRequestError as exc:
+        recommendation = (
+            "Check OpenAI API billing, quota, and rate limits. Try again later, "
+            "or switch Project Autopilot to dry-run/low-cost mode until quota is available."
+        )
+        error = exc.as_dict()
+        log_path = write_failure_log(
+            project=project,
+            title=exc.error_type,
+            error=error,
+            evidence=evidence,
+            recommendation=recommendation,
+        )
+        body = (
+            "Status: open\nSeverity: blocking\nSource: Project Autopilot\n\n"
+            f"Question or blocker:\n{exc.error_type} ({exc.status_code})\n{exc.message}\n\n"
+            f"Failure log:\n{log_path.relative_to(project.repo_path)}\n\n"
+            f"Recommended action:\n{recommendation}"
+        )
+        record_blocker(project, f"Autopilot blocked: {exc.error_type}", body)
+        alert = send_alert(project.project_id, exc.error_type, exc.message, enabled=project.telegram_enabled)
+        state = load_state(project)
+        state["last_status"] = "blocked"
+        state["last_error"] = error
+        state["last_log"] = str(log_path.relative_to(project.repo_path))
+        save_state(project, state)
+        print(f"Blocked: {exc.error_type} ({exc.status_code})")
+        print(exc.message)
+        print(f"Failure log: {log_path}")
+        print(f"Telegram: {alert.reason}")
+        print(f"Recommendation: {recommendation}")
         return 2
 
     builder_prompt = build_builder_prompt(project, control_docs, task_plan, evidence)
@@ -73,4 +105,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

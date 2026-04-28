@@ -123,3 +123,43 @@ Primary builder: {project.builder_primary}
     path.write_text(content, encoding="utf-8")
     return path
 
+
+def write_failure_log(
+    project: ProjectConfig,
+    title: str,
+    error: dict[str, Any],
+    evidence: dict[str, Any],
+    recommendation: str,
+) -> Path:
+    logs_dir = project.repo_path / project.logs_dir
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    path = logs_dir / f"{project.project_id}_autopilot_failure_{file_stamp()}.md"
+    changed = "\n".join(f"- {item}" for item in evidence.get("changed_files", [])) or "- None"
+    content = f"""# Project Autopilot Failure
+
+Timestamp: {utc_stamp()}
+Project: {project.project_name} ({project.project_id})
+Title: {title}
+
+## Error
+
+```json
+{json.dumps(error, indent=2, sort_keys=True)}
+```
+
+## Recommendation
+
+{recommendation.strip()}
+
+## Changed Files
+
+{changed}
+
+## Git Status
+
+```text
+{evidence.get('git_status', '').strip()}
+```
+"""
+    path.write_text(content, encoding="utf-8")
+    return path

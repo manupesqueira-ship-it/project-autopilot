@@ -39,14 +39,36 @@ def _git_env() -> dict[str, str]:
 
 
 def _run_args(args: list[str], cwd: Path) -> dict[str, Any]:
-    proc = subprocess.run(args, cwd=cwd, env=_git_env(), text=True, capture_output=True, timeout=120)
-    return {"exit_code": proc.returncode, "output": (proc.stdout + proc.stderr).strip()}
+    proc = subprocess.run(
+        args,
+        cwd=cwd,
+        env=_git_env(),
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        timeout=120,
+    )
+    stdout = proc.stdout or ""
+    stderr = proc.stderr or ""
+    return {"exit_code": proc.returncode, "output": (stdout + stderr).strip()}
 
 
 def run_command(command: str, cwd: Path) -> dict[str, Any]:
     assert_safe_command(command)
-    proc = subprocess.run(command, cwd=cwd, shell=True, text=True, capture_output=True, timeout=240)
-    return {"exit_code": proc.returncode, "output": (proc.stdout + proc.stderr).strip()}
+    proc = subprocess.run(
+        command,
+        cwd=cwd,
+        shell=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        timeout=240,
+    )
+    stdout = proc.stdout or ""
+    stderr = proc.stderr or ""
+    return {"exit_code": proc.returncode, "output": (stdout + stderr).strip()}
 
 
 def package_has_script(project: ProjectConfig, script_name: str) -> bool:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.error
 import urllib.request
 from typing import Any
 
@@ -16,6 +17,21 @@ class MissingOpenAICredentials(RuntimeError):
 
 class BudgetBlocked(RuntimeError):
     pass
+
+
+class OpenAIRequestError(RuntimeError):
+    def __init__(self, error_type: str, status_code: int | None, message: str):
+        self.error_type = error_type
+        self.status_code = status_code
+        self.message = message
+        super().__init__(message)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "error_type": self.error_type,
+            "status_code": self.status_code,
+            "message": self.message,
+        }
 
 
 class OpenAISupervisor:
@@ -54,8 +70,21 @@ class OpenAISupervisor:
             },
             method="POST",
         )
-        with urllib.request.urlopen(request, timeout=90) as response:  # pragma: no cover - network dependent
-            raw = json.loads(response.read().decode("utf-8"))
+        try:
+            with urllib.request.urlopen(request, timeout=90) as response:  # pragma: no cover - network dependent
+                raw = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429:
+                raise OpenAIRequestError(
+                    error_type="OPENAI_RATE_LIMIT",
+                    status_code=429,
+                    message="OpenAI returned HTTP 429 Too Many Requests. The project may be over quota or rate limited.",
+                ) from exc
+            raise OpenAIRequestError(
+                error_type="OPENAI_HTTP_ERROR",
+                status_code=exc.code,
+                message=f"OpenAI returned HTTP {exc.code}. The supervisor request did not complete.",
+            ) from exc
         if "output_text" in raw:
             return raw["output_text"]
         parts: list[str] = []
@@ -100,4 +129,3 @@ class OpenAISupervisor:
             {"task_plan": task_plan, "qa_review": qa_review, "evidence": evidence}, indent=2
         )[:60000]
         return self._call("correction", instructions, user_content)
-
