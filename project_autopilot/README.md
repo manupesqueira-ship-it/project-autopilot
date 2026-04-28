@@ -152,6 +152,64 @@ python -m playwright install chromium
 
 **Dev server must be running.** If the server is not reachable, browser QA prints a clear message and exits.
 
+### Post-Builder Intake
+
+After Claude Code or Codex finishes implementation, save its report to a markdown file. A report should follow `project_autopilot/templates/BUILDER_REPORT.template.md` and include:
+
+- task title
+- files created
+- files modified
+- commands run
+- validation results
+- what was verified
+- what was not verified
+- blockers
+- risks
+- git status
+
+Run:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --post-builder path/to/report.md
+```
+
+Equivalent alias:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --intake-builder-report path/to/report.md
+```
+
+Post-builder intake:
+
+1. Reads the builder report.
+2. Collects fresh evidence.
+3. Creates an evidence bundle.
+4. Runs deterministic risk classification.
+5. Produces a structured QA verdict.
+6. Writes `logs/<project_id>_post_builder_<timestamp>.md`.
+7. Updates task state.
+8. Generates a correction prompt when fixes are required.
+
+QA verdicts:
+
+| Verdict | Meaning |
+|---|---|
+| `PASS` | Evidence looks ready for human review and commit. |
+| `FAIL_FIX_REQUIRED` | A validation command or QA gate failed; use the correction prompt. |
+| `RESEARCH_REQUIRED` | More research is needed before continuing. |
+| `HUMAN_DECISION_REQUIRED` | A human needs to decide before more work proceeds. |
+| `BLOCKED` | Stop until the blocker is resolved. |
+
+If the verdict is `FAIL_FIX_REQUIRED`, Project Autopilot writes:
+
+```text
+logs/<project_id>_correction_prompt_latest.md
+```
+
+Paste that prompt into Claude Code or Codex for the fix pass.
+
+Project Autopilot does **not** auto-commit. Commit remains a human-controlled step.
+
 ## How to Use with Claude Code
 
 1. Run `--doctor` to validate your environment.
@@ -159,7 +217,10 @@ python -m playwright install chromium
 3. Run `--handoff-claude` to get the prompt path and instructions.
 4. Paste the prompt into Claude Code.
 5. Claude Code executes the task, provides evidence.
-6. Review the output. Run the next cycle when ready.
+6. Save Claude's report to a markdown file.
+7. Run `--post-builder path/to/report.md`.
+8. Review the QA verdict and correction prompt if one is generated.
+9. Commit only after validation and human review.
 
 ## Reliability Core
 

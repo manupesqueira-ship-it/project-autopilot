@@ -10,14 +10,14 @@ from config import ProjectConfig
 STATES = {"planned", "assigned", "implemented", "validating", "needs_fix", "blocked", "passed", "committed", "parked"}
 
 ALLOWED_TRANSITIONS = {
-    "planned": {"assigned", "blocked", "parked"},
+    "planned": {"assigned", "implemented", "validating", "blocked", "parked"},
     "assigned": {"implemented", "blocked", "parked"},
-    "implemented": {"validating", "needs_fix", "blocked"},
-    "validating": {"passed", "needs_fix", "blocked"},
-    "needs_fix": {"assigned", "implemented", "blocked", "parked"},
-    "blocked": {"planned", "assigned", "parked"},
-    "passed": {"committed", "needs_fix"},
-    "committed": {"planned", "parked"},
+    "implemented": {"validating", "needs_fix", "blocked", "passed"},
+    "validating": {"passed", "needs_fix", "blocked", "parked"},
+    "needs_fix": {"assigned", "implemented", "validating", "blocked", "parked"},
+    "blocked": {"planned", "assigned", "validating", "parked"},
+    "passed": {"planned", "committed", "needs_fix", "validating"},
+    "committed": {"planned", "validating", "parked"},
     "parked": {"planned", "assigned", "blocked"},
 }
 

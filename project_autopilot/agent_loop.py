@@ -25,6 +25,7 @@ from qa_reviewer import generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
 from task_state import load_task_state, transition_task_state
 from browser_qa import run_browser_qa, write_browser_qa_report
+from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_state
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 from risk_classifier import classify_task, format_risk_assessment
@@ -347,6 +348,48 @@ def run_browser_qa_cmd(project_id: str) -> int:
     return 0 if report.passed else 1
 
 
+def run_builder_intake(project_id: str, report_path: str) -> int:
+    """Ingest a builder report, collect fresh evidence, and produce a QA verdict."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+
+    transition_task_state(project, "validating", "Post-builder intake started.")
+    result = intake_builder_report(project, report_path, run_validation=True)
+    verdict = result["verdict"]
+    target_state = verdict_to_state(verdict)
+    transition_task_state(project, target_state, f"Post-builder verdict: {verdict.verdict}.")
+
+    state = load_state(project)
+    state["last_status"] = f"post_builder_{verdict.verdict.lower()}"
+    state["last_qa_verdict"] = verdict_as_dict(verdict)
+    state["last_log"] = str(result["intake_log_path"].relative_to(project.repo_path))
+    state["last_evidence_bundle"] = str(result["bundle_path"].relative_to(project.repo_path))
+    correction_prompt_path = result.get("correction_prompt_path")
+    if correction_prompt_path:
+        state["last_correction_prompt"] = str(correction_prompt_path.relative_to(project.repo_path))
+    save_state(project, state)
+
+    if verdict.verdict in {"BLOCKED", "HUMAN_DECISION_REQUIRED"}:
+        body = (
+            "Status: open\nSeverity: blocking\nSource: Project Autopilot post-builder QA\n\n"
+            f"Question or blocker:\n{verdict.verdict}\n\n"
+            f"Post-builder log:\n{state['last_log']}\n\n"
+            f"Recommended action:\n{verdict.recommended_next_action}"
+        )
+        record_blocker(project, f"Post-builder QA: {verdict.verdict}", body)
+
+    print(f"Post-builder intake: {project.project_name} ({project.project_id})")
+    print(f"Verdict: {verdict.verdict}")
+    print(f"Risk level: {verdict.risk_level}")
+    print(f"Post-builder log: {result['intake_log_path']}")
+    print(f"Evidence bundle: {result['bundle_path']}")
+    if correction_prompt_path:
+        print(f"Correction prompt: {correction_prompt_path}")
+    print(f"Recommended next action: {verdict.recommended_next_action}")
+
+    return 0 if verdict.verdict == "PASS" else 1
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -510,6 +553,8 @@ def main() -> int:
     group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
     group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
     group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
+    group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
+    group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
 
     args = parser.parse_args()
 
@@ -527,6 +572,10 @@ def main() -> int:
         return run_claude_execute(args.project)
     if args.browser_qa:
         return run_browser_qa_cmd(args.project)
+    if args.intake_builder_report:
+        return run_builder_intake(args.project, args.intake_builder_report)
+    if args.post_builder:
+        return run_builder_intake(args.project, args.post_builder)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 
