@@ -4,15 +4,12 @@ import argparse
 import os
 import urllib.parse
 import urllib.request
-from pathlib import Path
 from dataclasses import dataclass
 
-from dotenv import load_dotenv
-
+from env_loader import load_env
 from project_loader import load_project
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-load_dotenv(Path(__file__).resolve().parents[1] / ".env.local", override=True)
+load_env()
 
 
 @dataclass

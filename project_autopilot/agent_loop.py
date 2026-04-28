@@ -7,10 +7,9 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
+from env_loader import load_env
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
-load_dotenv(Path(__file__).resolve().parents[1] / ".env.local", override=True)
+load_env()
 
 from config import ProjectConfig
 from cost_controller import CostController
@@ -239,37 +238,35 @@ def run_status(project_id: str) -> int:
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
-    issues: list[str] = []
     checks: list[tuple[str, bool, str]] = []
 
-    # .env readable
+    # --- Environment files ---
     env_path = project.repo_path / ".env"
     env_local = project.repo_path / ".env.local"
-    checks.append((".env exists", env_path.exists(), str(env_path)))
-    checks.append((".env.local exists", env_local.exists(), str(env_local)))
+    checks.append((".env found", env_path.exists(), "yes" if env_path.exists() else "no"))
+    checks.append((".env.local found", env_local.exists(), "yes" if env_local.exists() else "no"))
 
-    # Telegram credentials
+    # --- Credentials ---
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    checks.append(("OPENAI_API_KEY present", bool(openai_key), "yes" if openai_key else "MISSING (local-plan still works)"))
+
     telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_BOT_TOKEN")
     telegram_chat = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_CHAT_ID")
-    checks.append(("Telegram bot token", bool(telegram_token), "present" if telegram_token else "MISSING"))
-    checks.append(("Telegram chat ID", bool(telegram_chat), "present" if telegram_chat else "MISSING"))
+    checks.append(("TELEGRAM_BOT_TOKEN present", bool(telegram_token), "yes" if telegram_token else "MISSING"))
+    checks.append(("TELEGRAM_CHAT_ID present", bool(telegram_chat), "yes" if telegram_chat else "MISSING"))
 
-    # OpenAI key
-    openai_key = os.environ.get("OPENAI_API_KEY")
-    checks.append(("OpenAI API key", bool(openai_key), "present" if openai_key else "MISSING (local-plan mode still works)"))
-
-    # Project config
+    # --- Project config ---
     from config import project_config_path
     cfg_path = project_config_path(project_id)
-    checks.append(("Project config", cfg_path.exists(), str(cfg_path)))
+    checks.append(("Project config readable", cfg_path.exists(), str(cfg_path)))
 
-    # project_control exists
+    # --- project_control ---
     checks.append(("project_control dir", project.project_control_path.exists(), str(project.project_control_path)))
     for name in ["TASK_QUEUE.md", "CURRENT_STATE.md", "QUALITY_BAR.md", "AGENT_RULES.md", "AUTONOMY_PROTOCOL.md", "COST_POLICY.md"]:
         p = project.project_control_path / name
         checks.append((f"  {name}", p.exists(), ""))
 
-    # package.json scripts
+    # --- package.json scripts ---
     pkg_path = project.repo_path / "package.json"
     if pkg_path.exists():
         pkg = json.loads(pkg_path.read_text(encoding="utf-8"))
@@ -279,23 +276,23 @@ def run_doctor(project_id: str) -> int:
     else:
         checks.append(("package.json", False, "not found"))
 
-    # git clean/dirty
+    # --- Git ---
     try:
         result = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=project.repo_path,
             capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
         )
-        dirty = len([l for l in result.stdout.strip().splitlines() if l.strip()])
+        dirty = len([line for line in result.stdout.strip().splitlines() if line.strip()])
         checks.append(("Git clean", dirty == 0, f"{dirty} dirty files" if dirty else "clean"))
     except Exception:
         checks.append(("Git status", False, "unavailable"))
 
-    # Build/typecheck/lint command availability
+    # --- Commands ---
     for label, cmd in [("Build cmd", project.build_command), ("Typecheck cmd", project.typecheck_command), ("Lint cmd", project.lint_command)]:
         checks.append((label, bool(cmd), cmd or "not configured"))
 
-    # Print results
+    # --- Print check results ---
     print(f"Doctor: {project.project_name} ({project.project_id})")
     print()
     all_ok = True
@@ -307,6 +304,15 @@ def run_doctor(project_id: str) -> int:
         if detail:
             line += f"  ({detail})"
         print(line)
+
+    # --- Config summary (always printed, not pass/fail) ---
+    print()
+    print("Configuration:")
+    print(f"  Intensity mode:   {project.intensity_mode}")
+    r = project.model_routing
+    print(f"  Model routing:    cheap={r.cheap_model}  standard={r.standard_model}  premium={r.premium_model}  qa={r.qa_model}")
+    print(f"  Budget:           cycle=${project.per_cycle_budget_usd:.2f}  daily=${project.daily_budget_usd:.2f}  monthly=${project.monthly_budget_usd:.2f}")
+    print(f"  Paid API mode:    {project.paid_api_mode}")
 
     print()
     if all_ok:

@@ -53,3 +53,19 @@ logs\mira_autopilot_failure_20260428_053643.md
 
 Recommended action:
 OpenAI supervisor unavailable. A local fallback plan has been generated. Resolve the underlying issue (billing, quota, credentials) when convenient.
+
+### 2026-04-28 05:39 UTC - Autopilot blocked: MissingOpenAICredentials
+
+Status: open
+Severity: blocking
+Source: Project Autopilot
+
+Question or blocker:
+MissingOpenAICredentials
+OPENAI_API_KEY is missing
+
+Failure log:
+logs\mira_autopilot_failure_20260428_053911.md
+
+Recommended action:
+OpenAI supervisor unavailable. A local fallback plan has been generated. Resolve the underlying issue (billing, quota, credentials) when convenient.
