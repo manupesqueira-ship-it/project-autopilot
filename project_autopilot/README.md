@@ -103,6 +103,33 @@ python -B project_autopilot/agent_loop.py --project mira --claude-execute
 
 Attempts to invoke the Claude CLI automatically. **Blocked by default.** Requires `allow_automatic_builder_execution: true` in the project YAML. This exists as a future path, not a current recommendation.
 
+### Browser QA (visual and functional evidence)
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --browser-qa
+```
+
+Walks all configured `route_walk_urls`, checks HTTP status, detects console errors and page errors, and takes screenshots (when Playwright is available). Requires the dev server to be running.
+
+**Screenshots** are saved to `screenshots/<project_id>/` (e.g., `screenshots/mira/`).
+
+**Report** is written to `logs/<project_id>_browser_qa_latest.md`.
+
+**Pass/fail criteria:**
+- Every route must return HTTP 200-399.
+- Zero console errors.
+- Zero page errors.
+- Screenshots are captured for visual review.
+
+**Playwright is optional.** Without it, browser QA falls back to HTTP-only checks (no screenshots, no console error detection). To install Playwright:
+
+```bash
+pip install playwright
+python -m playwright install chromium
+```
+
+**Dev server must be running.** If the server is not reachable, browser QA prints a clear message and exits.
+
 ## How to Use with Claude Code
 
 1. Run `--doctor` to validate your environment.
