@@ -107,6 +107,9 @@ def collect_evidence(project: ProjectConfig, dry_run: bool = False) -> dict[str,
     diff = _run_args(["git", "diff", "--", ".", ":(exclude).env", ":(exclude).env.local"], project.repo_path)
     evidence["git_diff"] = diff["output"]
 
+    diff_stat = _run_args(["git", "diff", "--stat", "--", ".", ":(exclude).env", ":(exclude).env.local"], project.repo_path)
+    evidence["git_diff_stat"] = diff_stat["output"]
+
     changed = _run_args(["git", "diff", "--name-only", "--", ".", ":(exclude).env", ":(exclude).env.local"], project.repo_path)
     names = [line for line in changed["output"].splitlines() if line and Path(line).name not in SENSITIVE_NAMES]
     evidence["changed_files"] = sorted(dict.fromkeys(names + _status_paths(status["output"])))

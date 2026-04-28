@@ -12,6 +12,7 @@ from typing import Any
 
 from config import ProjectConfig
 from quality_director import quality_block_for_prompt
+from risk_classifier import classify_task, format_risk_assessment
 
 
 def _utc_stamp() -> str:
@@ -120,6 +121,8 @@ Update project_control/TASK_QUEUE.md with the next priority task, then rerun.
 
     acceptance = _format_acceptance_criteria(body)
     evidence_summary = _summarize_evidence(evidence)
+    risk = classify_task(title, body, evidence.get("changed_files", []), control_docs)
+    risk_summary = format_risk_assessment(risk)
 
     agent_rules = control_docs.get("AGENT_RULES.md", "").strip()[:3000]
     quality_bar = control_docs.get("QUALITY_BAR.md", "").strip()[:3000]
@@ -165,6 +168,12 @@ Package manager: {project.package_manager}
 ## Current Repository Evidence
 
 {evidence_summary}
+
+---
+
+## Risk Assessment
+
+{risk_summary}
 
 ---
 

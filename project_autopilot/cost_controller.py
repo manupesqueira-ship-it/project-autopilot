@@ -67,7 +67,7 @@ class CostController:
         return decision
 
     def allow_paid_api(self, api_kind: str) -> CostDecision:
-        if self.project.paid_api_mode != "enabled":
+        if self.project.paid_api_mode != "enabled_with_budget":
             return CostDecision(False, "paid API mode is disabled")
         if api_kind == "image_generation" and not self.project.allow_paid_image_generation:
             return CostDecision(False, "paid image generation is disabled")
@@ -116,4 +116,3 @@ class CostController:
             f"  Paid API mode:      {paid_status} ({snap['paid_api_mode']})\n"
             f"  Note: Local planning (--local-plan, --dry-run) is always free."
         )
-

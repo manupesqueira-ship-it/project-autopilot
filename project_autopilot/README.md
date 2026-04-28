@@ -40,6 +40,18 @@ python -B project_autopilot/agent_loop.py --project mira --doctor
 
 Checks .env files, credentials, project config, control files, package.json scripts, git status. Does not call OpenAI. Does not send Telegram.
 
+Doctor now reports one `PASS`, `WARN`, or `FAIL` line per check and ends with:
+
+```text
+DOCTOR_RESULT: PASS
+DOCTOR_RESULT: WARN
+DOCTOR_RESULT: FAIL
+```
+
+`PASS` and `WARN` exit with code `0`; `FAIL` exits with code `2`.
+
+Doctor includes config schema validation from `config_validator.py`, including autonomy mode, intensity mode, budgets, model routing, command safety, browser QA config, and Claude handoff config.
+
 ### Dry Run (safe preview)
 
 ```bash
@@ -48,6 +60,12 @@ python -B project_autopilot/agent_loop.py --project mira --dry-run
 
 Reads config and control pack, collects git evidence, skips OpenAI calls, skips validation commands, writes a builder prompt under `logs/`.
 
+Dry run also creates a structured evidence bundle under:
+
+```text
+logs/evidence/<project_id>/<timestamp>/
+```
+
 ### Local Plan (offline fallback)
 
 ```bash
@@ -55,6 +73,8 @@ python -B project_autopilot/agent_loop.py --project mira --local-plan
 ```
 
 Generates a builder prompt from local state only. No OpenAI call. Runs build/typecheck/lint to collect real evidence. Always free. Use this when OpenAI is unavailable, over quota, or when you want zero API cost.
+
+Local plans include deterministic risk classification from `risk_classifier.py`.
 
 ### Cycle (one bounded planning cycle)
 
@@ -71,6 +91,8 @@ python -B project_autopilot/agent_loop.py --project mira --status
 ```
 
 Prints project config, budget state, cycle count, last log, git status. No API calls.
+
+Status also prints the current task state and a risk summary for the active task queue.
 
 ### Telegram Test
 
@@ -139,9 +161,58 @@ python -m playwright install chromium
 5. Claude Code executes the task, provides evidence.
 6. Review the output. Run the next cycle when ready.
 
+## Reliability Core
+
+Project Autopilot includes a small Reliability Core before scheduler or automatic execution:
+
+- `config_validator.py`: validates project YAML and rejects dangerous configured commands.
+- `evidence_bundle.py`: writes one structured evidence bundle per run.
+- `task_state.py`: tracks simple task states in `logs/<project_id>_task_state.json`.
+- `risk_classifier.py`: deterministic local risk classification with no OpenAI call.
+
+Task states:
+
+```text
+planned -> assigned -> implemented -> validating -> passed -> committed
+```
+
+Alternative states:
+
+```text
+needs_fix
+blocked
+parked
+```
+
+Risk categories:
+
+- `safe_local_change`
+- `product_behavior_change`
+- `data_schema_change`
+- `paid_api_risk`
+- `deploy_risk`
+- `secrets_risk`
+- `destructive_risk`
+- `research_required`
+- `human_decision_required`
+
+Recommended workflow:
+
+```text
+local-plan -> handoff to Claude/Codex -> validate -> evidence bundle -> commit
+```
+
 ### Why Automatic Execution Is Disabled by Default
 
 Project Autopilot generates builder prompts but does not execute them automatically. This keeps humans in control of what Claude Code does. Automatic execution can be enabled per-project by setting `allow_automatic_builder_execution: true` in the project YAML, but this is not recommended until the manual workflow is proven reliable and guardrails are mature.
+
+## Why Scheduler Is Not Enabled Yet
+
+The scheduler should wait until manual cycles are boringly reliable. Before scheduler work, Project Autopilot needs repeated clean runs of doctor, local-plan, evidence bundle creation, browser QA, and post-builder validation without human cleanup.
+
+## Why Automatic Claude Execution Is Not Enabled Yet
+
+Automatic Claude execution needs stronger execution isolation, retry rules, safe task eligibility, commit policy, and rollback/abort behavior. Until then, Claude handoff stays manual.
 
 ## How to Create a New Project
 
@@ -193,7 +264,7 @@ Then run `--dry-run` or `--local-plan` to verify prompt generation.
 ## What Not to Do
 
 - Do not run `--cycle` without checking `--doctor` first.
-- Do not enable `paid_api_mode: enabled` without reviewing budgets.
+- Do not enable `paid_api_mode: enabled_with_budget` without reviewing budgets.
 - Do not commit `.env` or `.env.local`.
 - Do not set `intensity_mode: high_intensity` unless you have budget headroom.
 - Do not skip reading `project_control/` files before resuming product work.
