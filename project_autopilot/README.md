@@ -145,15 +145,50 @@ Project Autopilot generates builder prompts but does not execute them automatica
 
 ## How to Create a New Project
 
+### Automated (recommended)
+
+```bash
+python -B project_autopilot/init_project.py \
+  --project-id demo \
+  --project-name "Demo Project" \
+  --repo-path "C:\Users\manup\projects\demo"
+```
+
+This creates:
+
+- `project_control/` in the target repo with all control files from templates.
+- `project_autopilot/config/projects/<project-id>.yaml` with safe defaults.
+- `logs/` and `screenshots/<project-id>/` directories.
+
+Existing files are **never overwritten** unless `--force` is passed.
+
+**Defaults:**
+
+| Setting | Value |
+|---|---|
+| `intensity_mode` | `low_cost` |
+| `paid_api_mode` | `disabled_by_default` |
+| `max_parallel_agents` | `1` |
+| `max_cycles_per_day` | `4` |
+
+After init, edit the generated YAML to set `framework`, `package_manager`, and commands for your project.
+
+### Manual
+
 1. Create a YAML config at `project_autopilot/config/projects/<project_id>.yaml`.
    Use `mira.yaml` as a reference.
 2. Create a `project_control/` directory in your repo root with the control files.
    Use the templates in `project_autopilot/templates/` as starting points.
-3. Run `--doctor` against the new project to validate setup:
-   ```bash
-   python -B project_autopilot/agent_loop.py --project <project_id> --doctor
-   ```
-4. Run `--dry-run` or `--local-plan` to verify prompt generation.
+
+### Validate
+
+Run `--doctor` against the new project to validate setup:
+
+```bash
+python -B project_autopilot/agent_loop.py --project <project_id> --doctor
+```
+
+Then run `--dry-run` or `--local-plan` to verify prompt generation.
 
 ## What Not to Do
 
