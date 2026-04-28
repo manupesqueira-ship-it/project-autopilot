@@ -96,9 +96,16 @@ class OpenAISupervisor:
 
     def plan_next_task(self, control_docs: dict[str, str], evidence: dict[str, Any]) -> str:
         instructions = (
-            "You are Project Autopilot's supervisor. Use only the loaded project config and "
-            "project_control context. Choose a safe next task, avoid hardcoded assumptions, "
-            "honor cost policy and autonomy mode, and return concise acceptance criteria."
+            "You are Project Autopilot's supervisor and quality director. "
+            "You enforce world-class standards: every button must work, every flow must complete, "
+            "no silent failures, no data leaks, no regressions, no shallow approvals. "
+            "Use the loaded project config, project_control context (including WORLD_CLASS_STANDARD.md, "
+            "QA_PROTOCOL.md, CUSTOMER_DATA_POLICY.md, and RESEARCH_PROTOCOL.md). "
+            "Choose a safe next task, avoid hardcoded assumptions, honor cost policy and autonomy mode. "
+            "Return concise acceptance criteria. "
+            "If a task involves customer data, include data policy verification in acceptance criteria. "
+            "If a task involves an unknown provider or architecture decision, flag research needed. "
+            "Never approve shallow work — require evidence of actual testing, not just build success."
         )
         user_content = json.dumps(
             {
@@ -113,9 +120,18 @@ class OpenAISupervisor:
 
     def qa_review(self, task_plan: str, evidence: dict[str, Any]) -> str:
         instructions = (
-            "You are Project Autopilot's QA reviewer. Review the evidence against the project's "
-            "QUALITY_BAR, AGENT_RULES, AUTONOMY_PROTOCOL, and COST_POLICY. Return pass/fail, "
-            "findings, risk level, and required corrections."
+            "You are Project Autopilot's QA reviewer enforcing world-class standards. "
+            "Review the evidence against WORLD_CLASS_STANDARD.md, QA_PROTOCOL.md, "
+            "CUSTOMER_DATA_POLICY.md, QUALITY_BAR.md, AGENT_RULES.md, AUTONOMY_PROTOCOL.md, "
+            "and COST_POLICY.md. "
+            "Return one of: PASS, FAIL_FIX_REQUIRED, RESEARCH_REQUIRED, HUMAN_DECISION_REQUIRED, BLOCKED. "
+            "Include risk level: low, medium, high, or critical. "
+            "Verify buttons and flows actually work, not just that build passes. "
+            "Verify backend writes produce correct database rows. "
+            "Verify customer data is mapped per CUSTOMER_DATA_POLICY.md. "
+            "If research is needed for an unknown provider or legal question, return RESEARCH_REQUIRED "
+            "with a proposed scope and time estimate. "
+            "Never give shallow approval. If evidence is insufficient to verify a criterion, say so."
         )
         user_content = json.dumps({"task_plan": task_plan, "evidence": evidence}, indent=2)[:60000]
         return self._call("qa", instructions, user_content)
@@ -123,7 +139,10 @@ class OpenAISupervisor:
     def correction_prompt(self, task_plan: str, qa_review: str, evidence: dict[str, Any]) -> str:
         instructions = (
             "Generate a precise correction prompt for the configured builder. Keep it scoped, "
-            "avoid destructive commands, avoid secrets, avoid deploys, and respect project control files."
+            "avoid destructive commands, avoid secrets, avoid deploys, and respect project control files. "
+            "Include specific QA checks the builder must perform from QA_PROTOCOL.md. "
+            "If the QA review flagged customer data concerns, include data policy verification steps. "
+            "If research was flagged, include a research proposal with scope and time estimate."
         )
         user_content = json.dumps(
             {"task_plan": task_plan, "qa_review": qa_review, "evidence": evidence}, indent=2

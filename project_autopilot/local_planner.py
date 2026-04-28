@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from config import ProjectConfig
+from quality_director import quality_block_for_prompt
 
 
 def _utc_stamp() -> str:
@@ -123,6 +124,7 @@ Update project_control/TASK_QUEUE.md with the next priority task, then rerun.
     agent_rules = control_docs.get("AGENT_RULES.md", "").strip()[:3000]
     quality_bar = control_docs.get("QUALITY_BAR.md", "").strip()[:3000]
     cost_policy = control_docs.get("COST_POLICY.md", "").strip()[:2000]
+    quality_block = quality_block_for_prompt(control_docs, evidence, f"{title}\n{body}")
 
     return f"""# LOCAL FALLBACK PLAN
 
@@ -180,6 +182,12 @@ Package manager: {project.package_manager}
 
 ---
 
+## Quality and QA Expectations
+
+{quality_block}
+
+---
+
 ## Stop / Report Format
 
 When done, report:
@@ -187,8 +195,9 @@ When done, report:
 2. Files modified (with one-line reason each).
 3. Commands run and their results.
 4. Whether build/typecheck/lint pass.
-5. Any remaining risks or blockers.
-6. Whether git is clean or dirty.
+5. QA checks performed (per QA_PROTOCOL.md).
+6. Any remaining risks or blockers.
+7. Whether git is clean or dirty.
 
 ---
 

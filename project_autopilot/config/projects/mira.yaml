@@ -11,10 +11,15 @@ lint_command: npm run lint
 test_command: npm test
 dev_server_command: npm run dev
 
+browser_qa_enabled: false
+screenshot_enabled: true
+screenshots_dir: screenshots/mira
+
 route_walk_urls:
   - http://localhost:3000/es
   - http://localhost:3000/en
   - http://localhost:3000/es/onboarding
+  - http://localhost:3000/es/scan
   - http://localhost:3000/es/catalog
 
 autonomy_mode: autonomous_guarded

@@ -50,6 +50,8 @@ class ProjectConfig:
     builder_handoff_mode: str = "manual"
     claude_command: str = "claude"
     latest_prompt_path: str = ""
+    browser_qa_enabled: bool = False
+    screenshot_enabled: bool = True
     model_routing: ModelRouting = field(default_factory=ModelRouting)
     logs_dir: str = "logs"
     screenshots_dir: str = "screenshots"

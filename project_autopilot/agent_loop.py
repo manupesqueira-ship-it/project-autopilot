@@ -20,6 +20,7 @@ from project_loader import ensure_project_dirs, load_project, read_project_contr
 from prompt_builder import build_builder_prompt
 from qa_reviewer import generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
+from browser_qa import run_browser_qa, write_browser_qa_report
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 
@@ -268,6 +269,36 @@ def run_claude_execute(project_id: str) -> int:
     return 0 if result.executed else 1
 
 
+def run_browser_qa_cmd(project_id: str) -> int:
+    """Run browser QA against configured route_walk_urls."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+
+    report = run_browser_qa(project)
+
+    if not report.dev_server_reachable:
+        print(report.summary)
+        return 1
+
+    report_path = write_browser_qa_report(project, report)
+
+    state = load_state(project)
+    state["last_browser_qa"] = str(report_path.relative_to(project.repo_path))
+    state["browser_qa_passed"] = report.passed
+    save_state(project, state)
+
+    print(f"Browser QA: {'PASS' if report.passed else 'FAIL'}")
+    print(report.summary)
+    print(f"Report: {report_path}")
+
+    if not report.passed:
+        failed = [r for r in report.routes if r.console_errors or r.page_errors or (r.status and r.status >= 400)]
+        for r in failed:
+            print(f"  FAIL: {r.url} (HTTP {r.status}, {len(r.console_errors)} console errors, {len(r.page_errors)} page errors)")
+
+    return 0 if report.passed else 1
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -295,7 +326,7 @@ def run_doctor(project_id: str) -> int:
 
     # --- project_control ---
     checks.append(("project_control dir", project.project_control_path.exists(), str(project.project_control_path)))
-    for name in ["TASK_QUEUE.md", "CURRENT_STATE.md", "QUALITY_BAR.md", "AGENT_RULES.md", "AUTONOMY_PROTOCOL.md", "COST_POLICY.md"]:
+    for name in ["TASK_QUEUE.md", "CURRENT_STATE.md", "QUALITY_BAR.md", "AGENT_RULES.md", "AUTONOMY_PROTOCOL.md", "COST_POLICY.md", "WORLD_CLASS_STANDARD.md", "QA_PROTOCOL.md", "CUSTOMER_DATA_POLICY.md", "RESEARCH_PROTOCOL.md"]:
         p = project.project_control_path / name
         checks.append((f"  {name}", p.exists(), ""))
 
@@ -329,6 +360,14 @@ def run_doctor(project_id: str) -> int:
     claude_ok, claude_path = detect_claude_cli(project)
     checks.append(("Claude CLI", claude_ok, claude_path if claude_ok else f"'{project.claude_command}' not on PATH"))
 
+    # --- Playwright ---
+    try:
+        import playwright.sync_api  # noqa: F401
+        pw_ok = True
+    except ImportError:
+        pw_ok = False
+    checks.append(("Playwright", pw_ok, "available" if pw_ok else "not installed (browser QA limited to HTTP checks)"))
+
     # --- Print check results ---
     print(f"Doctor: {project.project_name} ({project.project_id})")
     print()
@@ -352,6 +391,8 @@ def run_doctor(project_id: str) -> int:
     print(f"  Paid API mode:    {project.paid_api_mode}")
     print(f"  Handoff mode:     {project.builder_handoff_mode}")
     print(f"  Auto execution:   {'ENABLED' if project.allow_automatic_builder_execution else 'disabled'}")
+    print(f"  Browser QA:       {'enabled' if project.browser_qa_enabled else 'disabled (use --browser-qa to run manually)'}")
+    print(f"  Route walk URLs:  {len(project.route_walk_urls)}")
 
     print()
     if all_ok:
@@ -392,6 +433,7 @@ def main() -> int:
     group.add_argument("--handoff-claude", action="store_true", help="Generate prompt then hand off to Claude Code (manual mode).")
     group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
     group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
+    group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
 
     args = parser.parse_args()
 
@@ -407,6 +449,8 @@ def main() -> int:
         return run_claude_manual(args.project)
     if args.claude_execute:
         return run_claude_execute(args.project)
+    if args.browser_qa:
+        return run_browser_qa_cmd(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

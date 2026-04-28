@@ -6,11 +6,29 @@ MIRA is the first configured project.
 
 ## Operating Model
 
-- **Claude Code** is the heavy implementation agent (builder).
-- **Codex / ChatGPT** are supervisor, QA, prompt generation, review, and cost control.
+- **ChatGPT / OpenAI** acts as the quality director, product lead, architecture reviewer, backend reviewer, data policy reviewer, and QA lead. It enforces world-class standards.
+- **Claude Code** is the heavy implementation agent (builder). It writes code, runs commands, and provides evidence.
 - **Project Autopilot** orchestrates: reads state, collects evidence, calls OpenAI for planning/QA, generates builder prompts, handles failures gracefully.
 
-The generated builder prompt is optimized for pasting directly into Claude Code.
+The generated builder prompt includes quality expectations from `WORLD_CLASS_STANDARD.md`, `QA_PROTOCOL.md`, `CUSTOMER_DATA_POLICY.md`, and `RESEARCH_PROTOCOL.md`.
+
+## Quality Standard
+
+Project Autopilot enforces a world-class quality bar:
+- Every button must work. Every flow must complete.
+- Backend must be reliable and auditable. No silent failures.
+- Customer data must be mapped, stored correctly, and protected per `CUSTOMER_DATA_POLICY.md`.
+- QA checks from `QA_PROTOCOL.md` must be performed before marking any task complete.
+- Build success alone is not sufficient — actual testing of buttons, forms, routes, and states is required.
+- When research is needed (unknown provider, legal question, architecture decision), it must be proposed per `RESEARCH_PROTOCOL.md`, not silently skipped.
+
+## Research Escalation
+
+If a task involves an unknown provider, pricing uncertainty, legal/privacy question, or architecture decision with long-term consequences, Project Autopilot flags it as `RESEARCH_REQUIRED` with a proposed scope and time estimate. Research modes: `quick_check` (10-15 min), `standard_research` (30-45 min), `deep_research` (90+ min). Research is proposed, not silently executed.
+
+## Customer Data Policy
+
+Every project must map what customer data it collects, where it is stored, how sensitive it is, and what must never be exposed. See `project_control/CUSTOMER_DATA_POLICY.md`. Builder prompts include data policy reminders when the task involves user data.
 
 ## Quick Reference
 
@@ -119,6 +137,9 @@ Project Autopilot generates builder prompts but does not execute them automatica
 - Do not skip reading `project_control/` files before resuming product work.
 - Do not let builders execute without reviewing the generated prompt first.
 - Do not deploy from Project Autopilot. Deployment requires explicit human action.
+- Do not mark tasks complete without performing QA checks from `QA_PROTOCOL.md`.
+- Do not skip customer data policy review when a task touches user data.
+- Do not silently execute research. Propose it with scope and time estimate first.
 
 ## Cost Control
 

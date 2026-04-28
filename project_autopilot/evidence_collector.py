@@ -131,7 +131,13 @@ def collect_evidence(project: ProjectConfig, dry_run: bool = False) -> dict[str,
 
     if project.route_walk_urls:
         evidence["route_walk_urls"] = project.route_walk_urls
-        evidence["screenshots"] = "Route walk/screenshot capture is configured for a future browser-enabled cycle."
+
+    # Include latest browser QA report if available
+    browser_qa_path = project.repo_path / project.logs_dir / f"{project.project_id}_browser_qa_latest.md"
+    if browser_qa_path.exists():
+        evidence["browser_qa_report"] = str(browser_qa_path.relative_to(project.repo_path))
+    else:
+        evidence["browser_qa_report"] = None
 
     return evidence
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from config import ProjectConfig
+from quality_director import quality_block_for_prompt
 
 
 def build_builder_prompt(
@@ -12,6 +13,7 @@ def build_builder_prompt(
     evidence: dict[str, Any],
 ) -> str:
     changed_files = "\n".join(f"- {item}" for item in evidence.get("changed_files", [])) or "- None"
+    quality_block = quality_block_for_prompt(control_docs, evidence, task_plan)
     return f"""You are the builder agent for {project.project_name}.
 
 Project ID: {project.project_id}
@@ -45,6 +47,10 @@ Hard constraints:
 - Write non-blocking questions to `HUMAN_QUESTIONS.md`.
 - Provide evidence after changes: git status, changed files, build output, typecheck output, lint/test output when available.
 
+Quality and QA expectations:
+
+{quality_block}
+
 Project control excerpts:
 
 TASK_QUEUE.md:
@@ -58,5 +64,17 @@ AGENT_RULES.md:
 
 COST_POLICY.md:
 {control_docs.get('COST_POLICY.md', '').strip()[:4000]}
+
+Browser QA evidence:
+{_browser_qa_section(evidence)}
 """
 
+
+def _browser_qa_section(evidence: dict[str, Any]) -> str:
+    report = evidence.get("browser_qa_report")
+    if report:
+        return f"Latest browser QA report: {report}"
+    urls = evidence.get("route_walk_urls", [])
+    if urls:
+        return "No browser QA report yet. Run --browser-qa with the dev server running to collect route walk evidence."
+    return "No route_walk_urls configured."
