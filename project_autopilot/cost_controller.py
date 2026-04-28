@@ -91,11 +91,29 @@ class CostController:
             "estimated_model_usage_usd": round(self.state.estimated_model_usage_usd, 6),
             "paid_api_calls": self.state.paid_api_calls,
             "cycle_spend_usd": round(self.state.cycle_spend_usd, 6),
+            "daily_spend_usd": round(self.state.daily_spend_usd, 6),
+            "monthly_spend_usd": round(self.state.monthly_spend_usd, 6),
             "daily_budget_usd": self.project.daily_budget_usd,
             "per_cycle_budget_usd": self.project.per_cycle_budget_usd,
             "monthly_budget_usd": self.project.monthly_budget_usd,
             "paid_api_mode": self.project.paid_api_mode,
+            "paid_mode_disabled": self.project.paid_api_mode != "enabled",
             "allow_paid_image_generation": self.project.allow_paid_image_generation,
             "allow_paid_video_generation": self.project.allow_paid_video_generation,
         }
+
+    def report(self) -> str:
+        """Human-readable cost status report."""
+        snap = self.snapshot()
+        paid_status = "DISABLED" if snap["paid_mode_disabled"] else "ENABLED"
+        return (
+            f"Cost Controller Report\n"
+            f"  Daily budget:       ${snap['daily_budget_usd']:.2f}  (spent: ${snap['daily_spend_usd']:.4f})\n"
+            f"  Per-cycle budget:   ${snap['per_cycle_budget_usd']:.2f}  (spent: ${snap['cycle_spend_usd']:.4f})\n"
+            f"  Monthly budget:     ${snap['monthly_budget_usd']:.2f}  (spent: ${snap['monthly_spend_usd']:.4f})\n"
+            f"  Est. model usage:   ${snap['estimated_model_usage_usd']:.4f}\n"
+            f"  Paid API calls:     {snap['paid_api_calls']}\n"
+            f"  Paid API mode:      {paid_status} ({snap['paid_api_mode']})\n"
+            f"  Note: Local planning (--local-plan, --dry-run) is always free."
+        )
 

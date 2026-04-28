@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from project_loader import load_project
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+load_dotenv(Path(__file__).resolve().parents[1] / ".env.local", override=True)
 
 
 @dataclass

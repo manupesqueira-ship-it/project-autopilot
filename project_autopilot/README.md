@@ -1,100 +1,119 @@
 # Project Autopilot
 
-Project Autopilot is a reusable autonomous builder orchestrator. It is not specific to MIRA. It loads project-specific context, commands, budgets, models, and guardrails from configuration and `project_control/`.
+Reusable autonomous builder orchestrator. Not specific to MIRA. Loads project-specific context, commands, budgets, models, and guardrails from configuration and `project_control/`.
 
 MIRA is the first configured project.
 
-## Run MIRA In Dry-Run Mode
+## Operating Model
+
+- **Claude Code** is the heavy implementation agent (builder).
+- **Codex / ChatGPT** are supervisor, QA, prompt generation, review, and cost control.
+- **Project Autopilot** orchestrates: reads state, collects evidence, calls OpenAI for planning/QA, generates builder prompts, handles failures gracefully.
+
+The generated builder prompt is optimized for pasting directly into Claude Code.
+
+## Quick Reference
+
+### Doctor (validate environment)
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --doctor
+```
+
+Checks .env files, credentials, project config, control files, package.json scripts, git status. Does not call OpenAI. Does not send Telegram.
+
+### Dry Run (safe preview)
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --dry-run
 ```
 
-Dry-run mode reads the project config and project control pack, collects safe git evidence, skips OpenAI calls, skips validation commands, and writes a builder prompt under `logs/`.
+Reads config and control pack, collects git evidence, skips OpenAI calls, skips validation commands, writes a builder prompt under `logs/`.
 
-## Run One Guarded Cycle
+### Local Plan (offline fallback)
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --local-plan
+```
+
+Generates a builder prompt from local state only. No OpenAI call. Runs build/typecheck/lint to collect real evidence. Always free. Use this when OpenAI is unavailable, over quota, or when you want zero API cost.
+
+### Cycle (one bounded planning cycle)
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --cycle
 ```
 
-This is still bounded: it runs one cycle only. It does not execute builder work. It calls OpenAI for planning, QA review, and correction prompt generation when credentials and budgets allow.
+Collects evidence, calls OpenAI for planning + QA + correction prompt. If OpenAI fails (429, quota, missing key, budget), automatically falls back to local plan, writes failure log, sends Telegram alert, and exits cleanly.
 
-## Telegram Test
+### Status
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --status
+```
+
+Prints project config, budget state, cycle count, last log, git status. No API calls.
+
+### Telegram Test
 
 ```bash
 python -B project_autopilot/telegram_alerts.py --project mira --test
 ```
 
-Telegram is only for blockers, repeated failures, high-risk actions, secrets, deploys, destructive database changes, paid API usage, or strategic decisions. Project Autopilot should avoid noisy alerts for safe local work.
-
-Credentials are read from the environment:
+Sends a test alert. Credentials are read from the environment:
 
 - `MIRA_TELEGRAM_BOT_TOKEN` or `TELEGRAM_BOT_TOKEN`
 - `MIRA_TELEGRAM_CHAT_ID` or `TELEGRAM_CHAT_ID`
 
-Do not commit credentials.
+## How to Use with Claude Code
 
-## Project Configuration
+1. Run `--doctor` to validate your environment.
+2. Run `--local-plan` or `--cycle` to generate a builder prompt.
+3. Open the generated file at `logs/<project>_latest_builder_prompt.md`.
+4. Paste the prompt into Claude Code.
+5. Claude Code executes the task, provides evidence.
+6. Review the output. Run the next cycle when ready.
 
-Project configs live in:
+## How to Create a New Project
 
-```text
-project_autopilot/config/projects/
-```
+1. Create a YAML config at `project_autopilot/config/projects/<project_id>.yaml`.
+   Use `mira.yaml` as a reference.
+2. Create a `project_control/` directory in your repo root with the control files.
+   Use the templates in `project_autopilot/templates/` as starting points.
+3. Run `--doctor` against the new project to validate setup:
+   ```bash
+   python -B project_autopilot/agent_loop.py --project <project_id> --doctor
+   ```
+4. Run `--dry-run` or `--local-plan` to verify prompt generation.
 
-MIRA is configured at:
+## What Not to Do
 
-```text
-project_autopilot/config/projects/mira.yaml
-```
-
-Config controls:
-
-- Project name and repo path
-- Framework and package manager
-- Build/typecheck/lint/test/dev commands
-- Route walk URLs
-- Autonomy and retry limits
-- Parallelism limits
-- Daily, cycle, and monthly budget limits
-- Paid API mode
-- Telegram behavior
-- Builder routing
-- Model routing
-
-## Model Routing
-
-Routing is configurable per project:
-
-- Cheap model: summaries, log parsing, simple classification.
-- Standard model: planning and builder prompt generation.
-- Premium model: architecture, QA-critical decisions, visual review, or repeated failures.
-- QA model: quality review.
-
-Default intensity should be `low_cost` or `normal`, not `high_intensity`.
+- Do not run `--cycle` without checking `--doctor` first.
+- Do not enable `paid_api_mode: enabled` without reviewing budgets.
+- Do not commit `.env` or `.env.local`.
+- Do not set `intensity_mode: high_intensity` unless you have budget headroom.
+- Do not skip reading `project_control/` files before resuming product work.
+- Do not let builders execute without reviewing the generated prompt first.
+- Do not deploy from Project Autopilot. Deployment requires explicit human action.
 
 ## Cost Control
 
-`cost_controller.py` tracks estimated model usage, paid API calls, cycle budget, daily budget, monthly budget, and whether paid API mode is enabled.
-
-Paid image/video generation is disabled unless explicitly enabled in project config and approved in the project control pack.
+`cost_controller.py` tracks estimated model usage, paid API calls, and budget limits. Local planning (`--local-plan`, `--dry-run`) is always free and never blocked by budget.
 
 ## Project Control Packs
 
-Each project supplies its own context pack. For MIRA, it is:
+Each project supplies its own context pack (e.g., `project_control/`). Reusable templates live under `project_autopilot/templates/`.
 
-```text
-project_control/
-```
+## Environment Variables
 
-Reusable templates live under:
+Project Autopilot loads `.env` and `.env.local` from the repo root. Required variables depend on the mode:
 
-```text
-project_autopilot/templates/
-```
+| Variable | Required for |
+|---|---|
+| `OPENAI_API_KEY` | `--cycle` (optional — falls back to local plan) |
+| `TELEGRAM_BOT_TOKEN` | Telegram alerts (optional) |
+| `TELEGRAM_CHAT_ID` | Telegram alerts (optional) |
 
 ## Backward Compatibility
 
 The old `agent/` entrypoints remain as wrappers that point to Project Autopilot.
-
