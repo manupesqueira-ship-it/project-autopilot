@@ -35,6 +35,10 @@ telegram_enabled: true
 
 builder_primary: codex
 builder_fallback: claude
+allow_automatic_builder_execution: false
+builder_handoff_mode: manual
+claude_command: claude
+latest_prompt_path: logs/mira_latest_builder_prompt.md
 
 model_routing:
   cheap_model: gpt-5.4-mini

@@ -46,6 +46,10 @@ class ProjectConfig:
     telegram_enabled: bool = False
     builder_primary: str = "codex"
     builder_fallback: str = "claude"
+    allow_automatic_builder_execution: bool = False
+    builder_handoff_mode: str = "manual"
+    claude_command: str = "claude"
+    latest_prompt_path: str = ""
     model_routing: ModelRouting = field(default_factory=ModelRouting)
     logs_dir: str = "logs"
     screenshots_dir: str = "screenshots"

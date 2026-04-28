@@ -65,14 +65,38 @@ Sends a test alert. Credentials are read from the environment:
 - `MIRA_TELEGRAM_BOT_TOKEN` or `TELEGRAM_BOT_TOKEN`
 - `MIRA_TELEGRAM_CHAT_ID` or `TELEGRAM_CHAT_ID`
 
+### Handoff to Claude Code
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --handoff-claude
+```
+
+Generates a builder prompt (or reuses the latest one), then prints the path and instructions for pasting into Claude Code. This is the recommended workflow.
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-manual
+```
+
+Prints the latest prompt path only. Does not generate a new prompt.
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-execute
+```
+
+Attempts to invoke the Claude CLI automatically. **Blocked by default.** Requires `allow_automatic_builder_execution: true` in the project YAML. This exists as a future path, not a current recommendation.
+
 ## How to Use with Claude Code
 
 1. Run `--doctor` to validate your environment.
 2. Run `--local-plan` or `--cycle` to generate a builder prompt.
-3. Open the generated file at `logs/<project>_latest_builder_prompt.md`.
+3. Run `--handoff-claude` to get the prompt path and instructions.
 4. Paste the prompt into Claude Code.
 5. Claude Code executes the task, provides evidence.
 6. Review the output. Run the next cycle when ready.
+
+### Why Automatic Execution Is Disabled by Default
+
+Project Autopilot generates builder prompts but does not execute them automatically. This keeps humans in control of what Claude Code does. Automatic execution can be enabled per-project by setting `allow_automatic_builder_execution: true` in the project YAML, but this is not recommended until the manual workflow is proven reliable and guardrails are mature.
 
 ## How to Create a New Project
 

@@ -20,6 +20,7 @@ from project_loader import ensure_project_dirs, load_project, read_project_contr
 from prompt_builder import build_builder_prompt
 from qa_reviewer import generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
+from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 
 
@@ -235,6 +236,38 @@ def run_status(project_id: str) -> int:
     return 0
 
 
+def run_handoff_claude(project_id: str) -> int:
+    """Generate or reuse latest builder prompt, then hand off to Claude (manual mode)."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+
+    prompt_path = resolve_prompt_path(project)
+    if not prompt_path.exists():
+        # Generate a fresh local plan first
+        print("No existing builder prompt found. Generating local plan...")
+        run_local_plan(project_id)
+
+    result = handoff_manual(project)
+    print(result.message)
+    return 0
+
+
+def run_claude_manual(project_id: str) -> int:
+    """Print the prompt path for manual paste into Claude Code."""
+    project = load_project(project_id)
+    result = handoff_manual(project)
+    print(result.message)
+    return 0
+
+
+def run_claude_execute(project_id: str) -> int:
+    """Attempt automatic Claude execution (blocked by default)."""
+    project = load_project(project_id)
+    result = handoff_execute(project)
+    print(result.message)
+    return 0 if result.executed else 1
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -292,6 +325,10 @@ def run_doctor(project_id: str) -> int:
     for label, cmd in [("Build cmd", project.build_command), ("Typecheck cmd", project.typecheck_command), ("Lint cmd", project.lint_command)]:
         checks.append((label, bool(cmd), cmd or "not configured"))
 
+    # --- Claude CLI ---
+    claude_ok, claude_path = detect_claude_cli(project)
+    checks.append(("Claude CLI", claude_ok, claude_path if claude_ok else f"'{project.claude_command}' not on PATH"))
+
     # --- Print check results ---
     print(f"Doctor: {project.project_name} ({project.project_id})")
     print()
@@ -313,6 +350,8 @@ def run_doctor(project_id: str) -> int:
     print(f"  Model routing:    cheap={r.cheap_model}  standard={r.standard_model}  premium={r.premium_model}  qa={r.qa_model}")
     print(f"  Budget:           cycle=${project.per_cycle_budget_usd:.2f}  daily=${project.daily_budget_usd:.2f}  monthly=${project.monthly_budget_usd:.2f}")
     print(f"  Paid API mode:    {project.paid_api_mode}")
+    print(f"  Handoff mode:     {project.builder_handoff_mode}")
+    print(f"  Auto execution:   {'ENABLED' if project.allow_automatic_builder_execution else 'disabled'}")
 
     print()
     if all_ok:
@@ -339,6 +378,7 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --local-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --cycle\n"
             "  python -B project_autopilot/agent_loop.py --project mira --status\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --handoff-claude\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -349,6 +389,9 @@ def main() -> int:
     group.add_argument("--local-plan", action="store_true", help="Force local fallback planner. No OpenAI call.")
     group.add_argument("--status", action="store_true", help="Print project status summary.")
     group.add_argument("--doctor", action="store_true", help="Validate environment and project health.")
+    group.add_argument("--handoff-claude", action="store_true", help="Generate prompt then hand off to Claude Code (manual mode).")
+    group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
+    group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
 
     args = parser.parse_args()
 
@@ -358,6 +401,12 @@ def main() -> int:
         return run_status(args.project)
     if args.local_plan:
         return run_local_plan(args.project)
+    if args.handoff_claude:
+        return run_handoff_claude(args.project)
+    if args.claude_manual:
+        return run_claude_manual(args.project)
+    if args.claude_execute:
+        return run_claude_execute(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 
