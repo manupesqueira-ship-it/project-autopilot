@@ -12,6 +12,12 @@ Decision: The initial agent workflow generates builder prompts but does not exec
 
 Rationale: This keeps humans in control while proving the quality gates, evidence collection, and OpenAI supervisor loop.
 
+## 2026-04-27 - Project Autopilot As Reusable Orchestrator
+
+Decision: Refactor the MIRA-only control layer into Project Autopilot, a reusable project-agnostic orchestrator.
+
+Rationale: MIRA should be the first configured project, not the hardcoded system. Future projects should provide config and a `project_control/` context pack while sharing the same orchestration code.
+
 ## 2026-04-27 - Secrets Stay Outside Repo State
 
 Decision: API keys and Telegram credentials must be supplied through the local environment or another approved secret store, never committed to project control files.

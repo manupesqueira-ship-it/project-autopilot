@@ -2,13 +2,13 @@
 
 ## Initial Mode
 
-The first supported mode is `supervised`.
+MIRA uses Project Autopilot in `autonomous_guarded` mode with low-cost model routing by default.
 
-In supervised mode, the agent:
+In guarded mode, Project Autopilot:
 
 1. Reads project control files.
 2. Collects evidence.
-3. Requests OpenAI planning and QA where credentials are available.
+3. Requests OpenAI planning and QA where credentials and budgets allow.
 4. Generates a builder prompt for Codex or Claude.
 5. Stops before executing builder work.
 6. Writes an iteration log.
@@ -22,9 +22,9 @@ Each scheduled run should:
 1. Load config and state.
 2. Read `project_control/` files.
 3. Collect evidence.
-4. Ask OpenAI for next task planning.
-5. Generate a builder prompt.
-6. Wait for human approval or an approved automatic execution mode.
+4. Ask OpenAI for next task planning when credentials and budgets allow.
+5. Generate a builder prompt for safe local builder work.
+6. Escalate only when human approval is truly required.
 7. Collect post-builder evidence.
 8. Ask OpenAI for QA review.
 9. Generate correction prompts if needed.

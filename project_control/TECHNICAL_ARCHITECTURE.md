@@ -11,13 +11,15 @@
 - Supabase client and SQL schema scaffolding.
 - Mocked provider modules for image and video generation.
 
-## Agent Control Layer
+## Project Autopilot
 
-The control layer is intentionally separate from the product app:
+Project Autopilot is intentionally separate from the product app:
 
-- `project_control/` contains durable project state, rules, blockers, decisions, and task queue.
-- `agent/` contains Python orchestration modules.
-- `config/agent.config.example.yaml` documents default operating configuration.
+- `project_autopilot/` contains reusable orchestration code.
+- `project_autopilot/config/projects/mira.yaml` contains MIRA's project-specific runtime config.
+- `project_autopilot/templates/` contains reusable control-pack templates for future projects.
+- `project_control/` contains MIRA-specific durable state, rules, blockers, decisions, and task queue.
+- `agent/` remains only as a backward-compatible wrapper.
 - `logs/` stores iteration logs and generated prompts.
 - `screenshots/` stores future visual evidence.
 
