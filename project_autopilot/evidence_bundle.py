@@ -61,6 +61,7 @@ def create_evidence_bundle(
             len([result for result in evidence.get("commands", {}).values() if result.get("exit_code") not in (0, None)]),
         ),
         "file_change_metrics": evidence.get("file_change_metrics", {}),
+        "browser_qa_report": evidence.get("browser_qa_report"),
         "risk_summary": risk_summary,
         "cost_snapshot": cost_snapshot,
         "task_state": task_state,

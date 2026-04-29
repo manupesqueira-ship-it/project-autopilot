@@ -125,32 +125,72 @@ python -B project_autopilot/agent_loop.py --project mira --claude-execute
 
 Attempts to invoke the Claude CLI automatically. **Blocked by default.** Requires `allow_automatic_builder_execution: true` in the project YAML. This exists as a future path, not a current recommendation.
 
-### Browser QA (visual and functional evidence)
+### Browser QA (route, network, and visual evidence)
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --browser-qa
 ```
 
-Walks all configured `route_walk_urls`, checks HTTP status, detects console errors and page errors, and takes screenshots (when Playwright is available). Requires the dev server to be running.
+Walks all configured `route_walk_urls`, checks HTTP status, and records route evidence. Requires the dev server to be running.
 
-**Screenshots** are saved to `screenshots/<project_id>/` (e.g., `screenshots/mira/`).
+Browser QA has two modes:
 
-**Report** is written to `logs/<project_id>_browser_qa_latest.md`.
+| Mode | Behavior |
+|---|---|
+| `playwright` | Captures mobile, tablet, and desktop evidence; records console errors, page errors, failed 4xx/5xx responses, failed resource loads, route duration, and screenshots. |
+| `http_only` | Checks configured route URLs with HTTP GET only. No screenshots, console/page errors, or subresource network interception. |
 
-**Pass/fail criteria:**
-- Every route must return HTTP 200-399.
-- Zero console errors.
-- Zero page errors.
-- Screenshots are captured for visual review.
+When Playwright is missing, Browser QA prints:
 
-**Playwright is optional.** Without it, browser QA falls back to HTTP-only checks (no screenshots, no console error detection). To install Playwright:
+```text
+LIMITED_HTTP_ONLY_MODE: Playwright not installed.
+```
+
+Install Playwright later with:
 
 ```bash
 pip install playwright
 python -m playwright install chromium
 ```
 
+Default Playwright viewports:
+
+| Viewport | Size |
+|---|---|
+| `mobile` | `375x812` |
+| `tablet` | `768x1024` |
+| `desktop` | `1280x800` |
+
+**Screenshots** are saved to:
+
+```text
+screenshots/<project_id>/<run_id>/<viewport>/<safe_route_name>.png
+```
+
+Example:
+
+```text
+screenshots/mira/mira_browser_qa_20260429_010000/mobile/localhost3000_es.png
+```
+
+**Reports** are written to:
+
+```text
+logs/<project_id>_browser_qa_latest.md
+logs/<project_id>_browser_qa_<timestamp>.md
+```
+
+**Pass/fail criteria:**
+- Every route must return HTTP 200-399.
+- Zero console errors.
+- Zero page errors.
+- Zero failed 4xx/5xx network responses.
+- Zero failed resource loads.
+- Screenshots are captured in Playwright mode when `screenshot_enabled` is true.
+
 **Dev server must be running.** If the server is not reachable, browser QA prints a clear message and exits.
+
+Browser QA is evidence, not a complete replacement for flow tests. It does not yet fill forms, click through multi-step flows, validate database writes, or prove business logic correctness. Use it alongside manual QA, post-builder intake, and project-specific E2E checks.
 
 ### Post-Builder Intake
 
@@ -279,6 +319,9 @@ Tracked run events include:
 
 - `run_started`
 - `run_finished`
+- `browser_qa_started`
+- `browser_qa_finished`
+- `browser_qa_failed`
 - `command_started`
 - `command_finished`
 - `evidence_bundle_created`

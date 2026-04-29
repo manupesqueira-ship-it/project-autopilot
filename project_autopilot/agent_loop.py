@@ -24,7 +24,7 @@ from prompt_builder import build_builder_prompt
 from qa_reviewer import classify_risk, classify_verdict, generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
 from task_state import load_task_state, transition_task_state
-from browser_qa import run_browser_qa, write_browser_qa_report
+from browser_qa import report_to_evidence, run_browser_qa, write_browser_qa_report
 from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_state
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
@@ -381,6 +381,10 @@ def run_status(project_id: str) -> int:
     last_bundle = state.get("last_evidence_bundle")
     if last_bundle:
         print(f"Evidence bundle:    {last_bundle}")
+    last_browser_qa = state.get("last_browser_qa")
+    if last_browser_qa:
+        print(f"Browser QA report:  {last_browser_qa}")
+        print(f"Browser QA passed:  {state.get('browser_qa_passed')}")
     print()
 
     # Git status (quick)
@@ -457,28 +461,53 @@ def run_browser_qa_cmd(project_id: str) -> int:
     """Run browser QA against configured route_walk_urls."""
     project = load_project(project_id)
     ensure_project_dirs(project)
+    run_id = new_run_id(project.project_id, "browser_qa")
+    record_run_started(project, run_id, "browser_qa")
+    append_event(
+        project,
+        run_id,
+        "browser_qa_started",
+        {"route_count": len(project.route_walk_urls), "screenshot_enabled": project.screenshot_enabled},
+    )
 
-    report = run_browser_qa(project)
-
-    if not report.dev_server_reachable:
-        print(report.summary)
-        return 1
-
+    report = run_browser_qa(project, run_id=run_id)
     report_path = write_browser_qa_report(project, report)
+    evidence = report_to_evidence(report)
+    evidence["browser_qa_report"] = str(report_path.relative_to(project.repo_path))
 
     state = load_state(project)
     state["last_browser_qa"] = str(report_path.relative_to(project.repo_path))
     state["browser_qa_passed"] = report.passed
+    state["browser_qa_mode"] = report.mode
+    state["browser_qa_summary"] = report.summary_counts
     save_state(project, state)
 
+    event_details = {
+        "mode": report.mode,
+        "passed": report.passed,
+        "report": str(report_path.relative_to(project.repo_path)),
+        **report.summary_counts,
+    }
+    append_event(project, run_id, "browser_qa_finished", event_details)
+    if not report.passed:
+        append_event(project, run_id, "browser_qa_failed", event_details)
+    record_run_finished(project, run_id, "browser_qa_passed" if report.passed else "browser_qa_failed", event_details)
+
     print(f"Browser QA: {'PASS' if report.passed else 'FAIL'}")
+    print(f"Run id: {run_id}")
+    print(f"Mode: {report.mode}")
     print(report.summary)
     print(f"Report: {report_path}")
 
     if not report.passed:
-        failed = [r for r in report.routes if r.console_errors or r.page_errors or (r.status and r.status >= 400)]
+        failed = [r for r in report.routes if not r.passed]
         for r in failed:
-            print(f"  FAIL: {r.url} (HTTP {r.status}, {len(r.console_errors)} console errors, {len(r.page_errors)} page errors)")
+            print(
+                f"  FAIL: {r.url} [{r.viewport}] "
+                f"(HTTP {r.status}, {len(r.console_errors)} console errors, "
+                f"{len(r.page_errors)} page errors, "
+                f"{len(r.failed_network_requests) + len(r.failed_resource_loads)} failed requests)"
+            )
 
     return 0 if report.passed else 1
 
@@ -618,6 +647,14 @@ def run_doctor(project_id: str) -> int:
     except ImportError:
         pw_ok = False
     add("pass" if pw_ok else "warn", "PLAYWRIGHT_DETECTED", f"Playwright detected: {'yes' if pw_ok else 'no'}", "Install later for richer browser QA; HTTP checks can still run.")
+    add("pass", "BROWSER_QA_ENABLED", f"browser_qa_enabled: {project.browser_qa_enabled}", "Enable in project config when Browser QA should be required by workflow.")
+    add("pass", "SCREENSHOT_ENABLED", f"screenshot_enabled: {project.screenshot_enabled}", "No action needed.")
+    add(
+        "pass" if project.route_walk_urls else "warn",
+        "ROUTE_WALK_URL_COUNT",
+        f"configured route_walk_urls: {len(project.route_walk_urls)}",
+        "Add route_walk_urls to project config for Browser QA coverage." if not project.route_walk_urls else "No action needed.",
+    )
 
     # Config
     cfg_path = project_config_path(project_id)
@@ -661,6 +698,14 @@ def run_doctor(project_id: str) -> int:
     for path in ["logs/autopilot-test.md", "logs/evidence/test/metadata.json", ".env", ".env.local", "node_modules/example", ".next/example", "__pycache__/example.pyc"]:
         ignored = check_ignore(path)
         add("pass" if ignored else "fail", f"IGNORED_{path.upper().replace('/', '_').replace('.', '_').replace('-', '_')}", f"{path} ignored: {'yes' if ignored else 'no'}", "Update .gitignore.")
+    screenshot_probe = f"screenshots/{project.project_id}/autopilot-test.png"
+    screenshot_ignored = check_ignore(screenshot_probe)
+    add(
+        "pass" if screenshot_ignored else "warn",
+        "SCREENSHOT_DIRECTORY_IGNORED",
+        f"{screenshot_probe} ignored: {'yes' if screenshot_ignored else 'no'}",
+        "Keep Browser QA screenshots out of commits unless intentionally curating evidence.",
+    )
 
     # package.json and configured scripts
     pkg_path = project.repo_path / "package.json"
