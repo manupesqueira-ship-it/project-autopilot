@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from config import ModelRouting, ProjectConfig
+from config import ModelRouting, ProjectConfig, RetryPolicy
 
 VALID_AUTONOMY_MODES = {"autonomous_guarded", "supervised", "dry_run"}
 VALID_INTENSITY_MODES = {"low_cost", "normal", "high_intensity"}
@@ -181,6 +181,7 @@ def validate_project_config(project: ProjectConfig, config_path: Path | None = N
     issues.append(_check_min_int(project, "run_frequency_hours", 1))
 
     issues.extend(validate_model_routing(project.model_routing))
+    issues.extend(validate_retry_policy(project.retry_policy))
 
     for url in project.route_walk_urls:
         issues.append(
@@ -215,7 +216,48 @@ def validate_project_config(project: ProjectConfig, config_path: Path | None = N
     for field_name in ["build_command", "typecheck_command", "lint_command", "test_command", "dev_server_command"]:
         issues.extend(_check_command_safety(field_name, getattr(project, field_name, "")))
 
+    issues.extend(validate_browser_qa_viewports(project.browser_qa_viewports))
+
     return issues
+
+
+def validate_browser_qa_viewports(viewports: dict[str, str]) -> list[ConfigIssue]:
+    """Validate browser_qa_viewports config entries (if any)."""
+    if not viewports:
+        return []
+    checks: list[ConfigIssue] = []
+    for name, spec in viewports.items():
+        parts = str(spec).lower().split("x")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            w, h = int(parts[0]), int(parts[1])
+            if w > 0 and h > 0:
+                checks.append(issue("pass", "BROWSER_QA_VIEWPORT_VALID", f"viewport {name}={spec}", "No action needed."))
+            else:
+                checks.append(issue("fail", "BROWSER_QA_VIEWPORT_INVALID", f"viewport {name}={spec} has zero dimension", "Use WIDTHxHEIGHT with positive values."))
+        else:
+            checks.append(issue("fail", "BROWSER_QA_VIEWPORT_INVALID", f"viewport {name}={spec} invalid format", "Use WIDTHxHEIGHT (e.g. 375x812)."))
+    return checks
+
+
+def validate_retry_policy(policy: RetryPolicy) -> list[ConfigIssue]:
+    checks: list[ConfigIssue] = []
+    if isinstance(policy.max_attempts, int) and policy.max_attempts >= 1:
+        checks.append(issue("pass", "RETRY_MAX_ATTEMPTS_VALID", f"retry_policy.max_attempts={policy.max_attempts}", "No action needed."))
+    else:
+        checks.append(issue("fail", "RETRY_MAX_ATTEMPTS_INVALID", "retry_policy.max_attempts must be an integer >= 1", "Fix in project YAML."))
+    if isinstance(policy.backoff_seconds, int) and policy.backoff_seconds >= 1:
+        checks.append(issue("pass", "RETRY_BACKOFF_SECONDS_VALID", f"retry_policy.backoff_seconds={policy.backoff_seconds}", "No action needed."))
+    else:
+        checks.append(issue("fail", "RETRY_BACKOFF_SECONDS_INVALID", "retry_policy.backoff_seconds must be an integer >= 1", "Fix in project YAML."))
+    if isinstance(policy.backoff_multiplier, int) and policy.backoff_multiplier >= 1:
+        checks.append(issue("pass", "RETRY_BACKOFF_MULTIPLIER_VALID", f"retry_policy.backoff_multiplier={policy.backoff_multiplier}", "No action needed."))
+    else:
+        checks.append(issue("fail", "RETRY_BACKOFF_MULTIPLIER_INVALID", "retry_policy.backoff_multiplier must be an integer >= 1", "Fix in project YAML."))
+    if isinstance(policy.stop_on_same_error_count, int) and policy.stop_on_same_error_count >= 1:
+        checks.append(issue("pass", "RETRY_STOP_ON_SAME_ERROR_VALID", f"retry_policy.stop_on_same_error_count={policy.stop_on_same_error_count}", "No action needed."))
+    else:
+        checks.append(issue("fail", "RETRY_STOP_ON_SAME_ERROR_INVALID", "retry_policy.stop_on_same_error_count must be an integer >= 1", "Fix in project YAML."))
+    return checks
 
 
 def worst_severity(issues: list[ConfigIssue]) -> str:

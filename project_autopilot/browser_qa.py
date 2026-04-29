@@ -3,6 +3,12 @@
 Browser QA first diagnoses which configured URL is reachable, including
 localhost/127.0.0.1 and common Next.js dev ports. It then runs the current QA
 pass against that runtime base without rewriting project config.
+
+P0 features:
+- Network request/response interception (4xx/5xx, failed loads).
+- Config-driven multiple viewport screenshots.
+- PASS / WARN / FAIL verdict with clear semantics.
+- Security: no auth headers, cookies, bearer tokens, JWTs, or bodies logged.
 """
 from __future__ import annotations
 
@@ -25,6 +31,25 @@ DEFAULT_VIEWPORTS: dict[str, dict[str, int]] = {
 }
 
 COMMON_NEXT_PORTS = [3000, 3001, 3002, 3003]
+
+
+def _parse_config_viewports(raw: dict[str, str]) -> dict[str, dict[str, int]]:
+    """Parse viewport config like ``{'mobile': '375x812'}`` into sized dicts."""
+    viewports: dict[str, dict[str, int]] = {}
+    for name, spec in raw.items():
+        parts = str(spec).lower().split("x")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            viewports[name] = {"width": int(parts[0]), "height": int(parts[1])}
+    return viewports
+
+
+def resolve_viewports(project: ProjectConfig) -> dict[str, dict[str, int]]:
+    """Return viewports from config, falling back to DEFAULT_VIEWPORTS."""
+    if project.browser_qa_viewports:
+        parsed = _parse_config_viewports(project.browser_qa_viewports)
+        if parsed:
+            return parsed
+    return dict(DEFAULT_VIEWPORTS)
 
 
 @dataclass
@@ -96,6 +121,7 @@ class BrowserQAReport:
     mode: str
     playwright_available: bool
     dev_server_reachable: bool
+    dev_server_url: str = ""
     viewport_coverage: dict[str, dict[str, int]] = field(default_factory=dict)
     routes: list[RouteResult] = field(default_factory=list)
     summary: str = ""
@@ -109,10 +135,28 @@ class BrowserQAReport:
         return all(route.passed for route in self.routes)
 
     @property
-    def outcome(self) -> str:
+    def verdict(self) -> str:
+        """PASS / WARN / FAIL / SKIPPED_DEV_SERVER_DOWN.
+
+        - PASS: all routes passed in Playwright mode.
+        - WARN: HTTP-only fallback was used (cannot validate client-side).
+        - FAIL: at least one route failed.
+        - SKIPPED_DEV_SERVER_DOWN: dev server not reachable.
+        """
         if not self.dev_server_reachable:
-            return "SKIPPED"
-        return "PASS" if self.passed else "FAIL"
+            return "SKIPPED_DEV_SERVER_DOWN"
+        if not self.routes:
+            return "SKIPPED_DEV_SERVER_DOWN"
+        if not all(route.passed for route in self.routes):
+            return "FAIL"
+        if self.mode == "http_only":
+            return "WARN"
+        return "PASS"
+
+    # Keep legacy property for backwards compat in state/events.
+    @property
+    def outcome(self) -> str:
+        return self.verdict
 
     @property
     def summary_counts(self) -> dict[str, int]:
@@ -123,11 +167,24 @@ class BrowserQAReport:
             "console_errors": sum(len(route.console_errors) for route in self.routes),
             "page_errors": sum(len(route.page_errors) for route in self.routes),
             "failed_network_requests": sum(
-                len(route.failed_network_requests) + len(route.failed_resource_loads)
-                for route in self.routes
+                len(route.failed_network_requests) for route in self.routes
+            ),
+            "failed_resource_loads": sum(
+                len(route.failed_resource_loads) for route in self.routes
             ),
             "screenshots_captured": sum(1 for route in self.routes if route.screenshot_path),
         }
+
+    @property
+    def total_issues(self) -> int:
+        counts = self.summary_counts
+        return (
+            counts["routes_failed"]
+            + counts["console_errors"]
+            + counts["page_errors"]
+            + counts["failed_network_requests"]
+            + counts["failed_resource_loads"]
+        )
 
 
 def _utc_stamp() -> str:
@@ -255,6 +312,7 @@ def _relative(project: ProjectConfig, path: Path) -> str:
 
 
 def _network_failure_from_response(response: Any, route_url: str, viewport: str) -> NetworkFailure:
+    """Capture failed response metadata. Never logs headers, cookies, tokens, or bodies."""
     request = response.request
     return NetworkFailure(
         url=response.url,
@@ -267,6 +325,7 @@ def _network_failure_from_response(response: Any, route_url: str, viewport: str)
 
 
 def _network_failure_from_request(request: Any, route_url: str, viewport: str) -> NetworkFailure:
+    """Capture failed request metadata. Never logs headers, cookies, tokens, or bodies."""
     failure = request.failure
     failure_text = ""
     if callable(failure):
@@ -293,6 +352,7 @@ def _run_with_playwright(
     project: ProjectConfig,
     run_id: str,
     route_pairs: list[tuple[str, str]],
+    viewports: dict[str, dict[str, int]],
 ) -> tuple[list[RouteResult], list[str]]:
     from playwright.sync_api import sync_playwright  # noqa: E402
 
@@ -303,7 +363,7 @@ def _run_with_playwright(
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            for viewport_name, viewport_size in DEFAULT_VIEWPORTS.items():
+            for viewport_name, viewport_size in viewports.items():
                 context = browser.new_context(viewport=viewport_size)
                 for configured_url, runtime_url in route_pairs:
                     result = RouteResult(
@@ -397,6 +457,7 @@ def run_browser_qa(project: ProjectConfig, run_id: str | None = None) -> Browser
     run_id = run_id or f"{project.project_id}_browser_qa_{_file_stamp()}"
     playwright_available = _check_playwright()
     mode = "playwright" if playwright_available else "http_only"
+    viewports = resolve_viewports(project)
     report = BrowserQAReport(
         project_id=project.project_id,
         run_id=run_id,
@@ -404,7 +465,7 @@ def run_browser_qa(project: ProjectConfig, run_id: str | None = None) -> Browser
         mode=mode,
         playwright_available=playwright_available,
         dev_server_reachable=False,
-        viewport_coverage=DEFAULT_VIEWPORTS if playwright_available else {},
+        viewport_coverage=viewports if playwright_available else {},
     )
 
     if not project.route_walk_urls:
@@ -414,30 +475,34 @@ def run_browser_qa(project: ProjectConfig, run_id: str | None = None) -> Browser
 
     diagnostics = diagnose_browser_qa(project)
     report.diagnostics = diagnostics
+    report.dev_server_url = diagnostics.selected_runtime_url or diagnostics.configured_url
 
     if not playwright_available:
         report.limitations.extend(
             [
                 "LIMITED_HTTP_ONLY_MODE: Playwright not installed.",
+                "HTTP-only fallback cannot validate client-side behavior.",
                 "No screenshots, console errors, page errors, or subresource network requests were captured.",
-                "Install with: pip install playwright",
-                "Then install Chromium with: python -m playwright install chromium",
+                "Install with: pip install playwright && python -m playwright install chromium",
             ]
         )
 
     report.dev_server_reachable = diagnostics.reachable
     if not diagnostics.reachable:
+        start_cmd = project.dev_server_command or "npm run dev"
         report.summary = (
-            f"Dev server not reachable at {diagnostics.configured_url}. "
-            f"Start the dev server first: {project.dev_server_command or 'npm run dev'}"
+            f"SKIPPED_DEV_SERVER_DOWN: Dev server not reachable. "
+            f"Start the dev server first: {start_cmd}"
         )
-        report.limitations.append("Browser QA could not reach any configured or recovered runtime URL.")
+        report.limitations.append(
+            f"Dev server not reachable at any tested URL. Start with: {start_cmd}"
+        )
         return report
 
     route_pairs = _runtime_routes(project.route_walk_urls, diagnostics.selected_base_url or _base_url(diagnostics.selected_runtime_url or ""))
 
     if playwright_available:
-        routes, limitations = _run_with_playwright(project, run_id, route_pairs)
+        routes, limitations = _run_with_playwright(project, run_id, route_pairs, viewports)
         report.limitations.extend(limitations)
         if routes:
             report.routes = routes
@@ -449,32 +514,38 @@ def run_browser_qa(project: ProjectConfig, run_id: str | None = None) -> Browser
             report.viewport_coverage = {}
             report.routes = _run_with_http(route_pairs)
             report.limitations.append("Fell back to HTTP-only checks after Playwright failed.")
+            report.limitations.append("HTTP-only fallback cannot validate client-side behavior.")
             report.summary = f"HTTP-only Browser QA checked {len(report.routes)} routes after Playwright fallback."
     else:
         report.routes = _run_with_http(route_pairs)
-        report.summary = f"LIMITED_HTTP_ONLY_MODE: Playwright not installed. HTTP-only Browser QA checked {len(report.routes)} routes."
+        report.summary = f"LIMITED_HTTP_ONLY_MODE: HTTP-only Browser QA checked {len(report.routes)} routes."
 
     return report
 
 
+# ---------------------------------------------------------------------------
+# Report rendering
+# ---------------------------------------------------------------------------
+
+
 def _network_rows(routes: list[RouteResult]) -> list[str]:
-    rows = ["| Route | Viewport | Type | Status | Resource | URL | Failure |", "|---|---|---|---:|---|---|---|"]
+    rows = ["| Route | Viewport | Type | Method | Status | Resource | URL | Failure |", "|---|---|---|---|---:|---|---|---|"]
     count = 0
     for route in routes:
         for failure in route.failed_network_requests:
             rows.append(
-                f"| {route.url} | {route.viewport} | response | {failure.status or ''} | "
+                f"| {route.url} | {route.viewport} | response | {failure.method} | {failure.status or ''} | "
                 f"{failure.resource_type or ''} | {failure.url} | {failure.failure_text or ''} |"
             )
             count += 1
         for failure in route.failed_resource_loads:
             rows.append(
-                f"| {route.url} | {route.viewport} | requestfailed | {failure.status or ''} | "
+                f"| {route.url} | {route.viewport} | requestfailed | {failure.method} | {failure.status or ''} | "
                 f"{failure.resource_type or ''} | {failure.url} | {failure.failure_text or ''} |"
             )
             count += 1
     if count == 0:
-        rows.append("| None |  |  |  |  |  |  |")
+        rows.append("| None |  |  |  |  |  |  |  |")
     return rows
 
 
@@ -533,41 +604,66 @@ def write_browser_qa_report(project: ProjectConfig, report: BrowserQAReport) -> 
     viewport_lines = [
         f"- {name}: {size['width']}x{size['height']}" for name, size in report.viewport_coverage.items()
     ] or ["- HTTP-only mode: no viewport rendering"]
-    limitations = report.limitations or ["No Browser QA limitations recorded."]
+
+    # Build limitations with clear pass/fail semantics.
+    limitations = list(report.limitations) or ["No Browser QA limitations recorded."]
+    limitations.append("Browser QA does not fill forms, click buttons, or test multi-step flows.")
+    limitations.append("Browser QA does not verify database writes or business logic.")
+    limitations.append("Browser QA does not perform visual regression testing.")
+    limitations.append("Browser QA does not run accessibility audits.")
+
+    # Verdict explanation.
+    verdict = report.verdict
+    verdict_explanation = {
+        "PASS": "All routes returned 2xx/3xx, zero console errors, zero page errors, zero failed network requests in Playwright mode.",
+        "WARN": "All routes returned 2xx/3xx in HTTP-only mode. HTTP-only fallback cannot validate client-side behavior (console errors, page errors, subresource failures, responsive layout).",
+        "FAIL": "One or more routes failed: non-2xx/3xx status, console errors, page errors, or failed network requests detected.",
+        "SKIPPED_DEV_SERVER_DOWN": f"Dev server not reachable. Start with: {project.dev_server_command or 'npm run dev'}",
+    }.get(verdict, "Unknown verdict.")
 
     content = "\n".join(
         [
             "# Browser QA Report",
             "",
-            f"Run id: {report.run_id}",
-            f"Timestamp: {report.timestamp}",
-            f"Project: {project.project_name} ({project.project_id})",
-            f"Mode: {report.mode}",
-            f"Playwright: {'available' if report.playwright_available else 'not installed/unavailable'}",
-            f"Dev server: {'reachable' if report.dev_server_reachable else 'NOT reachable'}",
-            f"Overall: {report.outcome}",
-            f"Configured URL: {report.diagnostics.configured_url or 'none'}",
-            f"Selected runtime URL: {report.diagnostics.selected_runtime_url or 'none'}",
-            f"Selected runtime base: {report.diagnostics.selected_base_url or 'none'}",
-            f"Ports tested: {', '.join(str(port) for port in report.diagnostics.ports_tested) or 'none'}",
+            f"**Project:** {project.project_name} ({project.project_id})",
+            f"**Run id:** {report.run_id}",
+            f"**Timestamp:** {report.timestamp}",
+            f"**Mode:** {report.mode}",
+            f"**Playwright:** {'available' if report.playwright_available else 'not installed/unavailable'}",
+            f"**Dev server:** {'reachable' if report.dev_server_reachable else 'NOT reachable'}",
+            f"**Dev server URL:** {report.dev_server_url or 'none'}",
+            f"**Verdict:** {verdict}",
+            "",
+            f"> {verdict_explanation}",
             "",
             "## Summary",
             "",
-            f"- routes_checked: {counts['routes_checked']}",
-            f"- routes_passed: {counts['routes_passed']}",
-            f"- routes_failed: {counts['routes_failed']}",
-            f"- console_errors: {counts['console_errors']}",
-            f"- page_errors: {counts['page_errors']}",
-            f"- failed_network_requests: {counts['failed_network_requests']}",
-            f"- screenshots_captured: {counts['screenshots_captured']}",
+            f"| Metric | Count |",
+            f"|---|---:|",
+            f"| Routes tested | {counts['routes_checked']} |",
+            f"| Routes passed | {counts['routes_passed']} |",
+            f"| Routes failed | {counts['routes_failed']} |",
+            f"| Console errors | {counts['console_errors']} |",
+            f"| Page errors | {counts['page_errors']} |",
+            f"| Failed network requests | {counts['failed_network_requests']} |",
+            f"| Failed resource loads | {counts['failed_resource_loads']} |",
+            f"| Screenshots captured | {counts['screenshots_captured']} |",
+            f"| Total issues | {report.total_issues} |",
             "",
             report.summary,
             "",
             "## Reachability Diagnostics",
             "",
+            f"Configured URL: {report.diagnostics.configured_url or 'none'}",
+            f"Selected runtime URL: {report.diagnostics.selected_runtime_url or 'none'}",
+            f"Selected runtime base: {report.diagnostics.selected_base_url or 'none'}",
+            f"Ports tested: {', '.join(str(port) for port in report.diagnostics.ports_tested) or 'none'}",
+            "",
             "\n".join(_diagnostic_rows(report.diagnostics)),
             "",
             "## Viewport Coverage",
+            "",
+            f"Viewports configured: {len(report.viewport_coverage)}",
             "",
             "\n".join(viewport_lines),
             "",
@@ -575,7 +671,7 @@ def write_browser_qa_report(project: ProjectConfig, report: BrowserQAReport) -> 
             "",
             "\n".join(route_rows),
             "",
-            "## Failed Requests",
+            "## Failed Network Requests",
             "",
             "\n".join(_network_rows(report.routes)),
             "",
@@ -590,6 +686,11 @@ def write_browser_qa_report(project: ProjectConfig, report: BrowserQAReport) -> 
             "## Limitations",
             "",
             "\n".join(f"- {item}" for item in limitations),
+            "",
+            "## Security",
+            "",
+            "- No auth headers, cookies, bearer tokens, JWTs, or request bodies are logged.",
+            "- Only URL, method, status code, and resource type are captured from network events.",
             "",
         ]
     )
@@ -637,9 +738,11 @@ def report_to_evidence(report: BrowserQAReport) -> dict[str, Any]:
         "browser_qa_passed": report.passed,
         "run_id": report.run_id,
         "mode": report.mode,
+        "verdict": report.verdict,
         "outcome": report.outcome,
         "playwright_available": report.playwright_available,
         "dev_server_reachable": report.dev_server_reachable,
+        "dev_server_url": report.dev_server_url,
         "viewport_coverage": report.viewport_coverage,
         "routes_checked": counts["routes_checked"],
         "routes_passed": counts["routes_passed"],
@@ -647,7 +750,9 @@ def report_to_evidence(report: BrowserQAReport) -> dict[str, Any]:
         "console_errors_total": counts["console_errors"],
         "page_errors_total": counts["page_errors"],
         "failed_network_requests_total": counts["failed_network_requests"],
+        "failed_resource_loads_total": counts["failed_resource_loads"],
         "screenshots_captured": counts["screenshots_captured"],
+        "total_issues": report.total_issues,
         "summary": report.summary,
         "limitations": report.limitations,
         "configured_url": report.diagnostics.configured_url,

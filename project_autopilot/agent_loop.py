@@ -30,9 +30,10 @@ from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_st
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 from risk_classifier import classify_task, format_risk_assessment
-from research_log import count_research_index, record_research_request
-from run_history import append_event, count_research_requests, new_run_id, record_run_finished, record_run_started, summarize_recent_runs
-from run_lock import LockActiveError, acquire_lock, release_lock
+from research_log import count_research_index, record_research_request, summarize_research
+from run_history import append_event, count_research_requests, new_run_id, recent_events, record_run_finished, record_run_started, summarize_recent_runs
+from run_metrics import latest_run_metrics
+from run_lock import LockActiveError, acquire_lock, lock_status, release_lock
 from validation_report import create_validation_report
 from backend_audit import run_backend_audit
 
@@ -405,6 +406,20 @@ def run_status(project_id: str) -> int:
         reason = _halt_reason(project)
         if reason:
             print(f"  Reason: {reason[:200]}")
+
+    # Run lock
+    ls = lock_status(project.project_id)
+    if ls["locked"]:
+        print()
+        print(f"*** RUN LOCK ACTIVE ***")
+        print(f"  PID: {ls['pid']}")
+        print(f"  Started: {ls['started_at']}")
+        print(f"  Lock file: {ls['lock_path']}")
+    elif ls["stale"]:
+        print()
+        print(f"Run lock: STALE (PID {ls['pid']}, started {ls['started_at']})")
+    else:
+        print(f"Run lock:           not held")
     print()
 
     # Budget
@@ -456,6 +471,9 @@ def run_status(project_id: str) -> int:
     last_bundle = state.get("last_evidence_bundle")
     if last_bundle:
         print(f"Evidence bundle:    {last_bundle}")
+    last_correction = state.get("last_correction_prompt")
+    if last_correction:
+        print(f"Correction prompt:  {last_correction}")
     last_browser_qa = state.get("last_browser_qa")
     if last_browser_qa:
         print(f"Browser QA report:  {last_browser_qa}")
@@ -501,6 +519,128 @@ def run_status(project_id: str) -> int:
     print("Risk summary:")
     print(format_risk_assessment(risk))
 
+    return 0
+
+
+def run_history_cmd(project_id: str) -> int:
+    """Print recent run history in a compact, morning-readable form."""
+    project = load_project(project_id)
+    events = recent_events(project, limit=10)
+    runs = summarize_recent_runs(project.project_id, limit=1)
+    latest = runs[0] if runs else None
+    blocker_summary = summarize_blockers(project)
+
+    print(f"Run history: {project.project_name} ({project.project_id})")
+    if not events:
+        print("No run history recorded yet.")
+        return 0
+
+    if latest:
+        print(f"Last run id:        {latest.get('run_id')}")
+        print(f"Last run duration:  {latest.get('duration_seconds')}s")
+        print(f"Commands executed:  {latest.get('commands_count', 0)} ({latest.get('failed_commands_count', 0)} failed)")
+        print(f"Latest QA verdict:  {latest.get('qa_verdict') or 'none'}")
+    print(f"Latest blocker:     {blocker_summary.latest_open_title or 'none'}")
+    print()
+    print("Last 10 events:")
+    for event in events:
+        meta = event.get("metadata", {})
+        detail = event.get("status") or meta.get("label") or meta.get("verdict") or event.get("file_path") or ""
+        print(f"- {event.get('timestamp_utc')} | {event.get('run_id')} | {event.get('event_type')} | {detail}")
+    return 0
+
+
+def run_metrics_cmd(project_id: str) -> int:
+    """Print latest run activity metrics."""
+    project = load_project(project_id)
+    metrics = latest_run_metrics(project)
+    if not metrics:
+        print(f"Metrics: {project.project_name} ({project.project_id})")
+        print("No run metrics recorded yet.")
+        return 0
+
+    print(f"Metrics: {project.project_name} ({project.project_id})")
+    print(f"Run id:             {metrics['run_id']}")
+    print(f"Outcome:            {metrics.get('outcome') or 'unknown'}")
+    print(f"Active duration:    {metrics['active_duration_seconds']}s")
+    print(f"Total duration:     {metrics['total_duration_seconds']}s")
+    print(f"Commands executed:  {metrics['commands_executed']} ({metrics['commands_failed']} failed)")
+    print(
+        "Files changed:      "
+        f"+{metrics['files_created']} created, "
+        f"{metrics['files_modified']} modified, "
+        f"{metrics['files_deleted']} deleted"
+    )
+    print(f"Line delta:         +{metrics['lines_added']}/-{metrics['lines_removed']}")
+    print(f"Risk level:         {metrics.get('risk_level') or 'unknown'}")
+    print(f"QA verdict:         {metrics.get('qa_verdict') or 'none'}")
+    print(f"Evidence bundle:    {metrics.get('evidence_bundle_path') or 'none'}")
+    print(f"Task state:         {metrics.get('task_state')}")
+    print(f"Open blockers:      {metrics.get('open_blockers')}")
+    print(f"Research requests:  {metrics.get('research_requests')}")
+    print(f"Cost estimate:      {metrics.get('cost_estimate_usd') if metrics.get('cost_estimate_usd') is not None else 'n/a'}")
+    return 0
+
+
+def run_research_status(project_id: str) -> int:
+    """Print research index summary."""
+    project = load_project(project_id)
+    summary = summarize_research(project)
+    print(f"Research status: {project.project_name} ({project.project_id})")
+    if summary["count"] == 0:
+        print("No research requests recorded yet.")
+        return 0
+    print(f"Requested research count:      {summary['count']}")
+    print(f"Deep research pending approval:{summary['deep_research_pending_approval']}")
+    print(f"Completed research count:      {summary['completed_count']}")
+    latest = summary.get("latest")
+    if latest:
+        print("Latest research request:")
+        print(f"  id:        {latest.get('research_id')}")
+        print(f"  topic:     {latest.get('topic')}")
+        print(f"  mode:      {latest.get('mode')}")
+        print(f"  status:    {latest.get('status')}")
+        print(f"  estimate:  {latest.get('estimated_minutes')} min")
+        print(f"  approval:  {'required' if latest.get('requires_human_approval') else 'not required'}")
+    return 0
+
+
+def run_request_research(project_id: str, topic: str, mode: str) -> int:
+    """Record a research request. Does not perform research."""
+    project = load_project(project_id)
+    run_id = new_run_id(project.project_id, "research_request")
+    record_run_started(project, run_id, "research_request", task_title=topic)
+    record = record_research_request(
+        project,
+        run_id,
+        topic=topic,
+        reason="Manual CLI research request.",
+        mode=mode,
+        requested_by="CLI",
+        linked_task=topic,
+    )
+    if mode == "deep_research":
+        send_alert(
+            project.project_id,
+            "Deep research approval required",
+            topic,
+            enabled=project.telegram_enabled,
+        )
+    record_run_finished(
+        project,
+        run_id,
+        "research_requested",
+        {"outcome": "research_requested", "research_id": record["research_id"]},
+    )
+    print("Research request recorded.")
+    print(f"Research id: {record['research_id']}")
+    print(f"Topic: {record['topic']}")
+    print(f"Mode: {record['mode']}")
+    print(f"Estimated minutes: {record['estimated_minutes']}")
+    print(f"Human approval required: {'yes' if record['requires_human_approval'] else 'no'}")
+    if mode == "deep_research":
+        print("Deep research requires explicit human approval before any research is performed.")
+    print("No research was run automatically.")
     return 0
 
 
@@ -557,15 +697,19 @@ def run_browser_qa_cmd(project_id: str) -> int:
     state = load_state(project)
     state["last_browser_qa"] = str(report_path.relative_to(project.repo_path))
     state["browser_qa_passed"] = report.passed
+    state["browser_qa_verdict"] = report.verdict
     state["browser_qa_mode"] = report.mode
     state["browser_qa_summary"] = report.summary_counts
+    state["browser_qa_total_issues"] = report.total_issues
     state["browser_qa_selected_runtime_url"] = report.diagnostics.selected_runtime_url
     save_state(project, state)
 
     event_details = {
         "mode": report.mode,
         "passed": report.passed,
+        "verdict": report.verdict,
         "outcome": report.outcome,
+        "total_issues": report.total_issues,
         "report": str(report_path.relative_to(project.repo_path)),
         "configured_url": report.diagnostics.configured_url,
         "selected_runtime_url": report.diagnostics.selected_runtime_url,
@@ -573,30 +717,38 @@ def run_browser_qa_cmd(project_id: str) -> int:
         **report.summary_counts,
     }
     append_event(project, run_id, "browser_qa_finished", event_details)
-    if not report.passed:
+    if report.verdict in ("FAIL", "SKIPPED_DEV_SERVER_DOWN"):
         append_event(project, run_id, "browser_qa_failed", event_details)
-    record_run_finished(project, run_id, "browser_qa_passed" if report.passed else "browser_qa_failed", event_details)
+    record_run_finished(project, run_id, f"browser_qa_{report.verdict.lower()}", event_details)
 
-    print(f"Browser QA: {report.outcome}")
+    print(f"Browser QA verdict: {report.verdict}")
     print(f"Run id: {run_id}")
     print(f"Mode: {report.mode}")
+    print(f"Viewports: {', '.join(report.viewport_coverage.keys()) or 'http_only'}")
     print(f"Configured URL: {report.diagnostics.configured_url or 'none'}")
     print(f"Selected runtime URL: {report.diagnostics.selected_runtime_url or 'none'}")
     print(f"Ports tested: {', '.join(str(port) for port in report.diagnostics.ports_tested) or 'none'}")
+    counts = report.summary_counts
+    print(f"Routes: {counts['routes_checked']} checked, {counts['routes_passed']} passed, {counts['routes_failed']} failed")
+    print(f"Issues: {report.total_issues} total ({counts['console_errors']} console, {counts['page_errors']} page, {counts['failed_network_requests']} net requests, {counts['failed_resource_loads']} net loads)")
     print(report.summary)
     print(f"Report: {report_path}")
 
-    if not report.passed:
+    if report.verdict == "SKIPPED_DEV_SERVER_DOWN":
+        print(f"\nStart the dev server first: {project.dev_server_command or 'npm run dev'}")
+    elif report.verdict == "WARN":
+        print("\nHTTP-only fallback cannot validate client-side behavior. Install Playwright for full QA.")
+    elif report.verdict == "FAIL":
         failed = [r for r in report.routes if not r.passed]
         for r in failed:
             print(
                 f"  FAIL: {r.url} [{r.viewport}] "
-                f"(HTTP {r.status}, {len(r.console_errors)} console errors, "
-                f"{len(r.page_errors)} page errors, "
-                f"{len(r.failed_network_requests) + len(r.failed_resource_loads)} failed requests)"
+                f"(HTTP {r.status}, {len(r.console_errors)} console, "
+                f"{len(r.page_errors)} page, "
+                f"{len(r.failed_network_requests) + len(r.failed_resource_loads)} net failures)"
             )
 
-    return 0 if report.passed else 1
+    return 0 if report.verdict in ("PASS", "WARN") else 1
 
 
 def run_browser_qa_diagnose(project_id: str) -> int:
@@ -855,8 +1007,18 @@ def run_doctor(project_id: str) -> int:
     except ImportError:
         pw_ok = False
     add("pass" if pw_ok else "warn", "PLAYWRIGHT_DETECTED", f"Playwright detected: {'yes' if pw_ok else 'no'}", "Install later for richer browser QA; HTTP checks can still run.")
+    if not pw_ok:
+        add("warn", "PLAYWRIGHT_LIMITATION", "Without Playwright: no screenshots, no console/page errors, no network interception, no responsive testing.", "pip install playwright && python -m playwright install chromium")
     add("pass", "BROWSER_QA_ENABLED", f"browser_qa_enabled: {project.browser_qa_enabled}", "Enable in project config when Browser QA should be required by workflow.")
     add("pass", "SCREENSHOT_ENABLED", f"screenshot_enabled: {project.screenshot_enabled}", "No action needed.")
+    from browser_qa import resolve_viewports
+    viewports = resolve_viewports(project)
+    add(
+        "pass",
+        "BROWSER_QA_VIEWPORTS",
+        f"configured viewports: {len(viewports)} ({', '.join(viewports.keys())})",
+        "Add browser_qa_viewports to project config to customize. Defaults: mobile, tablet, desktop.",
+    )
     add(
         "pass" if project.route_walk_urls else "warn",
         "ROUTE_WALK_URL_COUNT",
@@ -1011,6 +1173,33 @@ def _print_scheduler_readiness(project: ProjectConfig) -> None:
     """Print scheduler readiness checklist. Does not implement a scheduler."""
     checks: list[tuple[str, bool]] = []
 
+    # git clean
+    try:
+        git_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=project.repo_path,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
+        )
+        git_clean = not any(line.strip() for line in git_result.stdout.splitlines())
+    except Exception:
+        git_clean = False
+    checks.append(("git clean", git_clean))
+
+    # config valid
+    from config_validator import validate_project_config as _vp, worst_severity as _ws
+    cfg_issues = _vp(project, project_config_path(project.project_id))
+    checks.append(("config valid", _ws(cfg_issues) != "fail"))
+
+    # logs ignored
+    try:
+        log_ignored = subprocess.run(
+            ["git", "check-ignore", "-q", "logs/autopilot-test.md"],
+            cwd=project.repo_path, capture_output=True, text=True, timeout=10,
+        ).returncode == 0
+    except Exception:
+        log_ignored = False
+    checks.append(("logs ignored", log_ignored))
+
     # run_lock available
     try:
         from run_lock import acquire_lock as _al  # noqa: F401
@@ -1018,8 +1207,32 @@ def _print_scheduler_readiness(project: ProjectConfig) -> None:
     except ImportError:
         checks.append(("run_lock available", False))
 
-    # HALT_AUTOPILOT supported
-    checks.append(("HALT_AUTOPILOT supported", True))
+    # HALT_AUTOPILOT absent
+    checks.append(("HALT_AUTOPILOT absent", not _halt_active(project)))
+
+    # evidence bundle available
+    bundle_dir = project.repo_path / "logs" / "evidence" / project.project_id
+    checks.append(("evidence bundle available", bundle_dir.exists()))
+
+    # risk classifier available
+    try:
+        from risk_classifier import classify_task as _ct  # noqa: F401
+        checks.append(("risk classifier available", True))
+    except ImportError:
+        checks.append(("risk classifier available", False))
+
+    # Telegram configured
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_BOT_TOKEN")
+    telegram_chat = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_CHAT_ID")
+    checks.append(("Telegram configured", bool(telegram_token and telegram_chat)))
+
+    # budget limits valid
+    budgets_ok = (
+        project.daily_budget_usd > 0
+        and project.per_cycle_budget_usd > 0
+        and project.monthly_budget_usd > 0
+    )
+    checks.append(("budget limits valid", budgets_ok))
 
     # max_cycles_per_day configured
     checks.append(("max_cycles_per_day configured", project.max_cycles_per_day > 0))
@@ -1027,23 +1240,23 @@ def _print_scheduler_readiness(project: ProjectConfig) -> None:
     # run_frequency_hours configured
     checks.append(("run_frequency_hours configured", project.run_frequency_hours > 0))
 
-    # automatic builder execution disabled
+    # automatic builder execution disabled or explicitly safe
     checks.append(("automatic builder execution disabled", not project.allow_automatic_builder_execution))
 
-    # paid APIs disabled by default
-    checks.append(("paid APIs disabled by default", project.paid_api_mode == "disabled_by_default"))
+    # paid APIs disabled or budgeted
+    checks.append(("paid APIs disabled or budgeted", project.paid_api_mode in ("disabled_by_default", "enabled_with_budget")))
 
     # deploy automation disabled (always true — no deploy automation exists)
     checks.append(("deploy automation disabled", True))
 
-    # Telegram configured
-    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_BOT_TOKEN")
-    telegram_chat = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_CHAT_ID")
-    checks.append(("Telegram configured", bool(telegram_token and telegram_chat)))
+    # retry policy configured
+    rp = project.retry_policy
+    retry_ok = rp.max_attempts >= 1 and rp.backoff_seconds >= 1 and rp.backoff_multiplier >= 1 and rp.stop_on_same_error_count >= 1
+    checks.append(("retry policy configured", retry_ok))
 
-    # evidence bundle available
-    bundle_dir = project.repo_path / "logs" / "evidence" / project.project_id
-    checks.append(("evidence bundle available", bundle_dir.exists()))
+    # no open critical blockers
+    blocker_info = summarize_blockers(project)
+    checks.append(("no open critical blockers", blocker_info.open_count == 0))
 
     # post-builder intake available
     try:
@@ -1056,9 +1269,14 @@ def _print_scheduler_readiness(project: ProjectConfig) -> None:
     total = len(checks)
     failed = [name for name, ok in checks if not ok]
 
+    hard_requirements = {
+        "run_lock available", "HALT_AUTOPILOT absent", "config valid",
+        "max_cycles_per_day configured", "run_frequency_hours configured",
+        "budget limits valid",
+    }
     if passed == total:
         result = "READY"
-    elif failed and any(f in ("run_lock available", "HALT_AUTOPILOT supported", "max_cycles_per_day configured", "run_frequency_hours configured") for f in failed):
+    elif any(f in hard_requirements for f in failed):
         result = "NOT_READY"
     else:
         result = "WARN"
@@ -1089,6 +1307,8 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --local-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --cycle\n"
             "  python -B project_autopilot/agent_loop.py --project mira --status\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --history\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --metrics\n"
             "  python -B project_autopilot/agent_loop.py --project mira --e2e-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --handoff-claude\n"
         ),
@@ -1100,6 +1320,10 @@ def main() -> int:
     group.add_argument("--cycle", action="store_true", help="Run one bounded planning/QA cycle. Falls back to local plan on OpenAI failure.")
     group.add_argument("--local-plan", action="store_true", help="Force local fallback planner. No OpenAI call.")
     group.add_argument("--status", action="store_true", help="Print project status summary.")
+    group.add_argument("--history", action="store_true", help="Print recent run history summary.")
+    group.add_argument("--metrics", action="store_true", help="Print latest run activity metrics.")
+    group.add_argument("--research-status", action="store_true", help="Print research request summary.")
+    group.add_argument("--request-research", metavar="TOPIC", help="Record a research request. Does not run research.")
     group.add_argument("--doctor", action="store_true", help="Validate environment and project health.")
     group.add_argument("--handoff-claude", action="store_true", help="Generate prompt then hand off to Claude Code (manual mode).")
     group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
@@ -1111,6 +1335,7 @@ def main() -> int:
     group.add_argument("--new-validation-report", action="store_true", help="Create a blank product validation report draft.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
     group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
+    parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
 
     args = parser.parse_args()
 
@@ -1118,6 +1343,14 @@ def main() -> int:
         return run_doctor(args.project)
     if args.status:
         return run_status(args.project)
+    if args.history:
+        return run_history_cmd(args.project)
+    if args.metrics:
+        return run_metrics_cmd(args.project)
+    if args.research_status:
+        return run_research_status(args.project)
+    if args.request_research:
+        return run_request_research(args.project, args.request_research, args.research_mode)
     if args.local_plan:
         return run_local_plan(args.project)
     if args.handoff_claude:

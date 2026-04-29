@@ -70,7 +70,7 @@ def transition_task_state(project: ProjectConfig, to_state: str, reason: str, ru
         append_event(
             project,
             run_id,
-            "state_transition",
+            "task_state_changed",
             {"from_state": from_state, "to_state": to_state, "reason": reason},
         )
     return state

@@ -15,6 +15,11 @@ browser_qa_enabled: false
 screenshot_enabled: true
 screenshots_dir: screenshots/mira
 
+browser_qa_viewports:
+  mobile: 375x812
+  tablet: 768x1024
+  desktop: 1280x800
+
 route_walk_urls:
   - http://localhost:3000/es
   - http://localhost:3000/en
@@ -44,6 +49,12 @@ allow_automatic_builder_execution: false
 builder_handoff_mode: manual
 claude_command: claude
 latest_prompt_path: logs/mira_latest_builder_prompt.md
+
+retry_policy:
+  max_attempts: 3
+  backoff_seconds: 60
+  backoff_multiplier: 2
+  stop_on_same_error_count: 3
 
 model_routing:
   cheap_model: gpt-5.4-mini

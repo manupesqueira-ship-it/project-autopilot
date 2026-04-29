@@ -10,6 +10,14 @@ PROJECTS_DIR = AUTOPILOT_ROOT / "config" / "projects"
 
 
 @dataclass
+class RetryPolicy:
+    max_attempts: int = 3
+    backoff_seconds: int = 60
+    backoff_multiplier: int = 2
+    stop_on_same_error_count: int = 3
+
+
+@dataclass
 class ModelRouting:
     cheap_model: str = "gpt-5.4-mini"
     standard_model: str = "gpt-5.4"
@@ -52,7 +60,9 @@ class ProjectConfig:
     latest_prompt_path: str = ""
     browser_qa_enabled: bool = False
     screenshot_enabled: bool = True
+    browser_qa_viewports: dict[str, str] = field(default_factory=dict)
     model_routing: ModelRouting = field(default_factory=ModelRouting)
+    retry_policy: RetryPolicy = field(default_factory=RetryPolicy)
     logs_dir: str = "logs"
     screenshots_dir: str = "screenshots"
 
@@ -125,7 +135,7 @@ def parse_simple_yaml(path: Path) -> dict[str, Any]:
             current_key = None
             current_kind = None
 
-        if value == "" and key == "model_routing":
+        if value == "" and key in {"model_routing", "browser_qa_viewports", "retry_policy"}:
             data[key] = {}
             current_kind = "dict"
 
@@ -151,9 +161,14 @@ def load_project_config(project_id: str) -> ProjectConfig:
 
     raw = parse_simple_yaml(path)
     routing = ModelRouting(**raw.get("model_routing", {}))
-    raw = {key: value for key, value in raw.items() if key != "model_routing"}
+    viewports = raw.get("browser_qa_viewports", {})
+    retry = RetryPolicy(**raw.get("retry_policy", {}))
+    raw = {key: value for key, value in raw.items() if key not in {"model_routing", "browser_qa_viewports", "retry_policy"}}
     raw["repo_path"] = _resolve_path(raw["repo_path"])
     raw["project_control_path"] = _resolve_path(raw["project_control_path"], raw["repo_path"])
     raw["model_routing"] = routing
+    raw["retry_policy"] = retry
+    if viewports:
+        raw["browser_qa_viewports"] = viewports
     return ProjectConfig(**raw)
 

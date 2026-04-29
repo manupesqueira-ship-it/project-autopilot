@@ -237,12 +237,24 @@ def collect_evidence(project: ProjectConfig, dry_run: bool = False, run_id: str 
     if project.route_walk_urls:
         evidence["route_walk_urls"] = project.route_walk_urls
 
-    # Include latest browser QA report if available
+    # Include latest browser QA report path and evidence when available.
     browser_qa_path = project.repo_path / project.logs_dir / f"{project.project_id}_browser_qa_latest.md"
     if browser_qa_path.exists():
         evidence["browser_qa_report"] = str(browser_qa_path.relative_to(project.repo_path))
     else:
         evidence["browser_qa_report"] = None
+
+    # Load browser QA state from state.json if available.
+    try:
+        state_path = project.repo_path / project.logs_dir / "state.json"
+        if state_path.exists():
+            state_data = json.loads(state_path.read_text(encoding="utf-8"))
+            if "browser_qa_summary" in state_data:
+                evidence["browser_qa_verdict"] = state_data.get("browser_qa_verdict", "PASS" if state_data.get("browser_qa_passed") else "FAIL")
+                evidence["browser_qa_mode"] = state_data.get("browser_qa_mode", "unknown")
+                evidence["browser_qa_summary"] = state_data.get("browser_qa_summary", {})
+    except Exception:
+        pass
 
     backend_audit_path = project.repo_path / project.logs_dir / f"{project.project_id}_backend_audit_latest.md"
     if backend_audit_path.exists():

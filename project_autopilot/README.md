@@ -94,6 +94,36 @@ Prints project config, budget state, cycle count, task state, run history, lates
 
 Status also prints a concise recent-run table and a risk summary for the active task queue.
 
+### History
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --history
+```
+
+Prints the latest run id, duration, command count, QA verdict, latest blocker, and the last 10 recorded events. This is the quickest answer to "what happened?"
+
+### Metrics
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --metrics
+```
+
+Prints latest-run activity metrics: active command duration, total run duration, commands executed, command failures, files created/modified/deleted, line delta, risk level, QA verdict, evidence bundle path, task state, open blocker count, research request count, and estimated model cost when available.
+
+### Research Status
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --research-status
+```
+
+Prints the research index summary. It is safe when no research exists yet.
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --request-research "Evaluate browser QA flow scripts" --research-mode quick_check
+```
+
+Records a research request without performing research. Modes are `quick_check` (10-15 min), `standard_research` (30-45 min), and `deep_research` (90+ min). Deep research always requires explicit human approval and may send a Telegram alert when enabled.
+
 ### Telegram Test
 
 ```bash
@@ -131,46 +161,59 @@ Attempts to invoke the Claude CLI automatically. **Blocked by default.** Require
 python -B project_autopilot/agent_loop.py --project mira --browser-qa
 ```
 
-Walks all configured `route_walk_urls`, checks HTTP status, and records route evidence. Requires the dev server to be running.
+Walks all configured `route_walk_urls`, checks HTTP status, captures network events, and records route evidence across multiple viewports. Requires the dev server to be running.
+
+**Why Playwright is optional but recommended:** Browser QA works without Playwright using HTTP-only fallback, but Playwright mode provides significantly richer evidence: screenshots, console error capture, page error capture, network request/response interception, and responsive viewport testing. HTTP-only mode can only check whether routes return valid HTTP status codes.
 
 Browser QA has two modes:
 
 | Mode | Behavior |
 |---|---|
-| `playwright` | Captures mobile, tablet, and desktop evidence; records console errors, page errors, failed 4xx/5xx responses, failed resource loads, route duration, and screenshots. |
-| `http_only` | Checks configured route URLs with HTTP GET only. No screenshots, console/page errors, or subresource network interception. |
+| `playwright` | Captures evidence at each configured viewport; records console errors, page errors, failed 4xx/5xx responses, failed resource loads (with URL, method, status, resource type), route duration, and screenshots. |
+| `http_only` | Checks configured route URLs with HTTP GET only. No screenshots, console/page errors, or subresource network interception. Verdict is WARN, not PASS. |
 
-When Playwright is missing, Browser QA prints:
-
-```text
-LIMITED_HTTP_ONLY_MODE: Playwright not installed.
-```
-
-Install Playwright later with:
+Install Playwright with:
 
 ```bash
 pip install playwright
 python -m playwright install chromium
 ```
 
-Default Playwright viewports:
+#### Viewports
 
-| Viewport | Size |
+Viewports are configurable in the project YAML:
+
+```yaml
+browser_qa_viewports:
+  mobile: 375x812
+  tablet: 768x1024
+  desktop: 1280x800
+```
+
+If `browser_qa_viewports` is not configured, the defaults are used (mobile 375x812, tablet 768x1024, desktop 1280x800). Each route is visited once per viewport in Playwright mode. In HTTP-only mode, viewports are not used.
+
+#### Network interception
+
+In Playwright mode, Browser QA intercepts all network activity per route/viewport:
+
+- **Failed responses:** Any HTTP 4xx/5xx response from the page or its subresources (API calls, fetch/XHR, scripts, stylesheets, images).
+- **Failed requests:** Any request that fails entirely (DNS failure, connection refused, timeout).
+- **Captured fields:** URL, HTTP method, status code, resource type, route being tested, viewport name.
+- **Not captured:** Auth headers, cookies, bearer tokens, JWTs, request bodies. Only safe metadata is logged.
+
+#### Verdicts
+
+| Verdict | Meaning |
 |---|---|
-| `mobile` | `375x812` |
-| `tablet` | `768x1024` |
-| `desktop` | `1280x800` |
+| `PASS` | All routes returned 2xx/3xx, zero console errors, zero page errors, zero failed network requests, in Playwright mode. |
+| `WARN` | All routes returned 2xx/3xx in HTTP-only mode. HTTP-only fallback cannot validate client-side behavior. |
+| `FAIL` | One or more routes failed: non-2xx/3xx status, console errors, page errors, or failed network requests. |
+| `SKIPPED_DEV_SERVER_DOWN` | Dev server not reachable. Prints the exact start command. |
 
 **Screenshots** are saved to:
 
 ```text
 screenshots/<project_id>/<run_id>/<viewport>/<safe_route_name>.png
-```
-
-Example:
-
-```text
-screenshots/mira/mira_browser_qa_20260429_010000/mobile/localhost3000_es.png
 ```
 
 **Reports** are written to:
@@ -180,17 +223,19 @@ logs/<project_id>_browser_qa_latest.md
 logs/<project_id>_browser_qa_<timestamp>.md
 ```
 
-**Pass/fail criteria:**
-- Every route must return HTTP 200-399.
-- Zero console errors.
-- Zero page errors.
-- Zero failed 4xx/5xx network responses.
-- Zero failed resource loads.
-- Screenshots are captured in Playwright mode when `screenshot_enabled` is true.
+**Dev server must be running.** If the server is not reachable, Browser QA exits cleanly with `SKIPPED_DEV_SERVER_DOWN` and prints the exact start command (e.g. `npm run dev`).
 
-**Dev server must be running.** If the server is not reachable, browser QA prints a clear message and exits.
+#### What Browser QA still cannot prove
 
-Browser QA is evidence, not a complete replacement for flow tests. It does not yet fill forms, click through multi-step flows, validate database writes, or prove business logic correctness. Use it alongside manual QA, post-builder intake, and project-specific E2E checks.
+Browser QA is evidence, not a complete test suite. It does **not**:
+
+- Fill forms, click buttons, or test multi-step flows.
+- Validate database writes or business logic correctness.
+- Perform visual regression testing (screenshot comparison).
+- Run accessibility audits.
+- Prove that interactive features work end-to-end.
+
+Use Browser QA alongside manual QA, post-builder intake, and project-specific E2E checks.
 
 ### Browser QA Diagnostics
 
@@ -420,8 +465,9 @@ Project Autopilot includes a small Reliability Core before scheduler or automati
 - `evidence_bundle.py`: writes one structured evidence bundle per run.
 - `task_state.py`: tracks simple task states in `logs/<project_id>_task_state.json`.
 - `risk_classifier.py`: deterministic local risk classification with no OpenAI call.
-- `run_history.py`: records run, command, evidence, QA, blocker, research, and error events in `logs/run_history.jsonl`.
-- `research_log.py`: records requested research in `logs/research_index.jsonl` without performing the research automatically.
+- `run_history.py`: records run, command, evidence, QA, blocker, research, and error events in `logs/run_history/<project_id>.jsonl`.
+- `run_metrics.py`: summarizes recent run activity from run history, evidence bundles, command events, git metrics, blockers, research, and task state.
+- `research_log.py`: records requested research in `logs/research/<project_id>_research_index.jsonl` without performing the research automatically.
 
 Task states:
 
@@ -461,8 +507,8 @@ Project Autopilot keeps local observability files under `logs/`:
 
 | File | Purpose |
 |---|---|
-| `logs/run_history.jsonl` | Append-only event stream for runs and commands. |
-| `logs/research_index.jsonl` | Append-only index of proposed research requests. |
+| `logs/run_history/<project_id>.jsonl` | Append-only event stream for runs and commands. |
+| `logs/research/<project_id>_research_index.jsonl` | Append-only index of proposed research requests. |
 | `logs/evidence/<project_id>/<timestamp>/metadata.json` | Per-run evidence metadata and metrics. |
 
 Tracked run events include:
@@ -480,24 +526,34 @@ Tracked run events include:
 - `correction_prompt_created`
 - `blocker_recorded`
 - `research_requested`
-- `state_transition`
+- `research_completed`
+- `task_state_changed`
 - `error`
 
-Run summaries include duration, command count, failed command count, created/modified/deleted file counts, added/removed line counts, evidence bundle path, QA verdict, risk level, estimated model cost, and paid API call count.
+Run summaries include total duration, active command duration, command count, failed command count, created/modified/deleted file counts, added/removed line counts, evidence bundle path, QA verdict, risk level, blockers opened, research requests, estimated model cost, and paid API call count.
+
+Use:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --history
+python -B project_autopilot/agent_loop.py --project mira --metrics
+python -B project_autopilot/agent_loop.py --project mira --research-status
+```
+
+These commands are intentionally boring and local. They help evaluate whether the agent is actually working by showing movement: commands ran, files changed, evidence was produced, QA gave a verdict, research was requested, or progress blocked somewhere specific.
 
 Project Autopilot does **not** track secrets, `.env` contents, `.env.local` contents, raw credential values, browser cookies, or external billing truth. Model cost is a conservative local estimate for routing and budgeting only.
 
-### Why Automatic Execution Is Disabled by Default
+### What Is Not Enabled Yet
 
-Project Autopilot generates builder prompts but does not execute them automatically. This keeps humans in control of what Claude Code does. Automatic execution can be enabled per-project by setting `allow_automatic_builder_execution: true` in the project YAML, but this is not recommended until the manual workflow is proven reliable and guardrails are mature.
+The following features exist in config or code but are **not active**:
 
-## Why Scheduler Is Not Enabled Yet
-
-The scheduler should wait until manual cycles are boringly reliable. Before scheduler work, Project Autopilot needs repeated clean runs of doctor, local-plan, evidence bundle creation, browser QA, and post-builder validation without human cleanup.
-
-## Why Automatic Claude Execution Is Not Enabled Yet
-
-Automatic Claude execution needs stronger execution isolation, retry rules, safe task eligibility, commit policy, and rollback/abort behavior. Until then, Claude handoff stays manual.
+- **Scheduler** — `retry_policy` is validated, `run_lock` works, systemd templates exist, but no scheduler runs autonomously. See "Scheduler Readiness" below.
+- **Automatic Claude execution** — `allow_automatic_builder_execution` defaults to `false`. Needs execution isolation, retry rules, safe task eligibility, commit policy, and rollback behavior.
+- **Auto-deploy** — No deploy commands are allowed in project config. Deployment is always manual.
+- **Paid image/video generation** — `allow_paid_image_generation` and `allow_paid_video_generation` default to `false`.
+- **Multi-agent parallel writes** — `max_parallel_agents` is validated but not consumed by a scheduler.
+- **Dashboard** — No dashboard exists. Use `--status`, `--history`, `--metrics` for observability.
 
 ## How to Create a New Project
 
@@ -600,22 +656,57 @@ To halt: create the file with a reason. To resume: delete it.
 
 `--doctor` now reports `SCHEDULER_READINESS` with a checklist:
 
+- git clean
+- config valid
+- logs ignored
 - run_lock available
-- HALT_AUTOPILOT supported
+- HALT_AUTOPILOT absent
+- evidence bundle available
+- risk classifier available
+- Telegram configured
+- budget limits valid
 - max_cycles_per_day configured
 - run_frequency_hours configured
 - automatic builder execution disabled
-- paid APIs disabled by default
+- paid APIs disabled or budgeted
 - deploy automation disabled
-- Telegram configured
-- evidence bundle available
+- retry policy configured
+- no open critical blockers
 - post-builder intake available
 
 Result: `READY`, `NOT_READY`, or `WARN`. No actual scheduler is implemented yet.
 
+Hard requirements (cause `NOT_READY`): run_lock available, HALT_AUTOPILOT absent, config valid, max_cycles_per_day configured, run_frequency_hours configured, budget limits valid.
+
+### Retry / Backoff Policy
+
+The project config supports a `retry_policy` block for future scheduler use:
+
+```yaml
+retry_policy:
+  max_attempts: 3
+  backoff_seconds: 60
+  backoff_multiplier: 2
+  stop_on_same_error_count: 3
+```
+
+- `max_attempts`: maximum retries per failed cycle (>= 1).
+- `backoff_seconds`: initial delay between retries (>= 1).
+- `backoff_multiplier`: exponential multiplier per retry (>= 1).
+- `stop_on_same_error_count`: stop retrying if the same error recurs this many times (>= 1).
+
+No scheduler consumes this config yet. It is validated by `--doctor` and included in the scheduler readiness check.
+
 ### Why Scheduler Is Not Enabled Yet
 
-The scheduler should wait until manual cycles are boringly reliable. Before scheduler work, Project Autopilot needs repeated clean runs without human cleanup.
+The scheduler should wait until manual cycles are boringly reliable. Before scheduler work, Project Autopilot needs:
+
+- Repeated clean `--cycle` runs without human cleanup.
+- All scheduler readiness checks passing (`READY`).
+- HALT_AUTOPILOT tested and trusted.
+- Run lock proven under real concurrent-attempt scenarios.
+- Retry/backoff policy reviewed for production use.
+- Telegram alerts confirmed working for error and success paths.
 
 ### Systemd Templates
 

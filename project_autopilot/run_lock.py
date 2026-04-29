@@ -94,3 +94,19 @@ def is_locked(project_id: str, max_age_seconds: int = DEFAULT_MAX_AGE_SECONDS) -
     if _is_stale(existing, max_age_seconds):
         return False
     return True
+
+
+def lock_status(project_id: str, max_age_seconds: int = DEFAULT_MAX_AGE_SECONDS) -> dict:
+    """Return lock status dict: locked, stale, pid, started_at, lock_path."""
+    path = _lock_path(project_id)
+    existing = _read_lock(path)
+    if existing is None:
+        return {"locked": False, "stale": False, "pid": None, "started_at": None, "lock_path": str(path)}
+    stale = _is_stale(existing, max_age_seconds)
+    return {
+        "locked": not stale,
+        "stale": stale,
+        "pid": existing.get("pid"),
+        "started_at": existing.get("started_at"),
+        "lock_path": str(path),
+    }
