@@ -1,85 +1,67 @@
 # MIRA Mock Generation Plan
 
-## Status: EXISTING MOCK MODE AVAILABLE
+## Status: IMPLEMENTED
 
-## Current State
+## Implementation (2026-04-29)
 
-Both generation providers already have built-in mock modes that activate when API keys are absent:
+QA mock mode is now fully implemented with the `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true` environment flag.
 
-### `lib/providers/openai-image.ts`
-- If `OPENAI_API_KEY` is not set, returns a mock placeholder image URL after a 1.5s delay.
-- No paid API call is made.
-- This is the default in local development.
+### Architecture
 
-### `lib/providers/seedance-video.ts`
-- If the BytePlus/Seedance API key is not set, returns a mock placeholder video URL.
-- No paid API call is made.
-- This is the default in local development.
+1. **`lib/qa-mock.ts`** — Shared utility module:
+   - `isQaMockMode()`: Returns true only when `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true` AND `NODE_ENV !== "production"`.
+   - `isQaMockGenerationId(id)`: Checks if a generation ID starts with `qa-mock-generation-`.
+   - `QA_MOCK_PREFIX`: The mock generation ID prefix.
+   - Production guard: If the flag is set in production, it logs an error and returns false.
 
-## How Flow QA Should Avoid Paid Generation
+2. **`app/api/tryon/jobs/route.ts`** — Mock job creation:
+   - When `isQaMockMode()` is true, returns a mock generation ID immediately.
+   - Skips product validation (profile, photos).
+   - Does NOT call `createGeneration()` (no Supabase write).
+   - Does NOT call `generateTryOnImage` or `generateTryOnVideo` (no paid APIs).
+   - Returns `{ generationId: "qa-mock-generation-<timestamp>", status: "processing_image", isMock: true }`.
 
-1. **Don't set API keys in test environment.** The providers automatically mock.
-2. **Playwright `page.route` interception** is the preferred approach for CI/E2E testing:
-   - Intercept `POST /api/tryon/jobs` and return `{ generationId: "mock-qa-id", status: "processing_image" }`.
-   - Intercept `GET /api/tryon/status/mock-qa-id` and return a mock completed generation.
-   - This avoids any database writes and any provider calls.
+3. **`app/api/tryon/status/[generationId]/route.ts`** — Mock status polling:
+   - If `generationId` starts with `qa-mock-generation-`, returns mock completed response.
+   - Does NOT call `getGeneration()` (no Supabase read).
+   - Returns completed status with `/qa-mock-result.svg` as image URL.
+   - Normal generation IDs follow the existing real path.
 
-## What API Endpoints Should Return in Mock Mode
+4. **`public/qa-mock-result.svg`** — Mock result placeholder:
+   - Minimal SVG showing "MIRA QA MOCK" text.
+   - No external dependencies, no binary files.
 
-### `POST /api/tryon/jobs` (mock intercept response)
-```json
-{
-  "generationId": "mock-qa-00000000",
-  "status": "processing_image"
-}
+### How to Run Full Mock E2E
+
+```bash
+# Start dev server with mock mode enabled
+NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev
+
+# Run full E2E mock flow
+python -B project_autopilot/flow_qa.py --project mira --run mira_full_e2e_mock_flow
 ```
 
-### `GET /api/tryon/status/mock-qa-00000000` (mock intercept response)
-```json
-{
-  "generationId": "mock-qa-00000000",
-  "status": "completed",
-  "imageUrl": "https://placehold.co/800x1000/1a1a1a/d9ff43?text=MIRA+QA",
-  "videoUrl": null,
-  "productName": "QA Test Product",
-  "brandName": "QA Brand",
-  "buyUrl": "https://example.com",
-  "errorMessage": null
-}
-```
+### Safety Guarantees
 
-## Future: MOCK_GENERATION Environment Flag
+- Flag defaults OFF (not set = real behavior).
+- Production guard: `isQaMockMode()` always returns false when `NODE_ENV === "production"`.
+- Mock generation IDs are deterministic (`qa-mock-generation-*`) so they can be detected.
+- No paid provider code is called in mock path.
+- No Supabase writes in mock path (jobs route skips `createGeneration()`).
+- No Supabase reads in mock path (status route skips `getGeneration()` for mock IDs).
+- `.env` and `.env.local` are NOT modified.
 
-A `MOCK_GENERATION=true` flag could be added to `app/api/tryon/jobs/route.ts` to:
-- Skip database writes entirely.
-- Return a hardcoded mock response.
-- Allow the result page to be tested without any Supabase or provider dependency.
+### Scan Flow Strategy
 
-### Safety Rules for This Flag
-- Must default to OFF (not set = real behavior).
-- Must NOT be set in production (enforce via build check or runtime `NODE_ENV` guard).
-- Must NOT call any paid API.
-- Must NOT hide real errors in production.
-- Must be clearly documented.
+The scan page already has a "Skip photos" button (`btn-skip-photos`) that navigates directly to catalog without any Supabase writes. Flow QA uses this existing skip path.
 
-### Implementation Approach (Next Sprint)
-```typescript
-// In app/api/tryon/jobs/route.ts
-if (process.env.MOCK_GENERATION === "true" && process.env.NODE_ENV !== "production") {
-  return NextResponse.json({
-    generationId: "mock-qa-" + crypto.randomUUID().slice(0, 8),
-    status: "completed",
-  });
-}
-```
+The tryon page uses legacy localStorage fallback (`mira_profile` + `mira_photos` keys) when Supabase data is not available. Flow QA sets these in localStorage via Playwright before navigating to the tryon page.
 
-## Preventing Accidental Production Use
+### What This Does NOT Replace
 
-- Guard with `NODE_ENV !== "production"`.
-- Never include `MOCK_GENERATION` in production `.env`.
-- Add a build-time check or lint rule if desired.
-- Document in BLOCKERS.md.
+- Real Supabase integration testing (requires RLS, policies, service_role key).
+- Real paid generation testing (requires API keys).
+- Real customer data flow (requires security alignment).
+- Production deployment readiness (requires all blockers resolved).
 
-## Decision: NOT implementing in this sprint
-
-The existing mock behavior (no API keys = mock responses) is sufficient for local development. The `MOCK_GENERATION` flag and Playwright route interception are deferred to the next sprint when E2E Flow QA with form submission is unblocked.
+This mock mode is for **automated QA validation of the user journey** only.

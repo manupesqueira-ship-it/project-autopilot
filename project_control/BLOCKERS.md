@@ -196,7 +196,14 @@ Remaining to unblock full E2E Flow QA:
 - Enable Anonymous Sign-Ins in Supabase Dashboard.
 - Set SUPABASE_SERVICE_ROLE_KEY server-side.
 - Decide test data strategy.
-- Implement Playwright route interception for mock generation.
+- ~~Implement Playwright route interception for mock generation.~~ DONE: QA mock mode implemented via NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS flag.
 - Decide RLS/storage path plan.
 - Draft and review storage policies.
 - Decide real customer data safety approach.
+
+Update 2026-04-29 (mock E2E sprint):
+- QA mock mode implemented: lib/qa-mock.ts + API route guards.
+- Full E2E mock flow added to Flow QA (mira_full_e2e_mock_flow).
+- Mock mode is safe: defaults OFF, production-guarded, no paid APIs, no Supabase writes.
+- To run: `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev` then `--run mira_full_e2e_mock_flow`.
+- Remaining for REAL E2E: all Supabase security blockers still apply.

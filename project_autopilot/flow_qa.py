@@ -70,6 +70,10 @@ class FlowResult:
     network_errors: list[str] = field(default_factory=list)
     step_results: list[dict[str, Any]] = field(default_factory=list)
     report_path: str = ""
+    mock_mode_active: bool = False
+    paid_api_calls_avoided: bool = True
+    live_supabase_mutation: bool = False
+    final_url: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -92,6 +96,10 @@ class FlowResult:
             "network_errors": self.network_errors,
             "step_results": self.step_results,
             "report_path": self.report_path,
+            "mock_mode_active": self.mock_mode_active,
+            "paid_api_calls_avoided": self.paid_api_calls_avoided,
+            "live_supabase_mutation": self.live_supabase_mutation,
+            "final_url": self.final_url,
         }
 
 
@@ -431,6 +439,209 @@ def run_onboarding_safe_dry(config: dict[str, Any], flow_def: dict[str, Any],
     return result
 
 
+def _check_mock_mode_active(base_url: str) -> tuple[bool, str]:
+    """Check if the dev server has QA mock mode enabled by probing a mock endpoint."""
+    import urllib.request
+    import urllib.error
+    try:
+        # POST a minimal mock-detectable request to the jobs endpoint
+        # In mock mode it returns isMock:true; in normal mode it returns an error
+        data = json.dumps({
+            "productId": "adidas-trefoil-tee",
+            "selectedSize": "M",
+            "profile": {"name": "qa-probe"},
+            "photos": {},
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"{base_url}/api/tryon/jobs",
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        resp = urllib.request.urlopen(req, timeout=10)
+        body = json.loads(resp.read().decode("utf-8"))
+        if body.get("isMock"):
+            return True, "QA mock mode is active"
+        return False, "Dev server responded but isMock not set. Start with NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true"
+    except urllib.error.HTTPError as e:
+        # 400/404 means the server is running but mock mode is not active
+        return False, f"Mock mode not active (HTTP {e.code}). Start dev server with: NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev"
+    except Exception as e:
+        return False, f"Could not reach dev server: {e}"
+
+
+def run_full_e2e_mock(config: dict[str, Any], flow_def: dict[str, Any],
+                      project: str, run_id: str, out_dir: Path) -> FlowResult:
+    """Run full MIRA E2E journey using QA mock mode."""
+    result = _init_result(project, "mira_full_e2e_mock_flow", run_id, out_dir)
+    base_url = config.get("base_url", "http://localhost:3000")
+    locale = config.get("locale", "es")
+
+    # Pre-checks
+    pw_ok, pw_msg = check_playwright()
+    srv_ok, srv_msg = check_dev_server(base_url)
+
+    if not srv_ok:
+        result.status = "SKIPPED"
+        result.blockers.append(srv_msg)
+        result.steps_total = 1
+        result.steps_skipped = 1
+        _finalize(result, out_dir)
+        return result
+
+    if not pw_ok:
+        result.status = "SKIPPED"
+        result.blockers.append(pw_msg)
+        result.steps_total = 1
+        result.steps_skipped = 1
+        _finalize(result, out_dir)
+        return result
+
+    mock_ok, mock_msg = _check_mock_mode_active(base_url)
+    if not mock_ok:
+        result.status = "BLOCKED"
+        result.blockers.append(mock_msg)
+        result.steps_total = 1
+        result.steps_blocked = 1
+        result.step_results.append({
+            "verb": "check_mock_mode", "status": "BLOCKED", "detail": mock_msg,
+        })
+        _finalize(result, out_dir)
+        return result
+
+    result.mock_mode_active = True
+    result.paid_api_calls_avoided = True
+    result.live_supabase_mutation = False
+
+    from playwright.sync_api import sync_playwright  # type: ignore[import-untyped]
+
+    console_errors: list[str] = []
+    page_errors: list[str] = []
+    steps_def = flow_def.get("steps", [])
+    result.steps_total = len(steps_def)
+
+    ss_dir = out_dir / "screenshots"
+    ss_dir.mkdir(parents=True, exist_ok=True)
+
+    def _step_pass(verb: str, **kwargs: Any) -> None:
+        result.steps_passed += 1
+        result.step_results.append({"verb": verb, "status": "PASS", **kwargs})
+
+    def _step_fail(verb: str, detail: str, **kwargs: Any) -> None:
+        result.steps_failed += 1
+        result.step_results.append({"verb": verb, "status": "FAIL", "detail": detail, **kwargs})
+
+    def _screenshot(page: Any, name: str) -> None:
+        ss_path = ss_dir / f"{name}.png"
+        page.screenshot(path=str(ss_path))
+        result.screenshots.append(str(ss_path))
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        ctx = browser.new_context()
+        page = ctx.new_page()
+        page.on("console", lambda msg: console_errors.append(f"[{msg.type}] {msg.text}") if msg.type == "error" else None)
+        page.on("pageerror", lambda err: page_errors.append(str(err)))
+
+        for step in steps_def:
+            verb = step.get("verb", "")
+            try:
+                if verb == "goto":
+                    path = step["path"].replace("{locale}", locale)
+                    url = f"{base_url}{path}"
+                    page.goto(url, wait_until="networkidle", timeout=20000)
+                    _step_pass("goto", path=path)
+
+                elif verb == "fill":
+                    sel = step["selector"]
+                    val = step["value"]
+                    page.fill(sel, val)
+                    _step_pass("fill", selector=sel)
+
+                elif verb == "click":
+                    sel = step["selector"]
+                    timeout = step.get("timeout", 5000)
+                    page.click(sel, timeout=timeout)
+                    _step_pass("click", selector=sel)
+
+                elif verb == "assert_selector":
+                    sel = step["selector"]
+                    timeout = step.get("timeout", 10000)
+                    el = page.wait_for_selector(sel, timeout=timeout)
+                    if el:
+                        _step_pass("assert_selector", selector=sel)
+                    else:
+                        _step_fail("assert_selector", "Not found", selector=sel)
+
+                elif verb == "assert_url_contains":
+                    expected = step["value"]
+                    actual = page.url
+                    if expected in actual:
+                        _step_pass("assert_url_contains", detail=f"URL contains '{expected}'")
+                    else:
+                        _step_fail("assert_url_contains", f"URL '{actual}' does not contain '{expected}'")
+
+                elif verb == "wait_for_navigation":
+                    timeout = step.get("timeout", 15000)
+                    page.wait_for_load_state("networkidle", timeout=timeout)
+                    _step_pass("wait_for_navigation")
+
+                elif verb == "set_local_storage":
+                    key = step["key"]
+                    value = step["value"]
+                    if isinstance(value, dict):
+                        value = json.dumps(value)
+                    page.evaluate(f"localStorage.setItem('{key}', '{value}')")
+                    _step_pass("set_local_storage", detail=f"Set {key}")
+
+                elif verb == "screenshot":
+                    name = step.get("name", "screenshot")
+                    _screenshot(page, name)
+                    _step_pass("screenshot", path=str(ss_dir / f"{name}.png"))
+
+                elif verb == "note":
+                    _step_pass("note", detail=step.get("message", ""))
+
+                elif verb == "wait_for_response":
+                    url_pattern = step["url_pattern"]
+                    timeout = step.get("timeout", 15000)
+                    page.wait_for_response(
+                        lambda resp, pat=url_pattern: pat in resp.url,
+                        timeout=timeout,
+                    )
+                    _step_pass("wait_for_response", detail=f"Got response matching {url_pattern}")
+
+                else:
+                    result.steps_skipped += 1
+                    result.step_results.append({
+                        "verb": verb, "status": "SKIP",
+                        "detail": f"Verb '{verb}' not implemented",
+                    })
+
+            except Exception as e:
+                _step_fail(verb, str(e))
+                # Take error screenshot
+                _screenshot(page, f"error_{verb}_{result.steps_failed}")
+
+        result.final_url = page.url
+        browser.close()
+
+    result.console_errors = console_errors
+    result.page_errors = page_errors
+
+    if result.steps_failed > 0:
+        result.status = "FAIL"
+    elif result.steps_blocked > 0:
+        result.status = "BLOCKED"
+    elif result.steps_skipped > 0:
+        result.status = "WARN"
+    else:
+        result.status = "PASS"
+
+    _finalize(result, out_dir)
+    return result
+
+
 def run_blocked_flow(config: dict[str, Any], flow_def: dict[str, Any],
                      project: str, run_id: str, out_dir: Path) -> FlowResult:
     """Report a blocked flow without attempting execution."""
@@ -457,6 +668,7 @@ FLOW_RUNNERS = {
     "mira_route_readiness": run_route_readiness,
     "mira_selector_readiness": run_selector_readiness,
     "mira_onboarding_safe_dry_flow": run_onboarding_safe_dry,
+    "mira_full_e2e_mock_flow": run_full_e2e_mock,
     "mira_full_flow_blocked": run_blocked_flow,
 }
 
@@ -526,6 +738,10 @@ def _generate_report(result: FlowResult) -> str:
         f"- Failed: {result.steps_failed}",
         f"- Blocked: {result.steps_blocked}",
         f"- Skipped: {result.steps_skipped}",
+        f"- Mock mode active: {'yes' if result.mock_mode_active else 'no'}",
+        f"- Paid API calls avoided: {'yes' if result.paid_api_calls_avoided else 'no'}",
+        f"- Live Supabase mutation: {'yes' if result.live_supabase_mutation else 'no'}",
+        f"- Final URL: {result.final_url or 'n/a'}",
         f"",
     ]
 

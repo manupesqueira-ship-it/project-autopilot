@@ -23,6 +23,7 @@ INSPECT_PATHS = [
     "app/[locale]/(app)/result/[generationId]/page.tsx",
     "app/api/tryon/jobs/route.ts",
     "app/api/tryon/status/[generationId]/route.ts",
+    "lib/qa-mock.ts",
     "package.json",
     "project_control/CUSTOMER_DATA_POLICY.md",
     "project_control/MIRA_E2E_VALIDATION_PLAN.md",
@@ -221,10 +222,11 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.readiness = "UNKNOWN"
     else:
         _add_findings(summary, tryon, scan)
-        # Add auth, selector, and Flow QA findings
+        # Add auth, selector, Flow QA, and mock mode findings
         summary.findings.extend(_check_auth_foundation(files))
         summary.findings.extend(_check_selectors(files))
         summary.findings.extend(_check_flow_qa())
+        summary.findings.extend(_check_mock_mode(files))
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -310,6 +312,31 @@ def _check_flow_qa() -> list[str]:
         findings.append(f"Latest Flow QA results exist: {results_path}")
     else:
         findings.append("No Flow QA results yet.")
+
+    return findings
+
+
+def _check_mock_mode(files: dict[str, str]) -> list[str]:
+    """Check QA mock mode implementation safety."""
+    findings: list[str] = []
+    qa_mock = files.get("lib/qa-mock.ts", "")
+    jobs_route = files.get("app/api/tryon/jobs/route.ts", "")
+    status_route = files.get("app/api/tryon/status/[generationId]/route.ts", "")
+
+    if qa_mock:
+        findings.append("QA mock mode helper exists (lib/qa-mock.ts).")
+        if 'NODE_ENV === "production"' in qa_mock:
+            findings.append("Mock mode has production guard (returns false in production).")
+        else:
+            findings.append("WARNING: Mock mode may lack production guard.")
+        if "NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS" in qa_mock:
+            findings.append("Mock mode uses explicit env flag NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS.")
+        if "isQaMockMode" in jobs_route:
+            findings.append("Jobs route uses isQaMockMode guard.")
+        if "isQaMockGenerationId" in status_route:
+            findings.append("Status route uses isQaMockGenerationId guard.")
+    else:
+        findings.append("QA mock mode helper not found.")
 
     return findings
 

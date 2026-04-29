@@ -731,3 +731,24 @@ Status: PARTIAL — code-side foundation in place, Supabase settings not yet cha
 6. Decide auth_user_id column vs JOIN policy for user_assets/generations.
 7. Apply RLS + policies in staging (do NOT run in production yet).
 8. Run manual verification checklist.
+
+---
+
+## Q. Sprint Update: QA Mock Mode E2E (2026-04-29)
+
+### What was done
+- QA mock mode implemented via `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true` env flag.
+- `lib/qa-mock.ts` provides `isQaMockMode()` with production guard.
+- `/api/tryon/jobs` returns mock generation ID without Supabase writes or paid API calls.
+- `/api/tryon/status/[id]` returns mock completed response for mock generation IDs.
+- `public/qa-mock-result.svg` serves as mock result image placeholder.
+- Full E2E mock flow added to Flow QA (`mira_full_e2e_mock_flow`).
+- Backend audit updated to detect and validate mock mode safety.
+
+### Security impact
+- Mock mode is production-guarded: always returns false when `NODE_ENV === "production"`.
+- No Supabase mutations in mock path.
+- No paid API calls in mock path.
+- No .env or .env.local files were modified.
+- No live Supabase SQL was executed.
+- All real-flow security blockers remain unchanged.

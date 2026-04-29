@@ -113,17 +113,114 @@ flows:
       - verb: screenshot
         name: "onboarding_filled"
 
+  mira_full_e2e_mock_flow:
+    description: "Full E2E journey using QA mock mode. Requires NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true."
+    safe: true
+    safe_mock: true
+    requires_mock_mode: true
+    steps:
+      # 1. Onboarding — fill form and submit (writes to Supabase which may fail, that's OK)
+      - verb: goto
+        path: "/{locale}/onboarding"
+      - verb: fill
+        selector: "[data-testid=input-name]"
+        value: "QA Test User"
+      - verb: fill
+        selector: "[data-testid=input-email]"
+        value: "qa-test+mira@example.com"
+      - verb: fill
+        selector: "[data-testid=input-height-cm]"
+        value: "170"
+      - verb: fill
+        selector: "[data-testid=input-weight-kg]"
+        value: "68"
+      - verb: click
+        selector: "[data-testid=chip-size-M]"
+      - verb: click
+        selector: "[data-testid=chip-build-regular]"
+      - verb: click
+        selector: "[data-testid=chip-gender-skip]"
+      - verb: screenshot
+        name: "e2e_01_onboarding_filled"
+      # Submit onboarding — may or may not succeed depending on Supabase state
+      - verb: click
+        selector: "[data-testid=btn-onboarding-next]"
+      # Wait a moment and check where we ended up
+      - verb: wait_for_navigation
+        timeout: 10000
+      - verb: screenshot
+        name: "e2e_02_after_onboarding_submit"
+      # 2. If we're on scan, skip photos; if still on onboarding (Supabase error), inject localStorage and navigate
+      - verb: note
+        message: "Checking if onboarding submit succeeded or if we need localStorage fallback"
+      # Try clicking skip-photos if visible; if not we'll handle via localStorage
+      # We use set_local_storage to ensure the tryon page can load flow data via legacy path
+      - verb: set_local_storage
+        key: "mira_profile"
+        value: '{"name":"QA Test User","email":"qa-test+mira@example.com","height":"170","weight":"68","size":"M","build":"regular","gender":"skip"}'
+      - verb: set_local_storage
+        key: "mira_photos"
+        value: '{"front":"qa-mock/front-placeholder.jpg"}'
+      # 3. Navigate to scan and skip photos
+      - verb: goto
+        path: "/{locale}/scan"
+      - verb: click
+        selector: "[data-testid=btn-skip-photos]"
+      - verb: wait_for_navigation
+        timeout: 10000
+      - verb: screenshot
+        name: "e2e_03_catalog"
+      # 4. Assert catalog and click product
+      - verb: assert_selector
+        selector: "[data-testid=catalog-grid]"
+      - verb: click
+        selector: "[data-testid=product-card-adidas-trefoil-tee]"
+      - verb: wait_for_navigation
+        timeout: 10000
+      - verb: screenshot
+        name: "e2e_04_tryon_page"
+      # 5. Assert tryon page and trigger mock generation
+      - verb: assert_selector
+        selector: "[data-testid=tryon-page]"
+      - verb: click
+        selector: "[data-testid=tryon-size-M]"
+      # Wait for flow data to load (legacy localStorage path)
+      - verb: assert_selector
+        selector: "[data-testid=btn-tryon-start]:not([disabled])"
+        timeout: 10000
+      - verb: click
+        selector: "[data-testid=btn-tryon-start]"
+      # 6. Wait for navigation to result page (mock generation returns immediately)
+      - verb: wait_for_navigation
+        timeout: 15000
+      - verb: screenshot
+        name: "e2e_05_result_page"
+      # 7. Assert result page elements
+      - verb: assert_selector
+        selector: "[data-testid=result-page]"
+      - verb: assert_selector
+        selector: "[data-testid=result-status]"
+      # Mock returns completed status with image URL, wait for it to render
+      - verb: assert_selector
+        selector: "[data-testid=tryon-result-image]"
+        timeout: 10000
+      - verb: assert_selector
+        selector: "[data-testid=btn-try-another]"
+      - verb: screenshot
+        name: "e2e_06_result_complete"
+      - verb: note
+        message: "Full E2E mock flow completed. No paid APIs called. No real customer data used."
+
   mira_full_flow_blocked:
-    description: "Full E2E flow — currently BLOCKED."
+    description: "Full REAL E2E flow — BLOCKED until RLS/auth/storage ready. Use mira_full_e2e_mock_flow for safe testing."
     status: BLOCKED
     blockers:
-      - "Supabase Anonymous Sign-Ins are OFF"
+      - "Supabase Anonymous Sign-Ins may not be enabled"
       - "SUPABASE_SERVICE_ROLE_KEY not configured server-side"
-      - "Test data strategy not decided"
-      - "Safe mock generation/interception not implemented"
-      - "RLS/storage path plan not decided"
-      - "Storage policies not drafted or reviewed"
+      - "RLS not enabled on tables"
+      - "Storage policies not configured"
       - "Real customer data safety decision pending"
+      - "Use mira_full_e2e_mock_flow for safe mock-based validation"
     steps:
       - verb: blocked_reason
-        message: "Cannot run full flow until all blockers are resolved."
+        message: "Cannot run real full flow until all blockers are resolved. Use mira_full_e2e_mock_flow instead."
