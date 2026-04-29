@@ -119,27 +119,36 @@ http://localhost:3000/es/catalog
 
 11. Select a product and navigate to the try-on page.
 
-12. On `/es/tryon/[productId]`, click the try-on CTA (`Probarme`).
+12. On `/es/tryon/[productId]`, verify the try-on page is ready:
 
-13. In Supabase, verify `generations`:
+- It should use `localStorage.mira_profile_id` to load the profile from `users_profile`.
+- It should load scan assets from `user_assets` using the same profile id.
+- If `mira_profile_id` is missing, the page should ask the user to complete onboarding.
+- If front scan assets are missing, the page should ask the user to upload a scan.
+
+13. Click the try-on CTA (`Probarme`).
+
+14. In Supabase, verify `generations`:
 
 - A new row exists after clicking the try-on CTA.
 - Product identifier matches the selected product if the current implementation supports persisted product linkage.
-- User/session/profile reference matches the test flow if the current implementation supports persisted profile linkage.
-- If `product_id` or `user_profile_id` is null because the MVP still uses local product IDs or does not pass `mira_profile_id` into the API request, record this as `MANUAL_VERIFICATION_REQUIRED` or a blocker depending on expected behavior.
+- `user_profile_id` matches `localStorage.mira_profile_id`.
+- If `user_profile_id` is null, record this as a FAIL because the flow should now pass `mira_profile_id` into generation creation.
+- If `product_id` is null, document it as the current MVP limitation because local product IDs are not Supabase UUIDs yet.
 - Status is present and valid for the mocked generation path.
 - Provider metadata does not contain secrets.
 
-14. Verify result polling:
+15. Verify result polling:
 
 - The app navigates to `/es/result/[generationId]` or otherwise exposes the generated result route.
 - The result page polls the status endpoint.
 - The page eventually shows the expected mock output.
 - No infinite spinner, unhandled exception, or silent failure occurs.
 
-15. Verify current flow-state behavior:
+16. Verify current flow-state behavior:
 
-- Confirm whether `/es/tryon/[productId]` sends populated profile/photo data or empty fallback objects.
+- Confirm `/es/tryon/[productId]` sends populated profile/photo data loaded from `mira_profile_id`, `users_profile`, and `user_assets`.
+- Confirm legacy `mira_profile` / `mira_photos` keys are not required for the normal path.
 - Confirm whether result display metadata survives a dev server restart. If not, document the in-memory metadata limitation.
 - Confirm no generated provider call uses paid APIs during this validation.
 
@@ -165,7 +174,8 @@ During the full flow, watch browser DevTools for:
 - `user_assets` row is created with correct asset type and storage path.
 - Catalog/product navigation works.
 - Try-on CTA creates a generation.
-- `generations` row is created with correct persisted fields for the current schema, and any missing product/profile linkage is explicitly documented.
+- `generations` row is created with `user_profile_id` matching the profile id from onboarding.
+- Any missing `product_id` linkage is explicitly documented as the local-product MVP limitation.
 - Result page polling completes and displays mock output.
 - No blocking console or network errors appear.
 - No secrets or real customer data are exposed.
@@ -179,6 +189,7 @@ During the full flow, watch browser DevTools for:
 - Supabase row data does not match submitted test data.
 - Storage upload fails or stores the file in the wrong bucket/path.
 - Try-on CTA does not create a `generations` row.
+- `generations.user_profile_id` is null or does not match `localStorage.mira_profile_id`.
 - Result polling never resolves or returns an error state without explanation.
 - Browser console/network errors indicate broken product behavior.
 - Any secret, token, `.env` value, or unrelated customer data is exposed.
@@ -202,7 +213,7 @@ During the full flow, watch browser DevTools for:
 - Browser console screenshot showing no blocking errors, or showing the exact failure.
 - Browser network screenshot filtered to failed requests, if any.
 - Notes on whether `generations.product_id` and `generations.user_profile_id` were populated or intentionally null.
-- Notes on whether try-on payload contained profile/photo data or empty fallback objects.
+- Notes that try-on payload contained profile/photo data loaded from Supabase-backed profile/assets, or exact evidence if it did not.
 - Current git status after validation.
 - A short summary of PASS/FAIL with timestamps.
 

@@ -115,6 +115,8 @@ Get human decision before more builder work.
 Status: open
 Severity: blocking
 Source: Project Autopilot post-builder QA
+Updated: 2026-04-29
+Note: The `mira_profile` / `mira_photos` flow mismatch has been addressed in the flow-alignment sprint. This blocker remains open for live manual Supabase E2E verification of rows, storage, policies, and result polling.
 
 Question or blocker:
 HUMAN_DECISION_REQUIRED

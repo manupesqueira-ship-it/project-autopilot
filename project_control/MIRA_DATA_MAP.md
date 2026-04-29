@@ -18,7 +18,7 @@ This document maps what MIRA currently appears to collect, where it is expected 
 | Scan | Back photo | safe dummy image | biometric/photo-sensitive | Optional. |
 | Catalog/product | Selected product | local product id | internal/product preference | Current catalog uses local static product data. |
 | Try-on | Selected size | M | personal preference | Sent to `/api/tryon/jobs`. |
-| Try-on | Generation request metadata | product id, selected size, profile/photos payload | sensitive if profile/photos included | Current payload appears to read legacy localStorage keys; verify manually. |
+| Try-on | Generation request metadata | product id, selected size, profile id, profile/assets payload | sensitive if profile/photos included | Primary source is now `mira_profile_id` plus Supabase `users_profile` and `user_assets`; legacy keys are fallback only. |
 | Result | Generated output metadata | image URL, video URL, status | generated/personal | Mock providers currently return external placeholder URLs. |
 
 ## B. Data Storage Location
@@ -39,11 +39,13 @@ This document maps what MIRA currently appears to collect, where it is expected 
 | Asset metadata | not durable in frontend after upload | none | `user_assets.asset_type`, `storage_path`, `user_profile_id` | `user-photos` | none | likely; manual verification required |
 | Selected product | try-on page state/static route param | none | `generations.product_id` currently null by design | none | `/api/tryon/jobs` | partial; local product IDs are not Supabase UUIDs |
 | Selected size | try-on page state | none | not directly stored in schema | none | `/api/tryon/jobs` | not persisted directly |
-| Generation row | API route/server state | none | `generations` | generated output paths in columns | `/api/tryon/jobs`, `/api/tryon/status/[generationId]` | likely; manual verification required |
+| Try-on profile payload | loaded on product page | primary: `mira_profile_id`; fallback: `mira_profile` | `users_profile` read by id | none | `/api/tryon/jobs` | likely; manual verification required |
+| Try-on photo payload | loaded on product page | fallback: `mira_photos` | `user_assets` read by `user_profile_id` | `user-photos` storage paths | `/api/tryon/jobs` | likely; manual verification required |
+| Generation row | API route/server state | none | `generations`, including `user_profile_id` when profile id is available | generated output paths in columns | `/api/tryon/jobs`, `/api/tryon/status/[generationId]` | likely; manual verification required |
 | Generation display metadata | server memory cache | none | not persisted | none | status API | mock/in-memory |
 | Result polling data | result page state | none | reads `generations` through server route | none | `/api/tryon/status/[generationId]` | likely for status; metadata may be lost after restart |
-| Legacy try-on profile payload | try-on request body | `mira_profile` | none | none | `/api/tryon/jobs` | unknown; key is read but not written by current onboarding |
-| Legacy try-on photos payload | try-on request body | `mira_photos` | none | none | `/api/tryon/jobs` | unknown; key is read but not written by current scan |
+| Legacy try-on profile payload | fallback only | `mira_profile` | none | none | `/api/tryon/jobs` | fallback only; not primary source of truth |
+| Legacy try-on photos payload | fallback only | `mira_photos` | none | none | `/api/tryon/jobs` | fallback only; not primary source of truth |
 
 ## C. Sensitivity
 
@@ -85,7 +87,7 @@ Acceptable evidence:
 - What is the intended retention period for profile rows, photos, and generated outputs?
 - How will users request deletion of profile data, photos, and generated outputs?
 - Should try-on persist selected size and product display metadata in `generations` or a related table?
-- Should `generations.user_profile_id` be populated from `mira_profile_id` during the try-on request?
-- Should current `mira_profile` / `mira_photos` localStorage reads be replaced with persisted Supabase-backed state?
+- Verify `generations.user_profile_id` is populated from `mira_profile_id` during the try-on request in live Supabase.
+- Verify try-on loads `users_profile` and `user_assets` from Supabase before falling back to legacy localStorage keys.
 - Where should generated image/video outputs be stored once real providers are enabled?
 - What cleanup process should remove fake QA data after manual validation?
