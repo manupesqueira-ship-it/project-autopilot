@@ -248,3 +248,89 @@ Specific next fix or investigation step.
 - Redact Supabase project identifiers if sharing outside the local repo.
 - Delete test data only through explicit, human-approved cleanup steps.
 - Do not modify production data.
+
+---
+
+## Automated Mock E2E Flow (Flow QA)
+
+### Purpose
+
+Run the complete MIRA user journey automatically using QA mock mode.
+No paid APIs called. No real customer data used. No Supabase writes in mock path.
+
+### How to Start Mock Dev Server (PowerShell)
+
+```powershell
+$env:NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS="true"
+npm run dev
+```
+
+Or in bash/Git Bash:
+```bash
+NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev
+```
+
+### How to Run the Full E2E Mock Flow
+
+```bash
+python -B project_autopilot/flow_qa.py --project mira --run mira_full_e2e_mock_flow
+```
+
+### Expected Results
+
+| Outcome | Meaning |
+|---|---|
+| **PASS** | Full journey completed: onboarding fill, scan skip, catalog browse, tryon click, mock result displayed. |
+| **WARN** | Completed with minor issues (console errors, missing non-critical selectors). |
+| **BLOCKED** | Mock mode not active. Restart dev server with `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true`. |
+| **SKIPPED** | Dev server not running or Playwright not installed. |
+| **FAIL** | Selector or navigation broke. Check step details in report. |
+
+### How to Inspect Results
+
+```bash
+# View flow report
+cat logs/flow_qa/mira/latest/flow_report.md
+
+# View JSON results
+cat logs/flow_qa/mira/latest/flow_results.json
+
+# View screenshots (if taken)
+ls logs/flow_qa/mira/latest/screenshots/
+```
+
+### Troubleshooting
+
+**"Mock mode not active":**
+- Dev server must be started with `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true`.
+- The flow probes `/api/tryon/jobs` — if `isMock` is not in the response, mock mode is OFF.
+
+**Selector not found:**
+- Ensure the latest code with data-testid selectors is running.
+- Rebuild if needed: `npm run build && npm run dev`
+
+**Route returns 404/500:**
+- Check dev server console for errors.
+- Ensure all required dependencies are installed: `npm install`
+
+**Playwright not installed:**
+- Install: `pip install playwright && playwright install chromium`
+
+### Other Available Flows
+
+```bash
+# List all flows
+python -B project_autopilot/flow_qa.py --project mira --list
+
+# Route readiness (no mock needed)
+python -B project_autopilot/flow_qa.py --project mira --run mira_route_readiness
+
+# Selector readiness (no mock needed)
+python -B project_autopilot/flow_qa.py --project mira --run mira_selector_readiness
+
+# Onboarding dry fill (no mock needed, no submit)
+python -B project_autopilot/flow_qa.py --project mira --run mira_onboarding_safe_dry_flow
+
+# Diagnose prerequisites
+python -B project_autopilot/flow_qa.py --project mira --diagnose
+```

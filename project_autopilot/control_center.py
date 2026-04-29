@@ -361,6 +361,13 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Task state", "Current task lifecycle state", logs / f"{pid}_task_state.json", "planning"),
         _entry("Autopilot state", "Full autopilot state snapshot", logs / f"{pid}_autopilot_state.json", "observability"),
         _entry("Security alignment plan", "Supabase RLS/auth security audit and migration plan", ctrl / "MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md", "validation"),
+        _entry("Manual activation checklist", "Supabase Dashboard manual steps", ctrl / "MIRA_SUPABASE_MANUAL_ACTIVATION_CHECKLIST.md", "planning"),
+        _entry("Local auth verification plan", "Post-activation verification steps", ctrl / "MIRA_LOCAL_AUTH_VERIFICATION_PLAN.md", "planning"),
+        _entry("RLS decision matrix", "Ownership/storage strategy comparisons", ctrl / "MIRA_RLS_DECISION_MATRIX.md", "planning"),
+        _entry("RLS migration draft", "SQL drafts for RLS enablement (DO NOT RUN)", ctrl / "MIRA_RLS_STORAGE_MIGRATION_DRAFT.md", "planning"),
+        _entry("Mock generation plan", "QA mock mode design and instructions", ctrl / "MIRA_MOCK_GENERATION_PLAN.md", "validation"),
+        _entry("E2E validation plan", "Manual and automated E2E testing instructions", ctrl / "MIRA_E2E_VALIDATION_PLAN.md", "validation"),
+        _entry("Flow QA report", "Latest automated flow results", logs / "flow_qa" / pid / "latest" / "flow_report.md", "validation"),
     ]
     return items
 

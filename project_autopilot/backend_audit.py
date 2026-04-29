@@ -222,11 +222,12 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.readiness = "UNKNOWN"
     else:
         _add_findings(summary, tryon, scan)
-        # Add auth, selector, Flow QA, and mock mode findings
+        # Add auth, selector, Flow QA, mock mode, and readiness doc findings
         summary.findings.extend(_check_auth_foundation(files))
         summary.findings.extend(_check_selectors(files))
         summary.findings.extend(_check_flow_qa())
         summary.findings.extend(_check_mock_mode(files))
+        summary.findings.extend(_check_readiness_docs())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -313,6 +314,28 @@ def _check_flow_qa() -> list[str]:
     else:
         findings.append("No Flow QA results yet.")
 
+    return findings
+
+
+def _check_readiness_docs() -> list[str]:
+    """Check existence of readiness planning documents."""
+    findings: list[str] = []
+    pc = Path(__file__).resolve().parent.parent / "project_control"
+    docs = {
+        "Manual Activation Checklist": pc / "MIRA_SUPABASE_MANUAL_ACTIVATION_CHECKLIST.md",
+        "Local Auth Verification Plan": pc / "MIRA_LOCAL_AUTH_VERIFICATION_PLAN.md",
+        "RLS Decision Matrix": pc / "MIRA_RLS_DECISION_MATRIX.md",
+        "RLS Migration Draft": pc / "MIRA_RLS_STORAGE_MIGRATION_DRAFT.md",
+        "Mock Generation Plan": pc / "MIRA_MOCK_GENERATION_PLAN.md",
+        "E2E Validation Plan": pc / "MIRA_E2E_VALIDATION_PLAN.md",
+    }
+    present = 0
+    for name, path in docs.items():
+        if path.exists():
+            present += 1
+        else:
+            findings.append(f"Missing: {name}")
+    findings.insert(0, f"Readiness docs: {present}/{len(docs)} present.")
     return findings
 
 

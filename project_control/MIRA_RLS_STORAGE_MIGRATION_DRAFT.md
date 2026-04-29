@@ -289,3 +289,173 @@ This migration should NOT be rushed. Suggested order:
 5. **Apply RLS in staging**: 30 minutes.
 6. **Test with Flow QA**: Run full flow with Playwright.
 7. **Apply to production**: Only after staging verification.
+
+---
+
+## 9. Candidate Migration v0.1 — DO NOT RUN
+
+> **DOCUMENTATION ONLY.** Every SQL block below is a draft for review.
+> Do NOT execute any of this SQL until human approval and staging test.
+
+### 9.1 Pre-migration diagnostics (safe SELECT queries)
+
+```sql
+-- Count rows with NULL auth_user_id (safe to run as read-only)
+SELECT 'users_profile' AS tbl, COUNT(*) AS total,
+       COUNT(*) FILTER (WHERE auth_user_id IS NULL) AS null_auth
+FROM users_profile;
+
+SELECT 'user_assets' AS tbl, COUNT(*) AS total FROM user_assets;
+SELECT 'generations' AS tbl, COUNT(*) AS total FROM generations;
+
+-- Identify orphan user_assets (no matching profile)
+SELECT ua.id, ua.user_profile_id
+FROM user_assets ua
+LEFT JOIN users_profile up ON ua.user_profile_id = up.id
+WHERE up.id IS NULL;
+
+-- Identify orphan generations (no matching profile)
+SELECT g.id, g.user_profile_id
+FROM generations g
+LEFT JOIN users_profile up ON g.user_profile_id = up.id
+WHERE up.id IS NULL;
+```
+
+### 9.2 Option: Delete all test data (recommended for MVP fresh start)
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+-- Delete in dependency order
+DELETE FROM generations;
+DELETE FROM user_assets;
+DELETE FROM users_profile;
+
+-- Also clean storage objects if needed (do via Dashboard or CLI)
+```
+
+### 9.3 Add auth_user_id columns (if direct-column strategy chosen)
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+ALTER TABLE user_assets ADD COLUMN IF NOT EXISTS auth_user_id UUID REFERENCES auth.users(id);
+ALTER TABLE generations ADD COLUMN IF NOT EXISTS auth_user_id UUID REFERENCES auth.users(id);
+```
+
+### 9.4 Enable RLS
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+-- Only after auth_user_id is verified populated on new rows
+
+ALTER TABLE users_profile ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users_profile FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE user_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_assets FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE generations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE generations FORCE ROW LEVEL SECURITY;
+```
+
+### 9.5 Policy drafts: users_profile
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+CREATE POLICY "users_own_profile_select" ON users_profile
+  FOR SELECT USING (auth_user_id = auth.uid());
+
+CREATE POLICY "users_own_profile_insert" ON users_profile
+  FOR INSERT WITH CHECK (auth_user_id = auth.uid());
+
+CREATE POLICY "users_own_profile_update" ON users_profile
+  FOR UPDATE USING (auth_user_id = auth.uid())
+  WITH CHECK (auth_user_id = auth.uid());
+
+-- No DELETE policy: users cannot delete their own profile via client
+```
+
+### 9.6 Policy drafts: user_assets (direct auth_user_id column)
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+CREATE POLICY "users_own_assets_select" ON user_assets
+  FOR SELECT USING (auth_user_id = auth.uid());
+
+CREATE POLICY "users_own_assets_insert" ON user_assets
+  FOR INSERT WITH CHECK (auth_user_id = auth.uid());
+
+-- No UPDATE/DELETE: assets are immutable from client perspective
+```
+
+### 9.7 Policy drafts: generations (direct auth_user_id column)
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+-- Users can read their own generations
+CREATE POLICY "users_own_generations_select" ON generations
+  FOR SELECT USING (auth_user_id = auth.uid());
+
+-- INSERT/UPDATE done server-side via service_role (bypasses RLS)
+-- No client-side INSERT policy needed
+```
+
+### 9.8 Storage policy draft: user-photos
+
+```sql
+-- DRAFT — DO NOT RUN LIVE
+-- Assumes storage paths will use {auth.uid()}/... format
+
+CREATE POLICY "users_upload_own_photos" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'user-photos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "users_read_own_photos" ON storage.objects
+  FOR SELECT USING (
+    bucket_id = 'user-photos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+CREATE POLICY "users_delete_own_photos" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'user-photos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+```
+
+### 9.9 Rollback
+
+```sql
+-- EMERGENCY ROLLBACK — only if migration causes issues
+ALTER TABLE users_profile DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_assets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE generations DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "users_own_profile_select" ON users_profile;
+DROP POLICY IF EXISTS "users_own_profile_insert" ON users_profile;
+DROP POLICY IF EXISTS "users_own_profile_update" ON users_profile;
+DROP POLICY IF EXISTS "users_own_assets_select" ON user_assets;
+DROP POLICY IF EXISTS "users_own_assets_insert" ON user_assets;
+DROP POLICY IF EXISTS "users_own_generations_select" ON generations;
+DROP POLICY IF EXISTS "users_upload_own_photos" ON storage.objects;
+DROP POLICY IF EXISTS "users_read_own_photos" ON storage.objects;
+DROP POLICY IF EXISTS "users_delete_own_photos" ON storage.objects;
+```
+
+### 9.10 Staging test plan
+
+1. Use a disposable Supabase branch or separate project.
+2. Enable Anonymous Sign-Ins.
+3. Run onboarding to create a profile with auth_user_id.
+4. Apply RLS + policies.
+5. Verify: user can read own profile (YES).
+6. Verify: user cannot read other user's profile (NO rows returned).
+7. Verify: user can upload to user-photos (YES).
+8. Verify: try-on generation works via service_role (YES).
+9. Verify: user can see own generation result (YES).
+10. Verify: rollback works (disable RLS, all data accessible again).
+11. Run `mira_full_e2e_mock_flow` to confirm Flow QA still passes.
