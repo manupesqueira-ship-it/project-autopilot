@@ -572,6 +572,65 @@ Before going live with RLS, a human must verify each item:
 
 ---
 
+## N-pre. Supabase Auth Dashboard Findings
+
+Audit date: 2026-04-29
+Source: Supabase Dashboard read-only inspection (no mutations)
+Project: mira-mvp (ref vtaqyammimmgxlkqwjat, AWS us-west-2)
+
+### Auth Provider Status
+
+| Setting | Value | Implication |
+|---|---|---|
+| Email provider | Enabled | Users could sign up with email/password, but no production email flow is configured |
+| Anonymous Sign-Ins | **OFF** | `getOrCreateAnonymousUser()` will return null. `auth_user_id` remains null on all rows. RLS policies using `auth.uid()` cannot be enabled safely. |
+| OAuth providers | All OFF | No Google/GitHub/etc. login available |
+| CAPTCHA / Attack Protection | **OFF** | No bot protection on sign-up or sign-in endpoints. Open to abuse if signups are public. |
+| Allow new user signups | ON | Combined with no CAPTCHA, any bot can create auth.users rows |
+| Email confirmation required | YES | New email signups require email verification, which adds friction but no abuse protection |
+| Leaked password detection | OFF | No check against known-breached passwords |
+| Compromised token revocation | ON | Good — detects and revokes stolen refresh tokens |
+
+### Auth Configuration
+
+| Setting | Value | Implication |
+|---|---|---|
+| Site URL | `http://localhost:3000` | Dev-only. Must be updated to production domain before launch. |
+| Redirect URLs | Empty (0 configured) | No allowed redirect targets. OAuth and email-confirm redirects will fail outside localhost. |
+| JWT expiry | Free plan default (1 hour access token) | Acceptable for MVP |
+| JWT signing key | ECC P-256 asymmetric | Current standard; good |
+| Legacy HS256 key | Still active for verification | Non-urgent but should be rotated eventually |
+
+### API Keys
+
+| Detail | Status |
+|---|---|
+| Key model | New model (`sb_publishable_*`, `sb_secret_*`) |
+| Publishable key (anon equivalent) | Present; embedded in frontend JS bundle |
+| Secret key (service_role equivalent) | Present; NOT revealed, copied, or logged in this audit |
+| Dashboard warning | "This key is safe to use in a browser **if you have enabled Row Level Security (RLS)** for your tables and configured policies." |
+
+### Edge Functions
+
+| Detail | Status |
+|---|---|
+| Deployed functions | 0 |
+| Implication | All server-owned logic (generation processing, status updates) must live in Next.js API routes or server actions. No Supabase-native compute available. |
+
+### Critical Implications
+
+1. **Anonymous Sign-Ins must be enabled** in Supabase Auth settings before `getOrCreateAnonymousUser()` can populate `auth_user_id`. Until then, every `users_profile` row has `auth_user_id = NULL` and RLS policies using `auth.uid()` will match no rows.
+
+2. **The Supabase dashboard itself warns** that publishable keys are safe in the browser only with RLS enabled and policies configured. MIRA currently ships the publishable key with RLS disabled and 0 policies — this is the exact unsafe configuration the dashboard warns about.
+
+3. **Email/password auth is enabled but non-functional for production** — Site URL is localhost, redirect URLs are empty, no CAPTCHA, no leaked-password protection. This is acceptable for dev but must be hardened before any real user sign-up.
+
+4. **New signups are open without CAPTCHA** — any script can create auth.users rows. If Anonymous Sign-Ins are enabled, anonymous sessions are cheaper to create but the risk is similar: unbounded auth.users growth without rate limiting.
+
+5. **No Edge Functions** means generation processing, which runs as a fire-and-forget background task in the API route, cannot be moved to Supabase compute. This is fine for MVP but limits future architecture options.
+
+---
+
 ## N. Code-Side Anonymous Auth Foundation — Implemented
 
 Sprint date: 2026-04-29

@@ -124,6 +124,78 @@ When implementing auth and RLS, existing rows in users_profile, user_assets, and
 Why it matters:
 Fresh deletion is simpler and safer. Migration requires creating anonymous auth users and backfilling auth_user_id, which is complex and fragile. Decision depends on whether any existing data has value.
 
+### 2026-04-29 - Should Anonymous Sign-Ins be enabled now?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+Anonymous Sign-Ins are currently OFF. The code-side auth helper (`getOrCreateAnonymousUser()`) returns null until this is enabled, so `auth_user_id` stays null on every profile row. Should Anonymous Sign-Ins be enabled now for development, or only at a specific milestone?
+
+Why it matters:
+This is the single prerequisite gating RLS enablement. Without it, all auth-related code runs in fallback mode and no row-level data isolation is possible.
+
+### 2026-04-29 - Should new signups remain open before launch?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+Supabase currently allows new user signups (email/password) with no CAPTCHA and no leaked-password protection. Should signups be restricted or should abuse protection be enabled before any public-facing testing?
+
+Why it matters:
+Open signups without CAPTCHA allow bots to create unlimited auth.users rows and potentially spam the database. Even for internal testing this creates noise and potential cost.
+
+### 2026-04-29 - Should CAPTCHA/Turnstile be enabled before public testing?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+CAPTCHA / Attack Protection is OFF. Supabase supports hCaptcha and Cloudflare Turnstile. Should one of these be enabled now, or deferred until closer to launch?
+
+Why it matters:
+Without CAPTCHA, sign-up and sign-in endpoints are unprotected. If Anonymous Sign-Ins are enabled, anonymous session creation is also unprotected. This is low-risk for private dev but should be resolved before any public URL is shared.
+
+### 2026-04-29 - What production Site URL and Redirect URLs should be configured?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+Site URL is currently `http://localhost:3000` and Redirect URLs are empty. What production domain should be set? Are there staging URLs that should be added? This affects email confirmation links, OAuth callbacks, and password reset flows.
+
+Why it matters:
+Email confirmation and any future OAuth flow will fail for users not on localhost. This must be set before any real user interacts with auth.
+
+### 2026-04-29 - Will auth remain email-only, or should Google OAuth be enabled later?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+All OAuth providers are currently OFF. For the MVP, is email + anonymous auth sufficient, or should Google OAuth (or another provider) be planned?
+
+Why it matters:
+Adding OAuth later is straightforward but affects UX design, redirect URL configuration, and consent flow. Better to decide early so the auth UI can be designed accordingly.
+
+### 2026-04-29 - Should image-generation logic stay in Next.js or move to Edge Functions?
+
+Status: open
+Severity: non-blocking
+Source: Supabase Auth Dashboard audit
+
+Question:
+There are 0 Edge Functions deployed. Try-on generation currently runs as a fire-and-forget background task inside the Next.js API route. Should this remain in Next.js, or should Supabase Edge Functions be considered for better isolation, timeouts, and scaling?
+
+Why it matters:
+Next.js API routes run in the same process as the web server. Long-running generation tasks can block other requests or be killed by platform timeouts. Edge Functions provide isolated execution but add deployment complexity. This is an architecture decision that affects the scheduler readiness milestone.
+
 ### 2026-04-29 - Is SUPABASE_SERVICE_ROLE_KEY set in .env.local?
 
 Status: open

@@ -152,15 +152,25 @@ Progress:
 - 2026-04-29: Code-side anonymous auth foundation implemented (Section N of plan).
   Onboarding now sets auth_user_id. Server writes use service_role path.
   Auth helper created. App degrades gracefully if anonymous sign-ins not yet enabled.
-- Remaining: Enable Anonymous Sign-Ins in Supabase, set SUPABASE_SERVICE_ROLE_KEY,
-  apply RLS/policies, delete/backfill existing rows, run manual verification.
+- 2026-04-29: Supabase Auth Dashboard audit (Section N-pre of plan). Findings:
+  - Anonymous Sign-Ins: OFF — auth_user_id stays null, RLS cannot be enabled
+  - CAPTCHA / Attack Protection: OFF — signups open to abuse
+  - Site URL: http://localhost:3000 — not production-ready
+  - Redirect URLs: empty — OAuth/email-confirm redirects will fail outside localhost
+  - New signups: open without leaked-password protection
+  - Dashboard warning confirms: publishable key + RLS-off = unsafe to ship
+  - 0 Edge Functions — all server logic must stay in Next.js API routes
+- Remaining: Enable Anonymous Sign-Ins, enable CAPTCHA, set production Site URL,
+  set SUPABASE_SERVICE_ROLE_KEY, apply RLS/policies, delete/backfill existing rows,
+  run manual verification.
 
 Impact:
 MIRA must not store real customer photos, personal data, or body measurements until RLS, policies, and an identity model are in place.
 
 Recommended action:
 1. Enable Anonymous Sign-Ins in Supabase Dashboard > Authentication > Settings
-2. Set SUPABASE_SERVICE_ROLE_KEY in .env.local
-3. Answer human questions in HUMAN_QUESTIONS.md
+2. Enable CAPTCHA (hCaptcha or Turnstile) for abuse protection
+3. Set SUPABASE_SERVICE_ROLE_KEY in .env.local
+4. Answer human questions in HUMAN_QUESTIONS.md
 4. Apply RLS + policies from Section J of the plan in staging
 5. Run manual verification checklist (Section L of the plan)
