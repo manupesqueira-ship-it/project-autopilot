@@ -21,7 +21,7 @@ from local_planner import _pick_next_task, generate_local_plan
 from openai_supervisor import BudgetBlocked, MissingOpenAICredentials, OpenAIRequestError, OpenAISupervisor
 from project_loader import ensure_project_dirs, load_project, read_project_control
 from prompt_builder import build_builder_prompt
-from qa_reviewer import generate_correction_prompt, review_with_openai
+from qa_reviewer import classify_risk, classify_verdict, generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
 from task_state import load_task_state, transition_task_state
 from browser_qa import run_browser_qa, write_browser_qa_report
@@ -29,6 +29,8 @@ from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_st
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 from risk_classifier import classify_task, format_risk_assessment
+from research_log import count_research_index, record_research_request
+from run_history import append_event, count_research_requests, new_run_id, record_run_finished, record_run_started, summarize_recent_runs
 
 
 # ---------------------------------------------------------------------------
@@ -36,14 +38,45 @@ from risk_classifier import classify_task, format_risk_assessment
 # ---------------------------------------------------------------------------
 
 
+def _risk_summary_dict(risk: Any) -> dict[str, Any]:
+    return {
+        "risk_level": risk.risk_level,
+        "categories": risk.categories,
+        "recommended_action": risk.recommended_action,
+        "reasons": risk.reasons,
+    }
+
+
+def _cost_finish_details(project: ProjectConfig, cost: CostController, evidence: dict[str, Any], **extra: Any) -> dict[str, Any]:
+    snapshot = cost.snapshot()
+    details: dict[str, Any] = {
+        "file_change_metrics": evidence.get("file_change_metrics", {}),
+        "estimated_model_cost": snapshot.get("estimated_model_usage_usd"),
+        "paid_api_calls": snapshot.get("paid_api_calls"),
+    }
+    details.update(extra)
+    return details
+
+
+def _count_open_blockers(project: ProjectConfig) -> int:
+    path = project.project_control_path / "BLOCKERS.md"
+    if not path.exists():
+        return 0
+    text = path.read_text(encoding="utf-8", errors="replace").lower()
+    return text.count("status: open")
+
+
 def run_cycle(project_id: str, dry_run: bool = False, cycle: bool = False) -> int:
     """Original planning cycle: evidence -> OpenAI -> builder prompt."""
     project = load_project(project_id)
     ensure_project_dirs(project)
+    mode = "dry_run" if dry_run else "cycle"
+    run_id = new_run_id(project.project_id, mode)
+    record_run_started(project, run_id, mode)
 
     cost_controller = CostController(project)
     control_docs = read_project_control(project)
-    evidence = collect_evidence(project, dry_run=dry_run)
+    evidence = collect_evidence(project, dry_run=dry_run, run_id=run_id)
     supervisor = OpenAISupervisor(project, cost_controller, dry_run=dry_run)
 
     try:
@@ -51,15 +84,31 @@ def run_cycle(project_id: str, dry_run: bool = False, cycle: bool = False) -> in
         qa_review = review_with_openai(supervisor, task_plan, evidence)
         correction_prompt = generate_correction_prompt(supervisor, task_plan, qa_review, evidence)
     except (MissingOpenAICredentials, BudgetBlocked, OpenAIRequestError) as exc:
-        return _handle_openai_failure(project, cost_controller, control_docs, evidence, exc)
+        return _handle_openai_failure(project, cost_controller, control_docs, evidence, exc, run_id)
 
     builder_prompt = build_builder_prompt(project, control_docs, task_plan, evidence)
+    if dry_run:
+        qa_verdict = "DRY_RUN_SKIPPED"
+        qa_risk = "not_applicable"
+    else:
+        qa_verdict = classify_verdict(qa_review)
+        qa_risk = classify_risk(qa_review)
+        append_event(project, run_id, "qa_verdict_created", {"verdict": qa_verdict, "risk_level": qa_risk})
     bundle_path = create_evidence_bundle(
         project=project,
         evidence=evidence,
         task_plan=task_plan,
         builder_prompt=builder_prompt,
         qa_review=qa_review,
+        risk_summary={"risk_level": qa_risk, "verdict": qa_verdict},
+        cost_snapshot=cost_controller.snapshot(),
+        task_state=load_task_state(project),
+    )
+    append_event(
+        project,
+        run_id,
+        "builder_prompt_created",
+        {"path": str((project.repo_path / project.logs_dir / f"{project.project_id}_latest_builder_prompt.md").relative_to(project.repo_path))},
     )
     log_path = write_iteration_log(
         project=project,
@@ -80,9 +129,24 @@ def run_cycle(project_id: str, dry_run: bool = False, cycle: bool = False) -> in
     prompt_rel = str((project.repo_path / project.logs_dir / f"{project.project_id}_latest_builder_prompt.md").relative_to(project.repo_path))
     state["last_builder_prompt"] = prompt_rel
     save_state(project, state)
-    transition_task_state(project, "planned", "Project Autopilot generated a builder prompt.")
+    transition_task_state(project, "planned", "Project Autopilot generated a builder prompt.", run_id=run_id)
+    if not dry_run and qa_verdict == "RESEARCH_REQUIRED":
+        record_research_request(
+            project,
+            run_id,
+            topic="OpenAI QA requested research",
+            reason="Supervisor QA verdict was RESEARCH_REQUIRED.",
+            mode="quick_check",
+        )
+    record_run_finished(
+        project,
+        run_id,
+        "planned_dry_run" if dry_run else "planned",
+        _cost_finish_details(project, cost_controller, evidence, outcome="dry_run" if dry_run else qa_verdict),
+    )
 
     print(f"Project: {project.project_name} ({project.project_id})")
+    print(f"Run id: {run_id}")
     print(f"Generated builder prompt: {project.repo_path / project.logs_dir / f'{project.project_id}_latest_builder_prompt.md'}")
     print(f"Wrote iteration log: {log_path}")
     print(f"Evidence bundle: {bundle_path}")
@@ -96,6 +160,7 @@ def _handle_openai_failure(
     control_docs: dict[str, str],
     evidence: dict[str, Any],
     exc: Exception,
+    run_id: str,
 ) -> int:
     """Handle any OpenAI failure: log it, alert, generate local fallback, exit cleanly."""
     if isinstance(exc, OpenAIRequestError):
@@ -113,6 +178,8 @@ def _handle_openai_failure(
         status_code = None
         message = str(exc)
         error_dict = {"error_type": error_type, "message": message}
+
+    append_event(project, run_id, "error", error_dict)
 
     # 1. Write failure log
     recommendation = (
@@ -137,6 +204,12 @@ def _handle_openai_failure(
         f"Recommended action:\n{recommendation}"
     )
     record_blocker(project, f"Autopilot blocked: {error_type}", body)
+    append_event(
+        project,
+        run_id,
+        "blocker_recorded",
+        {"title": f"Autopilot blocked: {error_type}", "status_code": status_code},
+    )
 
     # 3. Send Telegram alert
     alert = send_alert(project.project_id, error_type, message, enabled=project.telegram_enabled)
@@ -146,12 +219,20 @@ def _handle_openai_failure(
     fallback_path = project.repo_path / project.logs_dir / f"{project.project_id}_latest_builder_prompt.md"
     fallback_path.parent.mkdir(parents=True, exist_ok=True)
     fallback_path.write_text(fallback, encoding="utf-8")
+    append_event(
+        project,
+        run_id,
+        "builder_prompt_created",
+        {"path": str(fallback_path.relative_to(project.repo_path)), "fallback": True},
+    )
     bundle_path = create_evidence_bundle(
         project=project,
         evidence=evidence,
         task_plan="LOCAL FALLBACK PLAN",
         builder_prompt=fallback,
         qa_review="Local fallback plan generated without OpenAI QA.",
+        cost_snapshot=cost_controller.snapshot(),
+        task_state=load_task_state(project),
     )
 
     # 5. Update state
@@ -162,7 +243,13 @@ def _handle_openai_failure(
     state["last_builder_prompt"] = str(fallback_path.relative_to(project.repo_path))
     state["last_evidence_bundle"] = str(bundle_path.relative_to(project.repo_path))
     save_state(project, state)
-    transition_task_state(project, "blocked", f"Project Autopilot blocked on {error_type}.")
+    transition_task_state(project, "blocked", f"Project Autopilot blocked on {error_type}.", run_id=run_id)
+    record_run_finished(
+        project,
+        run_id,
+        "blocked_with_fallback",
+        _cost_finish_details(project, cost_controller, evidence, outcome=error_type),
+    )
 
     # 6. Print summary
     print(f"Blocked: {error_type}" + (f" ({status_code})" if status_code else ""))
@@ -179,20 +266,29 @@ def run_local_plan(project_id: str) -> int:
     """Force local fallback planner — no OpenAI call."""
     project = load_project(project_id)
     ensure_project_dirs(project)
+    run_id = new_run_id(project.project_id, "local_plan")
+    record_run_started(project, run_id, "local_plan")
 
     control_docs = read_project_control(project)
-    evidence = collect_evidence(project, dry_run=False)
+    evidence = collect_evidence(project, dry_run=False, run_id=run_id)
 
     fallback = generate_local_plan(project, control_docs, evidence)
     prompt_path = project.repo_path / project.logs_dir / f"{project.project_id}_latest_builder_prompt.md"
     prompt_path.parent.mkdir(parents=True, exist_ok=True)
     prompt_path.write_text(fallback, encoding="utf-8")
+    append_event(project, run_id, "builder_prompt_created", {"path": str(prompt_path.relative_to(project.repo_path))})
+
+    title, body = _pick_next_task(control_docs.get("TASK_QUEUE.md", ""))
+    risk = classify_task(title or "Current task queue", body or "", evidence.get("changed_files", []), control_docs)
     bundle_path = create_evidence_bundle(
         project=project,
         evidence=evidence,
         task_plan="LOCAL PLAN",
         builder_prompt=fallback,
         qa_review="Local plan mode does not call OpenAI QA.",
+        risk_summary=_risk_summary_dict(risk),
+        cost_snapshot=CostController(project).snapshot(),
+        task_state=load_task_state(project),
     )
 
     state = load_state(project)
@@ -201,9 +297,24 @@ def run_local_plan(project_id: str) -> int:
     state["last_builder_prompt"] = str(prompt_path.relative_to(project.repo_path))
     state["last_evidence_bundle"] = str(bundle_path.relative_to(project.repo_path))
     save_state(project, state)
-    transition_task_state(project, "planned", "Local planner generated a builder prompt.")
+    transition_task_state(project, "planned", "Local planner generated a builder prompt.", run_id=run_id)
+    if "research_required" in risk.categories:
+        record_research_request(
+            project,
+            run_id,
+            topic=title or "Current task queue",
+            reason="Risk classifier marked the task as research_required.",
+            mode="quick_check",
+        )
+    record_run_finished(
+        project,
+        run_id,
+        "local_plan",
+        _cost_finish_details(project, CostController(project), evidence, outcome=risk.recommended_action),
+    )
 
     print(f"Project: {project.project_name} ({project.project_id})")
+    print(f"Run id: {run_id}")
     print(f"Local fallback plan written to: {prompt_path}")
     print(f"Evidence bundle: {bundle_path}")
     print("Paste this into Claude Code or your preferred builder agent.")
@@ -215,6 +326,9 @@ def run_status(project_id: str) -> int:
     project = load_project(project_id)
     state = load_state(project)
     cost = CostController(project)
+    task_state = load_task_state(project)
+    recent_runs = summarize_recent_runs(project.project_id, limit=5)
+    latest_run = recent_runs[0] if recent_runs else None
 
     print(f"Project:            {project.project_name} ({project.project_id})")
     print(f"Autonomy mode:      {project.autonomy_mode}")
@@ -235,10 +349,29 @@ def run_status(project_id: str) -> int:
     print()
 
     # State
+    print("Activity:")
     print(f"Cycles run:         {state.get('cycles', 0)}")
     print(f"Last status:        {state.get('last_status', 'unknown')}")
-    task_state = load_task_state(project)
     print(f"Task state:         {task_state.get('state', 'unknown')}")
+    print(f"Total runs logged:  {len(summarize_recent_runs(project.project_id, limit=1000000))}")
+    if latest_run:
+        print(f"Last run id:        {latest_run.get('run_id')}")
+        print(f"Last run duration:  {latest_run.get('duration_seconds')}s")
+        print(f"Last run outcome:   {latest_run.get('outcome') or latest_run.get('status')}")
+        print(f"Latest commands:    {latest_run.get('commands_count', 0)} ({latest_run.get('failed_commands_count', 0)} failed)")
+        print(
+            "Latest file delta:  "
+            f"+{latest_run.get('files_created', 0)} created, "
+            f"{latest_run.get('files_modified', 0)} modified, "
+            f"{latest_run.get('files_deleted', 0)} deleted, "
+            f"+{latest_run.get('lines_added', 0)}/-{latest_run.get('lines_removed', 0)} lines"
+        )
+        if latest_run.get("evidence_bundle_path"):
+            print(f"Latest evidence:    {latest_run['evidence_bundle_path']}")
+        if latest_run.get("qa_verdict"):
+            print(f"Latest QA verdict:  {latest_run['qa_verdict']} ({latest_run.get('risk_level') or 'risk unknown'})")
+    print(f"Open blockers:      {_count_open_blockers(project)}")
+    print(f"Research requests:  {count_research_index(project)} indexed / {count_research_requests(project)} run events")
     last_log = state.get("last_log")
     if last_log:
         print(f"Last log:           {last_log}")
@@ -265,15 +398,17 @@ def run_status(project_id: str) -> int:
     except Exception:
         print("Git status:         unavailable")
 
-    # Latest logs
-    logs_dir = project.repo_path / project.logs_dir
-    if logs_dir.exists():
-        logs = sorted(logs_dir.glob(f"{project.project_id}_autopilot_*.md"), reverse=True)[:3]
-        if logs:
-            print()
-            print("Recent logs:")
-            for log in logs:
-                print(f"  {log.relative_to(project.repo_path)}")
+    if recent_runs:
+        print()
+        print("Recent runs:")
+        for run in recent_runs:
+            duration = run.get("duration_seconds")
+            duration_text = f"{duration}s" if duration is not None else "unfinished"
+            print(
+                f"  {run['run_id']} | {run.get('status') or 'unknown'} | "
+                f"{duration_text} | commands {run.get('commands_count', 0)} "
+                f"({run.get('failed_commands_count', 0)} failed)"
+            )
 
     control_docs = read_project_control(project)
     task_queue = control_docs.get("TASK_QUEUE.md", "")
@@ -352,12 +487,20 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
     """Ingest a builder report, collect fresh evidence, and produce a QA verdict."""
     project = load_project(project_id)
     ensure_project_dirs(project)
+    run_id = new_run_id(project.project_id, "post_builder")
+    record_run_started(project, run_id, "post_builder")
 
-    transition_task_state(project, "validating", "Post-builder intake started.")
-    result = intake_builder_report(project, report_path, run_validation=True)
+    transition_task_state(project, "validating", "Post-builder intake started.", run_id=run_id)
+    result = intake_builder_report(project, report_path, run_validation=True, run_id=run_id)
     verdict = result["verdict"]
+    append_event(
+        project,
+        run_id,
+        "qa_verdict_created",
+        {"verdict": verdict.verdict, "risk_level": verdict.risk_level, "recommended_next_action": verdict.recommended_next_action},
+    )
     target_state = verdict_to_state(verdict)
-    transition_task_state(project, target_state, f"Post-builder verdict: {verdict.verdict}.")
+    transition_task_state(project, target_state, f"Post-builder verdict: {verdict.verdict}.", run_id=run_id)
 
     state = load_state(project)
     state["last_status"] = f"post_builder_{verdict.verdict.lower()}"
@@ -367,6 +510,12 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
     correction_prompt_path = result.get("correction_prompt_path")
     if correction_prompt_path:
         state["last_correction_prompt"] = str(correction_prompt_path.relative_to(project.repo_path))
+        append_event(
+            project,
+            run_id,
+            "correction_prompt_created",
+            {"path": str(correction_prompt_path.relative_to(project.repo_path))},
+        )
     save_state(project, state)
 
     if verdict.verdict in {"BLOCKED", "HUMAN_DECISION_REQUIRED"}:
@@ -377,8 +526,38 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
             f"Recommended action:\n{verdict.recommended_next_action}"
         )
         record_blocker(project, f"Post-builder QA: {verdict.verdict}", body)
+        append_event(
+            project,
+            run_id,
+            "blocker_recorded",
+            {"title": f"Post-builder QA: {verdict.verdict}", "log": state["last_log"]},
+        )
+
+    if verdict.verdict == "RESEARCH_REQUIRED":
+        record_research_request(
+            project,
+            run_id,
+            topic="Post-builder QA research request",
+            reason="Post-builder QA verdict was RESEARCH_REQUIRED.",
+            mode="quick_check",
+        )
+
+    record_run_finished(
+        project,
+        run_id,
+        f"post_builder_{verdict.verdict.lower()}",
+        _cost_finish_details(
+            project,
+            CostController(project),
+            result["evidence"],
+            outcome=verdict.verdict,
+            qa_verdict=verdict.verdict,
+            risk_level=verdict.risk_level,
+        ),
+    )
 
     print(f"Post-builder intake: {project.project_name} ({project.project_id})")
+    print(f"Run id: {run_id}")
     print(f"Verdict: {verdict.verdict}")
     print(f"Risk level: {verdict.risk_level}")
     print(f"Post-builder log: {result['intake_log_path']}")

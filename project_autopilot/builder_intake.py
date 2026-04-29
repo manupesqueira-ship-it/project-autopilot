@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from config import ProjectConfig
+from cost_controller import CostController
 from evidence_bundle import create_evidence_bundle
 from evidence_collector import collect_evidence
 from qa_reviewer import QAVerdict, generate_local_correction_prompt, local_structured_review
 from risk_classifier import RiskAssessment, classify_task, format_risk_assessment
+from task_state import load_task_state
 
 
 def _stamp() -> str:
@@ -27,9 +29,10 @@ def intake_builder_report(
     project: ProjectConfig,
     report_path: str | Path,
     run_validation: bool = True,
+    run_id: str | None = None,
 ) -> dict[str, Any]:
     path, report_text = read_builder_report(report_path)
-    evidence = collect_evidence(project, dry_run=not run_validation)
+    evidence = collect_evidence(project, dry_run=not run_validation, run_id=run_id)
     risk = classify_task(
         title="Builder result intake",
         body=report_text,
@@ -49,6 +52,13 @@ def intake_builder_report(
         task_plan="Builder result intake",
         builder_prompt=report_text,
         qa_review=verdict.to_markdown(),
+        risk_summary={
+            "risk_level": risk.risk_level,
+            "categories": risk.categories,
+            "recommended_action": risk.recommended_action,
+        },
+        cost_snapshot=CostController(project).snapshot(),
+        task_state=load_task_state(project),
     )
     (bundle_path / "builder_report.md").write_text(report_text, encoding="utf-8")
     (bundle_path / "risk_assessment.txt").write_text(format_risk_assessment(risk), encoding="utf-8")

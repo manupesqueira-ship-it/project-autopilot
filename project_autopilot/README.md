@@ -90,9 +90,9 @@ Collects evidence, calls OpenAI for planning + QA + correction prompt. If OpenAI
 python -B project_autopilot/agent_loop.py --project mira --status
 ```
 
-Prints project config, budget state, cycle count, last log, git status. No API calls.
+Prints project config, budget state, cycle count, task state, run history, latest evidence bundle, latest QA verdict, git status, blocker count, and research request count. No API calls.
 
-Status also prints the current task state and a risk summary for the active task queue.
+Status also prints a concise recent-run table and a risk summary for the active task queue.
 
 ### Telegram Test
 
@@ -230,6 +230,8 @@ Project Autopilot includes a small Reliability Core before scheduler or automati
 - `evidence_bundle.py`: writes one structured evidence bundle per run.
 - `task_state.py`: tracks simple task states in `logs/<project_id>_task_state.json`.
 - `risk_classifier.py`: deterministic local risk classification with no OpenAI call.
+- `run_history.py`: records run, command, evidence, QA, blocker, research, and error events in `logs/run_history.jsonl`.
+- `research_log.py`: records requested research in `logs/research_index.jsonl` without performing the research automatically.
 
 Task states:
 
@@ -262,6 +264,35 @@ Recommended workflow:
 ```text
 local-plan -> handoff to Claude/Codex -> validate -> evidence bundle -> commit
 ```
+
+## Activity and Run History
+
+Project Autopilot keeps local observability files under `logs/`:
+
+| File | Purpose |
+|---|---|
+| `logs/run_history.jsonl` | Append-only event stream for runs and commands. |
+| `logs/research_index.jsonl` | Append-only index of proposed research requests. |
+| `logs/evidence/<project_id>/<timestamp>/metadata.json` | Per-run evidence metadata and metrics. |
+
+Tracked run events include:
+
+- `run_started`
+- `run_finished`
+- `command_started`
+- `command_finished`
+- `evidence_bundle_created`
+- `builder_prompt_created`
+- `qa_verdict_created`
+- `correction_prompt_created`
+- `blocker_recorded`
+- `research_requested`
+- `state_transition`
+- `error`
+
+Run summaries include duration, command count, failed command count, created/modified/deleted file counts, added/removed line counts, evidence bundle path, QA verdict, risk level, estimated model cost, and paid API call count.
+
+Project Autopilot does **not** track secrets, `.env` contents, `.env.local` contents, raw credential values, browser cookies, or external billing truth. Model cost is a conservative local estimate for routing and budgeting only.
 
 ### Why Automatic Execution Is Disabled by Default
 

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from config import ProjectConfig
+from run_history import append_event
 
 
 def _stamp() -> str:
@@ -33,20 +34,36 @@ def create_evidence_bundle(
     task_plan: str | None = None,
     builder_prompt: str | None = None,
     qa_review: str | None = None,
+    risk_summary: dict[str, Any] | None = None,
+    cost_snapshot: dict[str, Any] | None = None,
+    task_state: dict[str, Any] | None = None,
 ) -> Path:
     """Create a structured, secret-safe evidence bundle for one run."""
     bundle_dir = project.repo_path / project.logs_dir / "evidence" / project.project_id / _stamp()
     bundle_dir.mkdir(parents=True, exist_ok=True)
 
     metadata = {
+        "run_id": evidence.get("run_id"),
         "project_id": project.project_id,
         "project_name": project.project_name,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": evidence.get("started_at"),
+        "finished_at": evidence.get("finished_at"),
+        "duration_seconds": evidence.get("duration_seconds"),
         "framework": project.framework,
         "package_manager": project.package_manager,
         "autonomy_mode": project.autonomy_mode,
         "intensity_mode": project.intensity_mode,
         "changed_file_count": len(evidence.get("changed_files", [])),
+        "command_count": evidence.get("command_count", len(evidence.get("commands", {}))),
+        "failed_command_count": evidence.get(
+            "failed_command_count",
+            len([result for result in evidence.get("commands", {}).values() if result.get("exit_code") not in (0, None)]),
+        ),
+        "file_change_metrics": evidence.get("file_change_metrics", {}),
+        "risk_summary": risk_summary,
+        "cost_snapshot": cost_snapshot,
+        "task_state": task_state,
     }
     (bundle_dir / "metadata.json").write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
 
@@ -69,5 +86,19 @@ def create_evidence_bundle(
     questions_path = project.project_control_path / "HUMAN_QUESTIONS.md"
     _write_text(bundle_dir / "blockers_snapshot.md", blockers_path.read_text(encoding="utf-8") if blockers_path.exists() else "")
     _write_text(bundle_dir / "human_questions_snapshot.md", questions_path.read_text(encoding="utf-8") if questions_path.exists() else "")
+
+    run_id = evidence.get("run_id")
+    if run_id:
+        append_event(
+            project,
+            run_id,
+            "evidence_bundle_created",
+            {
+                "path": str(bundle_dir.relative_to(project.repo_path)),
+                "command_count": metadata["command_count"],
+                "failed_command_count": metadata["failed_command_count"],
+                "file_change_metrics": metadata["file_change_metrics"],
+            },
+        )
 
     return bundle_dir

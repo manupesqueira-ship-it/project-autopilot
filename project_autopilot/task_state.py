@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from config import ProjectConfig
+from run_history import append_event
 
 STATES = {"planned", "assigned", "implemented", "validating", "needs_fix", "blocked", "passed", "committed", "parked"}
 
@@ -50,7 +51,7 @@ def save_task_state(project: ProjectConfig, state: dict[str, Any]) -> Path:
     return path
 
 
-def transition_task_state(project: ProjectConfig, to_state: str, reason: str) -> dict[str, Any]:
+def transition_task_state(project: ProjectConfig, to_state: str, reason: str, run_id: str | None = None) -> dict[str, Any]:
     state = load_task_state(project)
     from_state = state.get("state", "planned")
     if from_state != to_state and not validate_transition(from_state, to_state):
@@ -65,4 +66,11 @@ def transition_task_state(project: ProjectConfig, to_state: str, reason: str) ->
         }
     )
     save_task_state(project, state)
+    if run_id:
+        append_event(
+            project,
+            run_id,
+            "state_transition",
+            {"from_state": from_state, "to_state": to_state, "reason": reason},
+        )
     return state
