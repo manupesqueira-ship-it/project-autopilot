@@ -345,23 +345,39 @@ project_control/CUSTOMER_DATA_POLICY.md
 
 `MIRA_DATA_MAP.md` is product-specific. It maps fields, localStorage keys, Supabase tables, storage buckets, sensitivity, logging restrictions, and open data questions. Backend audit is evidence for readiness; it is not proof that the live Supabase project contains the expected rows, bucket privacy, or policies.
 
-### Control Center
+### Control Center (v2.0 — Command Center Dashboard)
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --control-center
 ```
 
-Generates a self-contained HTML report at:
+Generates a self-contained HTML dashboard at:
 
 ```text
 logs/control_center/<project_id>_control_center.html
 ```
 
-Open this file in any browser. It shows project overview, current task, latest run, activity timeline, quality gates, Browser QA results, backend audit, research, blockers, human questions, budget, and safety gates in a single read-only page.
+Open in any browser. The dashboard is designed as a lightweight command center with these sections:
 
-**What it does:** Reads existing local logs, evidence bundles, config, project control files, run history, and state. Generates static HTML with inline CSS.
+1. **Hero summary** — project name, overall status badge, key metrics (stage, task state, QA verdict, browser QA, blockers, autonomy) visible above the fold.
+2. **Next step banner** — recommended action based on current state.
+3. **Lifecycle stage flow** — visual pipeline (Setup → Research → Planning → Builder Handoff → Implementation → Validation → QA Verdict → Scheduler Ready) with arrows and status coloring (completed/active/pending/blocked).
+4. **Current State ("You Are Here")** — phase, active task, risk level, risk categories, blockers, human questions, latest evidence, recommended CLI command as a copyable block.
+5. **Current task** — title, state, risk, acceptance criteria, prompt paths.
+6. **Capability map** — nine capability areas (Control, Reliability, Builder, QA, Browser QA, Research, Observability, Scheduler, Safety) as status cards.
+7. **Latest run** — run ID, outcome, duration, commands, file changes, lines, QA verdict.
+8. **Quality gates** — lint, typecheck, build, QA, browser QA, backend audit badges.
+9. **Browser QA** — verdict, routes, issues, screenshots.
+10. **Backend / customer data** — tables, buckets, manual verification items.
+11. **Blockers & human questions** — tables with status badges.
+12. **Research** — request count, latest request.
+13. **Activity timeline** — recent events table.
+14. **Budget / cost** — limits, current spend, controls.
+15. **Safety gates** — HALT, auto-exec, run lock, Telegram, deploy, scheduler status.
 
-**What it does not do:** No server. No authentication. No live updates. No external dependencies. No secrets included.
+**What it does:** Reads existing local logs, evidence bundles, config, project control files, run history, and state. Generates static HTML with inline CSS. No external dependencies.
+
+**What it does not do:** No server. No authentication. No live updates. No external dependencies. No secrets included. No action buttons — recommended commands are shown as copyable text only.
 
 **How it complements Telegram:** Telegram alerts are push-based (immediate errors/successes). The Control Center is pull-based (on-demand full status snapshot). Use Telegram for real-time awareness; use Control Center for comprehensive review.
 
