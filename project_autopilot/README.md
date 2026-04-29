@@ -192,6 +192,20 @@ logs/<project_id>_browser_qa_<timestamp>.md
 
 Browser QA is evidence, not a complete replacement for flow tests. It does not yet fill forms, click through multi-step flows, validate database writes, or prove business logic correctness. Use it alongside manual QA, post-builder intake, and project-specific E2E checks.
 
+### Browser QA Diagnostics
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --browser-qa-diagnose
+```
+
+Diagnoses dev-server reachability without Playwright, screenshots, form submits, or product data changes. It tries the configured route URLs, localhost/127.0.0.1 equivalents, and common Next.js dev ports `3000-3003`. The report is written to:
+
+```text
+logs/<project_id>_browser_qa_diagnostics_latest.md
+```
+
+Browser QA uses the detected runtime base URL for the current run only. It does not rewrite project config.
+
 ### Manual E2E Plan
 
 ```bash
@@ -219,6 +233,27 @@ onboarding -> scan -> catalog/product -> tryon -> result polling
 ```
 
 The E2E plan covers Supabase observations for `users_profile`, `user_assets`, `generations`, and the `user-photos` storage bucket.
+
+### Product Validation Report
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --new-validation-report
+```
+
+Creates a blank validation report draft under `logs/`:
+
+```text
+logs/<project_id>_validation_report_<timestamp>.md
+logs/<project_id>_validation_report_latest.md
+```
+
+The report template lives at:
+
+```text
+project_autopilot/templates/PRODUCT_VALIDATION_REPORT.template.md
+```
+
+Validation reports are ignored by git because they may reference local evidence paths. They must not include secrets, JWTs, cookies, API keys, or real customer photos.
 
 ### Product Validation Readiness
 

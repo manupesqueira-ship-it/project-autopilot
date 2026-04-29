@@ -25,7 +25,7 @@ from prompt_builder import build_builder_prompt
 from qa_reviewer import classify_risk, classify_verdict, generate_correction_prompt, review_with_openai
 from state_manager import load_state, record_blocker, save_state, write_failure_log, write_iteration_log
 from task_state import load_task_state, transition_task_state
-from browser_qa import report_to_evidence, run_browser_qa, write_browser_qa_report
+from browser_qa import diagnose_browser_qa, report_to_evidence, run_browser_qa, write_browser_qa_diagnostics_report, write_browser_qa_report
 from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_state
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
@@ -33,6 +33,7 @@ from risk_classifier import classify_task, format_risk_assessment
 from research_log import count_research_index, record_research_request
 from run_history import append_event, count_research_requests, new_run_id, record_run_finished, record_run_started, summarize_recent_runs
 from run_lock import LockActiveError, acquire_lock, release_lock
+from validation_report import create_validation_report
 
 
 # ---------------------------------------------------------------------------
@@ -553,12 +554,17 @@ def run_browser_qa_cmd(project_id: str) -> int:
     state["browser_qa_passed"] = report.passed
     state["browser_qa_mode"] = report.mode
     state["browser_qa_summary"] = report.summary_counts
+    state["browser_qa_selected_runtime_url"] = report.diagnostics.selected_runtime_url
     save_state(project, state)
 
     event_details = {
         "mode": report.mode,
         "passed": report.passed,
+        "outcome": report.outcome,
         "report": str(report_path.relative_to(project.repo_path)),
+        "configured_url": report.diagnostics.configured_url,
+        "selected_runtime_url": report.diagnostics.selected_runtime_url,
+        "ports_tested": report.diagnostics.ports_tested,
         **report.summary_counts,
     }
     append_event(project, run_id, "browser_qa_finished", event_details)
@@ -566,9 +572,12 @@ def run_browser_qa_cmd(project_id: str) -> int:
         append_event(project, run_id, "browser_qa_failed", event_details)
     record_run_finished(project, run_id, "browser_qa_passed" if report.passed else "browser_qa_failed", event_details)
 
-    print(f"Browser QA: {'PASS' if report.passed else 'FAIL'}")
+    print(f"Browser QA: {report.outcome}")
     print(f"Run id: {run_id}")
     print(f"Mode: {report.mode}")
+    print(f"Configured URL: {report.diagnostics.configured_url or 'none'}")
+    print(f"Selected runtime URL: {report.diagnostics.selected_runtime_url or 'none'}")
+    print(f"Ports tested: {', '.join(str(port) for port in report.diagnostics.ports_tested) or 'none'}")
     print(report.summary)
     print(f"Report: {report_path}")
 
@@ -583,6 +592,24 @@ def run_browser_qa_cmd(project_id: str) -> int:
             )
 
     return 0 if report.passed else 1
+
+
+def run_browser_qa_diagnose(project_id: str) -> int:
+    """Diagnose Browser QA URL reachability. No Playwright, screenshots, or product data mutation."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+    diagnostics = diagnose_browser_qa(project)
+    path = write_browser_qa_diagnostics_report(project, diagnostics)
+    print(f"Browser QA diagnostics: {'PASS' if diagnostics.reachable else 'FAIL'}")
+    print(f"Configured URL: {diagnostics.configured_url or 'none'}")
+    print("Reachability:")
+    for check in diagnostics.checks:
+        status = check.status if check.status is not None else ""
+        detail = f" {status}" if status != "" else f" {check.error}" if check.error else ""
+        print(f"- {check.url} {'PASS' if check.passed else 'FAIL'}{detail}")
+    print(f"Selected runtime URL: {diagnostics.selected_runtime_url or 'none'}")
+    print(f"Diagnostics report: {path}")
+    return 0 if diagnostics.reachable else 1
 
 
 def run_e2e_plan(project_id: str) -> int:
@@ -616,6 +643,17 @@ def run_e2e_plan(project_id: str) -> int:
     print("9. Capture screenshots/evidence and record failures in `project_control/BLOCKERS.md`.")
     print()
     print("This command does not run browser automation, call Supabase, or modify data.")
+    return 0
+
+
+def run_new_validation_report(project_id: str) -> int:
+    """Create a blank product validation report draft under logs."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+    latest_path, run_path = create_validation_report(project)
+    print(f"Validation report draft: {run_path}")
+    print(f"Latest validation report: {latest_path}")
+    print("No product data was modified.")
     return 0
 
 
@@ -1004,7 +1042,9 @@ def main() -> int:
     group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
     group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
     group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
+    group.add_argument("--browser-qa-diagnose", action="store_true", help="Diagnose Browser QA dev-server reachability.")
     group.add_argument("--e2e-plan", action="store_true", help="Print the project-specific manual E2E validation plan.")
+    group.add_argument("--new-validation-report", action="store_true", help="Create a blank product validation report draft.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
     group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
 
@@ -1024,8 +1064,12 @@ def main() -> int:
         return run_claude_execute(args.project)
     if args.browser_qa:
         return run_browser_qa_cmd(args.project)
+    if args.browser_qa_diagnose:
+        return run_browser_qa_diagnose(args.project)
     if args.e2e_plan:
         return run_e2e_plan(args.project)
+    if args.new_validation_report:
+        return run_new_validation_report(args.project)
     if args.intake_builder_report:
         return run_builder_intake(args.project, args.intake_builder_report)
     if args.post_builder:

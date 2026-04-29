@@ -11,6 +11,8 @@ Validate MIRA as a real product flow, not just as a buildable Next.js app. This 
 - Confirm `NEXT_PUBLIC_SUPABASE_ANON_KEY` is present locally.
 - Confirm Supabase project access for table and storage inspection.
 - Do not use real customer data.
+- Do not use real customer photos.
+- Do not share or commit JWTs, cookies, API keys, screenshots, logs, or exported data.
 - Do not commit `.env`, `.env.local`, screenshots, logs, or exported Supabase data.
 
 ## Required Supabase Tables
@@ -61,39 +63,45 @@ http://localhost:3000/es/onboarding
 - Timestamps are present if expected.
 - No secret values or unrelated user data are exposed in the browser.
 
-5. Continue to:
+5. In browser DevTools, verify local storage:
+
+- `localStorage.mira_profile_id` exists after onboarding.
+- The value matches the expected profile/session identifier shape.
+- The value does not expose JWTs, API keys, cookies, or unrelated user data.
+
+6. Continue to:
 
 ```text
 http://localhost:3000/es/scan
 ```
 
-6. Upload at least one front scan photo using a safe test image.
+7. Upload at least one front scan photo using a safe synthetic or sample test image.
 
-7. In Supabase Storage, verify `user-photos`:
+8. In Supabase Storage, verify `user-photos`:
 
 - A new object exists for the upload.
 - The object path is scoped to the test user/session as expected.
 - The file is readable only through the intended app/storage policy.
 - No `.env`, token, local path, or unrelated user identifier appears in the object path.
 
-8. In Supabase, verify `user_assets`:
+9. In Supabase, verify `user_assets`:
 
 - A new row exists for the uploaded photo.
 - `asset_type` is correct for the front scan photo.
 - `storage_path` points to the object in `user-photos`.
 - Any user/session/profile reference matches the test user flow.
 
-9. Open:
+10. Open:
 
 ```text
 http://localhost:3000/es/catalog
 ```
 
-10. Select a product and navigate to the try-on page.
+11. Select a product and navigate to the try-on page.
 
-11. On `/es/tryon/[productId]`, click the try-on CTA (`Probarme`).
+12. On `/es/tryon/[productId]`, click the try-on CTA (`Probarme`).
 
-12. In Supabase, verify `generations`:
+13. In Supabase, verify `generations`:
 
 - A new row exists after clicking the try-on CTA.
 - Product identifier matches the selected product.
@@ -101,7 +109,7 @@ http://localhost:3000/es/catalog
 - Status is present and valid for the mocked generation path.
 - Provider metadata does not contain secrets.
 
-13. Verify result polling:
+14. Verify result polling:
 
 - The app navigates to `/es/result/[generationId]` or otherwise exposes the generated result route.
 - The result page polls the status endpoint.
@@ -158,8 +166,9 @@ During the full flow, watch browser DevTools for:
 - Supabase screenshots or redacted notes for:
   - `users_profile`
   - `user_assets`
-  - `generations`
-  - `user-photos`
+- `generations`
+- `user-photos`
+- `localStorage.mira_profile_id`
 - Browser console screenshot showing no blocking errors, or showing the exact failure.
 - Browser network screenshot filtered to failed requests, if any.
 - Current git status after validation.
@@ -191,6 +200,7 @@ Specific next fix or investigation step.
 
 - Use only the fake test user `qa-test+manual-001@example.com`.
 - Do not upload real personal photos.
+- Do not share JWTs, cookies, API keys, refresh tokens, or Supabase service-role credentials.
 - Do not paste secret values into reports, screenshots, logs, prompts, or blockers.
 - Redact Supabase project identifiers if sharing outside the local repo.
 - Delete test data only through explicit, human-approved cleanup steps.

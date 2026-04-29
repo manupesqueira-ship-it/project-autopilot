@@ -75,3 +75,18 @@ logs\mira_autopilot_failure_20260428_053911.md
 
 Recommended action:
 OpenAI supervisor unavailable. A local fallback plan has been generated. Resolve the underlying issue (billing, quota, credentials) when convenient.
+
+### 2026-04-29 02:04 UTC - Post-builder QA: HUMAN_DECISION_REQUIRED
+
+Status: open
+Severity: blocking
+Source: Project Autopilot post-builder QA
+
+Question or blocker:
+HUMAN_DECISION_REQUIRED
+
+Post-builder log:
+logs\mira_post_builder_20260429_020431.md
+
+Recommended action:
+Get human decision before more builder work.
