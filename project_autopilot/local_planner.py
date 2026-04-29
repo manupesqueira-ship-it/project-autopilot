@@ -27,15 +27,29 @@ def _pick_next_task(task_queue_md: str) -> tuple[str, str]:
     """
     lines = task_queue_md.strip().splitlines()
     in_block = False
+    in_current_priority = False
     title = ""
     body_lines: list[str] = []
 
     for line in lines:
         stripped = line.strip()
-        # Skip top-level headings and empty lines before first task
         if stripped.startswith("# ") and not stripped.startswith("### "):
             continue
-        if stripped.startswith("## Paused") or stripped.startswith("## Done") or stripped.startswith("## Completed"):
+        if stripped.startswith("## "):
+            heading = stripped.lower()
+            if "current priority" in heading or "active" in heading:
+                in_current_priority = True
+                continue
+            if in_current_priority:
+                break
+            if any(marker in heading for marker in ["paused", "done", "completed"]):
+                break
+            continue
+        if not in_current_priority:
+            continue
+        if stripped.lower().startswith("status:") and any(word in stripped.lower() for word in ["done", "completed", "resolved"]):
+            title = ""
+            body_lines = []
             break
         if stripped.startswith("### "):
             if in_block:
@@ -113,7 +127,7 @@ def generate_local_plan(
 
 Generated: {_utc_stamp()}
 Project: {project.project_name} ({project.project_id})
-Status: IDLE / NEEDS_TASK_QUEUE_UPDATE
+Status: IDLE_NEEDS_TASK
 
 No actionable task found in TASK_QUEUE.md.
 Update project_control/TASK_QUEUE.md with the next priority task, then rerun.

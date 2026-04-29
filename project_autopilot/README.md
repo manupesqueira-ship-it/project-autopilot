@@ -192,6 +192,55 @@ logs/<project_id>_browser_qa_<timestamp>.md
 
 Browser QA is evidence, not a complete replacement for flow tests. It does not yet fill forms, click through multi-step flows, validate database writes, or prove business logic correctness. Use it alongside manual QA, post-builder intake, and project-specific E2E checks.
 
+### Manual E2E Plan
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --e2e-plan
+```
+
+Prints the path to the project-specific E2E validation plan and summarizes the exact next manual steps. For MIRA, the plan lives at:
+
+```text
+project_control/MIRA_E2E_VALIDATION_PLAN.md
+```
+
+`--e2e-plan` is intentionally read-only:
+
+- Does not run browser automation.
+- Does not call Supabase.
+- Does not modify data.
+- Does not require Playwright.
+- Does not fail if the app is not running.
+
+Use it before validating the real product flow:
+
+```text
+onboarding -> scan -> catalog/product -> tryon -> result polling
+```
+
+The E2E plan covers Supabase observations for `users_profile`, `user_assets`, `generations`, and the `user-photos` storage bucket.
+
+### Product Validation Readiness
+
+`--doctor` prints `PRODUCT_VALIDATION_READINESS` after the normal environment and scheduler checks. It verifies:
+
+- The project-specific E2E validation plan exists.
+- Browser QA is available, including HTTP-only mode when Playwright is missing.
+- `NEXT_PUBLIC_SUPABASE_URL` is present, without printing the value.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` is present, without printing the value.
+- `route_walk_urls` are configured.
+- Customer data policy, QA protocol, and world-class standard docs exist.
+
+Result values:
+
+| Result | Meaning |
+|---|---|
+| `READY` | Required validation docs, routes, and Supabase public env vars are present. |
+| `WARN` | Validation tooling exists, but something important needs attention, commonly local Supabase env vars. |
+| `NOT_READY` | A required validation document or route/control file is missing. |
+
+Passing `lint`, `typecheck`, and `build` is necessary but not sufficient. Product approval requires Browser QA evidence, manual E2E validation evidence, and post-builder QA review where relevant.
+
 ### Post-Builder Intake
 
 After Claude Code or Codex finishes implementation, save its report to a markdown file. A report should follow `project_autopilot/templates/BUILDER_REPORT.template.md` and include:
@@ -249,6 +298,20 @@ logs/<project_id>_correction_prompt_latest.md
 Paste that prompt into Claude Code or Codex for the fix pass.
 
 Project Autopilot does **not** auto-commit. Commit remains a human-controlled step.
+
+### Validation Layers
+
+Project Autopilot separates validation into layers:
+
+| Layer | Purpose |
+|---|---|
+| `lint/typecheck/build` | Confirms the codebase compiles and basic static checks pass. |
+| Browser QA | Captures route, network, console, page-error, and screenshot evidence. |
+| Manual E2E validation | Proves real product behavior, backend persistence, and customer data handling. |
+| Post-builder intake | Reviews builder reports, fresh evidence, risk, blockers, and correction prompts. |
+| QA verdict | Decides whether the work is passable, needs fixes, requires research, requires a human decision, or is blocked. |
+
+Build success alone must never be treated as product approval.
 
 ## How to Use with Claude Code
 

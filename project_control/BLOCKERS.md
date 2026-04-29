@@ -6,9 +6,11 @@ Blocking questions and decisions go here. These items should stop autonomous pro
 
 ### 2026-04-28 05:10 UTC - OpenAI API rate limit on --cycle
 
-Status: open
+Status: resolved
 Severity: non-critical
 Source: Project Autopilot
+Resolved: 2026-04-29
+Resolution: Historical blocker. Root cause was identified as OpenAI API billing/quota balance, not a Project Autopilot code failure. Project Autopilot now handles 429 cleanly and local-plan/dry-run remain available.
 
 Question or blocker:
 OpenAI API `--cycle` returned HTTP 429 (Too Many Requests) during earlier testing. The supervisor planning cycle cannot complete until API billing, quota, or rate limits are verified.
@@ -40,9 +42,11 @@ Recommended action:
 
 ### 2026-04-28 05:36 UTC - Autopilot blocked: MissingOpenAICredentials
 
-Status: open
+Status: resolved
 Severity: blocking
 Source: Project Autopilot
+Resolved: 2026-04-29
+Resolution: Historical blocker. Root cause was an empty local environment override causing OPENAI_API_KEY to be unavailable. Project Autopilot now reports missing credentials without printing secret values and falls back to local planning.
 
 Question or blocker:
 MissingOpenAICredentials
@@ -56,9 +60,11 @@ OpenAI supervisor unavailable. A local fallback plan has been generated. Resolve
 
 ### 2026-04-28 05:39 UTC - Autopilot blocked: MissingOpenAICredentials
 
-Status: open
+Status: resolved
 Severity: blocking
 Source: Project Autopilot
+Resolved: 2026-04-29
+Resolution: Historical duplicate of the local environment OPENAI_API_KEY issue. Kept for audit history, but no longer blocks local planning or product validation tooling.
 
 Question or blocker:
 MissingOpenAICredentials

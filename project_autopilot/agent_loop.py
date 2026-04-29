@@ -14,6 +14,7 @@ load_env()
 
 from config import ProjectConfig, project_config_path
 from config_validator import ConfigIssue, validate_project_config, worst_severity
+from blocker_summary import summarize_blockers
 from cost_controller import CostController
 from evidence_collector import collect_evidence
 from evidence_bundle import create_evidence_bundle
@@ -85,11 +86,14 @@ def _cost_finish_details(project: ProjectConfig, cost: CostController, evidence:
 
 
 def _count_open_blockers(project: ProjectConfig) -> int:
-    path = project.project_control_path / "BLOCKERS.md"
-    if not path.exists():
-        return 0
-    text = path.read_text(encoding="utf-8", errors="replace").lower()
-    return text.count("status: open")
+    return summarize_blockers(project).open_count
+
+
+def _e2e_plan_path(project: ProjectConfig) -> Path:
+    project_specific = project.project_control_path / f"{project.project_id.upper()}_E2E_VALIDATION_PLAN.md"
+    if project_specific.exists():
+        return project_specific
+    return project.project_control_path / "E2E_VALIDATION_PLAN.md"
 
 
 def run_cycle(project_id: str, dry_run: bool = False, cycle: bool = False) -> int:
@@ -434,7 +438,12 @@ def run_status(project_id: str) -> int:
             print(f"Latest evidence:    {latest_run['evidence_bundle_path']}")
         if latest_run.get("qa_verdict"):
             print(f"Latest QA verdict:  {latest_run['qa_verdict']} ({latest_run.get('risk_level') or 'risk unknown'})")
-    print(f"Open blockers:      {_count_open_blockers(project)}")
+    blocker_summary = summarize_blockers(project)
+    print(f"Open blockers:      {blocker_summary.open_count}")
+    print(f"Resolved blockers:  {blocker_summary.resolved_count}")
+    if blocker_summary.latest_open_title:
+        print(f"Latest open blocker:{blocker_summary.latest_open_title}")
+    print(f"Blocker file:       {blocker_summary.path.relative_to(project.repo_path)}")
     print(f"Research requests:  {count_research_index(project)} indexed / {count_research_requests(project)} run events")
     last_log = state.get("last_log")
     if last_log:
@@ -574,6 +583,40 @@ def run_browser_qa_cmd(project_id: str) -> int:
             )
 
     return 0 if report.passed else 1
+
+
+def run_e2e_plan(project_id: str) -> int:
+    """Print the project-specific manual E2E validation plan. No automation or data access."""
+    project = load_project(project_id)
+    path = _e2e_plan_path(project)
+    print(f"Project: {project.project_name} ({project.project_id})")
+    print(f"E2E validation plan: {path}")
+    print()
+
+    if not path.exists():
+        print("No E2E validation plan found.")
+        print(f"Expected: {path.relative_to(project.repo_path)}")
+        return 1
+
+    print("Preconditions:")
+    print("- Local app can be started with the intended environment.")
+    print("- Supabase project access is available for table and storage inspection.")
+    print("- Use only fake QA data; do not use real customer photos or personal data.")
+    print("- Do not commit logs, screenshots, exported data, or env files.")
+    print()
+    print("Exact next manual steps:")
+    print("1. Run `npm run dev`.")
+    print("2. Open `http://localhost:3000/es/onboarding`.")
+    print("3. Submit onboarding with `qa-test+manual-001@example.com` and fake profile data.")
+    print("4. Verify `users_profile` in Supabase.")
+    print("5. Upload a safe test image at `/es/scan`.")
+    print("6. Verify `user-photos` storage and `user_assets`.")
+    print("7. Select a product from `/es/catalog` and trigger try-on.")
+    print("8. Verify `generations` and result polling at `/es/result/[generationId]`.")
+    print("9. Capture screenshots/evidence and record failures in `project_control/BLOCKERS.md`.")
+    print()
+    print("This command does not run browser automation, call Supabase, or modify data.")
+    return 0
 
 
 def run_builder_intake(project_id: str, report_path: str) -> int:
@@ -815,8 +858,52 @@ def run_doctor(project_id: str) -> int:
     # Scheduler readiness report
     print()
     _print_scheduler_readiness(project)
+    print()
+    _print_product_validation_readiness(project)
 
     return 2 if result_severity == "fail" else 0
+
+
+def _print_product_validation_readiness(project: ProjectConfig) -> None:
+    """Print product-validation readiness. Does not access Supabase or run app flows."""
+    e2e_path = _e2e_plan_path(project)
+    supabase_url_present = bool(os.environ.get("NEXT_PUBLIC_SUPABASE_URL"))
+    supabase_anon_present = bool(os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY"))
+    checks: list[tuple[str, bool, str]] = [
+        ("MIRA_E2E_VALIDATION_PLAN exists", e2e_path.exists(), str(e2e_path.relative_to(project.repo_path))),
+        ("Browser QA available", True, "project_autopilot/browser_qa.py"),
+        ("Browser QA mode available", True, "playwright when installed, otherwise http_only"),
+        ("NEXT_PUBLIC_SUPABASE_URL present", supabase_url_present, "value hidden"),
+        ("NEXT_PUBLIC_SUPABASE_ANON_KEY present", supabase_anon_present, "value hidden"),
+        ("route_walk_urls configured", bool(project.route_walk_urls), f"{len(project.route_walk_urls)} routes"),
+        ("customer data policy exists", (project.project_control_path / "CUSTOMER_DATA_POLICY.md").exists(), "project_control/CUSTOMER_DATA_POLICY.md"),
+        ("QA protocol exists", (project.project_control_path / "QA_PROTOCOL.md").exists(), "project_control/QA_PROTOCOL.md"),
+        ("world-class standard exists", (project.project_control_path / "WORLD_CLASS_STANDARD.md").exists(), "project_control/WORLD_CLASS_STANDARD.md"),
+    ]
+    required = {
+        "MIRA_E2E_VALIDATION_PLAN exists",
+        "NEXT_PUBLIC_SUPABASE_URL present",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY present",
+        "route_walk_urls configured",
+        "customer data policy exists",
+        "QA protocol exists",
+        "world-class standard exists",
+    }
+    missing_required = [name for name, ok, _ in checks if name in required and not ok]
+    if not missing_required:
+        result = "READY"
+    elif any(name.startswith("NEXT_PUBLIC_SUPABASE") for name in missing_required):
+        result = "WARN"
+    else:
+        result = "NOT_READY"
+
+    print("PRODUCT_VALIDATION_READINESS:")
+    for name, ok, detail in checks:
+        print(f"  {'[x]' if ok else '[ ]'} {name}: {detail}")
+    print()
+    print(f"PRODUCT_VALIDATION_READINESS_RESULT: {result}")
+    if missing_required:
+        print(f"  Missing/needs attention: {', '.join(missing_required)}")
 
 
 def _print_scheduler_readiness(project: ProjectConfig) -> None:
@@ -901,6 +988,7 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --local-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --cycle\n"
             "  python -B project_autopilot/agent_loop.py --project mira --status\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --e2e-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --handoff-claude\n"
         ),
     )
@@ -916,6 +1004,7 @@ def main() -> int:
     group.add_argument("--claude-manual", action="store_true", help="Print latest prompt path for manual paste into Claude Code.")
     group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
     group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
+    group.add_argument("--e2e-plan", action="store_true", help="Print the project-specific manual E2E validation plan.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
     group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
 
@@ -935,6 +1024,8 @@ def main() -> int:
         return run_claude_execute(args.project)
     if args.browser_qa:
         return run_browser_qa_cmd(args.project)
+    if args.e2e_plan:
+        return run_e2e_plan(args.project)
     if args.intake_builder_report:
         return run_builder_intake(args.project, args.intake_builder_report)
     if args.post_builder:
