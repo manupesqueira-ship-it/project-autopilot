@@ -172,5 +172,31 @@ Recommended action:
 2. Enable CAPTCHA (hCaptcha or Turnstile) for abuse protection
 3. Set SUPABASE_SERVICE_ROLE_KEY in .env.local
 4. Answer human questions in HUMAN_QUESTIONS.md
-4. Apply RLS + policies from Section J of the plan in staging
-5. Run manual verification checklist (Section L of the plan)
+5. Apply RLS + policies from Section J of the plan in staging
+6. Run manual verification checklist (Section L of the plan)
+
+### 2026-04-29 - Flow QA selectors and framework added
+
+Status: open
+Severity: non-critical
+Source: Overnight sprint
+
+Progress:
+- 2026-04-29: Stable QA selectors (data-testid) added across all 5 pages (onboarding, scan, catalog, tryon, result).
+- 2026-04-29: Button component updated to accept testId prop.
+- 2026-04-29: Flow QA framework created (flow_qa.py + mira_flows.yaml).
+- 2026-04-29: 4 flows defined: route_readiness, selector_readiness, onboarding_safe_dry, full_flow_blocked.
+- 2026-04-29: Flow QA CLI operational (--list, --dry-run, --diagnose, --run).
+- 2026-04-29: Playwright-based execution works; gracefully skips when dev server is down.
+- 2026-04-29: Backend audit enhanced with auth, selector, and Flow QA checks.
+- 2026-04-29: Control Center updated with Flow QA integration.
+- 2026-04-29: Mock generation plan documented (providers already mock when API keys absent).
+
+Remaining to unblock full E2E Flow QA:
+- Enable Anonymous Sign-Ins in Supabase Dashboard.
+- Set SUPABASE_SERVICE_ROLE_KEY server-side.
+- Decide test data strategy.
+- Implement Playwright route interception for mock generation.
+- Decide RLS/storage path plan.
+- Draft and review storage policies.
+- Decide real customer data safety approach.

@@ -208,6 +208,24 @@ The generation-store now uses `createServiceRoleServer()` which requires `SUPABA
 Why it matters:
 Once RLS is enabled on the `generations` table, server-side INSERT/UPDATE from API routes will fail unless service_role is configured. This is a prerequisite for the RLS enablement sprint.
 
+### 2026-04-29 - Test data strategy for Flow QA
+
+Status: open
+Severity: non-blocking
+Source: Overnight sprint (Flow QA framework)
+
+Question:
+Flow QA needs a strategy for test data. Options:
+1. Playwright route interception (mock all Supabase calls) — no real data written.
+2. Dedicated test user/profile seeded before each test run — requires cleanup.
+3. Separate Supabase project for testing — full isolation but setup overhead.
+4. Mock mode flag (MOCK_GENERATION=true) — skip DB writes entirely.
+
+Which approach is preferred for MVP testing?
+
+Why it matters:
+Full E2E Flow QA (form submission, file upload, try-on generation, result polling) is blocked until a safe test data strategy is decided. The current Flow QA framework can only do non-destructive checks (route readiness, selector readiness, dry form fill).
+
 ## Format
 
 ```md

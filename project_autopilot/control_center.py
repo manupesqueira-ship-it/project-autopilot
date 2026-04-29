@@ -166,6 +166,39 @@ def _backend_audit_json(project: ProjectConfig) -> dict[str, Any]:
     return _read_json(path)
 
 
+def _flow_qa_data(project: ProjectConfig) -> dict[str, Any]:
+    """Collect latest Flow QA results if available."""
+    results_path = project.repo_path / "logs" / "flow_qa" / project.project_id / "latest" / "flow_results.json"
+    report_path = project.repo_path / "logs" / "flow_qa" / project.project_id / "latest" / "flow_report.md"
+    data: dict[str, Any] = {
+        "exists": results_path.exists(),
+        "report_path": str(report_path) if report_path.exists() else "",
+        "flows": [],
+        "overall_verdict": "NOT_RUN",
+    }
+    if results_path.exists():
+        try:
+            raw = json.loads(results_path.read_text(encoding="utf-8"))
+            if isinstance(raw, list):
+                data["flows"] = raw
+            else:
+                data["flows"] = [raw]
+            verdicts = [f.get("status", "UNKNOWN") for f in data["flows"]]
+            if "FAIL" in verdicts:
+                data["overall_verdict"] = "FAIL"
+            elif "BLOCKED" in verdicts:
+                data["overall_verdict"] = "BLOCKED"
+            elif all(v in ("PASS", "SKIPPED") for v in verdicts):
+                data["overall_verdict"] = "PASS" if "PASS" in verdicts else "SKIPPED"
+            elif "WARN" in verdicts:
+                data["overall_verdict"] = "WARN"
+            else:
+                data["overall_verdict"] = "MIXED"
+        except Exception:
+            data["overall_verdict"] = "ERROR"
+    return data
+
+
 def _autopilot_state(project: ProjectConfig) -> dict[str, Any]:
     path = project.repo_path / project.logs_dir / f"{project.project_id}_autopilot_state.json"
     return _read_json(path)
@@ -433,6 +466,9 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
 
     # Backend audit
     data["backend_audit"] = _backend_audit_json(project)
+
+    # Flow QA
+    data["flow_qa"] = _flow_qa_data(project)
 
     # Cost
     cost = data["latest_evidence"].get("cost_snapshot", {})

@@ -14,9 +14,11 @@ INSPECT_PATHS = [
     "supabase/schema.sql",
     "lib/supabase/client.ts",
     "lib/supabase/server.ts",
+    "lib/supabase/auth.ts",
     "lib/generation-store.ts",
     "app/[locale]/(app)/onboarding/page.tsx",
     "app/[locale]/(app)/scan/page.tsx",
+    "app/[locale]/(app)/catalog/page.tsx",
     "app/[locale]/(app)/tryon/[productId]/page.tsx",
     "app/[locale]/(app)/result/[generationId]/page.tsx",
     "app/api/tryon/jobs/route.ts",
@@ -219,12 +221,97 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.readiness = "UNKNOWN"
     else:
         _add_findings(summary, tryon, scan)
+        # Add auth, selector, and Flow QA findings
+        summary.findings.extend(_check_auth_foundation(files))
+        summary.findings.extend(_check_selectors(files))
+        summary.findings.extend(_check_flow_qa())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
     summary.report_path = str(report_path.relative_to(project.repo_path))
     _write_json_summary(project, summary)
     return summary, report_path
+
+
+def _check_auth_foundation(files: dict[str, str]) -> list[str]:
+    """Check anonymous auth foundation status."""
+    findings: list[str] = []
+    auth_ts = files.get("lib/supabase/auth.ts", "")
+    onboarding = files.get("app/[locale]/(app)/onboarding/page.tsx", "")
+    scan = files.get("app/[locale]/(app)/scan/page.tsx", "")
+    server = files.get("lib/supabase/server.ts", "")
+
+    if "signInAnonymously" in auth_ts:
+        findings.append("Anonymous Auth foundation exists (signInAnonymously in auth.ts).")
+    else:
+        findings.append("Anonymous Auth foundation NOT found.")
+
+    if "getOrCreateAnonymousUser" in onboarding:
+        findings.append("Onboarding calls getOrCreateAnonymousUser and writes auth_user_id.")
+    if "getOrCreateAnonymousUser" in scan:
+        findings.append("Scan ensures auth session before upload.")
+
+    if "createServiceRoleServer" in server:
+        findings.append("Service-role server path exists.")
+        if "ALLOW_SUPABASE_ANON_SERVER_FALLBACK" in server:
+            findings.append("Service-role fails fast unless SUPABASE_SERVICE_ROLE_KEY is set or explicit dev fallback is enabled.")
+
+    findings.append("Anonymous Sign-Ins dashboard setting is still OFF per manual finding.")
+    findings.append("localStorage mira_profile_id remains for UX continuity, not security.")
+
+    return findings
+
+
+def _check_selectors(files: dict[str, str]) -> list[str]:
+    """Check if QA selectors have been added."""
+    findings: list[str] = []
+    selector_pages = {
+        "onboarding": files.get("app/[locale]/(app)/onboarding/page.tsx", ""),
+        "scan": files.get("app/[locale]/(app)/scan/page.tsx", ""),
+        "catalog": files.get("app/[locale]/(app)/catalog/page.tsx", ""),
+        "tryon": files.get("app/[locale]/(app)/tryon/[productId]/page.tsx", ""),
+        "result": files.get("app/[locale]/(app)/result/[generationId]/page.tsx", ""),
+    }
+
+    total_selectors = 0
+    for page_name, content in selector_pages.items():
+        count = content.count("data-testid")
+        total_selectors += count
+        if count > 0:
+            findings.append(f"  {page_name}: {count} data-testid selectors")
+
+    if total_selectors > 0:
+        findings.insert(0, f"QA selectors added: {total_selectors} total across {sum(1 for c in selector_pages.values() if 'data-testid' in c)} pages.")
+    else:
+        findings.insert(0, "No QA selectors (data-testid) found in product code.")
+
+    return findings
+
+
+def _check_flow_qa() -> list[str]:
+    """Check if Flow QA framework exists."""
+    findings: list[str] = []
+    flow_qa_path = Path(__file__).resolve().parent / "flow_qa.py"
+    flows_path = Path(__file__).resolve().parent / "config" / "projects" / "mira_flows.yaml"
+
+    if flow_qa_path.exists():
+        findings.append("Flow QA framework exists (flow_qa.py).")
+    else:
+        findings.append("Flow QA framework NOT found.")
+
+    if flows_path.exists():
+        findings.append("Flow definitions exist (mira_flows.yaml).")
+    else:
+        findings.append("Flow definitions NOT found.")
+
+    # Check for latest results
+    results_path = Path(__file__).resolve().parent.parent / "logs" / "flow_qa" / "mira" / "latest" / "flow_results.json"
+    if results_path.exists():
+        findings.append(f"Latest Flow QA results exist: {results_path}")
+    else:
+        findings.append("No Flow QA results yet.")
+
+    return findings
 
 
 def _add_findings(summary: BackendAuditSummary, tryon: str, scan: str) -> None:

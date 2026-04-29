@@ -1,0 +1,129 @@
+## MIRA Flow QA Definitions
+## Safe, non-destructive flows for validating MIRA's testability.
+## Do NOT add flows that submit forms, upload files, or call paid APIs
+## unless explicitly marked safe_mock: true.
+
+base_url: "http://localhost:3000"
+locale: "es"
+
+flows:
+
+  mira_route_readiness:
+    description: "Visit all main routes and check for errors. No form submission."
+    safe: true
+    routes:
+      - path: "/{locale}"
+        name: "Landing"
+      - path: "/{locale}/onboarding"
+        name: "Onboarding"
+      - path: "/{locale}/scan"
+        name: "Scan"
+      - path: "/{locale}/catalog"
+        name: "Catalog"
+      - path: "/{locale}/tryon/adidas-trefoil-tee"
+        name: "TryOn (Adidas Trefoil Tee)"
+    checks:
+      - no_console_errors
+      - no_page_errors
+      - no_failed_network_4xx_5xx
+      - screenshot_each_route
+
+  mira_selector_readiness:
+    description: "Assert that stable QA selectors exist on each page."
+    safe: true
+    pages:
+      onboarding:
+        path: "/{locale}/onboarding"
+        selectors:
+          - data-testid=input-name
+          - data-testid=input-email
+          - data-testid=input-height-cm
+          - data-testid=input-weight-kg
+          - data-testid=chip-size-S
+          - data-testid=chip-build-slim
+          - data-testid=chip-gender-f
+          - data-testid=btn-onboarding-next
+      scan:
+        path: "/{locale}/scan"
+        selectors:
+          - data-testid=upload-front
+          - data-testid=upload-side
+          - data-testid=upload-back
+          - data-testid=input-upload-front
+          - data-testid=input-upload-side
+          - data-testid=input-upload-back
+          - data-testid=btn-skip-photos
+          - data-testid=btn-scan-next
+      catalog:
+        path: "/{locale}/catalog"
+        selectors:
+          - data-testid=catalog-grid
+          - data-testid=product-card-adidas-trefoil-tee
+          - data-testid=filter-brand-all
+          - data-testid=filter-category-all
+      tryon:
+        path: "/{locale}/tryon/adidas-trefoil-tee"
+        selectors:
+          - data-testid=tryon-page
+          - data-testid=tryon-product
+          - data-testid=tryon-size-S
+          - data-testid=btn-tryon-start
+      result:
+        path: "/{locale}/result/mock-test-id"
+        skip: true
+        skip_reason: "No safe mock generation ID exists yet"
+        selectors:
+          - data-testid=result-page
+          - data-testid=result-status
+          - data-testid=tryon-result-image
+          - data-testid=btn-try-another
+          - data-testid=btn-buy
+
+  mira_onboarding_safe_dry_flow:
+    description: "Navigate to onboarding, fill fields locally, do NOT submit to Supabase."
+    safe: true
+    safe_mock: false
+    steps:
+      - verb: goto
+        path: "/{locale}/onboarding"
+      - verb: assert_selector
+        selector: "[data-testid=input-name]"
+      - verb: fill
+        selector: "[data-testid=input-name]"
+        value: "QA Test User"
+      - verb: fill
+        selector: "[data-testid=input-email]"
+        value: "qa@test.local"
+      - verb: fill
+        selector: "[data-testid=input-height-cm]"
+        value: "175"
+      - verb: fill
+        selector: "[data-testid=input-weight-kg]"
+        value: "70"
+      - verb: click
+        selector: "[data-testid=chip-size-M]"
+      - verb: click
+        selector: "[data-testid=chip-build-regular]"
+      - verb: click
+        selector: "[data-testid=chip-gender-skip]"
+      - verb: assert_selector
+        selector: "[data-testid=btn-onboarding-next]"
+      - verb: note
+        message: "Form filled locally. NOT submitting to Supabase — no safe mock exists."
+      - verb: screenshot
+        name: "onboarding_filled"
+
+  mira_full_flow_blocked:
+    description: "Full E2E flow — currently BLOCKED."
+    status: BLOCKED
+    blockers:
+      - "Supabase Anonymous Sign-Ins are OFF"
+      - "SUPABASE_SERVICE_ROLE_KEY not configured server-side"
+      - "Test data strategy not decided"
+      - "Safe mock generation/interception not implemented"
+      - "RLS/storage path plan not decided"
+      - "Storage policies not drafted or reviewed"
+      - "Real customer data safety decision pending"
+    steps:
+      - verb: blocked_reason
+        message: "Cannot run full flow until all blockers are resolved."

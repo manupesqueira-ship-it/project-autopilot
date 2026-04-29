@@ -701,3 +701,33 @@ Status: PARTIAL — code-side foundation in place, Supabase settings not yet cha
 | `supabase/schema.sql` | Schema definitions, RLS comments |
 | `middleware.ts` | next-intl routing only, no auth |
 | `.env`, `.env.example` | Environment variable definitions |
+
+---
+
+## P. Sprint Update: QA Selectors + Flow QA Framework (2026-04-29)
+
+### What was done
+- Stable QA selectors (data-testid) added to all 5 app pages (onboarding, scan, catalog, tryon, result).
+- Button component updated with testId prop pass-through.
+- Flow QA framework created (project_autopilot/flow_qa.py + config/projects/mira_flows.yaml).
+- 4 flows defined: route_readiness, selector_readiness, onboarding_safe_dry, full_flow_blocked.
+- Backend audit enhanced with auth foundation, selector, and Flow QA checks.
+- Control Center enhanced with Flow QA data integration.
+- Mock generation plan documented (providers already mock when API keys absent).
+- RLS/storage migration draft created.
+
+### Impact on security alignment
+- Flow QA can now validate testability non-destructively.
+- Full E2E testing remains BLOCKED by the same security blockers listed in Section E.
+- No live Supabase mutations were performed during this sprint.
+- No secrets, env files, or RLS settings were touched.
+
+### Remaining manual Supabase actions
+1. Enable Anonymous Sign-Ins in Dashboard.
+2. Enable CAPTCHA before public testing.
+3. Set production Site URL + Redirect URLs.
+4. Set SUPABASE_SERVICE_ROLE_KEY server-side.
+5. Decide storage path migration strategy.
+6. Decide auth_user_id column vs JOIN policy for user_assets/generations.
+7. Apply RLS + policies in staging (do NOT run in production yet).
+8. Run manual verification checklist.
