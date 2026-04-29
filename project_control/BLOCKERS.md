@@ -220,3 +220,10 @@ Update 2026-04-29 (acceleration sprint):
 - No-human mock E2E validation: `python -B project_autopilot/flow_qa.py --project mira --validate-mock-e2e`
 - Auto-managed dev server (starts/stops as subprocess, no .env modification).
 - All remaining blockers are now external/manual (Supabase Dashboard actions), not codebase ambiguity.
+
+Update 2026-04-29 (privacy logging sprint):
+- Sensitive logging audit tool created (sensitive_logging_audit.py). Verdict: PASS.
+- Fixed 6 unsafe logging patterns: raw error objects in console, raw Supabase error messages shown to users.
+- Privacy logging guardrails documented (MIRA_PRIVACY_LOGGING_GUARDRAILS.md).
+- Backend audit, readiness report, and Control Center updated with privacy checks.
+- Remaining privacy blockers: retention/deletion policy, privacy policy/terms, RLS ownership.

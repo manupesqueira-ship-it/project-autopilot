@@ -376,6 +376,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Flow QA report", "Latest automated flow results", logs / "flow_qa" / pid / "latest" / "flow_report.md", "validation"),
         _entry("Secure MVP readiness", "Overall readiness verdict and category breakdown", logs / "mira_readiness_latest.json", "validation"),
         _entry("Secure MVP runbook", "Human-facing master runbook", ctrl / "MIRA_SECURE_MVP_RUNBOOK.md", "planning"),
+        _entry("Sensitive logging audit", "Privacy/logging static scan results", logs / "mira_sensitive_logging_audit_latest.json", "validation"),
+        _entry("Privacy logging guardrails", "Logging rules for sensitive data", ctrl / "MIRA_PRIVACY_LOGGING_GUARDRAILS.md", "validation"),
     ]
     return items
 

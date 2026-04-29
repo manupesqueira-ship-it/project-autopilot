@@ -228,6 +228,7 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.findings.extend(_check_flow_qa())
         summary.findings.extend(_check_mock_mode(files))
         summary.findings.extend(_check_readiness_docs())
+        summary.findings.extend(_check_sensitive_logging())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -336,6 +337,36 @@ def _check_readiness_docs() -> list[str]:
         else:
             findings.append(f"Missing: {name}")
     findings.insert(0, f"Readiness docs: {present}/{len(docs)} present.")
+    return findings
+
+
+def _check_sensitive_logging() -> list[str]:
+    """Check sensitive logging audit status."""
+    findings: list[str] = []
+    audit_path = Path(__file__).resolve().parent / "sensitive_logging_audit.py"
+    json_path = Path(__file__).resolve().parent.parent / "logs" / "mira_sensitive_logging_audit_latest.json"
+
+    if audit_path.exists():
+        findings.append("Sensitive logging audit tool exists.")
+    else:
+        findings.append("Sensitive logging audit tool NOT found.")
+        return findings
+
+    if json_path.exists():
+        try:
+            import json as _json
+            data = _json.loads(json_path.read_text(encoding="utf-8"))
+            verdict = data.get("verdict", "UNKNOWN")
+            total = data.get("total_findings", 0)
+            high = data.get("high", 0)
+            findings.append(f"Latest audit verdict: {verdict} ({total} findings, {high} HIGH).")
+            if verdict == "FAIL":
+                findings.append("CRITICAL: Sensitive logging audit FAILED — fix before real customer data.")
+        except Exception:
+            findings.append("Could not read latest audit report.")
+    else:
+        findings.append("No sensitive logging audit results yet. Run: python -B project_autopilot/sensitive_logging_audit.py --project mira")
+
     return findings
 
 

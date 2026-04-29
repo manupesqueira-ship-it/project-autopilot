@@ -181,6 +181,31 @@ def check_storage() -> ReadinessCategory:
     return cat
 
 
+def check_privacy_logging() -> ReadinessCategory:
+    cat = ReadinessCategory("Privacy & Logging", "UNKNOWN")
+    cat.add("Sensitive logging audit tool exists",
+            _exists("project_autopilot/sensitive_logging_audit.py"))
+    cat.add("Privacy logging guardrails doc exists",
+            _exists("project_control/MIRA_PRIVACY_LOGGING_GUARDRAILS.md"))
+    cat.add("Customer data policy exists",
+            _exists("project_control/CUSTOMER_DATA_POLICY.md"))
+
+    audit_data = _read_json("logs/mira_sensitive_logging_audit_latest.json")
+    if audit_data:
+        verdict = audit_data.get("verdict", "UNKNOWN")
+        high = audit_data.get("high", 0)
+        cat.add(f"Latest audit verdict: {verdict}",
+                verdict in ("PASS", "WARN") and high == 0,
+                f"{audit_data.get('total_findings', 0)} findings, {high} HIGH")
+    else:
+        cat.add("Logging audit not yet run", False, "Run: python -B project_autopilot/sensitive_logging_audit.py --project mira")
+
+    cat.add("Real customer data still blocked until RLS",
+            True, "Correct: must not store real data yet")
+    cat.status = cat.compute_status()
+    return cat
+
+
 def check_public_beta() -> ReadinessCategory:
     cat = ReadinessCategory("Public Beta Readiness", "UNKNOWN")
     cat.add("CAPTCHA documented as pending",
@@ -324,6 +349,7 @@ def main() -> None:
         check_auth(),
         check_flow_qa(),
         check_mock_generation(),
+        check_privacy_logging(),
         check_rls(),
         check_storage(),
         check_public_beta(),

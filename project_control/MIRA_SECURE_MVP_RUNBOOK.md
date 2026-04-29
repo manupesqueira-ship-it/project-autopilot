@@ -210,3 +210,12 @@ The `--validate-mock-e2e` command:
 - Make RLS ownership/storage decisions
 - Enable CAPTCHA before public testing
 - Set production Site URL
+
+### Sensitive Logging Audit
+
+```bash
+python -B project_autopilot/sensitive_logging_audit.py --project mira
+```
+
+Checks for unsafe logging of tokens, sessions, PII, storage paths, and raw errors.
+Must be PASS before real customer data. See `project_control/MIRA_PRIVACY_LOGGING_GUARDRAILS.md`.
