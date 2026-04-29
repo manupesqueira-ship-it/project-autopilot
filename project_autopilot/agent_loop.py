@@ -34,6 +34,7 @@ from research_log import count_research_index, record_research_request
 from run_history import append_event, count_research_requests, new_run_id, record_run_finished, record_run_started, summarize_recent_runs
 from run_lock import LockActiveError, acquire_lock, release_lock
 from validation_report import create_validation_report
+from backend_audit import run_backend_audit
 
 
 # ---------------------------------------------------------------------------
@@ -459,6 +460,10 @@ def run_status(project_id: str) -> int:
     if last_browser_qa:
         print(f"Browser QA report:  {last_browser_qa}")
         print(f"Browser QA passed:  {state.get('browser_qa_passed')}")
+    last_backend_audit = state.get("last_backend_audit")
+    if last_backend_audit:
+        print(f"Backend audit:      {last_backend_audit}")
+        print(f"Backend readiness:  {state.get('backend_readiness', 'unknown')}")
     print()
 
     # Git status (quick)
@@ -654,6 +659,64 @@ def run_new_validation_report(project_id: str) -> int:
     print(f"Validation report draft: {run_path}")
     print(f"Latest validation report: {latest_path}")
     print("No product data was modified.")
+    return 0
+
+
+def run_backend_audit_cmd(project_id: str) -> int:
+    """Run static backend/data-flow audit. No Supabase or OpenAI calls."""
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+    run_id = new_run_id(project.project_id, "backend_audit")
+    record_run_started(project, run_id, "backend_audit")
+    append_event(project, run_id, "backend_audit_started", {})
+
+    try:
+        summary, report_path = run_backend_audit(project)
+    except Exception as exc:
+        append_event(project, run_id, "backend_audit_failed", {"error": str(exc)})
+        record_run_finished(project, run_id, "backend_audit_failed", {"outcome": "error"})
+        print(f"Backend audit failed: {exc}")
+        return 1
+
+    rel_report = str(report_path.relative_to(project.repo_path))
+    state = load_state(project)
+    state["last_backend_audit"] = rel_report
+    state["backend_readiness"] = summary.readiness
+    state["backend_manual_verification_required"] = summary.manual_verification_required
+    save_state(project, state)
+
+    append_event(
+        project,
+        run_id,
+        "backend_audit_finished",
+        {
+            "report": rel_report,
+            "readiness": summary.readiness,
+            "tables_referenced": summary.tables_referenced,
+            "buckets_referenced": summary.buckets_referenced,
+            "manual_verification_required": len(summary.manual_verification_required),
+        },
+    )
+    record_run_finished(
+        project,
+        run_id,
+        f"backend_audit_{summary.readiness.lower()}",
+        {
+            "outcome": summary.readiness,
+            "backend_audit_report": rel_report,
+        },
+    )
+
+    print(f"Backend audit: {summary.readiness}")
+    print(f"Run id: {run_id}")
+    print(f"Report: {report_path}")
+    print(f"Tables referenced: {', '.join(summary.tables_referenced) or 'none'}")
+    print(f"Buckets referenced: {', '.join(summary.buckets_referenced) or 'none'}")
+    if summary.manual_verification_required:
+        print("Manual verification required:")
+        for item in summary.manual_verification_required:
+            print(f"- {item}")
+    print("No Supabase calls were made. No product data was modified.")
     return 0
 
 
@@ -1043,6 +1106,7 @@ def main() -> int:
     group.add_argument("--claude-execute", action="store_true", help="Invoke Claude CLI automatically (blocked unless config allows).")
     group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
     group.add_argument("--browser-qa-diagnose", action="store_true", help="Diagnose Browser QA dev-server reachability.")
+    group.add_argument("--backend-audit", action="store_true", help="Run static backend and data-flow audit.")
     group.add_argument("--e2e-plan", action="store_true", help="Print the project-specific manual E2E validation plan.")
     group.add_argument("--new-validation-report", action="store_true", help="Create a blank product validation report draft.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
@@ -1066,6 +1130,8 @@ def main() -> int:
         return run_browser_qa_cmd(args.project)
     if args.browser_qa_diagnose:
         return run_browser_qa_diagnose(args.project)
+    if args.backend_audit:
+        return run_backend_audit_cmd(args.project)
     if args.e2e_plan:
         return run_e2e_plan(args.project)
     if args.new_validation_report:

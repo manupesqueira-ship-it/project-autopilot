@@ -244,6 +244,12 @@ def collect_evidence(project: ProjectConfig, dry_run: bool = False, run_id: str 
     else:
         evidence["browser_qa_report"] = None
 
+    backend_audit_path = project.repo_path / project.logs_dir / f"{project.project_id}_backend_audit_latest.md"
+    if backend_audit_path.exists():
+        evidence["backend_audit_report"] = str(backend_audit_path.relative_to(project.repo_path))
+    else:
+        evidence["backend_audit_report"] = None
+
     finished_at = datetime.now(timezone.utc)
     evidence["finished_at"] = finished_at.isoformat()
     evidence["duration_seconds"] = round((finished_at - started_at).total_seconds(), 3)

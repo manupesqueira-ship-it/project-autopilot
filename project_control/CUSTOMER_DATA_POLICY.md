@@ -54,3 +54,46 @@ Every project must explicitly map what customer data it collects, where it is st
 - No auth. Profile IDs are stored in localStorage. Not secure for production.
 - No signed URLs for private bucket access. Photos are uploaded but not yet securely served.
 - No data export or deletion endpoint exists yet.
+
+## MIRA-Specific Customer Data Risks
+
+MIRA's current MVP flow collects or handles profile data, body measurements, photos, selected product/size, and generated try-on output metadata. See `MIRA_DATA_MAP.md` for the field-by-field product map.
+
+### Profile Data
+
+- Profile data is expected in `users_profile`.
+- `name`, `email`, `height_cm`, `weight_kg`, `usual_size`, `build`, and `gender` must be treated as personal or sensitive body data.
+- Do not paste real profile rows into LLM chats, Telegram, commit messages, or logs.
+
+### Photos
+
+- User scan photos are expected in the `user-photos` storage bucket.
+- Photos are biometric/photo-sensitive and must use private storage access.
+- QA must use safe dummy images only. Real customer photos must not appear in screenshots, reports, prompts, logs, or commits.
+
+### Generated Assets
+
+- Generated image/video metadata is expected in `generations`.
+- Generated output may reveal body shape and should be treated as personal unless explicitly sanitized.
+- Provider metadata must never include API keys, JWTs, signed URLs, or raw customer photos.
+
+### Local Storage
+
+- The app currently stores `mira_profile_id` in localStorage after onboarding.
+- A localStorage profile id is a sensitive identifier, not authentication.
+- Do not log `mira_profile_id` or expose it in screenshots unless redacted for QA evidence.
+
+### Supabase Tables And Buckets
+
+- Expected tables: `users_profile`, `user_assets`, `generations`.
+- Expected bucket: `user-photos`.
+- RLS, bucket privacy, storage policies, and profile/photo linkage require manual Supabase UI verification before MIRA can be backend-ready.
+
+### Do-Not-Log Rules
+
+Never log or paste:
+
+- Real names, emails, body measurements, gender, or build values.
+- Raw photo data, private object URLs, signed URLs, JWTs, cookies, or Supabase service-role keys.
+- `.env` or `.env.local` values.
+- Supabase screenshots containing unrelated rows or production customer data.

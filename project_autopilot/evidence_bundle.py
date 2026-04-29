@@ -62,6 +62,7 @@ def create_evidence_bundle(
         ),
         "file_change_metrics": evidence.get("file_change_metrics", {}),
         "browser_qa_report": evidence.get("browser_qa_report"),
+        "backend_audit_report": evidence.get("backend_audit_report"),
         "risk_summary": risk_summary,
         "cost_snapshot": cost_snapshot,
         "task_state": task_state,

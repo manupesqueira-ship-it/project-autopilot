@@ -6,10 +6,17 @@ Validate MIRA as a real product flow, not just as a buildable Next.js app. This 
 
 ## Preconditions
 
-- Run the app locally with the intended environment loaded.
+- Run the app locally with the intended environment loaded:
+
+```bash
+npm run dev
+```
+
+- Open the local app at `http://localhost:3000/es/onboarding`.
 - Confirm `NEXT_PUBLIC_SUPABASE_URL` is present locally.
 - Confirm `NEXT_PUBLIC_SUPABASE_ANON_KEY` is present locally.
 - Confirm Supabase project access for table and storage inspection.
+- Keep browser DevTools open on Console, Network, Application, and Storage views.
 - Do not use real customer data.
 - Do not use real customer photos.
 - Do not share or commit JWTs, cookies, API keys, screenshots, logs, or exported data.
@@ -28,8 +35,14 @@ Validate MIRA as a real product flow, not just as a buildable Next.js app. This 
 ## Test User
 
 - Email: `qa-test+manual-001@example.com`
+- Name: `QA Test User`
+- Height: `170`
+- Weight: `68`
+- Usual size: `M`
+- Build: `regular`
+- Gender: `skip` or another fake QA-only value
 
-Use obviously fake, non-sensitive profile data for all other fields.
+Use only fake, non-sensitive profile data. Do not use real body data.
 
 ## Flow
 
@@ -51,15 +64,20 @@ http://localhost:3000/es/onboarding
 
 3. Complete onboarding with the test user:
 
+- Name: `QA Test User`
 - Email: `qa-test+manual-001@example.com`
-- Use fake/non-sensitive values for name, body profile, sizing, preferences, and any optional fields.
+- Height: `170`
+- Weight: `68`
+- Size: `M`
+- Build: `regular`
+- Gender: `skip` or another fake QA-only value
 - Submit the form.
 
 4. In Supabase, verify `users_profile`:
 
 - A new row exists for the test user.
 - Email matches `qa-test+manual-001@example.com`.
-- Profile fields match the submitted fake data.
+- `name`, `height_cm`, `weight_kg`, `usual_size`, `build`, and `gender` match the submitted fake data.
 - Timestamps are present if expected.
 - No secret values or unrelated user data are exposed in the browser.
 
@@ -76,6 +94,8 @@ http://localhost:3000/es/scan
 ```
 
 7. Upload at least one front scan photo using a safe synthetic or sample test image.
+
+Use a dummy image that contains no real person, face, body, license plate, home, workplace, or private metadata.
 
 8. In Supabase Storage, verify `user-photos`:
 
@@ -104,8 +124,9 @@ http://localhost:3000/es/catalog
 13. In Supabase, verify `generations`:
 
 - A new row exists after clicking the try-on CTA.
-- Product identifier matches the selected product.
-- User/session/profile reference matches the test flow.
+- Product identifier matches the selected product if the current implementation supports persisted product linkage.
+- User/session/profile reference matches the test flow if the current implementation supports persisted profile linkage.
+- If `product_id` or `user_profile_id` is null because the MVP still uses local product IDs or does not pass `mira_profile_id` into the API request, record this as `MANUAL_VERIFICATION_REQUIRED` or a blocker depending on expected behavior.
 - Status is present and valid for the mocked generation path.
 - Provider metadata does not contain secrets.
 
@@ -115,6 +136,12 @@ http://localhost:3000/es/catalog
 - The result page polls the status endpoint.
 - The page eventually shows the expected mock output.
 - No infinite spinner, unhandled exception, or silent failure occurs.
+
+15. Verify current flow-state behavior:
+
+- Confirm whether `/es/tryon/[productId]` sends populated profile/photo data or empty fallback objects.
+- Confirm whether result display metadata survives a dev server restart. If not, document the in-memory metadata limitation.
+- Confirm no generated provider call uses paid APIs during this validation.
 
 ## Console And Network Checks
 
@@ -138,11 +165,12 @@ During the full flow, watch browser DevTools for:
 - `user_assets` row is created with correct asset type and storage path.
 - Catalog/product navigation works.
 - Try-on CTA creates a generation.
-- `generations` row is created with correct product and user/session linkage.
+- `generations` row is created with correct persisted fields for the current schema, and any missing product/profile linkage is explicitly documented.
 - Result page polling completes and displays mock output.
 - No blocking console or network errors appear.
 - No secrets or real customer data are exposed.
 - Evidence is captured and attached to the validation report.
+- Any manual verification gaps are recorded as `MANUAL_VERIFICATION_REQUIRED`; no unverified behavior is marked PASS.
 
 ## FAIL Criteria
 
@@ -154,6 +182,8 @@ During the full flow, watch browser DevTools for:
 - Result polling never resolves or returns an error state without explanation.
 - Browser console/network errors indicate broken product behavior.
 - Any secret, token, `.env` value, or unrelated customer data is exposed.
+- The validation report claims PASS for Supabase persistence that was not actually checked in Supabase.
+- Real customer photos or real personal data are used.
 
 ## Evidence To Capture
 
@@ -171,6 +201,8 @@ During the full flow, watch browser DevTools for:
 - `localStorage.mira_profile_id`
 - Browser console screenshot showing no blocking errors, or showing the exact failure.
 - Browser network screenshot filtered to failed requests, if any.
+- Notes on whether `generations.product_id` and `generations.user_profile_id` were populated or intentionally null.
+- Notes on whether try-on payload contained profile/photo data or empty fallback objects.
 - Current git status after validation.
 - A short summary of PASS/FAIL with timestamps.
 

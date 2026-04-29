@@ -255,6 +255,51 @@ project_autopilot/templates/PRODUCT_VALIDATION_REPORT.template.md
 
 Validation reports are ignored by git because they may reference local evidence paths. They must not include secrets, JWTs, cookies, API keys, or real customer photos.
 
+### Backend Audit
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --backend-audit
+```
+
+Runs a static backend/data-flow audit without calling Supabase, OpenAI, paid APIs, or the dev server. It does not read `.env` or `.env.local` contents.
+
+The audit detects:
+
+- Supabase tables referenced in code.
+- Storage buckets referenced in code.
+- localStorage keys.
+- API routes used by the frontend.
+- Whether onboarding, scan upload, try-on generation, and result polling appear wired to persistence.
+- Whether schema references, storage bucket documentation, and RLS comments appear aligned.
+- Whether anything still looks mock, in-memory, or manual-verification-only.
+
+Reports are written to:
+
+```text
+logs/<project_id>_backend_audit_latest.md
+logs/<project_id>_backend_audit_<timestamp>.md
+logs/<project_id>_backend_audit_latest.json
+```
+
+Readiness values:
+
+| Verdict | Meaning |
+|---|---|
+| `READY_FOR_MANUAL_E2E` | Static code/schema signals are aligned enough to proceed with manual Supabase E2E. |
+| `PARTIAL_READY` | The app has real persistence signals, but mock/in-memory behavior or manual checks remain. |
+| `BLOCKED` | Static audit found an obvious schema/code mismatch. |
+| `UNKNOWN` | Insufficient files were available for a confident audit. |
+
+For MIRA, the backend audit should be read alongside:
+
+```text
+project_control/MIRA_DATA_MAP.md
+project_control/MIRA_E2E_VALIDATION_PLAN.md
+project_control/CUSTOMER_DATA_POLICY.md
+```
+
+`MIRA_DATA_MAP.md` is product-specific. It maps fields, localStorage keys, Supabase tables, storage buckets, sensitivity, logging restrictions, and open data questions. Backend audit is evidence for readiness; it is not proof that the live Supabase project contains the expected rows, bucket privacy, or policies.
+
 ### Product Validation Readiness
 
 `--doctor` prints `PRODUCT_VALIDATION_READINESS` after the normal environment and scheduler checks. It verifies:
@@ -342,11 +387,18 @@ Project Autopilot separates validation into layers:
 |---|---|
 | `lint/typecheck/build` | Confirms the codebase compiles and basic static checks pass. |
 | Browser QA | Captures route, network, console, page-error, and screenshot evidence. |
+| Backend audit | Statically checks code/schema/data-flow alignment before live Supabase validation. |
 | Manual E2E validation | Proves real product behavior, backend persistence, and customer data handling. |
 | Post-builder intake | Reviews builder reports, fresh evidence, risk, blockers, and correction prompts. |
 | QA verdict | Decides whether the work is passable, needs fixes, requires research, requires a human decision, or is blocked. |
 
 Build success alone must never be treated as product approval.
+
+Recommended product validation sequence:
+
+```text
+doctor -> backend-audit -> browser-qa -> e2e-plan -> manual Supabase validation -> validation report -> post-builder -> commit only after PASS or accepted human decision
+```
 
 ## How to Use with Claude Code
 

@@ -78,6 +78,40 @@ OpenAI supervisor unavailable. A local fallback plan has been generated. Resolve
 
 ### 2026-04-29 02:04 UTC - Post-builder QA: HUMAN_DECISION_REQUIRED
 
+Status: parked
+Severity: blocking
+Source: Project Autopilot post-builder QA
+Parked: 2026-04-29
+Reason: Superseded by the 2026-04-29 02:31 UTC backend validation post-builder blocker, which captures the current manual Supabase verification requirement.
+
+Question or blocker:
+HUMAN_DECISION_REQUIRED
+
+Post-builder log:
+logs\mira_post_builder_20260429_020431.md
+
+Recommended action:
+Get human decision before more builder work.
+
+### 2026-04-29 02:31 UTC - Post-builder QA: HUMAN_DECISION_REQUIRED
+
+Status: parked
+Severity: blocking
+Source: Project Autopilot post-builder QA
+Parked: 2026-04-29
+Reason: Superseded by the later post-builder run after dependency installation and final validation gates.
+
+Question or blocker:
+HUMAN_DECISION_REQUIRED
+
+Post-builder log:
+logs\mira_post_builder_20260429_023122.md
+
+Recommended action:
+Get human decision before more builder work.
+
+### 2026-04-29 02:39 UTC - Post-builder QA: HUMAN_DECISION_REQUIRED
+
 Status: open
 Severity: blocking
 Source: Project Autopilot post-builder QA
@@ -86,7 +120,7 @@ Question or blocker:
 HUMAN_DECISION_REQUIRED
 
 Post-builder log:
-logs\mira_post_builder_20260429_020431.md
+logs\mira_post_builder_20260429_023939.md
 
 Recommended action:
 Get human decision before more builder work.
