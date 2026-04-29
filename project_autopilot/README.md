@@ -345,7 +345,7 @@ project_control/CUSTOMER_DATA_POLICY.md
 
 `MIRA_DATA_MAP.md` is product-specific. It maps fields, localStorage keys, Supabase tables, storage buckets, sensitivity, logging restrictions, and open data questions. Backend audit is evidence for readiness; it is not proof that the live Supabase project contains the expected rows, bucket privacy, or policies.
 
-### Control Center (v2.0 — Command Center Dashboard)
+### Control Center (v0.3 — Operational Graph + Node Details)
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --control-center
@@ -357,27 +357,30 @@ Generates a self-contained HTML dashboard at:
 logs/control_center/<project_id>_control_center.html
 ```
 
-Open in any browser. The dashboard is designed as a lightweight command center with these sections:
+Open in any browser. The dashboard is a lightweight command center designed to answer five questions at a glance: what is happening now, what happens next, what is blocked, where to inspect evidence, and where human input is needed.
 
-1. **Hero summary** — project name, overall status badge, key metrics (stage, task state, QA verdict, browser QA, blockers, autonomy) visible above the fold.
-2. **Next step banner** — recommended action based on current state.
-3. **Lifecycle stage flow** — visual pipeline (Setup → Research → Planning → Builder Handoff → Implementation → Validation → QA Verdict → Scheduler Ready) with arrows and status coloring (completed/active/pending/blocked).
-4. **Current State ("You Are Here")** — phase, active task, risk level, risk categories, blockers, human questions, latest evidence, recommended CLI command as a copyable block.
+Key sections:
+
+1. **Hero summary** — project name, status badge, 7 metric tiles (stage, task state, QA verdict, browser QA, blockers, questions, autonomy).
+2. **"What happens next?" panel** — inferred next action, recommended CLI command (copyable), evidence file to inspect, whether human input is required.
+3. **Autopilot Flow Map (operational graph)** — branching decision map replacing the old linear pipeline. Shows 7 lanes (Intake, Research, Planning, Builder, Implementation, Validation, QA Verdict, Scheduler) with branch nodes for each outcome path. QA Verdict lane shows all 5 branches: PASS, FAIL_FIX_REQUIRED, HUMAN_DECISION, RESEARCH_REQUIRED, BLOCKED. Nodes are colored by status (completed/active/amber/failed/disabled/pending). Clickable nodes expand detail panels showing inputs, outputs, next paths, evidence links, and commands. Includes a color legend.
+4. **Human Action Panel** — open blocker count, open question count, latest titles, file paths to edit, suggested answer format. Shows green "no input required" when clear.
 5. **Current task** — title, state, risk, acceptance criteria, prompt paths.
-6. **Capability map** — nine capability areas (Control, Reliability, Builder, QA, Browser QA, Research, Observability, Scheduler, Safety) as status cards.
-7. **Latest run** — run ID, outcome, duration, commands, file changes, lines, QA verdict.
-8. **Quality gates** — lint, typecheck, build, QA, browser QA, backend audit badges.
-9. **Browser QA** — verdict, routes, issues, screenshots.
-10. **Backend / customer data** — tables, buckets, manual verification items.
-11. **Blockers & human questions** — tables with status badges.
-12. **Research** — request count, latest request.
-13. **Activity timeline** — recent events table.
-14. **Budget / cost** — limits, current spend, controls.
-15. **Safety gates** — HALT, auto-exec, run lock, Telegram, deploy, scheduler status.
+6. **Evidence Navigator** — table of 10 evidence artifacts (evidence bundle, browser QA report, backend audit, builder prompt, correction prompt, post-builder report, run history, research index, task state, autopilot state) with exists/missing dot, file path, and related stage.
+7. **Capability map** — 9 capability areas as status cards.
+8. **Latest run** — run ID, outcome, duration, commands, file changes, QA verdict.
+9. **Quality gates** — lint, typecheck, build, QA, browser QA, backend audit badges.
+10. **Browser QA** — verdict, routes, issues, screenshots.
+11. **Backend / customer data** — tables, buckets, manual verification items.
+12. **Blockers & human questions** — tables with status badges.
+13. **Research** — request count, latest request.
+14. **Activity timeline** — recent events table.
+15. **Budget / cost** — limits, current spend, controls.
+16. **Safety gates** — HALT, auto-exec, run lock, Telegram, deploy, scheduler status.
 
-**What it does:** Reads existing local logs, evidence bundles, config, project control files, run history, and state. Generates static HTML with inline CSS. No external dependencies.
+**What it does:** Reads existing local logs, evidence bundles, config, project control files, run history, and state. Generates static HTML with inline CSS and minimal self-contained JS (node detail toggle only). No external dependencies.
 
-**What it does not do:** No server. No authentication. No live updates. No external dependencies. No secrets included. No action buttons — recommended commands are shown as copyable text only.
+**What it does not do:** No server. No authentication. No live updates. No external dependencies. No secrets included. No action buttons. No command execution from the dashboard. Recommended commands are shown as copyable text only.
 
 **How it complements Telegram:** Telegram alerts are push-based (immediate errors/successes). The Control Center is pull-based (on-demand full status snapshot). Use Telegram for real-time awareness; use Control Center for comprehensive review.
 
