@@ -183,4 +183,30 @@ python -B project_autopilot/flow_qa.py --project mira --run mira_onboarding_safe
 
 # Full mock E2E (dev server with mock mode must be running)
 python -B project_autopilot/flow_qa.py --project mira --run mira_full_e2e_mock_flow
+
+# NO-HUMAN VALIDATION: auto-starts mock dev server, runs all flows, stops server
+python -B project_autopilot/flow_qa.py --project mira --validate-mock-e2e
+
+# Run single flow with managed mock dev server
+python -B project_autopilot/flow_qa.py --project mira --run mira_full_e2e_mock_flow --start-dev-server
 ```
+
+### No-Human Validation
+
+The `--validate-mock-e2e` command:
+1. Starts a dev server with `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true` as a subprocess.
+2. Runs route readiness, selector readiness, onboarding dry flow, and full mock E2E.
+3. Stops the dev server.
+4. Writes summary to `logs/flow_qa/mira/latest/validation_summary.md`.
+5. Returns 0 if no code failures, 1 if any flow FAILs.
+
+**What it proves:** The full user journey works end-to-end with mock generation, no paid APIs, no real customer data.
+
+**What it does NOT prove:** Real Supabase auth, RLS policies, storage access, paid generation quality.
+
+**Remaining external/manual blockers (not code issues):**
+- Enable Anonymous Sign-Ins in Supabase Dashboard
+- Add SUPABASE_SERVICE_ROLE_KEY to .env.local
+- Make RLS ownership/storage decisions
+- Enable CAPTCHA before public testing
+- Set production Site URL

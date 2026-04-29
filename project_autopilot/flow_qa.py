@@ -882,6 +882,142 @@ def dry_run(project: str, config: dict[str, Any]) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _run_validate_mock_e2e(project: str, config: dict[str, Any]) -> int:
+    """Run full mock E2E validation with managed dev server.
+
+    Starts a dev server with NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true,
+    runs key flows, stops server, writes summary. Returns exit code.
+    """
+    from dev_server_runner import DevServer
+
+    base_url = config.get("base_url", "http://localhost:3000")
+    out_dir = LOGS_BASE / project / "latest"
+
+    # Clean latest dir
+    if out_dir.exists():
+        for f in out_dir.glob("flow_results.json"):
+            f.unlink()
+        for f in out_dir.glob("flow_report.md"):
+            f.unlink()
+
+    pw_ok, pw_msg = check_playwright()
+    if not pw_ok:
+        print(f"[validate] SKIP: {pw_msg}")
+        return 0
+
+    # Check if server is already running
+    srv_ok, _ = check_dev_server(base_url)
+    managed_server = None
+    server_msg = ""
+
+    if srv_ok:
+        # Server already running — check if mock mode is active
+        mock_ok, mock_msg = _check_mock_mode_active(base_url)
+        if mock_ok:
+            server_msg = "Using existing dev server with mock mode active"
+            print(f"[validate] {server_msg}")
+        else:
+            print(f"[validate] Existing dev server found but mock mode not active.")
+            print(f"[validate] Starting managed dev server on alternate port...")
+            managed_server = DevServer(port=3099, extra_env={
+                "NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS": "true",
+            })
+            ok, msg = managed_server.start()
+            if not ok:
+                print(f"[validate] Could not start managed server: {msg}")
+                print(f"[validate] Falling back to existing server without mock mode.")
+                managed_server = None
+                server_msg = "Using existing server, mock mode NOT active"
+            else:
+                server_msg = f"Started managed dev server on port 3099"
+                base_url = managed_server.base_url
+                config = {**config, "base_url": base_url}
+    else:
+        # No healthy server — try to start our own
+        # Try port 3000 first, if busy try 3099
+        for port in [3000, 3099]:
+            managed_server = DevServer(port=port, extra_env={
+                "NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS": "true",
+            })
+            ok, msg = managed_server.start()
+            if ok:
+                server_msg = f"Started managed dev server on port {port}"
+                base_url = managed_server.base_url
+                config = {**config, "base_url": base_url}
+                break
+            else:
+                print(f"[validate] Port {port}: {msg}")
+                managed_server = None
+        if not managed_server:
+            print(f"[validate] SKIP: Could not start dev server on any port.")
+            return 0
+
+    print(f"[validate] Server: {server_msg}")
+    print(f"[validate] Base URL: {base_url}")
+    print()
+
+    flows_to_run = [
+        "mira_route_readiness",
+        "mira_selector_readiness",
+        "mira_onboarding_safe_dry_flow",
+        "mira_full_e2e_mock_flow",
+    ]
+
+    results: list[FlowResult] = []
+    any_fail = False
+
+    try:
+        for flow_name in flows_to_run:
+            if flow_name not in config.get("flows", {}):
+                print(f"[validate] SKIP: Flow '{flow_name}' not defined")
+                continue
+            runner = FLOW_RUNNERS.get(flow_name)
+            if not runner:
+                print(f"[validate] SKIP: No runner for '{flow_name}'")
+                continue
+            flow_def = config["flows"][flow_name]
+            run_id = str(uuid.uuid4())[:8]
+            print(f"[validate] Running: {flow_name}...")
+            result = runner(config, flow_def, project, run_id, out_dir)
+            results.append(result)
+            if result.status == "FAIL":
+                any_fail = True
+            print()
+    finally:
+        if managed_server:
+            managed_server.stop()
+
+    # Write summary
+    summary_path = out_dir / "validation_summary.md"
+    lines = [
+        "# Mock E2E Validation Summary",
+        "",
+        f"Server: {server_msg}",
+        f"Base URL: {base_url}",
+        "",
+        "## Results",
+        "",
+    ]
+    for r in results:
+        lines.append(f"- **{r.flow_name}**: {r.status} "
+                      f"({r.steps_passed}P/{r.steps_failed}F/{r.steps_blocked}B/{r.steps_skipped}S)")
+    lines.append("")
+
+    overall = "FAIL" if any_fail else "PASS"
+    if not results:
+        overall = "SKIPPED"
+    elif all(r.status in ("SKIPPED", "BLOCKED") for r in results):
+        overall = "BLOCKED"
+
+    lines.append(f"## Overall: {overall}")
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"[validate] Summary: {summary_path}")
+    print(f"[validate] Overall: {overall}")
+
+    return 1 if any_fail else 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Flow QA for Project Autopilot")
     parser.add_argument("--project", required=True, help="Project ID (e.g. mira)")
@@ -889,6 +1025,10 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Show what would be done")
     parser.add_argument("--diagnose", action="store_true", help="Check prerequisites")
     parser.add_argument("--run", type=str, help="Run a specific flow by name")
+    parser.add_argument("--validate-mock-e2e", action="store_true",
+                        help="Start mock dev server and run full E2E validation")
+    parser.add_argument("--start-dev-server", action="store_true",
+                        help="Start managed dev server for --run (with mock mode)")
     args = parser.parse_args()
 
     config = load_flows_config(args.project)
@@ -910,6 +1050,10 @@ def main() -> None:
         diagnose(args.project, config)
         return
 
+    if args.validate_mock_e2e:
+        code = _run_validate_mock_e2e(args.project, config)
+        sys.exit(code)
+
     if args.run:
         flow_name = args.run
         if flow_name not in config.get("flows", {}):
@@ -925,6 +1069,16 @@ def main() -> None:
         run_id = str(uuid.uuid4())[:8]
         out_dir = LOGS_BASE / args.project / "latest"
 
+        # Optionally start managed dev server
+        managed_server = None
+        if args.start_dev_server:
+            from dev_server_runner import DevServer
+            managed_server = DevServer(extra_env={"NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS": "true"})
+            ok, msg = managed_server.start()
+            if not ok:
+                print(f"[flow_qa] Could not start dev server: {msg}")
+                sys.exit(1)
+
         # Clean latest dir for fresh run
         if out_dir.exists():
             for f in out_dir.glob("flow_results.json"):
@@ -932,7 +1086,12 @@ def main() -> None:
             for f in out_dir.glob("flow_report.md"):
                 f.unlink()
 
-        result = runner(config, flow_def, args.project, run_id, out_dir)
+        try:
+            result = runner(config, flow_def, args.project, run_id, out_dir)
+        finally:
+            if managed_server:
+                managed_server.stop()
+
         sys.exit(0 if result.status in ("PASS", "WARN", "BLOCKED", "SKIPPED") else 1)
 
     parser.print_help()

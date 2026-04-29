@@ -67,15 +67,21 @@ def _read_json(rel: str) -> Any:
         return None
 
 
-def _flow_qa_latest_verdict(flow_name: str) -> str:
+def _flow_qa_latest(flow_name: str) -> dict[str, Any]:
+    """Return the latest result dict for a flow, or empty dict."""
     data = _read_json("logs/flow_qa/mira/latest/flow_results.json")
     if not data:
-        return "NOT_RUN"
+        return {}
     results = data if isinstance(data, list) else [data]
     for r in results:
         if r.get("flow_name") == flow_name:
-            return r.get("status", "UNKNOWN")
-    return "NOT_RUN"
+            return r
+    return {}
+
+
+def _flow_qa_latest_verdict(flow_name: str) -> str:
+    r = _flow_qa_latest(flow_name)
+    return r.get("status", "NOT_RUN") if r else "NOT_RUN"
 
 
 def check_auth() -> ReadinessCategory:
@@ -99,6 +105,7 @@ def check_flow_qa() -> ReadinessCategory:
     cat = ReadinessCategory("Flow QA Readiness", "UNKNOWN")
     cat.add("Flow QA framework exists", _exists("project_autopilot/flow_qa.py"))
     cat.add("Flow definitions exist", _exists("project_autopilot/config/projects/mira_flows.yaml"))
+    cat.add("Dev server runner exists", _exists("project_autopilot/dev_server_runner.py"))
 
     for flow, label in [
         ("mira_route_readiness", "Route readiness"),
@@ -110,6 +117,16 @@ def check_flow_qa() -> ReadinessCategory:
         cat.add(f"{label} latest: {verdict}",
                 verdict in ("PASS", "WARN", "SKIPPED"),
                 verdict)
+
+    # Check mock E2E detail properties
+    mock_result = _flow_qa_latest("mira_full_e2e_mock_flow")
+    if mock_result:
+        cat.add("Mock mode was active",
+                mock_result.get("mock_mode_active", False))
+        cat.add("Paid API calls avoided",
+                mock_result.get("paid_api_calls_avoided", True))
+        cat.add("No live Supabase mutation",
+                not mock_result.get("live_supabase_mutation", False))
 
     cat.status = cat.compute_status()
     return cat
@@ -183,6 +200,28 @@ def check_public_beta() -> ReadinessCategory:
 
 
 def compute_overall(categories: list[ReadinessCategory]) -> str:
+    by_name = {c.name: c for c in categories}
+
+    # Check if local mock E2E is ready (code-side)
+    mock_gen = by_name.get("Mock Generation Readiness")
+    flow_qa = by_name.get("Flow QA Readiness")
+    auth = by_name.get("Auth Readiness")
+    mock_e2e_verdict = _flow_qa_latest_verdict("mira_full_e2e_mock_flow")
+
+    local_mock_ready = (
+        mock_gen and mock_gen.status == "READY"
+        and auth and auth.status == "READY"
+        and mock_e2e_verdict in ("PASS", "WARN")
+    )
+
+    public_beta = by_name.get("Public Beta Readiness")
+    rls = by_name.get("RLS Readiness")
+
+    if local_mock_ready and public_beta and public_beta.status == "BLOCKED":
+        return "CODE_READY_MOCK_E2E_PASS"
+    if auth and auth.status == "READY" and (not rls or rls.status in ("READY", "PARTIAL")):
+        if public_beta and public_beta.status == "BLOCKED":
+            return "BLOCKED_FOR_REAL_CUSTOMER_DATA"
     statuses = [c.status for c in categories]
     if all(s == "READY" for s in statuses):
         return "READY"

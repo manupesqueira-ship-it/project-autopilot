@@ -215,3 +215,8 @@ Update 2026-04-29 (secure MVP convergence sprint):
 - Overall verdict: BLOCKED_FOR_REAL_CUSTOMER_DATA.
 - Auth code: READY. Mock generation: READY. RLS docs: READY.
 - Remaining: enable Anonymous Sign-Ins, add service_role key, make RLS decisions, run staging test.
+
+Update 2026-04-29 (acceleration sprint):
+- No-human mock E2E validation: `python -B project_autopilot/flow_qa.py --project mira --validate-mock-e2e`
+- Auto-managed dev server (starts/stops as subprocess, no .env modification).
+- All remaining blockers are now external/manual (Supabase Dashboard actions), not codebase ambiguity.
