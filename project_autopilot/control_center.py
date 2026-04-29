@@ -327,6 +327,7 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Research index", "Research request log", logs / f"research/{pid}_index.jsonl", "research"),
         _entry("Task state", "Current task lifecycle state", logs / f"{pid}_task_state.json", "planning"),
         _entry("Autopilot state", "Full autopilot state snapshot", logs / f"{pid}_autopilot_state.json", "observability"),
+        _entry("Security alignment plan", "Supabase RLS/auth security audit and migration plan", ctrl / "MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md", "validation"),
     ]
     return items
 

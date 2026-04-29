@@ -126,3 +126,35 @@ logs\mira_post_builder_20260429_023939.md
 
 Recommended action:
 Get human decision before more builder work.
+
+### 2026-04-29 - Supabase security model not ready for real customer data
+
+Status: open
+Severity: critical
+Source: Manual Supabase audit + code inspection
+
+Question or blocker:
+P0 security gap. All 3 customer-facing tables (users_profile, user_assets, generations) have RLS disabled, 0 policies, and anon has all 7 Postgres privileges (SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER). Anyone with the public anon key — which is embedded in the frontend JS bundle — can read, modify, delete, or truncate all customer data including personal profiles, body measurements, and photo metadata.
+
+Evidence:
+- RLS disabled on users_profile, user_assets, generations (confirmed via SELECT-only audit)
+- anon role has SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER on all 3 tables
+- 0 policies on any table
+- 0 policies on storage.objects
+- user-photos bucket is private but has no access policies (uploads/reads likely fail)
+- generations and product-images buckets are public with no file size or MIME restrictions
+- auth_user_id is nullable and unpopulated — no Supabase Auth in use
+- user_profile_id is nullable on user_assets and generations
+- Identity is localStorage-only (mira_profile_id) — tamperable
+- Server-side Supabase client uses anon key, not service_role
+- Full analysis: project_control/MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md
+
+Impact:
+MIRA must not store real customer photos, personal data, or body measurements until RLS, policies, and an identity model are in place.
+
+Recommended action:
+1. Review MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md
+2. Answer human questions in HUMAN_QUESTIONS.md
+3. Implement "Supabase Anonymous Auth Foundation" sprint (Section M of the plan)
+4. Test in staging before production
+5. Run manual verification checklist (Section L of the plan)
