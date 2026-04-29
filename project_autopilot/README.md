@@ -384,6 +384,63 @@ Project Autopilot loads `.env` and `.env.local` from the repo root. Required var
 | `TELEGRAM_BOT_TOKEN` | Telegram alerts (optional) |
 | `TELEGRAM_CHAT_ID` | Telegram alerts (optional) |
 
+## VPS Readiness and Scheduler Foundation
+
+Project Autopilot is **local-first today**. VPS deployment is planned but not active.
+
+### Run Lock
+
+`run_lock.py` prevents two `--cycle` runs from executing at the same time. Lock files live under `logs/locks/<project_id>.lock`. Stale locks (default: 4 hours) are automatically cleared. Only `--cycle` acquires a lock. Other modes (`--doctor`, `--status`, `--local-plan`, `--dry-run`) do not lock.
+
+### HALT_AUTOPILOT
+
+If `project_control/HALT_AUTOPILOT.md` exists:
+
+- `--cycle` refuses to run and exits with code 2.
+- `--local-plan` warns but still runs (read-only planning is safe).
+- `--doctor` reports HALT active.
+- `--status` reports HALT active.
+
+To halt: create the file with a reason. To resume: delete it.
+
+### Scheduler Readiness
+
+`--doctor` now reports `SCHEDULER_READINESS` with a checklist:
+
+- run_lock available
+- HALT_AUTOPILOT supported
+- max_cycles_per_day configured
+- run_frequency_hours configured
+- automatic builder execution disabled
+- paid APIs disabled by default
+- deploy automation disabled
+- Telegram configured
+- evidence bundle available
+- post-builder intake available
+
+Result: `READY`, `NOT_READY`, or `WARN`. No actual scheduler is implemented yet.
+
+### Why Scheduler Is Not Enabled Yet
+
+The scheduler should wait until manual cycles are boringly reliable. Before scheduler work, Project Autopilot needs repeated clean runs without human cleanup.
+
+### Systemd Templates
+
+Template files for future VPS deployment:
+
+- `project_autopilot/templates/systemd/pa-cycle.service.template`
+- `project_autopilot/templates/systemd/pa-cycle.timer.template`
+
+These are **not installed or enabled**. They contain placeholders (`{{PROJECT_ID}}`, `{{WORKDIR}}`, `{{PYTHON_BIN}}`, `{{COMMAND}}`, `{{USER}}`) to be filled before deployment.
+
+### VPS Coexistence Rules
+
+- Existing project at `/root/bot/` must not be touched.
+- Existing services use `bot-*` prefixes.
+- Project Autopilot uses `pa-*` prefixes for service names.
+- Separate install path, separate venv, separate user (later).
+- See `project_control/VPS_DEPLOYMENT_PLAN.md` for full details.
+
 ## Backward Compatibility
 
 The old `agent/` entrypoints remain as wrappers that point to Project Autopilot.

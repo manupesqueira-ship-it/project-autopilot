@@ -31,6 +31,32 @@ from telegram_alerts import send_alert
 from risk_classifier import classify_task, format_risk_assessment
 from research_log import count_research_index, record_research_request
 from run_history import append_event, count_research_requests, new_run_id, record_run_finished, record_run_started, summarize_recent_runs
+from run_lock import LockActiveError, acquire_lock, release_lock
+
+
+# ---------------------------------------------------------------------------
+# HALT_AUTOPILOT support
+# ---------------------------------------------------------------------------
+
+HALT_FILE = "HALT_AUTOPILOT.md"
+
+
+def _halt_path(project: ProjectConfig) -> Path:
+    return project.project_control_path / HALT_FILE
+
+
+def _halt_active(project: ProjectConfig) -> bool:
+    return _halt_path(project).exists()
+
+
+def _halt_reason(project: ProjectConfig) -> str:
+    path = _halt_path(project)
+    if not path.exists():
+        return ""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return "(could not read HALT file)"
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +95,35 @@ def _count_open_blockers(project: ProjectConfig) -> int:
 def run_cycle(project_id: str, dry_run: bool = False, cycle: bool = False) -> int:
     """Original planning cycle: evidence -> OpenAI -> builder prompt."""
     project = load_project(project_id)
+
+    # HALT check — cycle refuses to run
+    if _halt_active(project):
+        reason = _halt_reason(project)
+        print(f"HALT_AUTOPILOT is active. Cycle refused to run.")
+        print(f"  File: {_halt_path(project)}")
+        if reason:
+            print(f"  Reason: {reason[:200]}")
+        send_alert(project.project_id, "HALT_AUTOPILOT", "Cycle blocked by HALT_AUTOPILOT.", enabled=project.telegram_enabled)
+        return 2
+
+    # Run lock — only for --cycle (not --dry-run)
+    locked = cycle and not dry_run
+    if locked:
+        try:
+            acquire_lock(project_id)
+        except LockActiveError as exc:
+            print(str(exc))
+            return 2
+
+    try:
+        return _run_cycle_inner(project, project_id, dry_run, cycle)
+    finally:
+        if locked:
+            release_lock(project_id)
+
+
+def _run_cycle_inner(project: ProjectConfig, project_id: str, dry_run: bool, cycle: bool) -> int:
+    """Inner cycle logic after lock and HALT checks."""
     ensure_project_dirs(project)
     mode = "dry_run" if dry_run else "cycle"
     run_id = new_run_id(project.project_id, mode)
@@ -265,6 +320,9 @@ def _handle_openai_failure(
 def run_local_plan(project_id: str) -> int:
     """Force local fallback planner — no OpenAI call."""
     project = load_project(project_id)
+    if _halt_active(project):
+        print(f"WARNING: HALT_AUTOPILOT is active. Proceeding with local plan (read-only).")
+        print(f"  File: {_halt_path(project)}")
     ensure_project_dirs(project)
     run_id = new_run_id(project.project_id, "local_plan")
     record_run_started(project, run_id, "local_plan")
@@ -335,6 +393,12 @@ def run_status(project_id: str) -> int:
     print(f"Intensity mode:     {project.intensity_mode}")
     print(f"Builder primary:    {project.builder_primary}")
     print(f"Builder fallback:   {project.builder_fallback}")
+    if _halt_active(project):
+        print()
+        print(f"*** HALT_AUTOPILOT ACTIVE ***")
+        reason = _halt_reason(project)
+        if reason:
+            print(f"  Reason: {reason[:200]}")
     print()
 
     # Budget
@@ -688,6 +752,10 @@ def run_doctor(project_id: str) -> int:
     add("pass" if isinstance(project.browser_qa_enabled, bool) else "fail", "BROWSER_QA_CONFIG_VALID", f"browser_qa_enabled={project.browser_qa_enabled}", "Use true or false.")
     add("pass" if project.builder_handoff_mode in {"manual", "disabled", "automatic"} else "fail", "CLAUDE_HANDOFF_CONFIG_VALID", f"builder_handoff_mode={project.builder_handoff_mode}", "Use manual, disabled, or automatic.")
 
+    # HALT_AUTOPILOT
+    halt = _halt_active(project)
+    add("warn" if halt else "pass", "HALT_AUTOPILOT", f"HALT_AUTOPILOT active: {'YES' if halt else 'no'}", "Remove project_control/HALT_AUTOPILOT.md to resume cycles." if halt else "No action needed.")
+
     severity_rank = {"pass": 0, "warn": 1, "fail": 2}
     for item in sorted(issues, key=lambda issue: (severity_rank[issue.severity], issue.code)):
         print(f"{item.severity.upper():4} {item.code}: {item.message}")
@@ -698,7 +766,78 @@ def run_doctor(project_id: str) -> int:
     result_label = result_severity.upper()
     print()
     print(f"DOCTOR_RESULT: {result_label}")
+
+    # Scheduler readiness report
+    print()
+    _print_scheduler_readiness(project)
+
     return 2 if result_severity == "fail" else 0
+
+
+def _print_scheduler_readiness(project: ProjectConfig) -> None:
+    """Print scheduler readiness checklist. Does not implement a scheduler."""
+    checks: list[tuple[str, bool]] = []
+
+    # run_lock available
+    try:
+        from run_lock import acquire_lock as _al  # noqa: F401
+        checks.append(("run_lock available", True))
+    except ImportError:
+        checks.append(("run_lock available", False))
+
+    # HALT_AUTOPILOT supported
+    checks.append(("HALT_AUTOPILOT supported", True))
+
+    # max_cycles_per_day configured
+    checks.append(("max_cycles_per_day configured", project.max_cycles_per_day > 0))
+
+    # run_frequency_hours configured
+    checks.append(("run_frequency_hours configured", project.run_frequency_hours > 0))
+
+    # automatic builder execution disabled
+    checks.append(("automatic builder execution disabled", not project.allow_automatic_builder_execution))
+
+    # paid APIs disabled by default
+    checks.append(("paid APIs disabled by default", project.paid_api_mode == "disabled_by_default"))
+
+    # deploy automation disabled (always true — no deploy automation exists)
+    checks.append(("deploy automation disabled", True))
+
+    # Telegram configured
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_BOT_TOKEN")
+    telegram_chat = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get(f"{project.project_id.upper()}_TELEGRAM_CHAT_ID")
+    checks.append(("Telegram configured", bool(telegram_token and telegram_chat)))
+
+    # evidence bundle available
+    bundle_dir = project.repo_path / "logs" / "evidence" / project.project_id
+    checks.append(("evidence bundle available", bundle_dir.exists()))
+
+    # post-builder intake available
+    try:
+        from builder_intake import intake_builder_report as _ibr  # noqa: F401
+        checks.append(("post-builder intake available", True))
+    except ImportError:
+        checks.append(("post-builder intake available", False))
+
+    passed = sum(1 for _, ok in checks if ok)
+    total = len(checks)
+    failed = [name for name, ok in checks if not ok]
+
+    if passed == total:
+        result = "READY"
+    elif failed and any(f in ("run_lock available", "HALT_AUTOPILOT supported", "max_cycles_per_day configured", "run_frequency_hours configured") for f in failed):
+        result = "NOT_READY"
+    else:
+        result = "WARN"
+
+    print("SCHEDULER_READINESS:")
+    for name, ok in checks:
+        status = "ok" if ok else "MISSING"
+        print(f"  {'[x]' if ok else '[ ]'} {name}: {status}")
+    print()
+    print(f"SCHEDULER_READINESS_RESULT: {result}")
+    if failed:
+        print(f"  Missing: {', '.join(failed)}")
 
 
 # ---------------------------------------------------------------------------
