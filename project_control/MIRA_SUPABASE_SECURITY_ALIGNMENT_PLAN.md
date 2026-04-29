@@ -752,3 +752,13 @@ Status: PARTIAL — code-side foundation in place, Supabase settings not yet cha
 - No .env or .env.local files were modified.
 - No live Supabase SQL was executed.
 - All real-flow security blockers remain unchanged.
+
+---
+
+## R. Secure MVP Convergence Status (2026-04-29)
+
+- Secure MVP readiness report: `python -B project_autopilot/mira_readiness.py --project mira`
+- Master runbook: `project_control/MIRA_SECURE_MVP_RUNBOOK.md`
+- Overall: BLOCKED_FOR_REAL_CUSTOMER_DATA
+- Auth code: READY | Mock: READY | RLS docs: READY | Public beta: BLOCKED
+- Next: enable Anonymous Sign-Ins, add service_role key, make RLS decisions, staging test.

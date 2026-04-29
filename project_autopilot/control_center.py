@@ -199,6 +199,12 @@ def _flow_qa_data(project: ProjectConfig) -> dict[str, Any]:
     return data
 
 
+def _readiness_data(project: ProjectConfig) -> dict[str, Any]:
+    """Collect latest MIRA secure MVP readiness report if available."""
+    path = project.repo_path / project.logs_dir / "mira_readiness_latest.json"
+    return _read_json(path) if path.exists() else {"overall": "NOT_RUN", "categories": []}
+
+
 def _autopilot_state(project: ProjectConfig) -> dict[str, Any]:
     path = project.repo_path / project.logs_dir / f"{project.project_id}_autopilot_state.json"
     return _read_json(path)
@@ -368,6 +374,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Mock generation plan", "QA mock mode design and instructions", ctrl / "MIRA_MOCK_GENERATION_PLAN.md", "validation"),
         _entry("E2E validation plan", "Manual and automated E2E testing instructions", ctrl / "MIRA_E2E_VALIDATION_PLAN.md", "validation"),
         _entry("Flow QA report", "Latest automated flow results", logs / "flow_qa" / pid / "latest" / "flow_report.md", "validation"),
+        _entry("Secure MVP readiness", "Overall readiness verdict and category breakdown", logs / "mira_readiness_latest.json", "validation"),
+        _entry("Secure MVP runbook", "Human-facing master runbook", ctrl / "MIRA_SECURE_MVP_RUNBOOK.md", "planning"),
     ]
     return items
 
@@ -476,6 +484,9 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
+
+    # Secure MVP Readiness
+    data["readiness"] = _readiness_data(project)
 
     # Cost
     cost = data["latest_evidence"].get("cost_snapshot", {})
