@@ -572,6 +572,61 @@ Before going live with RLS, a human must verify each item:
 
 ---
 
+## N. Code-Side Anonymous Auth Foundation — Implemented
+
+Sprint date: 2026-04-29
+Status: PARTIAL — code-side foundation in place, Supabase settings not yet changed
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `lib/supabase/auth.ts` | Client-side anonymous auth helper: `getOrCreateAnonymousUser()`, `getCurrentAuthUserId()` |
+
+### Files Modified
+
+| File | Change |
+|---|---|
+| `lib/supabase/server.ts` | Added `createServiceRoleServer()` — uses `SUPABASE_SERVICE_ROLE_KEY` when available, falls back to anon client |
+| `app/[locale]/(app)/onboarding/page.tsx` | Calls `getOrCreateAnonymousUser()` before profile INSERT; includes `auth_user_id` in the row |
+| `app/[locale]/(app)/scan/page.tsx` | Calls `getOrCreateAnonymousUser()` before storage upload to ensure auth session is active |
+| `lib/generation-store.ts` | `createGeneration()` and `updateGeneration()` now use `createServiceRoleServer()` for writes; `getGeneration()` stays on anon client |
+
+### Auth Flow
+
+1. User opens onboarding page
+2. On submit, `getOrCreateAnonymousUser()` checks for existing Supabase Auth session
+3. If no session, calls `supabase.auth.signInAnonymously()`
+4. If anonymous sign-ins are disabled, returns `null` (graceful degradation)
+5. `auth_user_id` is included in the `users_profile` INSERT (null if auth unavailable)
+6. Profile UUID stored in localStorage `mira_profile_id` for UX continuity
+7. Scan page ensures auth session is active before upload
+8. Server-side generation writes use service_role client (falls back to anon if not configured)
+
+### What This Enables
+
+- New `users_profile` rows will have `auth_user_id` set when anonymous sign-ins are enabled
+- Supabase client sends JWT in requests, so future RLS policies will see `auth.uid()`
+- Server-side writes use service_role path, ready for RLS bypass
+- App still works if anonymous sign-ins are not yet enabled (null auth_user_id, anon client fallback)
+
+### Remaining Blockers Before RLS
+
+1. **Supabase project setting**: Anonymous Sign-Ins must be enabled in Supabase Auth settings
+2. **SUPABASE_SERVICE_ROLE_KEY**: Must be set in `.env.local` for server-side writes to bypass RLS
+3. **Existing rows**: All existing `users_profile` rows have `auth_user_id = NULL` — must be deleted or backfilled
+4. **Storage path convention**: Current paths use `{profileId}/...` — when RLS is enabled, storage policies may need `{auth.uid()}/...` or a mapping
+5. **SQL migrations**: RLS enable + policies from Section J must be applied
+6. **Manual verification**: Full checklist from Section L must pass in staging
+
+### Manual Supabase Settings Required
+
+- [ ] Supabase Dashboard > Authentication > Settings > Enable Anonymous Sign-Ins
+- [ ] Consider enabling captcha (hCaptcha or Turnstile) for abuse protection
+- [ ] Set `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (never in `.env` or client-side code)
+
+---
+
 ## Appendix: Files Inspected
 
 | File | Supabase operations found |

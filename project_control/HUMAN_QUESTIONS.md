@@ -124,6 +124,18 @@ When implementing auth and RLS, existing rows in users_profile, user_assets, and
 Why it matters:
 Fresh deletion is simpler and safer. Migration requires creating anonymous auth users and backfilling auth_user_id, which is complex and fragile. Decision depends on whether any existing data has value.
 
+### 2026-04-29 - Is SUPABASE_SERVICE_ROLE_KEY set in .env.local?
+
+Status: open
+Severity: non-blocking
+Source: Anonymous auth foundation sprint
+
+Question:
+The generation-store now uses `createServiceRoleServer()` which requires `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` to bypass RLS for server-side writes. If not set, it falls back to the anon client (which works today but will break when RLS is enabled). Is this key already in `.env.local`?
+
+Why it matters:
+Once RLS is enabled on the `generations` table, server-side INSERT/UPDATE from API routes will fail unless service_role is configured. This is a prerequisite for the RLS enablement sprint.
+
 ## Format
 
 ```md

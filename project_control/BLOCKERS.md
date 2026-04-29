@@ -146,15 +146,21 @@ Evidence:
 - auth_user_id is nullable and unpopulated — no Supabase Auth in use
 - user_profile_id is nullable on user_assets and generations
 - Identity is localStorage-only (mira_profile_id) — tamperable
-- Server-side Supabase client uses anon key, not service_role
 - Full analysis: project_control/MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md
+
+Progress:
+- 2026-04-29: Code-side anonymous auth foundation implemented (Section N of plan).
+  Onboarding now sets auth_user_id. Server writes use service_role path.
+  Auth helper created. App degrades gracefully if anonymous sign-ins not yet enabled.
+- Remaining: Enable Anonymous Sign-Ins in Supabase, set SUPABASE_SERVICE_ROLE_KEY,
+  apply RLS/policies, delete/backfill existing rows, run manual verification.
 
 Impact:
 MIRA must not store real customer photos, personal data, or body measurements until RLS, policies, and an identity model are in place.
 
 Recommended action:
-1. Review MIRA_SUPABASE_SECURITY_ALIGNMENT_PLAN.md
-2. Answer human questions in HUMAN_QUESTIONS.md
-3. Implement "Supabase Anonymous Auth Foundation" sprint (Section M of the plan)
-4. Test in staging before production
+1. Enable Anonymous Sign-Ins in Supabase Dashboard > Authentication > Settings
+2. Set SUPABASE_SERVICE_ROLE_KEY in .env.local
+3. Answer human questions in HUMAN_QUESTIONS.md
+4. Apply RLS + policies from Section J of the plan in staging
 5. Run manual verification checklist (Section L of the plan)
