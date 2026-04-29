@@ -345,6 +345,28 @@ project_control/CUSTOMER_DATA_POLICY.md
 
 `MIRA_DATA_MAP.md` is product-specific. It maps fields, localStorage keys, Supabase tables, storage buckets, sensitivity, logging restrictions, and open data questions. Backend audit is evidence for readiness; it is not proof that the live Supabase project contains the expected rows, bucket privacy, or policies.
 
+### Control Center
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --control-center
+```
+
+Generates a self-contained HTML report at:
+
+```text
+logs/control_center/<project_id>_control_center.html
+```
+
+Open this file in any browser. It shows project overview, current task, latest run, activity timeline, quality gates, Browser QA results, backend audit, research, blockers, human questions, budget, and safety gates in a single read-only page.
+
+**What it does:** Reads existing local logs, evidence bundles, config, project control files, run history, and state. Generates static HTML with inline CSS.
+
+**What it does not do:** No server. No authentication. No live updates. No external dependencies. No secrets included.
+
+**How it complements Telegram:** Telegram alerts are push-based (immediate errors/successes). The Control Center is pull-based (on-demand full status snapshot). Use Telegram for real-time awareness; use Control Center for comprehensive review.
+
+The generated HTML is ignored by git (`logs/control_center/`).
+
 ### Product Validation Readiness
 
 `--doctor` prints `PRODUCT_VALIDATION_READINESS` after the normal environment and scheduler checks. It verifies:

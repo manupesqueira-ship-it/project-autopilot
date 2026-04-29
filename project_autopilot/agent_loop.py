@@ -36,6 +36,7 @@ from run_metrics import latest_run_metrics
 from run_lock import LockActiveError, acquire_lock, lock_status, release_lock
 from validation_report import create_validation_report
 from backend_audit import run_backend_audit
+from control_center import generate_control_center
 
 
 # ---------------------------------------------------------------------------
@@ -872,6 +873,14 @@ def run_backend_audit_cmd(project_id: str) -> int:
     return 0
 
 
+def run_control_center(project_id: str) -> int:
+    """Generate Control Center HTML report. Read-only, no secrets, no state changes."""
+    project = load_project(project_id)
+    path = generate_control_center(project)
+    print(f"Control Center: {path}")
+    return 0
+
+
 def run_builder_intake(project_id: str, report_path: str) -> int:
     """Ingest a builder report, collect fresh evidence, and produce a QA verdict."""
     project = load_project(project_id)
@@ -1331,6 +1340,7 @@ def main() -> int:
     group.add_argument("--browser-qa", action="store_true", help="Run browser QA against configured route_walk_urls.")
     group.add_argument("--browser-qa-diagnose", action="store_true", help="Diagnose Browser QA dev-server reachability.")
     group.add_argument("--backend-audit", action="store_true", help="Run static backend and data-flow audit.")
+    group.add_argument("--control-center", action="store_true", help="Generate Control Center HTML report.")
     group.add_argument("--e2e-plan", action="store_true", help="Print the project-specific manual E2E validation plan.")
     group.add_argument("--new-validation-report", action="store_true", help="Create a blank product validation report draft.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
@@ -1365,6 +1375,8 @@ def main() -> int:
         return run_browser_qa_diagnose(args.project)
     if args.backend_audit:
         return run_backend_audit_cmd(args.project)
+    if args.control_center:
+        return run_control_center(args.project)
     if args.e2e_plan:
         return run_e2e_plan(args.project)
     if args.new_validation_report:
