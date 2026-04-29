@@ -378,6 +378,7 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Secure MVP runbook", "Human-facing master runbook", ctrl / "MIRA_SECURE_MVP_RUNBOOK.md", "planning"),
         _entry("Sensitive logging audit", "Privacy/logging static scan results", logs / "mira_sensitive_logging_audit_latest.json", "validation"),
         _entry("Privacy logging guardrails", "Logging rules for sensitive data", ctrl / "MIRA_PRIVACY_LOGGING_GUARDRAILS.md", "validation"),
+        _entry("Env preflight report", "Supabase env var presence check", logs / "mira_env_preflight_latest.json", "validation"),
     ]
     return items
 

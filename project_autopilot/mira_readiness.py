@@ -87,8 +87,11 @@ def _flow_qa_latest_verdict(flow_name: str) -> str:
 def check_auth() -> ReadinessCategory:
     cat = ReadinessCategory("Auth Readiness", "UNKNOWN")
     cat.add("Anonymous auth helper exists", _exists("lib/supabase/auth.ts"))
+    cat.add("Supabase env precheck helper exists", _exists("lib/supabase/env.ts"))
     cat.add("Onboarding writes auth_user_id",
             _contains("app/[locale]/(app)/onboarding/page.tsx", "auth_user_id"))
+    cat.add("Onboarding checks env before Supabase call",
+            _contains("app/[locale]/(app)/onboarding/page.tsx", "isSupabasePublicConfigReady"))
     cat.add("Service role server helper exists",
             _exists("lib/supabase/server.ts") and _contains("lib/supabase/server.ts", "createServiceRoleServer"))
     cat.add("Service role fails fast if key missing",
@@ -97,6 +100,18 @@ def check_auth() -> ReadinessCategory:
             _contains("app/[locale]/(app)/onboarding/page.tsx", "mira_profile_id"))
     cat.add("Anonymous Sign-Ins dashboard checklist exists",
             _exists("project_control/MIRA_SUPABASE_MANUAL_ACTIVATION_CHECKLIST.md"))
+
+    # Check env preflight status
+    env_data = _read_json("logs/mira_env_preflight_latest.json")
+    if env_data:
+        verdict = env_data.get("verdict", "UNKNOWN")
+        cat.add(f"Env preflight: {verdict}",
+                verdict in ("PASS", "WARN"),
+                "FAIL means critical env vars missing" if verdict == "FAIL" else "")
+    else:
+        cat.add("Env preflight not yet run", False,
+                "Run: python -B project_autopilot/env_preflight.py --project mira")
+
     cat.status = cat.compute_status()
     return cat
 

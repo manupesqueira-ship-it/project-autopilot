@@ -229,6 +229,7 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.findings.extend(_check_mock_mode(files))
         summary.findings.extend(_check_readiness_docs())
         summary.findings.extend(_check_sensitive_logging())
+        summary.findings.extend(_check_env_preflight())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -366,6 +367,29 @@ def _check_sensitive_logging() -> list[str]:
             findings.append("Could not read latest audit report.")
     else:
         findings.append("No sensitive logging audit results yet. Run: python -B project_autopilot/sensitive_logging_audit.py --project mira")
+
+    return findings
+
+
+def _check_env_preflight() -> list[str]:
+    """Check env preflight status."""
+    findings: list[str] = []
+    json_path = Path(__file__).resolve().parent.parent / "logs" / "mira_env_preflight_latest.json"
+
+    if not json_path.exists():
+        findings.append("Env preflight not yet run. Run: python -B project_autopilot/env_preflight.py --project mira")
+        return findings
+
+    try:
+        import json as _json
+        data = _json.loads(json_path.read_text(encoding="utf-8"))
+        verdict = data.get("verdict", "UNKNOWN")
+        findings.append(f"Env preflight verdict: {verdict}")
+        for check in data.get("checks", []):
+            if check.get("status") != "PRESENT" and check.get("critical"):
+                findings.append(f"  MISSING CRITICAL: {check['name']} — {check.get('fix', '')}")
+    except Exception:
+        findings.append("Could not read env preflight report.")
 
     return findings
 

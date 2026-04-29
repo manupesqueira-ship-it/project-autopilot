@@ -227,3 +227,11 @@ Update 2026-04-29 (privacy logging sprint):
 - Privacy logging guardrails documented (MIRA_PRIVACY_LOGGING_GUARDRAILS.md).
 - Backend audit, readiness report, and Control Center updated with privacy checks.
 - Remaining privacy blockers: retention/deletion policy, privacy policy/terms, RLS ownership.
+
+Update 2026-04-29 (env preflight sprint):
+- Root cause: app crashed with "@supabase/ssr: Your project's URL and API key are required" because NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY were missing from .env.local.
+- Fix: lib/supabase/env.ts validates env presence before client creation.
+- Onboarding/scan show friendly error instead of raw crash.
+- Env preflight tool: `python -B project_autopilot/env_preflight.py --project mira`
+- Backend audit, readiness report, and Control Center updated with env checks.
+- User must add all 3 Supabase env vars to .env.local (see runbook section D2).

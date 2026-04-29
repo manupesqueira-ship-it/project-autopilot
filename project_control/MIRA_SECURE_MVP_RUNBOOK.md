@@ -56,6 +56,27 @@ python -B project_autopilot/flow_qa.py --project mira --run mira_full_e2e_mock_f
 
 Expected: PASS. If BLOCKED, check mock mode is active. If SKIPPED, check dev server is running.
 
+## D2. Supabase Local Env Setup
+
+Your `.env.local` must have these three variables (never commit this file):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://vtaqyammimmgxlkqwjat.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_publishable_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_secret_service_role_key_here
+```
+
+Get the values from: Supabase Dashboard > Settings > API
+
+**Verify without printing secrets:**
+```bash
+python -B project_autopilot/env_preflight.py --project mira
+```
+
+Expected: all three show `PRESENT`. If any show `MISSING`, the app will show a friendly error instead of crashing.
+
+**Common mistake:** Adding `SUPABASE_SERVICE_ROLE_KEY` but forgetting the `NEXT_PUBLIC_` prefixed vars. All three are required.
+
 ## E. How to Enable Anonymous Sign-Ins
 
 1. Open: https://supabase.com/dashboard/project/vtaqyammimmgxlkqwjat/auth/providers
