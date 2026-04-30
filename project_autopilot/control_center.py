@@ -380,6 +380,9 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Privacy logging guardrails", "Logging rules for sensitive data", ctrl / "MIRA_PRIVACY_LOGGING_GUARDRAILS.md", "validation"),
         _entry("Env preflight report", "Supabase env var presence check", logs / "mira_env_preflight_latest.json", "validation"),
         _entry("Auth verification", "Supabase auth foundation check", logs / "mira_supabase_auth_verify_latest.json", "validation"),
+        _entry("Visual QA report", "Page layout, accessibility, state rendering checks", logs / f"{pid}_visual_qa_latest.md", "validation"),
+        _entry("Visual Quality Standard", "Visual design rules and quality bar", ctrl / "visual" / "MIRA_VISUAL_QUALITY_STANDARD.md", "planning"),
+        _entry("External Builder Policy", "External tool intake governance", ctrl / "EXTERNAL_BUILDER_POLICY.md", "planning"),
     ]
     return items
 
