@@ -211,6 +211,74 @@ flows:
       - verb: note
         message: "Full E2E mock flow completed. No paid APIs called. No real customer data used."
 
+  mira_real_flow_static:
+    description: "Static analysis of real-flow readiness: checks all pages render, auth helpers exist, error states are reachable."
+    safe: true
+    routes:
+      - path: "/{locale}"
+        name: "Landing"
+      - path: "/{locale}/onboarding"
+        name: "Onboarding"
+      - path: "/{locale}/scan"
+        name: "Scan"
+      - path: "/{locale}/catalog"
+        name: "Catalog"
+      - path: "/{locale}/tryon/adidas-trefoil-tee"
+        name: "TryOn"
+    error_selectors:
+      onboarding:
+        path: "/{locale}/onboarding"
+        selectors:
+          - role=alert
+      scan:
+        path: "/{locale}/scan"
+        selectors:
+          - role=alert
+      tryon:
+        path: "/{locale}/tryon/adidas-trefoil-tee"
+        selectors:
+          - data-testid=tryon-error
+          - data-testid=tryon-status
+
+  mira_error_states:
+    description: "Validate error state UX: visit tryon with no profile, visit result with bad ID, check graceful failures."
+    safe: true
+    steps:
+      - verb: goto
+        path: "/{locale}/tryon/adidas-trefoil-tee"
+      - verb: note
+        message: "Without localStorage profile, should show missing-profile error"
+      - verb: screenshot
+        name: "error_tryon_no_profile"
+      - verb: goto
+        path: "/{locale}/result/nonexistent-bad-id-12345"
+      - verb: note
+        message: "Nonexistent generation should gracefully fail after polling"
+      - verb: screenshot
+        name: "error_result_not_found"
+      - verb: goto
+        path: "/{locale}/tryon/nonexistent-product-xyz"
+      - verb: note
+        message: "Nonexistent product should show 404 page"
+      - verb: screenshot
+        name: "error_tryon_bad_product"
+
+  mira_no_paid_generation:
+    description: "Verify that no paid generation API is called. POST to /api/tryon/jobs without mock mode and verify no generation succeeds."
+    safe: true
+    api_checks:
+      - method: POST
+        path: "/api/tryon/jobs"
+        body:
+          productId: "adidas-trefoil-tee"
+          selectedSize: "M"
+          profile:
+            name: "no-paid-probe"
+          photos:
+            front: "fake-path"
+        expect_no_paid_call: true
+        note: "In non-mock mode, this should attempt Supabase write (may fail) but never reach paid image API without valid photos."
+
   mira_full_flow_blocked:
     description: "Full REAL E2E flow — BLOCKED until RLS/auth/storage ready. Use mira_full_e2e_mock_flow for safe testing."
     status: BLOCKED
