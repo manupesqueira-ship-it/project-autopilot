@@ -231,6 +231,7 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.findings.extend(_check_sensitive_logging())
         summary.findings.extend(_check_env_preflight())
         summary.findings.extend(_check_auth_verify())
+        summary.findings.extend(_check_security_staging())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -436,6 +437,47 @@ def _check_mock_mode(files: dict[str, str]) -> list[str]:
             findings.append("Status route uses isQaMockGenerationId guard.")
     else:
         findings.append("QA mock mode helper not found.")
+
+    return findings
+
+
+def _check_security_staging() -> list[str]:
+    """Check security staging pack presence and SQL draft safety."""
+    findings: list[str] = []
+    repo = Path(__file__).resolve().parent.parent
+
+    staging_docs = [
+        "project_control/security/MIRA_RLS_STORAGE_STAGING_PLAN.md",
+        "project_control/security/MIRA_RLS_POLICY_MATRIX.md",
+        "project_control/security/MIRA_STORAGE_POLICY_MATRIX.md",
+        "project_control/security/MIRA_SECURITY_TEST_PLAN.md",
+        "project_control/security/MIRA_SECURITY_ROLLBACK_PLAN.md",
+        "project_control/security/MIRA_SECURITY_OWNERSHIP_FINDINGS.md",
+    ]
+    sql_drafts = [
+        "supabase/drafts/rls_candidate_policies.sql",
+        "supabase/drafts/storage_candidate_policies.sql",
+    ]
+
+    existing = sum(1 for d in staging_docs if (repo / d).exists())
+    findings.append(f"Security staging docs: {existing}/{len(staging_docs)} present.")
+
+    for sql in sql_drafts:
+        p = repo / sql
+        if p.exists():
+            content = p.read_text(encoding="utf-8", errors="replace")
+            if "DO NOT RUN AGAINST PRODUCTION" in content:
+                findings.append(f"{sql}: exists with safety warning.")
+            else:
+                findings.append(f"WARNING: {sql} exists but MISSING safety warning.")
+        else:
+            findings.append(f"{sql}: not found.")
+
+    ownership = repo / "project_control/security/MIRA_SECURITY_OWNERSHIP_FINDINGS.md"
+    if ownership.exists():
+        findings.append("API ownership findings documented.")
+    else:
+        findings.append("WARNING: API ownership findings not documented.")
 
     return findings
 

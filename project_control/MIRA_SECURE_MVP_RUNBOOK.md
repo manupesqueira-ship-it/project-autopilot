@@ -159,25 +159,55 @@ Key decisions needed:
 - **Do NOT share the app URL** publicly until CAPTCHA enabled.
 - **Do NOT deploy** to production.
 
-## N. Next 3 Sprints
+## N. Security Staging Pack
 
-### Sprint 1: Activate Auth
-- Enable Anonymous Sign-Ins.
-- Add service_role key to .env.local.
+The security staging pack provides all draft policies, test plans, and rollback procedures needed
+before enabling RLS or storage policies. All files are in `project_control/security/` and `supabase/drafts/`.
+
+### Security Staging Docs
+- `project_control/security/MIRA_RLS_STORAGE_STAGING_PLAN.md` — Master staging plan
+- `project_control/security/MIRA_RLS_POLICY_MATRIX.md` — Per-table RLS policies
+- `project_control/security/MIRA_STORAGE_POLICY_MATRIX.md` — Per-bucket storage policies
+- `project_control/security/MIRA_SECURITY_TEST_PLAN.md` — A/B user test matrix (30 cases)
+- `project_control/security/MIRA_SECURITY_ROLLBACK_PLAN.md` — Phased rollback procedures
+- `project_control/security/MIRA_SECURITY_OWNERSHIP_FINDINGS.md` — API ownership risk review
+
+### SQL Drafts (DO NOT RUN ON PRODUCTION)
+- `supabase/drafts/rls_candidate_policies.sql` — RLS policies for all tables
+- `supabase/drafts/storage_candidate_policies.sql` — Storage policies for all buckets
+
+### Security Staging Validator
+```bash
+python -B project_autopilot/security_staging_plan.py --project mira
+```
+
+### Key Ownership Findings
+- Status endpoint (`/api/tryon/status/[id]`) has NO ownership check — any UUID returns data.
+- Jobs endpoint trusts client-provided profileId without server auth verification.
+- Both must be fixed before real customer data.
+
+## O. Next 3 Sprints
+
+### Sprint 1: Activate Auth (partially done)
+- ~~Enable Anonymous Sign-Ins.~~ DONE
+- ~~Add service_role key to .env.local.~~ DONE
 - Verify auth_user_id populates.
 - Run full mock E2E with live server.
 
 ### Sprint 2: RLS Staging
-- Make ownership/storage decisions.
-- Apply RLS + policies in Supabase staging branch or disposable project.
-- Test with Flow QA.
-- Test rollback.
+- Make ownership/storage decisions (use decision matrix).
+- Add auth_user_id column to user_assets and generations.
+- Apply RLS + policies in disposable Supabase project.
+- Run A/B security test matrix (30 test cases).
+- Test rollback procedures.
+- Add auth verification to status and jobs endpoints.
 
 ### Sprint 3: Security Hardening
 - Enable CAPTCHA.
 - Set production Site URL.
-- Add bucket restrictions.
-- Make generations bucket private + signed URLs.
+- Add bucket MIME/size restrictions.
+- Switch generations bucket to private + signed URLs.
+- Update client storage upload paths to `{auth.uid()}/...`.
 - Prepare for private beta deployment.
 
 ---
