@@ -255,3 +255,11 @@ Update 2026-04-29 (runtime auth hardening sprint):
 - Result page polling now fails gracefully after 15 consecutive failures (no infinite spin).
 - Onboarding error handling now distinguishes auth failure vs network error vs DB error.
 - Real customer data still blocked until RLS/storage/CAPTCHA/privacy decisions.
+
+Update 2026-04-30 (live auth consolidation):
+- User enabled Anonymous Sign-Ins in Supabase Dashboard.
+- Live dev check PASS (24/24): anonymous auth + fake profile insert succeeded.
+- auth_user_id confirmed non-null on inserted row.
+- Branch agent/mira-runtime-auth-hardening fast-forward merged to master.
+- Readiness: CODE_READY_AUTH_LIVE_DEV_VERIFIED_REALDATA_BLOCKED.
+- Remaining: RLS, storage policies, CAPTCHA, privacy/retention, production URLs.

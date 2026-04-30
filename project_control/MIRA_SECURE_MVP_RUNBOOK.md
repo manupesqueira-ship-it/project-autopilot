@@ -239,7 +239,12 @@ python -B project_autopilot/supabase_auth_verify.py --project mira
 
 Verifies env vars, code wiring, auth helper, onboarding/scan integration, and mock mode safety. Must be PASS before testing with live Supabase.
 
-To verify auth works end-to-end with real Supabase, open http://localhost:3000/es/onboarding, fill and submit a profile, then check `users_profile.auth_user_id` is non-null in the Supabase Table Editor.
+```bash
+python -B project_autopilot/supabase_auth_verify.py --project mira --live-dev-check
+```
+
+Performs anonymous auth + fake profile insert against live Supabase using dev-only data. Confirms auth_user_id is non-null. **Status: PASS (2026-04-30).**
+
 - Set production Site URL
 
 ### Sensitive Logging Audit
