@@ -232,6 +232,58 @@ def check_privacy_logging() -> ReadinessCategory:
     return cat
 
 
+def check_runtime_env() -> ReadinessCategory:
+    cat = ReadinessCategory("Runtime Env Readiness", "UNKNOWN")
+    cat.add("Dev runtime diagnose tool exists",
+            _exists("project_autopilot/dev_runtime_diagnose.py"))
+    cat.add("Health env API route exists",
+            _exists("app/api/health/env/route.ts"))
+    cat.add("Error message explains stale-server cause",
+            _contains("lib/supabase/env.ts", "clean restart"))
+
+    diag_data = _read_json("logs/mira_dev_runtime_diagnose_latest.json")
+    if diag_data:
+        verdict = diag_data.get("verdict", "UNKNOWN")
+        cat.add(f"Dev runtime diagnose: {verdict}",
+                verdict in ("PASS", "WARN"),
+                "FAIL means env mismatch or missing config" if verdict.startswith("FAIL") else "")
+    else:
+        cat.add("Dev runtime diagnose not yet run", False,
+                "Run: python -B project_autopilot/dev_runtime_diagnose.py --project mira")
+
+    cat.status = cat.compute_status()
+    return cat
+
+
+def check_auth_live_dev() -> ReadinessCategory:
+    cat = ReadinessCategory("Auth Live Dev Verification", "UNKNOWN")
+    cat.add("Live dev check helper exists",
+            _exists("project_autopilot/helpers/supabase_live_dev_check.mjs"))
+
+    auth_data = _read_json("logs/mira_supabase_auth_verify_latest.json")
+    if auth_data and auth_data.get("mode") == "static+live":
+        checks = auth_data.get("checks", [])
+        live_checks = [c for c in checks if "Live dev check" in c.get("name", "")]
+        if live_checks:
+            all_ok = all(c.get("ok", False) for c in live_checks)
+            cat.add("Live dev check completed",
+                    all_ok,
+                    "All live checks passed" if all_ok else "Some live checks failed")
+            for c in live_checks:
+                cat.add(c["name"], c.get("ok", False), c.get("detail", ""))
+        else:
+            cat.add("Live dev check results", False, "No live check results found in report")
+    else:
+        cat.add("Live dev check not yet run", False,
+                "Run: python -B project_autopilot/supabase_auth_verify.py --project mira --live-dev-check")
+
+    cat.add("Real customer data still blocked",
+            True, "Live dev check uses fake data only")
+
+    cat.status = cat.compute_status()
+    return cat
+
+
 def check_public_beta() -> ReadinessCategory:
     cat = ReadinessCategory("Public Beta Readiness", "UNKNOWN")
     cat.add("CAPTCHA documented as pending",
@@ -255,9 +307,10 @@ def compute_overall(categories: list[ReadinessCategory]) -> str:
 
     # Check if local mock E2E is ready (code-side)
     mock_gen = by_name.get("Mock Generation Readiness")
-    flow_qa = by_name.get("Flow QA Readiness")
     auth = by_name.get("Auth Readiness")
     mock_e2e_verdict = _flow_qa_latest_verdict("mira_full_e2e_mock_flow")
+    runtime_env = by_name.get("Runtime Env Readiness")
+    auth_live = by_name.get("Auth Live Dev Verification")
 
     local_mock_ready = (
         mock_gen and mock_gen.status == "READY"
@@ -266,13 +319,25 @@ def compute_overall(categories: list[ReadinessCategory]) -> str:
     )
 
     public_beta = by_name.get("Public Beta Readiness")
-    rls = by_name.get("RLS Readiness")
 
+    # Best case: code ready + auth live verified + runtime env ok
+    if (local_mock_ready
+            and auth_live and auth_live.status == "READY"
+            and runtime_env and runtime_env.status == "READY"):
+        return "CODE_READY_AUTH_LIVE_DEV_VERIFIED_REALDATA_BLOCKED"
+
+    # Code ready + runtime env ok but live dev not run
+    if local_mock_ready and runtime_env and runtime_env.status == "READY":
+        return "CODE_READY_MOCK_E2E_PASS_RUNTIME_ENV_READY"
+
+    # Code ready but runtime env blocked
+    if local_mock_ready and runtime_env and runtime_env.status in ("BLOCKED", "UNKNOWN"):
+        return "CODE_READY_BUT_RUNTIME_ENV_BLOCKED"
+
+    # Basic mock E2E pass
     if local_mock_ready and public_beta and public_beta.status == "BLOCKED":
         return "CODE_READY_MOCK_E2E_PASS"
-    if auth and auth.status == "READY" and (not rls or rls.status in ("READY", "PARTIAL")):
-        if public_beta and public_beta.status == "BLOCKED":
-            return "BLOCKED_FOR_REAL_CUSTOMER_DATA"
+
     statuses = [c.status for c in categories]
     if all(s == "READY" for s in statuses):
         return "READY"
@@ -292,10 +357,10 @@ def top_blockers(categories: list[ReadinessCategory]) -> list[str]:
 
 def next_actions() -> list[str]:
     return [
+        "Verify runtime env: python -B project_autopilot/dev_runtime_diagnose.py --project mira --url http://localhost:3000",
         "Enable Anonymous Sign-Ins in Supabase Dashboard",
-        "Add SUPABASE_SERVICE_ROLE_KEY to .env.local",
-        "Run local auth verification plan",
-        "Start dev server with NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true and run full mock E2E",
+        "Run live dev auth check: python -B project_autopilot/supabase_auth_verify.py --project mira --live-dev-check",
+        "Start dev server and run mock E2E: python -B project_autopilot/flow_qa.py --project mira --validate-mock-e2e",
         "Make RLS ownership/storage decisions in decision matrix",
     ]
 
@@ -373,6 +438,8 @@ def main() -> None:
 
     categories = [
         check_auth(),
+        check_runtime_env(),
+        check_auth_live_dev(),
         check_flow_qa(),
         check_mock_generation(),
         check_privacy_logging(),

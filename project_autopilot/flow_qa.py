@@ -1018,6 +1018,67 @@ def _run_validate_mock_e2e(project: str, config: dict[str, Any]) -> int:
     return 1 if any_fail else 0
 
 
+def _run_validate_runtime_env(project: str) -> int:
+    """Run dev runtime diagnostics with a managed dev server.
+
+    Starts a clean dev server, probes /api/health/env, compares with
+    env_preflight, then stops the server.  Returns exit code.
+    """
+    from dev_server_runner import DevServer
+
+    print("[validate-runtime-env] Starting managed dev server on port 3099...")
+    server = DevServer(port=3099)
+    ok, msg = server.start()
+    if not ok:
+        print(f"[validate-runtime-env] Could not start dev server: {msg}")
+        print("[validate-runtime-env] WARN: Falling back to file-only diagnosis")
+        # Run without runtime probe
+        from dev_runtime_diagnose import (
+            DiagResult, check_env_file_exists, check_env_vars_in_files,
+            check_env_preflight_alignment, check_next_cache,
+            compute_verdict, write_report,
+        )
+        result = DiagResult()
+        check_env_file_exists(result)
+        check_env_vars_in_files(result)
+        check_env_preflight_alignment(result)
+        check_next_cache(result)
+        result.verdict = compute_verdict(result)
+        report = write_report(result)
+        print(f"[validate-runtime-env] {result.verdict}")
+        print(f"[validate-runtime-env] Report: {report}")
+        return 0 if not result.verdict.startswith("FAIL") else 1
+
+    try:
+        from dev_runtime_diagnose import (
+            DiagResult, check_env_file_exists, check_env_vars_in_files,
+            check_env_preflight_alignment, check_next_cache,
+            probe_runtime_env, compute_verdict, write_report,
+        )
+        result = DiagResult()
+        check_env_file_exists(result)
+        check_env_vars_in_files(result)
+        check_env_preflight_alignment(result)
+        check_next_cache(result)
+        probe_runtime_env(result, f"http://localhost:3099")
+        result.verdict = compute_verdict(result)
+        report = write_report(result)
+
+        print(f"[validate-runtime-env] {result.verdict}")
+        for c in result.checks:
+            icon = {"PASS": "[OK]", "WARN": "[??]", "FAIL": "[!!]",
+                    "INFO": "[--]", "SKIP": "[--]"}.get(c.status, "[??]")
+            line = f"  {icon} {c.status} {c.name}"
+            if c.detail:
+                line += f" — {c.detail}"
+            print(line)
+        print(f"  Report: {report}")
+
+        return 0 if not result.verdict.startswith("FAIL") else 1
+    finally:
+        server.stop()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Flow QA for Project Autopilot")
     parser.add_argument("--project", required=True, help="Project ID (e.g. mira)")
@@ -1027,6 +1088,8 @@ def main() -> None:
     parser.add_argument("--run", type=str, help="Run a specific flow by name")
     parser.add_argument("--validate-mock-e2e", action="store_true",
                         help="Start mock dev server and run full E2E validation")
+    parser.add_argument("--validate-runtime-env", action="store_true",
+                        help="Start dev server and validate runtime env config")
     parser.add_argument("--start-dev-server", action="store_true",
                         help="Start managed dev server for --run (with mock mode)")
     args = parser.parse_args()
@@ -1049,6 +1112,10 @@ def main() -> None:
     if args.diagnose:
         diagnose(args.project, config)
         return
+
+    if args.validate_runtime_env:
+        code = _run_validate_runtime_env(args.project)
+        sys.exit(code)
 
     if args.validate_mock_e2e:
         code = _run_validate_mock_e2e(args.project, config)

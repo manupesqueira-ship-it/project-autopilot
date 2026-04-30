@@ -141,6 +141,86 @@ def run_static(result: VerifyResult) -> None:
 
 
 # -----------------------------------------------------------------------
+# Live dev check
+# -----------------------------------------------------------------------
+
+def run_live_dev_check(result: VerifyResult) -> None:
+    """Run the Node.js live dev check helper.
+
+    Performs anonymous auth + fake profile insert using the same Supabase
+    client libraries as the app.  Never prints secrets, tokens, or keys.
+    """
+    import subprocess
+
+    helper = REPO_ROOT / "project_autopilot" / "helpers" / "supabase_live_dev_check.mjs"
+    if not helper.exists():
+        result.add("Live dev check helper exists", False,
+                    f"Missing: {helper}")
+        return
+
+    # Pre-check: required env vars must be present (from static checks)
+    load_env()
+    import os
+    url_val = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").strip()
+    anon_val = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "").strip()
+    if not url_val or not anon_val:
+        result.add("Live dev check: env precondition", False,
+                    "NEXT_PUBLIC_SUPABASE_URL or ANON_KEY not present — cannot run live check")
+        return
+
+    result.add("Live dev check helper exists", True)
+
+    node_cmd = "node"
+    try:
+        proc = subprocess.run(
+            [node_cmd, str(helper)],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(REPO_ROOT),
+        )
+    except FileNotFoundError:
+        result.add("Live dev check: node available", False, "node not found on PATH")
+        return
+    except subprocess.TimeoutExpired:
+        result.add("Live dev check: execution", False, "Timed out after 30s")
+        return
+
+    stdout = proc.stdout.strip()
+    if not stdout:
+        result.add("Live dev check: execution", False,
+                    f"No output. stderr: {proc.stderr[:200] if proc.stderr else 'none'}")
+        return
+
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        result.add("Live dev check: parse output", False,
+                    f"Invalid JSON: {stdout[:200]}")
+        return
+
+    # Auth check
+    auth_ok = data.get("authOk", False)
+    result.add("Live dev check: anonymous auth", auth_ok,
+               data.get("userId", "no user id") if auth_ok else
+               data.get("detail", "auth failed"))
+
+    # Insert check
+    insert_ok = data.get("insertOk", False)
+    if insert_ok:
+        result.add("Live dev check: fake profile insert", True,
+                    f"Row ID: {data.get('insertedRowId', '?')}, "
+                    f"email: {data.get('fakeEmail', '?')}")
+    elif data.get("error") == "INSERT_FAILED":
+        result.add("Live dev check: fake profile insert", False,
+                    data.get("detail", "insert failed"))
+    # If --no-insert was used, skip insert check
+
+    # Overall
+    overall_ok = data.get("ok", False)
+    result.add("Live dev check: overall", overall_ok,
+               data.get("detail", "unknown"))
+
+
+# -----------------------------------------------------------------------
 # Compute verdict
 # -----------------------------------------------------------------------
 
@@ -227,11 +307,7 @@ def main() -> None:
 
     if args.live_dev_check:
         result.mode = "static+live"
-        print("[auth-verify] --live-dev-check requested.")
-        print("[auth-verify] This would insert ONE disposable test profile row.")
-        print("[auth-verify] Skipping in this version — static verification is sufficient.")
-        print("[auth-verify] To test live: use onboarding UI with dev server running.")
-        result.add("Live dev check", True, "Deferred to manual UI test via onboarding page")
+        run_live_dev_check(result)
 
     compute_verdict(result)
     report_path = write_reports(result)

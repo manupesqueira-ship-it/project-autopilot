@@ -242,3 +242,16 @@ Update 2026-04-30 (auth verification sprint):
 - Static verification: PASS (20/20 checks).
 - Auth foundation is correctly wired: env, client, auth helper, onboarding, scan.
 - Real customer data still blocked until RLS/storage/CAPTCHA/privacy decisions.
+
+Update 2026-04-29 (runtime auth hardening sprint):
+- Root cause diagnosed: env_preflight reads .env.local directly into Python; Next.js compiles NEXT_PUBLIC_* into client bundle at dev-server start. If server not restarted after .env.local edit, Python sees vars but browser does not.
+- Fix: improved error message in lib/supabase/env.ts explains stale-server cause.
+- New: /api/health/env runtime diagnostic endpoint (booleans only, never secrets).
+- New: dev_runtime_diagnose.py — detects env_preflight-vs-runtime mismatch.
+- New: supabase_live_dev_check.mjs — Node helper for anonymous auth + fake profile insert.
+- supabase_auth_verify.py --live-dev-check now calls the real Node helper.
+- flow_qa.py --validate-runtime-env starts managed server and probes /api/health/env.
+- mira_readiness.py expanded: Runtime Env Readiness + Auth Live Dev Verification categories.
+- Result page polling now fails gracefully after 15 consecutive failures (no infinite spin).
+- Onboarding error handling now distinguishes auth failure vs network error vs DB error.
+- Real customer data still blocked until RLS/storage/CAPTCHA/privacy decisions.
