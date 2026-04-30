@@ -389,6 +389,9 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Security ownership findings", "API ownership risk review", ctrl / "security" / "MIRA_SECURITY_OWNERSHIP_FINDINGS.md", "validation"),
         _entry("RLS candidate SQL", "Draft RLS policies (DO NOT RUN)", project.repo_path / "supabase" / "drafts" / "rls_candidate_policies.sql", "planning"),
         _entry("Storage candidate SQL", "Draft storage policies (DO NOT RUN)", project.repo_path / "supabase" / "drafts" / "storage_candidate_policies.sql", "planning"),
+        _entry("Visual QA report", "Page layout, accessibility, state rendering checks", logs / f"{pid}_visual_qa_latest.md", "validation"),
+        _entry("Visual Quality Standard", "Visual design rules and quality bar", ctrl / "visual" / "MIRA_VISUAL_QUALITY_STANDARD.md", "planning"),
+        _entry("External Builder Policy", "External tool intake governance", ctrl / "EXTERNAL_BUILDER_POLICY.md", "planning"),
     ]
     return items
 

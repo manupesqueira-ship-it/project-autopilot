@@ -426,6 +426,40 @@ def check_public_beta() -> ReadinessCategory:
     return cat
 
 
+def check_visual_qa() -> ReadinessCategory:
+    cat = ReadinessCategory("Visual QA Polish", "UNKNOWN")
+    cat.add("Visual Quality Standard exists",
+            _exists("project_control/visual/MIRA_VISUAL_QUALITY_STANDARD.md"))
+    cat.add("External Builder Policy exists",
+            _exists("project_control/EXTERNAL_BUILDER_POLICY.md"))
+    cat.add("Visual QA tool exists",
+            _exists("project_autopilot/visual_qa.py"))
+    cat.add("Visual QA review template exists",
+            _exists("project_autopilot/templates/MIRA_VISUAL_QA_REVIEW.template.md"))
+    cat.add("External builder import template exists",
+            _exists("project_autopilot/templates/EXTERNAL_BUILDER_IMPORT_REVIEW.template.md"))
+
+    # Check latest visual QA report
+    vqa_data = _read_json("logs/mira_visual_qa_latest.json")
+    if vqa_data:
+        verdict = vqa_data.get("overall", "UNKNOWN")
+        cat.add(f"Visual QA verdict: {verdict}",
+                verdict in ("PASS", "PASS_WITH_ISSUES", "WARN"),
+                f"Latest run: {vqa_data.get('generated_at', 'unknown')}")
+    else:
+        cat.add("Visual QA not yet run", False,
+                "Run: python -B project_autopilot/visual_qa.py --project mira")
+
+    # Check key accessibility markers
+    cat.add("Button component has focus-visible",
+            _contains("components/ui/button.tsx", "focus-visible"))
+    cat.add("StepIndicator has aria-current",
+            _contains("components/app/step-indicator.tsx", "aria-current"))
+
+    cat.status = cat.compute_status()
+    return cat
+
+
 def compute_overall(categories: list[ReadinessCategory]) -> str:
     by_name = {c.name: c for c in categories}
 
@@ -581,6 +615,7 @@ def main() -> None:
         check_rls(),
         check_storage(),
         check_security_staging(),
+        check_visual_qa(),
         check_public_beta(),
     ]
 
