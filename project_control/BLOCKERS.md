@@ -235,3 +235,10 @@ Update 2026-04-29 (env preflight sprint):
 - Env preflight tool: `python -B project_autopilot/env_preflight.py --project mira`
 - Backend audit, readiness report, and Control Center updated with env checks.
 - User must add all 3 Supabase env vars to .env.local (see runbook section D2).
+
+Update 2026-04-30 (auth verification sprint):
+- User fixed .env.local. Env preflight now WARN (only optional var missing).
+- Auth verification tool: `python -B project_autopilot/supabase_auth_verify.py --project mira`
+- Static verification: PASS (20/20 checks).
+- Auth foundation is correctly wired: env, client, auth helper, onboarding, scan.
+- Real customer data still blocked until RLS/storage/CAPTCHA/privacy decisions.

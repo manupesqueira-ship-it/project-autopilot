@@ -226,10 +226,20 @@ The `--validate-mock-e2e` command:
 **What it does NOT prove:** Real Supabase auth, RLS policies, storage access, paid generation quality.
 
 **Remaining external/manual blockers (not code issues):**
-- Enable Anonymous Sign-Ins in Supabase Dashboard
-- Add SUPABASE_SERVICE_ROLE_KEY to .env.local
+- ~~Enable Anonymous Sign-Ins in Supabase Dashboard~~ DONE
+- ~~Add SUPABASE_SERVICE_ROLE_KEY to .env.local~~ DONE
 - Make RLS ownership/storage decisions
 - Enable CAPTCHA before public testing
+
+### Supabase Auth Verification
+
+```bash
+python -B project_autopilot/supabase_auth_verify.py --project mira
+```
+
+Verifies env vars, code wiring, auth helper, onboarding/scan integration, and mock mode safety. Must be PASS before testing with live Supabase.
+
+To verify auth works end-to-end with real Supabase, open http://localhost:3000/es/onboarding, fill and submit a profile, then check `users_profile.auth_user_id` is non-null in the Supabase Table Editor.
 - Set production Site URL
 
 ### Sensitive Logging Audit

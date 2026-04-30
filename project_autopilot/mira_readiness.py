@@ -112,6 +112,17 @@ def check_auth() -> ReadinessCategory:
         cat.add("Env preflight not yet run", False,
                 "Run: python -B project_autopilot/env_preflight.py --project mira")
 
+    # Check auth verification
+    auth_data = _read_json("logs/mira_supabase_auth_verify_latest.json")
+    if auth_data:
+        av = auth_data.get("verdict", "UNKNOWN")
+        cat.add(f"Auth verification: {av}",
+                av in ("PASS", "WARN"),
+                f"mode: {auth_data.get('mode', '?')}")
+    else:
+        cat.add("Auth verification not yet run", False,
+                "Run: python -B project_autopilot/supabase_auth_verify.py --project mira")
+
     cat.status = cat.compute_status()
     return cat
 

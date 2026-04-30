@@ -230,6 +230,7 @@ def run_backend_audit(project: ProjectConfig) -> tuple[BackendAuditSummary, Path
         summary.findings.extend(_check_readiness_docs())
         summary.findings.extend(_check_sensitive_logging())
         summary.findings.extend(_check_env_preflight())
+        summary.findings.extend(_check_auth_verify())
         summary.readiness = _readiness(summary)
 
     report_path = _write_report(project, summary, files)
@@ -391,6 +392,26 @@ def _check_env_preflight() -> list[str]:
     except Exception:
         findings.append("Could not read env preflight report.")
 
+    return findings
+
+
+def _check_auth_verify() -> list[str]:
+    """Check Supabase auth verification status."""
+    findings: list[str] = []
+    json_path = Path(__file__).resolve().parent.parent / "logs" / "mira_supabase_auth_verify_latest.json"
+    if json_path.exists():
+        try:
+            import json as _json
+            data = _json.loads(json_path.read_text(encoding="utf-8"))
+            verdict = data.get("verdict", "UNKNOWN")
+            mode = data.get("mode", "?")
+            passed = sum(1 for c in data.get("checks", []) if c.get("ok"))
+            total = len(data.get("checks", []))
+            findings.append(f"Auth verification: {verdict} ({passed}/{total}, mode: {mode})")
+        except Exception:
+            findings.append("Could not read auth verification report.")
+    else:
+        findings.append("Auth verification not yet run. Run: python -B project_autopilot/supabase_auth_verify.py --project mira")
     return findings
 
 
