@@ -478,7 +478,25 @@ def compute_overall(categories: list[ReadinessCategory]) -> str:
 
     public_beta = by_name.get("Public Beta Readiness")
 
-    # Best case: code ready + auth live verified + runtime env ok
+    # Check consolidated sprint readiness
+    security_staging = by_name.get("Security Staging Pack")
+    product_flow = by_name.get("Product Flow Static Readiness")
+    visual_qa = by_name.get("Visual QA Polish")
+
+    sprints_ready = (
+        (security_staging and security_staging.status == "READY")
+        and (product_flow and product_flow.status == "READY")
+        and (visual_qa and visual_qa.status == "READY")
+    )
+
+    # Best case: all sprints consolidated + auth live verified + runtime env ok
+    if (local_mock_ready
+            and auth_live and auth_live.status == "READY"
+            and runtime_env and runtime_env.status == "READY"
+            and sprints_ready):
+        return "CODE_READY_AUTH_LIVE_DEV_VERIFIED_FLOW_HARDENED_SECURITY_STAGED_VISUAL_QA_READY_REALDATA_BLOCKED"
+
+    # Auth live verified but not all sprints consolidated
     if (local_mock_ready
             and auth_live and auth_live.status == "READY"
             and runtime_env and runtime_env.status == "READY"):

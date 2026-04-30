@@ -1,7 +1,7 @@
 # MIRA Secure MVP Runbook
 
 > Master human-facing guide for advancing MIRA toward private beta.
-> Last updated: 2026-04-29
+> Last updated: 2026-04-30
 
 ---
 
@@ -16,7 +16,10 @@
 | RLS | Disabled (correct for now) |
 | Storage policies | None (correct for now) |
 | Real customer data | BLOCKED |
-| Overall verdict | BLOCKED_FOR_REAL_CUSTOMER_DATA |
+| Product flow hardening | Implemented (MIME/size validation, API guards) |
+| Security staging pack | Complete (RLS/storage matrices, test plan, rollback) |
+| Visual QA | Standard + tooling + external builder policy |
+| Overall verdict | CODE_READY_AUTH_LIVE_DEV_VERIFIED_FLOW_HARDENED_SECURITY_STAGED_VISUAL_QA_READY_REALDATA_BLOCKED |
 
 ## B. What Is Safe Today
 
@@ -186,7 +189,24 @@ python -B project_autopilot/security_staging_plan.py --project mira
 - Jobs endpoint trusts client-provided profileId without server auth verification.
 - Both must be fixed before real customer data.
 
-## O. Next 3 Sprints
+## O. Internal Local Demo Flow
+
+To walk through the complete user experience with mock data (no paid APIs, no real photos):
+
+1. Start the dev server:
+   ```bash
+   NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev
+   ```
+2. Open http://localhost:3000/es/onboarding (or `/en/onboarding`)
+3. Complete onboarding with fake data (any name, any email, height/weight/size/build)
+4. On scan page, skip photos (click "Skip photos →")
+5. Browse catalog, select any product
+6. On try-on page, select a size and click "Try On"
+7. View result page — mock generation will show placeholder image/video
+
+**Safety:** Mock mode uses no paid APIs, no real Supabase writes in the generation path, and no real customer data. The onboarding step does write a test profile to Supabase (acceptable for dev).
+
+## P. Next 3 Sprints
 
 ### Sprint 1: Activate Auth (partially done)
 - ~~Enable Anonymous Sign-Ins.~~ DONE
