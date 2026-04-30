@@ -284,6 +284,43 @@ def check_auth_live_dev() -> ReadinessCategory:
     return cat
 
 
+def check_security_staging() -> ReadinessCategory:
+    cat = ReadinessCategory("Security Staging Pack", "UNKNOWN")
+    cat.add("RLS staging plan exists",
+            _exists("project_control/security/MIRA_RLS_STORAGE_STAGING_PLAN.md"))
+    cat.add("RLS policy matrix exists",
+            _exists("project_control/security/MIRA_RLS_POLICY_MATRIX.md"))
+    cat.add("Storage policy matrix exists",
+            _exists("project_control/security/MIRA_STORAGE_POLICY_MATRIX.md"))
+    cat.add("Security test plan exists",
+            _exists("project_control/security/MIRA_SECURITY_TEST_PLAN.md"))
+    cat.add("Security rollback plan exists",
+            _exists("project_control/security/MIRA_SECURITY_ROLLBACK_PLAN.md"))
+    cat.add("RLS candidate SQL exists",
+            _exists("supabase/drafts/rls_candidate_policies.sql"))
+    cat.add("Storage candidate SQL exists",
+            _exists("supabase/drafts/storage_candidate_policies.sql"))
+    cat.add("SQL drafts have safety warnings",
+            _contains("supabase/drafts/rls_candidate_policies.sql", "DO NOT RUN AGAINST PRODUCTION") and
+            _contains("supabase/drafts/storage_candidate_policies.sql", "DO NOT RUN AGAINST PRODUCTION"))
+    cat.add("Ownership findings documented",
+            _exists("project_control/security/MIRA_SECURITY_OWNERSHIP_FINDINGS.md"))
+
+    # Check staging validation tool
+    staging_data = _read_json("logs/mira_security_staging_latest.json")
+    if staging_data:
+        sv = staging_data.get("overall", "UNKNOWN")
+        cat.add(f"Staging validation: {sv}",
+                sv in ("PASS", "WARN"),
+                f"Run: python -B project_autopilot/security_staging_plan.py --project mira")
+    else:
+        cat.add("Staging validation not yet run", False,
+                "Run: python -B project_autopilot/security_staging_plan.py --project mira")
+
+    cat.status = cat.compute_status()
+    return cat
+
+
 def check_public_beta() -> ReadinessCategory:
     cat = ReadinessCategory("Public Beta Readiness", "UNKNOWN")
     cat.add("CAPTCHA documented as pending",
@@ -403,6 +440,14 @@ def print_report(categories: list[ReadinessCategory], overall: str) -> None:
         "project_control/MIRA_RLS_DECISION_MATRIX.md",
         "project_control/MIRA_RLS_STORAGE_MIGRATION_DRAFT.md",
         "project_control/MIRA_SECURE_MVP_RUNBOOK.md",
+        "project_control/security/MIRA_RLS_STORAGE_STAGING_PLAN.md",
+        "project_control/security/MIRA_RLS_POLICY_MATRIX.md",
+        "project_control/security/MIRA_STORAGE_POLICY_MATRIX.md",
+        "project_control/security/MIRA_SECURITY_TEST_PLAN.md",
+        "project_control/security/MIRA_SECURITY_ROLLBACK_PLAN.md",
+        "project_control/security/MIRA_SECURITY_OWNERSHIP_FINDINGS.md",
+        "supabase/drafts/rls_candidate_policies.sql",
+        "supabase/drafts/storage_candidate_policies.sql",
         "logs/flow_qa/mira/latest/flow_report.md",
     ]:
         exists = _exists(p)
@@ -445,6 +490,7 @@ def main() -> None:
         check_privacy_logging(),
         check_rls(),
         check_storage(),
+        check_security_staging(),
         check_public_beta(),
     ]
 

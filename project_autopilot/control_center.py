@@ -380,6 +380,15 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Privacy logging guardrails", "Logging rules for sensitive data", ctrl / "MIRA_PRIVACY_LOGGING_GUARDRAILS.md", "validation"),
         _entry("Env preflight report", "Supabase env var presence check", logs / "mira_env_preflight_latest.json", "validation"),
         _entry("Auth verification", "Supabase auth foundation check", logs / "mira_supabase_auth_verify_latest.json", "validation"),
+        _entry("Security staging report", "RLS/storage staging validation", logs / "mira_security_staging_latest.json", "validation"),
+        _entry("RLS staging plan", "Master RLS/storage staging plan", ctrl / "security" / "MIRA_RLS_STORAGE_STAGING_PLAN.md", "planning"),
+        _entry("RLS policy matrix", "Per-table RLS policy definitions", ctrl / "security" / "MIRA_RLS_POLICY_MATRIX.md", "planning"),
+        _entry("Storage policy matrix", "Per-bucket storage policy definitions", ctrl / "security" / "MIRA_STORAGE_POLICY_MATRIX.md", "planning"),
+        _entry("Security test plan", "A/B user test matrix", ctrl / "security" / "MIRA_SECURITY_TEST_PLAN.md", "validation"),
+        _entry("Security rollback plan", "RLS/storage rollback procedures", ctrl / "security" / "MIRA_SECURITY_ROLLBACK_PLAN.md", "planning"),
+        _entry("Security ownership findings", "API ownership risk review", ctrl / "security" / "MIRA_SECURITY_OWNERSHIP_FINDINGS.md", "validation"),
+        _entry("RLS candidate SQL", "Draft RLS policies (DO NOT RUN)", project.repo_path / "supabase" / "drafts" / "rls_candidate_policies.sql", "planning"),
+        _entry("Storage candidate SQL", "Draft storage policies (DO NOT RUN)", project.repo_path / "supabase" / "drafts" / "storage_candidate_policies.sql", "planning"),
     ]
     return items
 

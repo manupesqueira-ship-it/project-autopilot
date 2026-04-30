@@ -263,3 +263,16 @@ Update 2026-04-30 (live auth consolidation):
 - Branch agent/mira-runtime-auth-hardening fast-forward merged to master.
 - Readiness: CODE_READY_AUTH_LIVE_DEV_VERIFIED_REALDATA_BLOCKED.
 - Remaining: RLS, storage policies, CAPTCHA, privacy/retention, production URLs.
+
+Update 2026-04-29 (security staging sprint):
+- Security staging pack created: 5 docs in project_control/security/ + 2 SQL drafts in supabase/drafts/.
+- RLS policy matrix: per-table SELECT/INSERT/UPDATE/DELETE policies defined for all customer tables.
+- Storage policy matrix: per-bucket policies defined (user-photos owner-only, generations private+signed URL, product-images public read).
+- A/B user security test plan: 30 test cases covering cross-user access, MIME/size restrictions, edge cases.
+- Rollback plan: phased rollback procedures for RLS, storage policies, and schema changes.
+- SQL drafts have DO NOT RUN AGAINST PRODUCTION warning at top.
+- Ownership review: status endpoint has NO ownership check (any UUID returns data). Jobs endpoint trusts client profileId.
+- Security staging validator tool: python -B project_autopilot/security_staging_plan.py --project mira.
+- Readiness, Control Center, and backend audit updated with security staging checks.
+- No live SQL executed. No RLS enabled. No storage policies applied. No secrets touched.
+- Real customer data still blocked until RLS/storage/CAPTCHA/privacy decisions.
