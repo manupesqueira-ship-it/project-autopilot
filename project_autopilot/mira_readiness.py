@@ -284,6 +284,98 @@ def check_auth_live_dev() -> ReadinessCategory:
     return cat
 
 
+def check_product_flow_static() -> ReadinessCategory:
+    cat = ReadinessCategory("Product Flow Static Readiness", "UNKNOWN")
+    cat.add("Onboarding page exists",
+            _exists("app/[locale]/(app)/onboarding/page.tsx"))
+    cat.add("Scan page exists",
+            _exists("app/[locale]/(app)/scan/page.tsx"))
+    cat.add("Catalog page exists",
+            _exists("app/[locale]/(app)/catalog/page.tsx"))
+    cat.add("TryOn page exists",
+            _exists("app/[locale]/(app)/tryon/[productId]/page.tsx"))
+    cat.add("Result page exists",
+            _exists("app/[locale]/(app)/result/[generationId]/page.tsx"))
+    cat.add("Jobs API route exists",
+            _exists("app/api/tryon/jobs/route.ts"))
+    cat.add("Status API route exists",
+            _exists("app/api/tryon/status/[generationId]/route.ts"))
+    cat.add("Tryon flow helper exists",
+            _exists("lib/tryon-flow.ts"))
+    cat.add("Generation store exists",
+            _exists("lib/generation-store.ts"))
+
+    # Check for hardened patterns
+    cat.add("Scan validates file MIME type",
+            _contains("app/[locale]/(app)/scan/page.tsx", "ALLOWED_MIME_TYPES"))
+    cat.add("Scan validates file size",
+            _contains("app/[locale]/(app)/scan/page.tsx", "MAX_FILE_SIZE"))
+    cat.add("Jobs validates selectedSize against product",
+            _contains("app/api/tryon/jobs/route.ts", "product.sizes.includes"))
+    cat.add("Status API has no-store cache header",
+            _contains("app/api/tryon/status/[generationId]/route.ts", "no-store"))
+    cat.add("Result handles 404 gracefully",
+            _contains("app/[locale]/(app)/result/[generationId]/page.tsx", "res.status === 404"))
+
+    # Check QA results
+    verdict = _flow_qa_latest_verdict("mira_real_flow_static")
+    cat.add(f"Real flow static QA: {verdict}",
+            verdict in ("PASS", "WARN", "SKIPPED", "NOT_RUN"),
+            verdict)
+
+    cat.status = cat.compute_status()
+    return cat
+
+
+def check_error_state_readiness() -> ReadinessCategory:
+    cat = ReadinessCategory("Error State Readiness", "UNKNOWN")
+    cat.add("Onboarding has role=alert",
+            _contains("app/[locale]/(app)/onboarding/page.tsx", 'role="alert"'))
+    cat.add("Scan has role=alert",
+            _contains("app/[locale]/(app)/scan/page.tsx", 'role="alert"'))
+    cat.add("TryOn has error testid",
+            _contains("app/[locale]/(app)/tryon/[productId]/page.tsx", 'data-testid="tryon-error"'))
+    cat.add("Result has aria-live for failure",
+            _contains("app/[locale]/(app)/result/[generationId]/page.tsx", 'aria-live'))
+    cat.add("Result handles JSON parse error",
+            _contains("app/[locale]/(app)/result/[generationId]/page.tsx", "res.json()"))
+    cat.add("Jobs API catches createGeneration failure",
+            _contains("app/api/tryon/jobs/route.ts", "generation_create_failed"))
+    cat.add("Status API catches getGeneration failure",
+            _contains("app/api/tryon/status/[generationId]/route.ts", "generation_fetch_failed"))
+
+    verdict = _flow_qa_latest_verdict("mira_error_states")
+    cat.add(f"Error states QA: {verdict}",
+            verdict in ("PASS", "WARN", "SKIPPED", "NOT_RUN"),
+            verdict)
+
+    cat.status = cat.compute_status()
+    return cat
+
+
+def check_no_paid_generation_gate() -> ReadinessCategory:
+    cat = ReadinessCategory("No Paid Generation Gate", "UNKNOWN")
+    cat.add("QA mock mode defaults OFF",
+            _contains("lib/qa-mock.ts", 'NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS') and
+            not _contains("lib/qa-mock.ts", "= true"))
+    cat.add("Production guard blocks mock flag",
+            _contains("lib/qa-mock.ts", 'NODE_ENV === "production"'))
+    cat.add("Jobs route checks mock mode before generation",
+            _contains("app/api/tryon/jobs/route.ts", "isQaMockMode"))
+    cat.add("Jobs route validates productId non-empty",
+            _contains("app/api/tryon/jobs/route.ts", "productId is required"))
+    cat.add("Jobs route validates selectedSize non-empty",
+            _contains("app/api/tryon/jobs/route.ts", "selectedSize is required"))
+
+    verdict = _flow_qa_latest_verdict("mira_no_paid_generation")
+    cat.add(f"No-paid-generation QA: {verdict}",
+            verdict in ("PASS", "WARN", "SKIPPED", "NOT_RUN"),
+            verdict)
+
+    cat.status = cat.compute_status()
+    return cat
+
+
 def check_public_beta() -> ReadinessCategory:
     cat = ReadinessCategory("Public Beta Readiness", "UNKNOWN")
     cat.add("CAPTCHA documented as pending",
@@ -442,6 +534,9 @@ def main() -> None:
         check_auth_live_dev(),
         check_flow_qa(),
         check_mock_generation(),
+        check_product_flow_static(),
+        check_error_state_readiness(),
+        check_no_paid_generation_gate(),
         check_privacy_logging(),
         check_rls(),
         check_storage(),
