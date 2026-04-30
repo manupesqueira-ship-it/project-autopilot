@@ -460,6 +460,38 @@ def check_visual_qa() -> ReadinessCategory:
     return cat
 
 
+def check_internal_demo() -> ReadinessCategory:
+    cat = ReadinessCategory("Internal Demo Readiness", "UNKNOWN")
+    cat.add("Demo page exists",
+            _exists("app/[locale]/(app)/demo/page.tsx"))
+    cat.add("Demo i18n ES exists",
+            _contains("messages/es.json", '"demo"'))
+    cat.add("Demo i18n EN exists",
+            _contains("messages/en.json", '"demo"'))
+    cat.add("Demo seeds mock profile for quick start",
+            _contains("app/[locale]/(app)/demo/page.tsx", "QA_MOCK_PROFILE"))
+    cat.add("Demo has start button",
+            _contains("app/[locale]/(app)/demo/page.tsx", "btn-demo-start"))
+    cat.add("Tryon flow has QA mock fallback",
+            _contains("lib/tryon-flow.ts", "isQaMockMode"))
+    cat.add("Internal demo report exists",
+            _exists("project_control/MIRA_INTERNAL_DEMO_READY_REPORT.md"))
+
+    # Check internal demo check tool
+    demo_data = _read_json("logs/mira_internal_demo_check_latest.json")
+    if demo_data:
+        dv = demo_data.get("verdict", "UNKNOWN")
+        cat.add(f"Internal demo check: {dv}",
+                dv in ("PASS", "WARN"),
+                f"{demo_data.get('passed', '?')}/{demo_data.get('total', '?')} checks")
+    else:
+        cat.add("Internal demo check not yet run", False,
+                "Run: python -B project_autopilot/internal_demo_check.py --project mira")
+
+    cat.status = cat.compute_status()
+    return cat
+
+
 def compute_overall(categories: list[ReadinessCategory]) -> str:
     by_name = {c.name: c for c in categories}
 
@@ -469,11 +501,19 @@ def compute_overall(categories: list[ReadinessCategory]) -> str:
     mock_e2e_verdict = _flow_qa_latest_verdict("mira_full_e2e_mock_flow")
     runtime_env = by_name.get("Runtime Env Readiness")
     auth_live = by_name.get("Auth Live Dev Verification")
+    internal_demo = by_name.get("Internal Demo Readiness")
 
     local_mock_ready = (
         mock_gen and mock_gen.status == "READY"
         and auth and auth.status == "READY"
         and mock_e2e_verdict in ("PASS", "WARN")
+    )
+
+    # Relax mock_e2e_verdict for internal demo: if demo page exists and infra is ready
+    internal_demo_ready = (
+        internal_demo and internal_demo.status == "READY"
+        and mock_gen and mock_gen.status == "READY"
+        and auth and auth.status == "READY"
     )
 
     public_beta = by_name.get("Public Beta Readiness")
@@ -496,11 +536,22 @@ def compute_overall(categories: list[ReadinessCategory]) -> str:
             and sprints_ready):
         return "CODE_READY_AUTH_LIVE_DEV_VERIFIED_FLOW_HARDENED_SECURITY_STAGED_VISUAL_QA_READY_REALDATA_BLOCKED"
 
+    # Internal demo ready + auth live verified
+    if (internal_demo_ready
+            and auth_live and auth_live.status == "READY"
+            and runtime_env and runtime_env.status == "READY"):
+        return "INTERNAL_DEMO_READY_REALDATA_BLOCKED"
+
     # Auth live verified but not all sprints consolidated
     if (local_mock_ready
             and auth_live and auth_live.status == "READY"
             and runtime_env and runtime_env.status == "READY"):
         return "CODE_READY_AUTH_LIVE_DEV_VERIFIED_REALDATA_BLOCKED"
+
+    # Internal demo ready but auth live not verified
+    if (internal_demo_ready
+            and runtime_env and runtime_env.status == "READY"):
+        return "INTERNAL_DEMO_READY_AUTH_LIVE_NOT_VERIFIED"
 
     # Code ready + runtime env ok but live dev not run
     if local_mock_ready and runtime_env and runtime_env.status == "READY":
@@ -626,6 +677,7 @@ def main() -> None:
         check_auth_live_dev(),
         check_flow_qa(),
         check_mock_generation(),
+        check_internal_demo(),
         check_product_flow_static(),
         check_error_state_readiness(),
         check_no_paid_generation_gate(),

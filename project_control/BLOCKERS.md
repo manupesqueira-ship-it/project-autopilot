@@ -264,6 +264,16 @@ Update 2026-04-30 (live auth consolidation):
 - Readiness: CODE_READY_AUTH_LIVE_DEV_VERIFIED_REALDATA_BLOCKED.
 - Remaining: RLS, storage policies, CAPTCHA, privacy/retention, production URLs.
 
+Update 2026-04-29 (internal demo MVP sprint):
+- Internal demo page created at /[locale]/demo — visible dashboard with readiness, CTAs, and QA commands.
+- Demo seeds localStorage with mock profile/photos for one-click catalog → tryon → result flow.
+- tryon-flow.ts now falls back to QA mock data in mock mode (no Supabase required).
+- Status API validates generationId format (prevents injection).
+- Internal demo check script: python -B project_autopilot/internal_demo_check.py --project mira.
+- Readiness verdict updated to support INTERNAL_DEMO_READY_REALDATA_BLOCKED.
+- Internal demo report: project_control/MIRA_INTERNAL_DEMO_READY_REPORT.md.
+- All safety rules maintained: no .env changes, no SQL, no RLS, no paid APIs, no real data.
+
 Update 2026-04-29 (security staging sprint):
 - Security staging pack created: 5 docs in project_control/security/ + 2 SQL drafts in supabase/drafts/.
 - RLS policy matrix: per-table SELECT/INSERT/UPDATE/DELETE policies defined for all customer tables.

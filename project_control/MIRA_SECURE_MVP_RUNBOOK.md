@@ -19,10 +19,13 @@
 | Product flow hardening | Implemented (MIME/size validation, API guards) |
 | Security staging pack | Complete (RLS/storage matrices, test plan, rollback) |
 | Visual QA | Standard + tooling + external builder policy |
-| Overall verdict | CODE_READY_AUTH_LIVE_DEV_VERIFIED_FLOW_HARDENED_SECURITY_STAGED_VISUAL_QA_READY_REALDATA_BLOCKED |
+| Internal demo | Ready at /[locale]/demo |
+| Overall verdict | INTERNAL_DEMO_READY_REALDATA_BLOCKED |
 
 ## B. What Is Safe Today
 
+- **Open the internal demo** at `http://localhost:3000/es/demo` (start with `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev`).
+- Click "Start full demo" for a one-click catalog → tryon → result flow with mock data.
 - Run mock E2E flow (no paid APIs, no live Supabase writes in mock path).
 - Run route/selector/onboarding readiness flows.
 - Run backend audit and Control Center.
