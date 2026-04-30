@@ -263,6 +263,23 @@ def probe_runtime_env(result: DiagResult, url: str) -> dict[str, Any] | None:
         result.add("Runtime: server config ready", "WARN",
                     "Server config (service_role) not fully ready in runtime")
 
+    mock_enabled = bool(body.get("qaMockModeEnabled", body.get("mockModeEnabled", False)))
+    if mock_enabled:
+        result.add("Runtime: QA mock mode", "PASS",
+                    "NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS is active in this dev server")
+    else:
+        result.add("Runtime: QA mock mode", "INFO",
+                    "QA mock mode is not active in this dev server",
+                    "For the internal demo, restart with NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true")
+
+    if body.get("demoRouteCanRunWithoutSupabase"):
+        result.add("Runtime: demo can bypass Supabase", "PASS",
+                    "/demo can run in mock mode without Supabase public config")
+    elif not pub_ready:
+        result.add("Runtime: demo can bypass Supabase", "WARN",
+                    "Supabase public config is missing and QA mock mode is off",
+                    "Start the demo server with NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true")
+
     # Cross-check: env_preflight says PRESENT but runtime says missing
     load_env()
     file_url_present = bool(os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").strip())
@@ -379,6 +396,11 @@ def write_report(result: DiagResult) -> Path:
     lines.append("3. A stale .next/ cache can also cause the old (missing) values to persist")
     lines.append("4. Fix: stop dev server → delete .next/ → run `npm run dev`")
     lines.append("5. Verify: visit /api/health/env in the browser")
+    lines.append("")
+    lines.append("For the internal demo, QA mock mode is a separate safe path:")
+    lines.append("- Start with `NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true`")
+    lines.append("- `/es/demo` should render without Supabase public config in mock mode")
+    lines.append("- Real onboarding and scan still require Supabase public config")
     lines.append("")
     lines.append("## Safety")
     lines.append("- No secret values printed or logged")

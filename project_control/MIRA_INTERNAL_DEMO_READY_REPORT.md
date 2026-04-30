@@ -11,16 +11,23 @@ Real customer data remains blocked until RLS, storage policies, and privacy deci
 
 ## How to Run Locally
 
-```bash
-# 1. Start dev server with mock mode
-NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev
+### PowerShell clean start
 
-# 2. Open the demo dashboard
-# http://localhost:3000/es/demo  (Spanish)
-# http://localhost:3000/en/demo  (English)
-
-# 3. Click "Start full demo" to experience the flow
+```powershell
+cd C:\Users\manup\projects\mira
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+$env:NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS="true"
+npm run dev
 ```
+
+Then open:
+
+```text
+http://localhost:3000/es/demo
+```
+
+Do not use old tabs. Do not use old port 3099 unless a Project Autopilot tool explicitly reports that port. The internal demo mock path does not require real photos, real customer data, Supabase writes, or paid APIs. Real onboarding and scan still require Supabase public config.
 
 ## What to Click
 
@@ -82,6 +89,9 @@ python -B project_autopilot/dev_runtime_diagnose.py --project mira
 
 # Internal demo check
 python -B project_autopilot/internal_demo_check.py --project mira
+
+# Internal demo managed server check
+python -B project_autopilot/internal_demo_check.py --project mira --managed-dev-server
 
 # Full readiness report
 python -B project_autopilot/mira_readiness.py --project mira

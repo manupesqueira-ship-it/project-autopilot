@@ -473,7 +473,7 @@ def check_internal_demo() -> ReadinessCategory:
     cat.add("Demo has start button",
             _contains("app/[locale]/(app)/demo/page.tsx", "btn-demo-start"))
     cat.add("Tryon flow has QA mock fallback",
-            _contains("lib/tryon-flow.ts", "isQaMockMode"))
+            _contains("lib/tryon-flow.ts", "isMiraQaMocksEnabled"))
     cat.add("Internal demo report exists",
             _exists("project_control/MIRA_INTERNAL_DEMO_READY_REPORT.md"))
 

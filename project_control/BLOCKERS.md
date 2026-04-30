@@ -274,6 +274,12 @@ Update 2026-04-29 (internal demo MVP sprint):
 - Internal demo report: project_control/MIRA_INTERNAL_DEMO_READY_REPORT.md.
 - All safety rules maintained: no .env changes, no SQL, no RLS, no paid APIs, no real data.
 
+Update 2026-04-30 (internal demo Supabase config bypass):
+- Root cause: stale or existing localStorage `mira_profile_id` could route try-on through the Supabase client before QA mock data was selected, causing the friendly public-config guard to block the internal demo.
+- Fix: `/[locale]/demo` now requires QA mock mode explicitly, clears stale Supabase profile state when starting the demo, and tryon-flow chooses mock data before creating any Supabase client in QA mock mode.
+- Real onboarding and scan remain guarded by Supabase public config when not using the internal demo mock path.
+- This resolves the local internal-demo blocker only; real customer data remains blocked by the open security model blocker.
+
 Update 2026-04-29 (security staging sprint):
 - Security staging pack created: 5 docs in project_control/security/ + 2 SQL drafts in supabase/drafts/.
 - RLS policy matrix: per-table SELECT/INSERT/UPDATE/DELETE policies defined for all customer tables.

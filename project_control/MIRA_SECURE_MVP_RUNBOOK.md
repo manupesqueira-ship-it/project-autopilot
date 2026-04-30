@@ -46,9 +46,16 @@
 
 ### PowerShell
 ```powershell
+cd C:\Users\manup\projects\mira
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 $env:NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS="true"
 npm run dev
 ```
+
+Then open `http://localhost:3000/es/demo`.
+
+Do not use old tabs. Do not use old port 3099 unless a Project Autopilot tool explicitly reports that port. Demo mock mode does not require real photos, real customer data, Supabase writes, or paid APIs. Real onboarding and scan still require Supabase public config.
 
 ### Bash / Git Bash
 ```bash
@@ -197,17 +204,20 @@ python -B project_autopilot/security_staging_plan.py --project mira
 To walk through the complete user experience with mock data (no paid APIs, no real photos):
 
 1. Start the dev server:
-   ```bash
-   NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS=true npm run dev
+   ```powershell
+   cd C:\Users\manup\projects\mira
+   Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+   Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+   $env:NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS="true"
+   npm run dev
    ```
-2. Open http://localhost:3000/es/onboarding (or `/en/onboarding`)
-3. Complete onboarding with fake data (any name, any email, height/weight/size/build)
-4. On scan page, skip photos (click "Skip photos →")
-5. Browse catalog, select any product
-6. On try-on page, select a size and click "Try On"
-7. View result page — mock generation will show placeholder image/video
+2. Open http://localhost:3000/es/demo (or `/en/demo`)
+3. Click "Start full demo"
+4. Browse catalog, select any product
+5. On try-on page, select a size and click "Try On"
+6. View result page - mock generation will show placeholder image/video
 
-**Safety:** Mock mode uses no paid APIs, no real Supabase writes in the generation path, and no real customer data. The onboarding step does write a test profile to Supabase (acceptable for dev).
+**Safety:** Mock mode uses no paid APIs, no real Supabase writes in the demo generation path, and no real customer data.
 
 ## P. Next 3 Sprints
 

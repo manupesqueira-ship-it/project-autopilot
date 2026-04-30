@@ -16,6 +16,8 @@ import argparse
 import json
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -57,6 +59,23 @@ def _read_json(rel: str) -> Any:
         return None
 
 
+def _read_text(rel: str) -> str:
+    p = REPO_ROOT / rel
+    if not p.exists():
+        return ""
+    try:
+        return p.read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return ""
+
+
+def _needle_before(rel: str, first: str, second: str) -> bool:
+    text = _read_text(rel)
+    a = text.find(first)
+    b = text.find(second)
+    return a >= 0 and b >= 0 and a < b
+
+
 def check_demo_route() -> list[CheckResult]:
     results: list[CheckResult] = []
     results.append(CheckResult(
@@ -74,6 +93,22 @@ def check_demo_route() -> list[CheckResult]:
     results.append(CheckResult(
         "Demo page has mock result CTA",
         _contains("app/[locale]/(app)/demo/page.tsx", "btn-demo-mock-result"),
+    ))
+    results.append(CheckResult(
+        "Demo page shows QA mock mode marker",
+        _contains("app/[locale]/(app)/demo/page.tsx", "demo-qa-mock-mode"),
+    ))
+    results.append(CheckResult(
+        "Demo page includes QA mock flag instructions",
+        _contains("app/[locale]/(app)/demo/page.tsx", "NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS"),
+    ))
+    results.append(CheckResult(
+        "Demo page does not import Supabase client/config guard",
+        not _contains("app/[locale]/(app)/demo/page.tsx", "@/lib/supabase/"),
+    ))
+    results.append(CheckResult(
+        "Friendly Supabase config error is not a demo blocker",
+        not _contains("app/[locale]/(app)/demo/page.tsx", "getSupabaseMissingEnvMessage"),
     ))
     results.append(CheckResult(
         "Demo i18n keys exist (ES)",
@@ -110,7 +145,19 @@ def check_mock_infrastructure() -> list[CheckResult]:
     ))
     results.append(CheckResult(
         "Tryon flow has QA mock fallback",
-        _contains("lib/tryon-flow.ts", "isQaMockMode"),
+        _contains("lib/tryon-flow.ts", "isMiraQaMocksEnabled"),
+    ))
+    results.append(CheckResult(
+        "Tryon flow bypasses Supabase before client creation in mock mode",
+        _needle_before("lib/tryon-flow.ts", "if (isMiraQaMocksEnabled())", "const supabase = createClient()"),
+    ))
+    results.append(CheckResult(
+        "Jobs API mock branch is before paid image generation",
+        _needle_before("app/api/tryon/jobs/route.ts", "if (isQaMockMode())", "generateAsync(generationId"),
+    ))
+    results.append(CheckResult(
+        "Runtime health reports QA mock mode",
+        _contains("app/api/health/env/route.ts", "qaMockModeEnabled"),
     ))
     return results
 
@@ -188,6 +235,10 @@ def check_no_paid_apis() -> list[CheckResult]:
         _contains("lib/providers/seedance-video.ts", "mock") or
         _contains("lib/providers/seedance-video.ts", "Mock"),
     ))
+    results.append(CheckResult(
+        "QA mock job returns before paid provider calls",
+        _needle_before("app/api/tryon/jobs/route.ts", "return NextResponse.json({", "generateAsync(generationId"),
+    ))
     return results
 
 
@@ -200,10 +251,96 @@ def check_readiness_report() -> list[CheckResult]:
     return results
 
 
+def _fetch(url: str) -> tuple[int, str, str]:
+    try:
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status, resp.read().decode("utf-8", errors="replace"), ""
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        return e.code, body, ""
+    except Exception as e:
+        return 0, "", str(e)
+
+
+def check_managed_dev_server() -> list[CheckResult]:
+    """Start a mock-mode dev server, probe env + /es/demo, then stop it."""
+    from dev_server_runner import DevServer
+
+    results: list[CheckResult] = []
+    server = None
+    for port in (3099, 3100):
+        candidate = DevServer(
+            port=port,
+            extra_env={"NEXT_PUBLIC_MIRA_ENABLE_QA_MOCKS": "true"},
+        )
+        ok, msg = candidate.start()
+        if ok:
+            server = candidate
+            results.append(CheckResult("Managed dev server start", True, msg))
+            break
+        results.append(CheckResult(f"Managed dev server port {port}", False, msg))
+
+    if server is None:
+        results.append(CheckResult(
+            "Managed demo route check",
+            False,
+            "Could not start an isolated mock-mode dev server",
+        ))
+        return results
+
+    try:
+        base = server.base_url
+        env_status, env_body, env_error = _fetch(f"{base}/api/health/env")
+        env_ok = False
+        env_detail = f"HTTP {env_status}"
+        if env_error:
+            env_detail = env_error
+        else:
+            try:
+                payload = json.loads(env_body)
+                env_ok = (
+                    env_status == 200
+                    and payload.get("qaMockModeEnabled") is True
+                    and payload.get("demoRouteCanRunWithoutSupabase") is True
+                )
+                env_detail = (
+                    f"HTTP {env_status}; qaMockModeEnabled="
+                    f"{payload.get('qaMockModeEnabled')}; "
+                    f"demoRouteCanRunWithoutSupabase="
+                    f"{payload.get('demoRouteCanRunWithoutSupabase')}"
+                )
+            except Exception:
+                env_detail = f"HTTP {env_status}; invalid JSON"
+        results.append(CheckResult("Runtime env reports mock demo readiness", env_ok, env_detail))
+
+        demo_status, demo_body, demo_error = _fetch(f"{base}/es/demo")
+        marker_found = (
+            "QA mock mode" in demo_body
+            or "demo-qa-mock-mode" in demo_body
+            or "MIRA Internal Demo" in demo_body
+        )
+        results.append(CheckResult(
+            "Demo route renders in managed QA mock mode",
+            demo_status == 200 and marker_found and not demo_error,
+            demo_error or f"HTTP {demo_status}; marker_found={marker_found}",
+        ))
+    finally:
+        server.stop()
+        results.append(CheckResult("Managed dev server stopped", True, "Clean shutdown"))
+
+    return results
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="MIRA Internal Demo Check")
     parser.add_argument("--project", required=True)
-    parser.parse_args()
+    parser.add_argument("--managed-dev-server", action="store_true",
+                        help="Start an isolated mock-mode dev server and probe /es/demo")
+    args = parser.parse_args()
 
     sections = [
         ("Demo Route", check_demo_route()),
@@ -215,6 +352,8 @@ def main() -> None:
         ("No Paid APIs", check_no_paid_apis()),
         ("Readiness Report", check_readiness_report()),
     ]
+    if args.managed_dev_server:
+        sections.append(("Managed Dev Server", check_managed_dev_server()))
 
     total = 0
     passed = 0
