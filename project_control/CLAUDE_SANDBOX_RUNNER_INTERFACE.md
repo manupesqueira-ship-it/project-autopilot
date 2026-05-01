@@ -97,6 +97,23 @@ The packet must include the sandbox path, branch, allowed files, denied files, a
 
 Rollback/rejection/cancellation are dry-run checklists now. Future implementation must preserve evidence, avoid rewriting history, park rejected worktrees, and return blocked work to OpenAI Auditor for correction planning.
 
+## Manual Claude Handoff Flow
+
+When the runner state reaches `WORKTREE_CREATED`, a human may manually open Claude Code in the sandbox worktree and paste the handoff packet. This is the **manual Claude handoff flow** — Claude executes as an interactive builder, not as an automated runner.
+
+The manual flow follows the lifecycle defined in `CLAUDE_MANUAL_HANDOFF_PROTOCOL.md`. The runner interface tracks state but does not execute Claude. The human is the bridge between the runner and Claude Code.
+
+Key constraints during manual handoff:
+
+- No auto-merge.
+- No scheduler activation.
+- No automatic Claude execution.
+- No env/secrets access.
+- No SQL/RLS/deploy.
+- No paid API calls.
+
+After Claude finishes, the human runs post-builder policy from the main repo. The runner state transitions to `WORKTREE_CLEANUP_REQUIRED` after the post-builder verdict.
+
 ## Next Phase
 
 The next phase may run the first real manual Claude Code task inside an already approved sandbox worktree. Claude builder execution by Project Autopilot remains a later, separately approved phase.

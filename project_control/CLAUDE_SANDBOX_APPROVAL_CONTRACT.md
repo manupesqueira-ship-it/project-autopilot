@@ -6,7 +6,9 @@ Purpose: define the exact human approval object required before any future Claud
 
 ## Current Rule
 
-`APPROVED_FOR_WORKTREE_CREATION_ONLY` may create one explicitly approved sandbox worktree outside the main repo. No approval status enables Claude builder execution, automatic Claude execution, auto-merge, deploy, SQL/RLS work, env access, or paid APIs.
+`APPROVED_FOR_WORKTREE_CREATION_ONLY` is active and permits creating sandbox worktrees for manual Claude handoff. Claude builder execution inside the sandbox is manual — the human opens Claude Code and pastes the handoff packet. Automated builder execution remains future-only. No approval status enables automatic Claude execution, auto-merge, deploy, SQL/RLS work, env access, or paid APIs.
+
+See `CLAUDE_MANUAL_HANDOFF_PROTOCOL.md` for the full manual handoff lifecycle.
 
 ## Approval Statuses
 
@@ -83,3 +85,17 @@ logs/claude_sandbox/<project_id>/latest/claude_sandbox_approval_contract_preview
 ```
 
 The preview is evidence only. It is not an execution token.
+
+## Safety Invariants
+
+Regardless of approval status, the following are permanently prohibited:
+
+- Auto-merge to any branch.
+- Scheduler activation.
+- Automatic Claude execution.
+- Reading, printing, or modifying env/secret files.
+- SQL/RLS mutations or deploys.
+- Paid external API calls.
+- Claude approving its own output.
+
+These rules apply to both manual handoff and any future automated execution.

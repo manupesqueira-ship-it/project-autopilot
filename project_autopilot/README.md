@@ -228,7 +228,28 @@ python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke
 
 The smoke test creates one temporary `mira-sandbox-*` worktree outside the main repo, verifies branch/status, writes ignored evidence, and removes only the recorded sandbox path. It does not execute Claude, edit files, commit, merge, call external APIs, touch env files, deploy, run SQL/RLS, enable scheduler, or enable automatic Claude execution.
 
-The next phase may be first manual Claude prompt handoff into an existing sandbox worktree. Claude builder execution remains a later, separate approval.
+### Manual Claude Sandbox Handoff
+
+After a worktree is created through the approved flow, the human may manually hand off a task to Claude Code:
+
+1. Run worktree creation with `--claude-worktree-create-approved`.
+2. Open Claude Code with working directory set to the sandbox worktree path.
+3. Paste the handoff packet from `logs/claude_sandbox/<project_id>/latest/manual_handoff_packet.md`.
+4. Claude edits only allowed files, runs only allowed commands, and produces a builder report.
+5. Save Claude's report to a markdown file.
+6. Run post-builder policy from the main repo:
+   ```bash
+   python -B project_autopilot/agent_loop.py --project mira --post-builder <path_to_report>
+   ```
+7. Review the verdict. Commit only after `SAFE_TO_COMMIT`.
+8. Clean up the sandbox when done:
+   ```bash
+   python -B project_autopilot/agent_loop.py --project mira --claude-worktree-cleanup-approved --task-id "<task_id>"
+   ```
+
+The manual handoff flow does not enable automatic Claude execution, scheduler, auto-merge, env/secrets access, SQL/RLS, deploy, or paid APIs. See `project_control/CLAUDE_MANUAL_HANDOFF_PROTOCOL.md` for the full protocol.
+
+Automated Claude builder execution remains a later, separate approval.
 
 ## Quality Standard
 

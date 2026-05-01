@@ -224,7 +224,25 @@ Any code that implements auto-merge logic is itself a policy violation and must 
 
 ---
 
-## 10. Sandbox Rules for Claude Builder
+## 10. Manual Claude Handoff in Sandbox Worktree
+
+When a sandbox worktree has been created through the approved flow, a human may manually open Claude Code in that worktree and paste a handoff packet. This is the **manual Claude handoff flow**.
+
+The full lifecycle is defined in `CLAUDE_MANUAL_HANDOFF_PROTOCOL.md`. Key rules for worktree context:
+
+- Claude operates only within the sandbox worktree directory.
+- Claude edits only files listed in the handoff packet's allowed files.
+- Claude runs only commands listed in the handoff packet's allowed commands.
+- Claude commits only to the sandbox branch, never to main or develop.
+- After Claude finishes, the human runs post-builder policy from the main repo.
+- The sandbox remains active until post-builder review completes.
+- Cleanup is human-initiated using the recorded sandbox path only.
+
+The manual handoff flow does not enable automatic Claude execution, scheduler, auto-merge, env/secrets access, SQL/RLS, deploy, or paid APIs.
+
+---
+
+## 11. Sandbox Rules for Claude Builder (Future Automated)
 
 Claude Agent SDK, when used as a code builder:
 
@@ -246,7 +264,7 @@ Any code path that checks `SANDBOX` and behaves differently is a red flag and mu
 
 ---
 
-## 11. Sandbox Rules for Codex Builder
+## 12. Sandbox Rules for Codex Builder
 
 Codex (OpenAI), when used as a code builder:
 
@@ -271,7 +289,7 @@ Codex never has direct worktree access. It outputs structured content that the r
 
 ---
 
-## 12. Evidence Requirements
+## 13. Evidence Requirements
 
 Every worktree operation must produce an evidence record before the worktree is closed.
 
@@ -304,7 +322,7 @@ Evidence file is written to:
 
 ---
 
-## 13. Post-builder Policy Requirements
+## 14. Post-builder Policy Requirements
 
 After any agent completes work in a worktree, before opening a PR:
 
@@ -324,7 +342,7 @@ If any item fails: do NOT open PR. Write HALT, send Telegram, await human.
 
 ---
 
-## 14. Claude Sandbox Boundary Preflight
+## 15. Claude Sandbox Boundary Preflight
 
 Claude builder execution is not enabled. The current safe step is boundary preflight and simulation only:
 
@@ -361,7 +379,7 @@ The commands must not:
 
 ---
 
-## 15. Runner Approval Interface
+## 16. Runner Approval Interface
 
 Before a real worktree can be created in a future sprint, the runner must validate an approval contract:
 

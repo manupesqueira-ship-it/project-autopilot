@@ -441,14 +441,34 @@ These actions are forbidden for all agents, in all contexts, permanently:
 
 ## 13. Claude Sandboxed Builder Boundary
 
-Claude can become a builder only after a separate human-approved sandbox execution phase. The current operating model supports boundary preflight only:
+Claude operates as a builder through the **manual handoff flow**: the human creates an approved sandbox worktree, opens Claude Code in that directory, and pastes the handoff packet. Claude edits only allowed files, runs only allowed commands, and produces a builder report. The human then runs post-builder policy from the main repo.
+
+The full manual handoff lifecycle is defined in `CLAUDE_MANUAL_HANDOFF_PROTOCOL.md`.
+
+Boundary preflight and simulation commands remain available for validating sandbox safety before manual handoff:
 
 ```bash
 python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"
 python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"
 ```
 
-Future flow:
+### Manual Handoff Flow (Active)
+
+```text
+Human objective
+-> Project Autopilot generates handoff packet + creates approved worktree
+-> Human opens Claude Code in sandbox worktree
+-> Human pastes handoff packet
+-> Claude edits allowed files only
+-> Claude runs validation commands
+-> Claude produces builder report
+-> Human saves report and runs post-builder policy
+-> Project Autopilot policy verdict
+-> Human decides: commit, fix, or abandon
+-> Human runs cleanup
+```
+
+### Future Automated Flow
 
 ```text
 Human objective
@@ -465,9 +485,17 @@ Human objective
 -> Human-controlled commit/merge decision
 ```
 
-Preflight and simulation do not execute providers. They only prove that worktree lifecycle, file scope, command scope, no-secret prompt pack, rollback/rejection, evidence, and policy review requirements are present.
+Automated Claude builder execution remains disabled until a later sprint explicitly implements it with separate human approval.
 
-Claude builder execution remains disabled until a later sprint explicitly implements human-approved sandbox execution.
+### Safety Invariants (Both Flows)
+
+- No auto-merge.
+- No scheduler activation.
+- No automatic Claude execution.
+- No env/secrets access.
+- No SQL/RLS/deploy.
+- No paid API calls.
+- No self-approval by Claude.
 
 ---
 
