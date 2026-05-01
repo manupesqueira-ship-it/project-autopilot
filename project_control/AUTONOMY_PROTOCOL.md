@@ -83,6 +83,14 @@ After builder work, Project Autopilot must run `--post-builder` or `--policy-che
 - `NEEDS_FIX`: create or use a correction prompt, then rerun validation.
 - `BLOCKED`: stop and record blocker or human decision need.
 - `HUMAN_REVIEW_REQUIRED`: pause for human review, design review, research approval, or risk acceptance.
+
+Before any expansion into Claude Agent SDK execution, scheduler runs, or automatic builder execution, the policy fixture suite must pass:
+
+```bash
+python -B project_autopilot/policy_test_fixtures.py --project mira --run all
+```
+
+The fixture suite is local and deterministic. It simulates changed files and builder reports for safe docs, UI, backend, Supabase/security, env/secrets, paid API, scheduler, automatic Claude, generated logs, research, design failure, and validation failure cases. It must not call external APIs, execute SQL, mutate Supabase, or stage generated logs.
 - `SAFE_NO_CHANGES`: no commit required.
 
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

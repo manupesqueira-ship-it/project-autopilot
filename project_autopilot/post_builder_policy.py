@@ -165,6 +165,7 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
     touches_env = any(re.search(pattern, path, flags=re.IGNORECASE) for path in paths for pattern in FORBIDDEN_FILE_PATTERNS[:3]) or _mentions_any(lower, SECRET_WORDS)
     touches_deploy = any(word in lower for word in ["deploy", "vercel", "production deployment", "dockerfile", "systemd"])
     touches_paid = _mentions_any(lower, PAID_WORDS)
+    touches_product_api = any(path.startswith("app/api/") for path in paths)
 
     code_paths = [p for p in paths if not p.startswith("project_control/") and not p.endswith(".md")]
     docs_only = bool(paths) and not code_paths
@@ -189,8 +190,8 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
         requires_design_review=touches_ui or touches_design_system,
         requires_research_review=requires_research,
         requires_backend_audit=requires_backend,
-        requires_flow_qa=touches_ui or touches_flow_qa,
-        requires_mock_e2e=touches_ui or touches_flow_qa,
+        requires_flow_qa=touches_ui or touches_flow_qa or touches_product_api,
+        requires_mock_e2e=touches_ui or touches_flow_qa or touches_product_api,
         requires_human_approval=touches_env or touches_deploy or touches_paid or touches_security,
     )
 

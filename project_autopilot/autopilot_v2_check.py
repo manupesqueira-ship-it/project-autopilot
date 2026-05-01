@@ -42,6 +42,13 @@ def _contains(path: Path, needle: str) -> bool:
         return False
 
 
+def _read_json(path: Path) -> dict[str, Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
 def run_check(project: ProjectConfig) -> V2Report:
     root = project.repo_path
     ap = root / "project_autopilot"
@@ -62,6 +69,17 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
     add("Post-builder policy enforcement exists", (ap / "post_builder_policy.py").exists())
+    add("Policy fixture suite exists", (ap / "policy_test_fixtures.py").exists())
+    add("Policy fixture suite command documented", _contains(ap / "README.md", "policy_test_fixtures.py"))
+    policy_fixture_results = _read_json(root / project.logs_dir / "policy_tests" / project.project_id / "latest" / "policy_test_results.json")
+    if policy_fixture_results:
+        add(
+            "Latest policy fixture suite passed",
+            policy_fixture_results.get("status") == "PASS",
+            f"{policy_fixture_results.get('passed', 0)}/{policy_fixture_results.get('total', 0)} passed",
+        )
+    else:
+        add("Latest policy fixture suite passed", True, "WARN: no latest fixture report yet; run policy_test_fixtures.py")
     add("Autopilot Definition of Done exists", (pc / "AUTOPILOT_DEFINITION_OF_DONE.md").exists())
     add("Autopilot v2 spec exists", (pc / "AUTOPILOT_V2_SPEC.md").exists())
     add("Control Center exists", (ap / "control_center.py").exists())

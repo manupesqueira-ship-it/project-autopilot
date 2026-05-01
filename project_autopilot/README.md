@@ -35,6 +35,7 @@ python -B project_autopilot/builder_orchestrator.py --project mira --status
 python -B project_autopilot/builder_orchestrator.py --project mira --plan "Improve MIRA result page design"
 python -B project_autopilot/autopilot_v2_check.py --project mira
 python -B project_autopilot/agent_loop.py --project mira --policy-check
+python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 ```
 
 These commands do not execute builders, call Anthropic/OpenAI, call paid APIs, deploy, or mutate live databases.
@@ -56,6 +57,20 @@ python -B project_autopilot/agent_loop.py --project mira --post-builder logs/<bu
 | `SAFE_NO_CHANGES` | No working-tree changes were detected. |
 
 Policy gates include provider status, risk, scope, forbidden files, secrets/env, validation, design, research, backend, Flow QA/mock E2E, evidence, Definition of Done, and human approval gates.
+
+### v2 Policy Fixture Tests
+
+Policy fixtures are deterministic regression tests for the post-builder gate matrix. They use simulated changed files and in-memory builder reports, so they do not create real `.env` files, touch product code, call external APIs, execute SQL, mutate Supabase, enable scheduler, or execute builders.
+
+```bash
+python -B project_autopilot/policy_test_fixtures.py --project mira --list
+python -B project_autopilot/policy_test_fixtures.py --project mira --run docs_only_safe
+python -B project_autopilot/policy_test_fixtures.py --project mira --run all
+```
+
+The suite covers safe docs, UI/design gates, backend/Flow QA gates, Supabase/security human review, forbidden env files, secret-like report text, paid APIs, scheduler activation, automatic Claude execution, generated logs, research-required decisions, forced design failure, and validation failure. Results are written to ignored files under `logs/policy_tests/<project_id>/latest/`.
+
+This suite must pass before enabling Claude Agent SDK execution, scheduler runs, or automatic builder execution. Add new fixtures by extending `fixtures()` in `project_autopilot/policy_test_fixtures.py`; keep assertions focused on policy outcomes instead of duplicating policy logic.
 
 ## Quality Standard
 

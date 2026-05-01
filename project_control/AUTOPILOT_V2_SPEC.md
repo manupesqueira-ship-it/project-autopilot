@@ -132,6 +132,14 @@ Unified verdicts:
 
 `SAFE_TO_COMMIT` requires all applicable hard gates to pass. `NEEDS_FIX` means a builder can safely correct the work. `BLOCKED` means the builder must not bypass the gate and a human decision or safer alternative is required. `HUMAN_REVIEW_REQUIRED` means the system cannot honestly approve the work without human visual, research, security, or strategic review.
 
+Post-builder policy behavior is protected by a deterministic fixture suite:
+
+```bash
+python -B project_autopilot/policy_test_fixtures.py --project mira --run all
+```
+
+The fixtures use simulated changed files and builder reports. They do not touch real env files, mutate Supabase, call external APIs, execute SQL, deploy, enable scheduler, or execute builders. The suite must pass before Project Autopilot expands into Claude Agent SDK execution, scheduler runs, or automatic builder execution.
+
 ## 12. Human Approval Gates
 
 Human approval is required for:

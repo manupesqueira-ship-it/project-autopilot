@@ -59,3 +59,5 @@ Builders must:
 - `NEEDS_FIX` requires a correction prompt and a new validation pass.
 - `BLOCKED` must not be bypassed by a builder; request human decision or choose a safer alternative.
 - `HUMAN_REVIEW_REQUIRED` requires an explicit human decision before commit.
+- `python -B project_autopilot/policy_test_fixtures.py --project mira --run all` must pass before changing policy gates, enabling Claude SDK execution, enabling scheduler, or enabling automatic builder execution.
+- Policy fixture results are generated logs and must not be staged.

@@ -51,6 +51,16 @@ python -B project_autopilot/agent_loop.py --project mira --post-builder logs/<bu
 python -B project_autopilot/agent_loop.py --project mira --policy-check
 ```
 
+## Policy Fixture Regression Gate
+
+Project Autopilot v2 policy behavior must stay covered by deterministic fixtures:
+
+```bash
+python -B project_autopilot/policy_test_fixtures.py --project mira --run all
+```
+
+The fixture suite must pass before Claude Agent SDK execution, scheduler activation, automatic builder execution, or broader autonomy is enabled. Fixtures simulate safe docs, UI/design changes, backend changes, Supabase/security review, forbidden env paths, secret-like text, paid APIs, scheduler activation, automatic Claude execution, generated logs, research-required decisions, design failure, and validation failure. Results are generated under ignored `logs/policy_tests/`.
+
 ## Stop Conditions
 
 Stop and ask for human approval before secrets, env files, git history, destructive commands, deployment, live Supabase changes, SQL/RLS/storage policies, paid APIs, scheduler enablement, automatic Claude execution, or parallel writes without worktrees.
