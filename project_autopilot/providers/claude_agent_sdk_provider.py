@@ -19,6 +19,8 @@ def _latest_analysis_status(project: ProjectConfig) -> dict[str, object]:
         "live_call_made": bool(payload.get("live_call_made", False)),
         "anthropic_call_count": payload.get("anthropic_call_count", 0),
         "secrets_sent": bool(payload.get("secrets_sent", False)),
+        "model_used": payload.get("model_used", ""),
+        "model_error": payload.get("model_error", ""),
         "path": str(path),
     }
 
@@ -64,6 +66,9 @@ def detect(project: ProjectConfig) -> ProviderInfo:
             "env_status": key_status["status"],
             "sdk_package_detected": sdk_package_detected,
             "current_execution_mode": "controlled_analysis_only",
+            "configured_analysis_model": project.claude_analysis_model,
+            "default_analysis_model": "claude-haiku-4-5-20251001",
+            "stronger_analysis_model": "claude-sonnet-4-6",
             "automatic_execution_enabled": False,
             "external_calls_enabled": "controlled_analysis_only_with_explicit_approval",
             "requires_explicit_approval_for_live_call": True,

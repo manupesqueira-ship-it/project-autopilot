@@ -113,6 +113,8 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("No-human mock E2E exists", _contains(ap / "flow_qa.py", "--validate-mock-e2e"))
     add("Scheduler disabled", not (root / "project_control" / "SCHEDULER_ENABLED.md").exists(), "No scheduler enable marker found")
     add("Automatic Claude execution disabled", project.allow_automatic_builder_execution is False)
+    add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
+    add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)
     add("Paid APIs disabled by default", project.paid_api_mode == "disabled_by_default" and not project.allow_paid_image_generation and not project.allow_paid_video_generation)
     add("HALT support exists", (ap / "run_lock.py").exists() and _contains(ap / "agent_loop.py", "HALT_AUTOPILOT"))
     add("Run lock exists", (ap / "run_lock.py").exists())

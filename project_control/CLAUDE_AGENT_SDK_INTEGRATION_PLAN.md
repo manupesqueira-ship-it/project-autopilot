@@ -76,6 +76,16 @@ Prompt safety:
 - Block prompts that cannot be safely redacted.
 - Never print key values.
 
+Model configuration:
+
+```yaml
+claude_analysis_model: claude-haiku-4-5-20251001
+```
+
+Use `claude-haiku-4-5-20251001` for low-cost analysis. Use `claude-sonnet-4-6` for stronger analysis only when explicitly needed and available. Do not use deprecated aliases such as `claude-3-5-haiku-latest`, `claude-3-5-haiku-20241022`, or retired 3.5/3.7 models.
+
+If Anthropic returns a model-not-found error, Project Autopilot must record `CLAUDE_ANALYSIS_MODEL_NOT_FOUND`, save the attempted model, and stop without retrying multiple models.
+
 Allowed output is structured analysis only. The call must not suggest direct edits, live mutation commands, deployment, scheduler activation, or automatic Claude execution.
 
 ### Phase 2: Sandboxed Builder

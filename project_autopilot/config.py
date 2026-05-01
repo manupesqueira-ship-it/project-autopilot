@@ -57,6 +57,7 @@ class ProjectConfig:
     allow_automatic_builder_execution: bool = False
     builder_handoff_mode: str = "manual"
     claude_command: str = "claude"
+    claude_analysis_model: str = "claude-haiku-4-5-20251001"
     latest_prompt_path: str = ""
     browser_qa_enabled: bool = False
     screenshot_enabled: bool = True
@@ -171,4 +172,3 @@ def load_project_config(project_id: str) -> ProjectConfig:
     if viewports:
         raw["browser_qa_viewports"] = viewports
     return ProjectConfig(**raw)
-

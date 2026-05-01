@@ -48,6 +48,7 @@ builder_fallback: claude
 allow_automatic_builder_execution: false
 builder_handoff_mode: manual
 claude_command: claude
+claude_analysis_model: claude-haiku-4-5-20251001
 latest_prompt_path: logs/mira_latest_builder_prompt.md
 
 retry_policy:
@@ -61,4 +62,3 @@ model_routing:
   standard_model: gpt-5.4
   premium_model: gpt-5.5
   qa_model: gpt-5.4
-

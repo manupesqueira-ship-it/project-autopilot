@@ -104,6 +104,9 @@ def claude_analysis_health(project: ProjectConfig) -> dict[str, Any]:
         "live_call_made": bool(payload.get("live_call_made", False)),
         "anthropic_call_count": payload.get("anthropic_call_count", 0),
         "secrets_sent": bool(payload.get("secrets_sent", False)),
+        "model_used": payload.get("model_used", ""),
+        "attempted_model": payload.get("attempted_model", payload.get("model_used", "")),
+        "model_error": payload.get("model_error", ""),
         "no_tools": bool(payload.get("no_tools", True)),
         "no_commands": bool(payload.get("no_commands", True)),
         "no_file_edits": bool(payload.get("no_file_edits", True)),
@@ -178,6 +181,9 @@ def _claude_readiness(project: ProjectConfig, provider_payload: dict[str, Any]) 
         "anthropic_api_key_status": key_status,
         "anthropic_api_key_present": key_status == "PRESENT_VALUE_HIDDEN",
         "sdk_package_detected": bool(sdk_meta.get("sdk_package_detected", False)),
+        "claude_analysis_model": sdk_meta.get("configured_analysis_model", project.claude_analysis_model),
+        "default_analysis_model": sdk_meta.get("default_analysis_model", "claude-haiku-4-5-20251001"),
+        "latest_model_error": analysis.get("model_error", ""),
         "claude_sdk_dry_run_verdict": sdk_dry["verdict"],
         "controlled_analysis_verdict": analysis["verdict"],
         "claude_agent_sdk_external_call_tested": analysis["live_call_made"],
@@ -269,6 +275,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("Claude SDK dry-run validator is partial; live Claude calls remain disabled.")
     if claude_analysis["verdict"] == "CLAUDE_ANALYSIS_CALL_BLOCKED":
         warnings.append("Latest controlled Claude analysis was blocked by provider/auth/model handling; no retry was attempted.")
+    if claude_analysis["verdict"] == "CLAUDE_ANALYSIS_MODEL_NOT_FOUND":
+        warnings.append("Latest controlled Claude analysis failed because the configured model was unavailable.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -288,7 +296,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     ]
     if not claude["anthropic_api_key_present"]:
         next_actions.append("For Claude SDK later: add ANTHROPIC_API_KEY locally, then implement dry-run mode before any live call.")
-    elif claude_analysis["verdict"] == "CLAUDE_ANALYSIS_CALL_BLOCKED":
+    elif claude_analysis["verdict"] in {"CLAUDE_ANALYSIS_CALL_BLOCKED", "CLAUDE_ANALYSIS_MODEL_NOT_FOUND"}:
         next_actions.append("Fix Anthropic auth/billing/model configuration, then rerun one approved analysis call when ready.")
     else:
         next_actions.append("For Claude SDK later: request explicit approval before the first controlled analysis call.")
@@ -384,6 +392,9 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Claude Agent SDK scaffold exists: {'yes' if claude['claude_agent_sdk_provider_scaffold_exists'] else 'no'}",
         f"- ANTHROPIC_API_KEY status: {claude['anthropic_api_key_status']}",
         f"- SDK package detected: {'yes' if claude['sdk_package_detected'] else 'no'}",
+        f"- Claude analysis model: {claude['claude_analysis_model']}",
+        f"- Default analysis model: {claude['default_analysis_model']}",
+        f"- Latest model error: {claude['latest_model_error'] or 'none'}",
         f"- Claude SDK dry-run verdict: {claude['claude_sdk_dry_run_verdict']}",
         f"- Controlled analysis verdict: {claude['controlled_analysis_verdict']}",
         f"- Live Claude calls: {claude['live_claude_calls']}",
@@ -409,6 +420,8 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Verdict: {analysis['verdict']}",
         f"- Live call made: {'yes' if analysis['live_call_made'] else 'no'}",
         f"- Anthropic call count: {analysis['anthropic_call_count']}",
+        f"- Model used: {analysis.get('model_used') or 'none'}",
+        f"- Model error: {analysis.get('model_error') or 'none'}",
         f"- Secrets sent: {'yes' if analysis['secrets_sent'] else 'no'}",
         f"- No tools: {'yes' if analysis['no_tools'] else 'no'}",
         f"- No commands: {'yes' if analysis['no_commands'] else 'no'}",

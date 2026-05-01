@@ -143,5 +143,7 @@ Rules:
 - Prompt redaction must run before any live call.
 - Evidence must be saved under `logs/claude/<project_id>/latest/`.
 - Sandboxed builder execution remains a future phase requiring separate approval.
+- Claude analysis model is configured with `claude_analysis_model` in project YAML. Default: `claude-haiku-4-5-20251001`.
+- Do not use deprecated 3.5/3.7 Claude model aliases. Use `claude-sonnet-4-6` only when stronger analysis is explicitly needed and available.
 
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

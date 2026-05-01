@@ -151,6 +151,14 @@ logs/claude/<project_id>/latest/claude_analysis_metadata.json
 
 This is not builder execution. The next phase remains sandboxed builder execution in a dedicated worktree, only after separate human approval.
 
+Claude analysis model configuration lives in the project YAML:
+
+```yaml
+claude_analysis_model: claude-haiku-4-5-20251001
+```
+
+Use `claude-haiku-4-5-20251001` for low-cost analysis. Use `claude-sonnet-4-6` only when stronger analysis is explicitly needed and available to the account. Do not use deprecated or retired 3.5/3.7 model aliases such as `claude-3-5-haiku-latest`.
+
 ## Quality Standard
 
 Project Autopilot enforces a world-class quality bar:

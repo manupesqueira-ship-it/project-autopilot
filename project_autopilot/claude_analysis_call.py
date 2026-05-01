@@ -21,7 +21,8 @@ load_env()
 
 
 DEFAULT_TASK = "Review Project Autopilot v2 architecture and identify top 5 risks."
-DEFAULT_MODEL = "claude-3-5-haiku-latest"
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+STRONG_ANALYSIS_MODEL = "claude-sonnet-4-6"
 MAX_INPUT_CHARS = 12000
 MAX_OUTPUT_TOKENS = 700
 ESTIMATED_MAX_COST_USD = 0.05
@@ -38,8 +39,18 @@ def _latest_dir(project: ProjectConfig) -> Path:
 
 
 def _model_for_project(project: ProjectConfig) -> str:
-    configured = getattr(project, "claude_model_analysis", "")
+    configured = getattr(project, "claude_analysis_model", "")
     return configured or DEFAULT_MODEL
+
+
+def _is_model_not_found_error(exc: Exception) -> bool:
+    text = f"{exc.__class__.__name__}: {exc}".lower()
+    return "notfounderror" in text or "not_found_error" in text or ("model:" in text and "not found" in text)
+
+
+def _safe_error_message(exc: Exception) -> str:
+    raw = f"{exc.__class__.__name__}: {exc}"
+    return sanitize_prompt_text(raw).sanitized_text
 
 
 def _build_prompt(project: ProjectConfig, task: str) -> str:
@@ -187,8 +198,16 @@ def run_analysis(project_id: str, task: str = DEFAULT_TASK, approved_live_call: 
             if not response_text:
                 error_message = "Anthropic returned an empty response."
         except Exception as exc:
-            verdict = "CLAUDE_ANALYSIS_CALL_BLOCKED"
-            error_message = f"{exc.__class__.__name__}: {exc}"
+            if _is_model_not_found_error(exc):
+                verdict = "CLAUDE_ANALYSIS_MODEL_NOT_FOUND"
+                error_message = (
+                    f"Model not found or unavailable: {model}. "
+                    f"Configure claude_analysis_model to {DEFAULT_MODEL} for low-cost analysis "
+                    f"or {STRONG_ANALYSIS_MODEL} for stronger analysis if available."
+                )
+            else:
+                verdict = "CLAUDE_ANALYSIS_CALL_BLOCKED"
+                error_message = _safe_error_message(exc)
             call_meta = {}
     else:
         call_meta = {}
@@ -211,6 +230,14 @@ def run_analysis(project_id: str, task: str = DEFAULT_TASK, approved_live_call: 
         "redaction_findings": safety.findings,
         "blocked_reason": safety.blocked_reason or error_message,
         "model_used": model,
+        "attempted_model": model,
+        "default_model": DEFAULT_MODEL,
+        "recommended_models": {
+            "low_cost_analysis": DEFAULT_MODEL,
+            "stronger_analysis": STRONG_ANALYSIS_MODEL,
+        },
+        "model_error": error_message if verdict == "CLAUDE_ANALYSIS_MODEL_NOT_FOUND" else "",
+        "error_type": verdict if error_message else "",
         "token_usage": call_meta.get("usage", {}),
         "estimated_max_cost_usd": ESTIMATED_MAX_COST_USD,
         "budget_message": budget_message,
