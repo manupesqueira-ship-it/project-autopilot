@@ -192,6 +192,34 @@ logs/claude_sandbox/<project_id>/latest/worktree_sandbox_plan.md
 
 `SANDBOX_PREFLIGHT_PASS` or `SANDBOX_SIMULATION_PASS` is not permission to run Claude. It only means Project Autopilot is ready for a later human-approved sandbox execution design sprint.
 
+### Claude Sandbox Runner Approval Interface
+
+The runner interface defines the human approval contract for future sandbox work, while still blocking all execution:
+
+```bash
+python -B project_autopilot/claude_sandbox_runner.py --project mira --status
+python -B project_autopilot/claude_sandbox_runner.py --project mira --approval-preflight --task "Improve Project Autopilot docs"
+python -B project_autopilot/claude_sandbox_runner.py --project mira --dry-run --task "Improve Project Autopilot docs"
+python -B project_autopilot/claude_sandbox_runner.py --project mira --rollback-plan --task "Improve Project Autopilot docs"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner-status
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-approval-preflight --task "Improve Project Autopilot docs"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner-dry-run --task "Improve Project Autopilot docs"
+```
+
+Runner states include `RUNNER_DISABLED`, `APPROVAL_REQUIRED`, `APPROVAL_VALIDATED_DRY_RUN_ONLY`, `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`, `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`, `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`, `REJECTED`, and `BLOCKED`.
+
+Approval statuses include `APPROVAL_NOT_REQUESTED`, `APPROVAL_REQUESTED`, `APPROVED_FOR_DRY_RUN_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_FUTURE`, `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`, `REJECTED`, `EXPIRED`, and `INVALID`. All worktree/builder approvals are future-only in the current mode.
+
+Evidence is written to ignored files:
+
+```text
+logs/claude_sandbox/<project_id>/latest/claude_sandbox_runner_plan.md
+logs/claude_sandbox/<project_id>/latest/claude_sandbox_runner_plan.json
+logs/claude_sandbox/<project_id>/latest/claude_sandbox_approval_contract_preview.json
+```
+
+The next phase may be first human-approved worktree creation only. Claude builder execution remains a later, separate approval.
+
 ## Quality Standard
 
 Project Autopilot enforces a world-class quality bar:

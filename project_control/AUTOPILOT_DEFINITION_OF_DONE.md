@@ -171,3 +171,19 @@ If a sprint designs or prepares Claude builder execution, completion additionall
 13. Policy fixtures cover direct master write, env access, SQL/RLS, deploy, auto-merge, missing rollback, unapproved product files, and missing post-builder policy.
 
 These gates prove boundary readiness only. They do not enable sandboxed Claude builder execution.
+
+## Claude Sandbox Runner Interface Gates
+
+If a sprint touches the Claude sandbox runner interface, completion additionally requires:
+
+1. `python -B project_autopilot/claude_sandbox_runner.py --project mira --status`.
+2. `python -B project_autopilot/claude_sandbox_runner.py --project mira --approval-preflight --task "<task>"`.
+3. `python -B project_autopilot/claude_sandbox_runner.py --project mira --dry-run --task "<task>"`.
+4. `python -B project_autopilot/claude_sandbox_runner.py --project mira --rollback-plan --task "<task>"`.
+5. Agent loop wrappers for status, approval preflight, and runner dry-run pass.
+6. No real worktree is created.
+7. Claude builder execution remains disabled.
+8. Worktree creation remains disabled.
+9. Approval contract preview is generated under ignored logs.
+10. Runner plan is generated under ignored logs.
+11. Policy fixtures cover missing approval, future-only approval, blocked worktree creation, blocked builder execution, rollback, post-builder policy, env scope, direct master write, auto-merge, and safe dry-run.

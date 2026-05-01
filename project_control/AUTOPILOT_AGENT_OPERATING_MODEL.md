@@ -468,3 +468,22 @@ Human objective
 Preflight and simulation do not execute providers. They only prove that worktree lifecycle, file scope, command scope, no-secret prompt pack, rollback/rejection, evidence, and policy review requirements are present.
 
 Claude builder execution remains disabled until a later sprint explicitly implements human-approved sandbox execution.
+
+---
+
+## 14. Runner Approval Loop
+
+The future Claude sandbox runner adds an approval loop before any worktree or builder action:
+
+```text
+sandbox preflight
+-> approval contract preview
+-> runner dry-run
+-> human decision
+-> future worktree creation sprint
+-> later future builder execution sprint
+```
+
+The runner states are documented in `CLAUDE_SANDBOX_RUNNER_INTERFACE.md`. In the current mode, `APPROVED_FOR_WORKTREE_CREATION_FUTURE` and `APPROVED_FOR_BUILDER_EXECUTION_FUTURE` are audit labels only, not executable permissions.
+
+If approval is rejected, expired, invalid, missing rollback, missing post-builder policy, or includes forbidden actions, the runner must stop and preserve evidence.

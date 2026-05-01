@@ -211,12 +211,20 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
     prompt_json = base / "claude_prompt_pack_metadata.json"
     worktree_md = base / "worktree_sandbox_plan.md"
     worktree_json = base / "worktree_sandbox_plan.json"
+    runner_md = base / "claude_sandbox_runner_plan.md"
+    runner_json = base / "claude_sandbox_runner_plan.json"
+    runner_status_json = base / "claude_sandbox_runner_status.json"
+    approval_contract_json = base / "claude_sandbox_approval_contract_preview.json"
     preflight = _read_json(preflight_json)
     simulation = _read_json(simulation_json)
     boundary = preflight.get("boundary", {}) if preflight else {}
     file_policy = boundary.get("file_policy", {}) if boundary else {}
     command_policy = boundary.get("command_policy", {}) if boundary else {}
     rollback = boundary.get("rollback_plan", {}) if boundary else {}
+    runner = _read_json(runner_json)
+    runner_state = runner.get("runner_state", {}) if runner else {}
+    runner_status = _read_json(runner_status_json)
+    approval_contract = _read_json(approval_contract_json)
     return {
         "preflight_verdict": preflight.get("verdict", "NOT_RUN"),
         "simulation_verdict": simulation.get("verdict", "NOT_RUN"),
@@ -237,6 +245,17 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
         "prompt_pack_json_path": str(prompt_json),
         "worktree_plan_path": str(worktree_md),
         "worktree_plan_json_path": str(worktree_json),
+        "runner_state": runner_state.get("state", runner_status.get("runner_state", "NOT_RUN")),
+        "runner_dry_run_result": runner_state.get("dry_run_result", "NOT_RUN"),
+        "approval_status": runner_state.get("approval_status", approval_contract.get("approval_status", "APPROVAL_NOT_REQUESTED")),
+        "worktree_creation_enabled": bool(runner_state.get("worktree_creation_enabled", False)),
+        "runner_builder_execution_enabled": bool(runner_state.get("builder_execution_enabled", False)),
+        "runner_external_api_called": bool(runner_state.get("external_api_called", False)),
+        "runner_real_worktree_created": bool(runner_state.get("real_worktree_created", False)),
+        "runner_plan_path": str(runner_md),
+        "runner_plan_json_path": str(runner_json),
+        "runner_status_json_path": str(runner_status_json),
+        "approval_contract_path": str(approval_contract_json),
         "next_action": "Run --claude-sandbox-preflight and --claude-sandbox-simulate before any human-approved sandbox execution.",
     }
 
@@ -377,6 +396,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "multistep_loop": multistep["verdict"],
         "claude_sandbox_preflight": claude_sandbox["preflight_verdict"],
         "claude_sandbox_simulation": claude_sandbox["simulation_verdict"],
+        "claude_sandbox_runner": claude_sandbox["runner_state"],
+        "claude_sandbox_approval": claude_sandbox["approval_status"],
         "claude_builder_execution": "DISABLED_EXPECTED" if not claude_sandbox["builder_execution_enabled"] else "ENABLED",
     }
 
@@ -409,6 +430,14 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("Claude sandbox reports external API activity.")
     if claude_sandbox["real_worktree_created"]:
         blockers.append("Claude sandbox reports a real worktree was created.")
+    if claude_sandbox["worktree_creation_enabled"]:
+        blockers.append("Claude sandbox runner reports worktree creation enabled.")
+    if claude_sandbox["runner_builder_execution_enabled"]:
+        blockers.append("Claude sandbox runner reports builder execution enabled.")
+    if claude_sandbox["runner_external_api_called"]:
+        blockers.append("Claude sandbox runner reports external API activity.")
+    if claude_sandbox["runner_real_worktree_created"]:
+        blockers.append("Claude sandbox runner reports a real worktree was created.")
     if claude_sandbox["preflight_verdict"] == "SANDBOX_PREFLIGHT_BLOCKED":
         blockers.append("Claude sandbox preflight is blocked.")
     if claude_sandbox["simulation_verdict"] == "SANDBOX_SIMULATION_BLOCKED":
@@ -439,6 +468,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("Claude sandbox preflight has not run yet.")
     if claude_sandbox["simulation_verdict"] == "NOT_RUN":
         warnings.append("Claude sandbox simulation has not run yet.")
+    if claude_sandbox["runner_state"] == "NOT_RUN":
+        warnings.append("Claude sandbox runner dry-run has not run yet.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -493,6 +524,9 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_prompt_pack_json": claude_sandbox["prompt_pack_json_path"],
         "worktree_sandbox_plan": claude_sandbox["worktree_plan_path"],
         "worktree_sandbox_plan_json": claude_sandbox["worktree_plan_json_path"],
+        "claude_sandbox_runner_plan": claude_sandbox["runner_plan_path"],
+        "claude_sandbox_runner_plan_json": claude_sandbox["runner_plan_json_path"],
+        "claude_sandbox_approval_contract": claude_sandbox["approval_contract_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
@@ -658,6 +692,17 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Prompt pack: {sandbox['prompt_pack_path']}",
         f"- Worktree plan: {sandbox['worktree_plan_path']}",
         f"- Next action: {sandbox['next_action']}",
+        "",
+        "## Claude Sandbox Runner Interface",
+        f"- Runner state: {sandbox['runner_state']}",
+        f"- Approval status: {sandbox['approval_status']}",
+        f"- Dry-run result: {sandbox['runner_dry_run_result']}",
+        f"- Worktree creation enabled: {'yes' if sandbox['worktree_creation_enabled'] else 'no'}",
+        f"- Runner builder execution enabled: {'yes' if sandbox['runner_builder_execution_enabled'] else 'no'}",
+        f"- Runner external API called: {'yes' if sandbox['runner_external_api_called'] else 'no'}",
+        f"- Runner real worktree created: {'yes' if sandbox['runner_real_worktree_created'] else 'no'}",
+        f"- Runner plan: {sandbox['runner_plan_path']}",
+        f"- Approval contract: {sandbox['approval_contract_path']}",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
@@ -682,6 +727,8 @@ def main() -> int:
     print(f"  Multi-step loop: {payload['multistep_loop']['verdict']}")
     print(f"  Claude sandbox preflight: {payload['claude_sandbox']['preflight_verdict']}")
     print(f"  Claude sandbox simulation: {payload['claude_sandbox']['simulation_verdict']}")
+    print(f"  Claude sandbox runner: {payload['claude_sandbox']['runner_state']}")
+    print(f"  Claude sandbox approval: {payload['claude_sandbox']['approval_status']}")
     print(f"  Scheduler: {payload['subsystem_statuses']['scheduler']}")
     print(f"  Automatic Claude execution: {payload['subsystem_statuses']['automatic_claude_execution']}")
     print(f"  Blockers: {', '.join(payload['blockers']) if payload['blockers'] else 'none'}")

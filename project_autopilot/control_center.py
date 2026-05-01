@@ -430,6 +430,9 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Claude prompt pack JSON", "Machine-readable prompt pack metadata", logs / "claude_sandbox" / pid / "latest" / "claude_prompt_pack_metadata.json", "planning"),
         _entry("Worktree sandbox plan", "Planned worktree lifecycle without creation", logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.md", "planning"),
         _entry("Worktree sandbox plan JSON", "Machine-readable worktree sandbox plan", logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.json", "planning"),
+        _entry("Claude sandbox runner plan", "Future runner interface dry-run plan", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.md", "planning"),
+        _entry("Claude sandbox runner JSON", "Machine-readable runner interface state", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.json", "planning"),
+        _entry("Claude sandbox approval contract", "Future-only human approval contract preview", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_approval_contract_preview.json", "planning"),
     ]
     return items
 
@@ -556,6 +559,8 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["claude_sandbox_simulation"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_simulation.json")
     data["claude_prompt_pack"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_prompt_pack_metadata.json")
     data["worktree_sandbox"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.json")
+    data["claude_sandbox_runner"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.json")
+    data["claude_sandbox_approval"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_approval_contract_preview.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1725,6 +1730,35 @@ def _render_claude_sandbox_boundary(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_claude_sandbox_runner(d: dict[str, Any]) -> str:
+    runner = d.get("claude_sandbox_runner", {})
+    approval = d.get("claude_sandbox_approval", {})
+    pid = d.get("project_id")
+    if not runner and not approval:
+        return '<div class="empty-state">No Claude sandbox runner dry-run yet. Run --claude-sandbox-approval-preflight and --claude-sandbox-runner-dry-run.</div>'
+    state = runner.get("runner_state", {})
+    validation = runner.get("approval_validation", {})
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Runner state", state.get("state", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Approval", state.get("approval_status", approval.get("approval_status", "APPROVAL_NOT_REQUESTED")))}</div>')
+    lines.append(f'<div>{_kv_badge("Dry-run", state.get("dry_run_result", "NOT_RUN"))}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Worktree creation", "enabled" if state.get("worktree_creation_enabled") else "disabled")}</div>')
+    lines.append(f'<div>{_kv("Builder execution", "enabled" if state.get("builder_execution_enabled") else "disabled")}</div>')
+    lines.append(f'<div>{_kv("Real worktree", "yes" if state.get("real_worktree_created") else "no")}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("External API", "yes" if state.get("external_api_called") else "NO")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Rollback plan", "yes" if runner.get("rollback_checklist") else "unknown")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Approval validation", validation.get("status", "UNKNOWN"))}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Runner plan", f"logs/claude_sandbox/{pid}/latest/claude_sandbox_runner_plan.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Approval contract", f"logs/claude_sandbox/{pid}/latest/claude_sandbox_approval_contract_preview.json", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Next action", state.get("next_action", "Design future worktree creation separately; keep execution disabled."))}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -2030,6 +2064,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7j. Claude sandbox boundary
         _section("claude-sandbox", "Claude Sandbox Boundary", _render_claude_sandbox_boundary(d)),
+
+        # 7k. Claude sandbox runner interface
+        _section("claude-sandbox-runner", "Claude Sandbox Runner Interface", _render_claude_sandbox_runner(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

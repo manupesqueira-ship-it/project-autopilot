@@ -63,6 +63,10 @@ CLAUDE_SANDBOX_AUTO_MERGE_WORDS = ["auto-merge enabled", "automatic merge enable
 CLAUDE_SANDBOX_MISSING_ROLLBACK_WORDS = ["missing rollback", "without rollback plan", "rollback plan missing"]
 CLAUDE_SANDBOX_MISSING_POST_POLICY_WORDS = ["without post-builder policy", "post-builder policy skipped", "missing post-builder policy"]
 CLAUDE_SANDBOX_UNAPPROVED_PRODUCT_WORDS = ["without explicit product-file approval", "unapproved product file", "product file without approval"]
+SANDBOX_RUNNER_MISSING_APPROVAL_WORDS = ["sandbox runner missing approval", "without approval contract", "approval gate skipped"]
+SANDBOX_RUNNER_WORKTREE_CREATE_WORDS = ["created real worktree", "worktree creation enabled now", "git worktree add executed"]
+SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS = ["builder execution enabled now", "executed claude builder", "claude edited files through autopilot"]
+SANDBOX_RUNNER_FUTURE_APPROVAL_SAFE_WORDS = ["approved for worktree creation future", "future-only approval", "does not execute"]
 
 
 @dataclass(frozen=True)
@@ -157,6 +161,45 @@ def _mentions_any(text: str, words: list[str]) -> bool:
     return any(word in lower for word in words)
 
 
+def _mentions_unnegated_word(text: str, word: str) -> bool:
+    lower = text.lower()
+    start = 0
+    while True:
+        idx = lower.find(word, start)
+        if idx == -1:
+            return False
+        prefix = lower[max(0, idx - 12):idx]
+        if not any(negation in prefix for negation in ["no ", "not ", "do not ", "without "]):
+            return True
+        start = idx + len(word)
+
+
+def _safe_sandbox_runner_dry_run_scope(changed_files: list[str], report_text: str) -> bool:
+    paths = {_norm(path) for path in changed_files}
+    allowed_paths = {
+        "project_autopilot/claude_sandbox_approval.py",
+        "project_autopilot/claude_sandbox_runner.py",
+    }
+    lower = report_text.lower()
+    has_safe_mode = any(phrase in lower for phrase in ["dry-run", "dry run", "future-only approval"])
+    has_no_execution = any(phrase in lower for phrase in ["no claude execution", "does not execute", "builder execution remains disabled"])
+    has_no_worktree = any(phrase in lower for phrase in ["no real worktree", "worktree creation remains disabled"])
+    has_no_external = any(phrase in lower for phrase in ["no external call", "no external api call", "without calling anthropic", "without calling openai"])
+    dangerous = (
+        _mentions_any(lower, SANDBOX_RUNNER_MISSING_APPROVAL_WORDS)
+        or _mentions_any(lower, SANDBOX_RUNNER_WORKTREE_CREATE_WORDS)
+        or _mentions_any(lower, SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_ENV_ACCESS_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_DIRECT_MASTER_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_AUTO_MERGE_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_MISSING_ROLLBACK_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_MISSING_POST_POLICY_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_SQL_COMMAND_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_DEPLOY_COMMAND_WORDS)
+    )
+    return bool(paths) and paths.issubset(allowed_paths) and has_safe_mode and has_no_execution and has_no_worktree and has_no_external and not dangerous
+
+
 def _extract_report_paths(report_text: str) -> list[str]:
     paths: list[str] = []
     for line in report_text.splitlines():
@@ -189,7 +232,7 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
     touches_control_center = any("control_center" in path for path in paths)
     secret_language_risk = _mentions_any(lower, SECRET_WORDS) and not _mentions_any(lower, SECRET_NEGATION_WORDS)
     touches_env = any(re.search(pattern, path, flags=re.IGNORECASE) for path in paths for pattern in FORBIDDEN_FILE_PATTERNS[:3]) or secret_language_risk
-    touches_deploy = any(word in lower for word in ["deploy", "vercel", "production deployment", "dockerfile", "systemd"])
+    touches_deploy = any(_mentions_unnegated_word(lower, word) for word in ["deploy", "vercel", "production deployment", "dockerfile", "systemd"])
     touches_paid = _mentions_any(lower, PAID_WORDS)
     touches_claude_sdk_live = _mentions_any(lower, CLAUDE_SDK_LIVE_WORDS)
     touches_product_api = any(path.startswith("app/api/") for path in paths)
@@ -300,6 +343,13 @@ def evaluate_post_builder_policy(
 ) -> PostBuilderPolicyReport:
     changed_files = evidence.get("changed_files", [])
     risk = risk or classify_task("Post-builder review", body=builder_report_text, changed_files=changed_files)
+    if _safe_sandbox_runner_dry_run_scope(changed_files, builder_report_text):
+        risk = RiskAssessment(
+            "low",
+            ["safe_local_change", "claude_sandbox_runner_dry_run"],
+            ["Claude sandbox runner change is dry-run/future-only and explicitly does not execute Claude, create a worktree, or call external APIs."],
+            "proceed",
+        )
     characteristics = classify_task_characteristics(changed_files, builder_report_text, risk)
     gates: list[PolicyGateResult] = []
     evidence_paths: list[str] = []
@@ -393,6 +443,12 @@ def evaluate_post_builder_policy(
         safety_blocks.append("Claude sandbox post-builder policy missing.")
     if _mentions_any(lower, CLAUDE_SANDBOX_UNAPPROVED_PRODUCT_WORDS):
         safety_blocks.append("Claude sandbox unapproved product-file write detected.")
+    if _mentions_any(lower, SANDBOX_RUNNER_MISSING_APPROVAL_WORDS):
+        safety_blocks.append("Claude sandbox runner approval gate missing.")
+    if _mentions_any(lower, SANDBOX_RUNNER_WORKTREE_CREATE_WORDS):
+        safety_blocks.append("Claude sandbox runner real worktree creation detected.")
+    if _mentions_any(lower, SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS):
+        safety_blocks.append("Claude sandbox runner builder execution detected.")
     secret_blocked = any("Secrets/env" in item or "env/secret" in item for item in safety_blocks)
     gates.append(_gate(
         "secrets_env_gate",

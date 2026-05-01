@@ -342,3 +342,24 @@ The commands must not:
 - Enable scheduler or automatic Claude execution.
 
 `SANDBOX_SIMULATION_PASS` means only that the boundary model is coherent enough for a future human-approved sandbox execution design sprint.
+
+---
+
+## 15. Runner Approval Interface
+
+Before a real worktree can be created in a future sprint, the runner must validate an approval contract:
+
+```bash
+python -B project_autopilot/claude_sandbox_runner.py --project mira --approval-preflight --task "<task>"
+python -B project_autopilot/claude_sandbox_runner.py --project mira --dry-run --task "<task>"
+```
+
+Current behavior:
+
+- Worktree creation disabled.
+- Builder execution disabled.
+- Real worktree creation blocked.
+- Approval statuses are future-only.
+- Runner plan and approval preview are evidence only.
+
+Future first execution phase should be limited to human-approved worktree creation only. Claude builder execution must remain a separate later approval.

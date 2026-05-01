@@ -80,3 +80,6 @@ Builders must:
 - Claude sandbox preflight must produce a worktree plan, file allowlist/denylist, command allowlist/denylist, no-secret prompt pack, rollback/rejection plan, and post-builder policy requirement.
 - Claude sandbox simulation must not create a real worktree, call Anthropic/OpenAI, execute Claude, edit files, deploy, run SQL/RLS, or enable scheduler/automatic Claude execution.
 - A passing sandbox preflight is not permission to execute Claude; it only permits the next human-approved sandbox execution design discussion.
+- Claude sandbox runner approval contracts are future-only in the current mode.
+- The runner must reject missing approval, missing rollback, missing post-builder policy, env/secret scope, direct master writes, auto-merge, real worktree creation, and builder execution.
+- `--claude-sandbox-runner-dry-run` may write ignored evidence only; it must not execute Claude or create a worktree.

@@ -22,6 +22,9 @@ STATES = [
     "BUILDER_SELECTED",
     "CLAUDE_SANDBOX_PREFLIGHT",
     "CLAUDE_SANDBOX_SIMULATION",
+    "APPROVAL_REQUIRED",
+    "APPROVAL_VALIDATED_DRY_RUN_ONLY",
+    "READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE",
     "ASSIGNED_TO_CLAUDE",
     "ASSIGNED_TO_CODEX",
     "BUILDER_RUNNING",
@@ -124,6 +127,7 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
             "definition_of_done_gate",
             "sandbox_preflight_gate",
             "sandbox_simulation_gate",
+            "sandbox_runner_approval_gate",
             *auditor.required_policy_gates,
         }
     )
@@ -133,6 +137,9 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
         LoopStep("BUILDER_SELECTED", "builder_orchestrator", f"Select {plan.recommended_provider} with fallback {plan.fallback_provider}.", ["provider_gate"]),
         LoopStep("CLAUDE_SANDBOX_PREFLIGHT", "project_autopilot", "If Claude is the future builder, evaluate worktree, file, command, prompt, rollback, and policy boundaries before execution.", ["sandbox_preflight_gate", "human_approval_gate"]),
         LoopStep("CLAUDE_SANDBOX_SIMULATION", "project_autopilot", "Simulate the Claude sandbox lifecycle without creating a worktree or calling providers.", ["sandbox_simulation_gate"]),
+        LoopStep("APPROVAL_REQUIRED", "human", "Future Claude worktree creation or builder execution requires an explicit approval contract.", ["sandbox_runner_approval_gate"]),
+        LoopStep("APPROVAL_VALIDATED_DRY_RUN_ONLY", "project_autopilot", "Validate approval preview; worktree creation and builder execution remain blocked in this sprint.", ["sandbox_runner_approval_gate", "rollback_gate"]),
+        LoopStep("READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE", "project_autopilot", "Runner interface may design future worktree creation only; no real worktree is created now.", ["human_approval_gate"]),
         LoopStep(assigned_state, "project_autopilot", f"Prepare handoff for {builder_label}; execution remains disabled.", ["human_approval_gate"]),
         LoopStep("BUILDER_BLOCKED", "builder", "If blocked, return blocker report to OpenAI Auditor.", ["evidence_gate"]),
         LoopStep("OPENAI_REVIEWING_BLOCKER", "openai_auditor", "Diagnose blocker and draft correction instructions.", ["research_gate"]),

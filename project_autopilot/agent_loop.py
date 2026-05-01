@@ -44,6 +44,7 @@ from claude_analysis_review import review_latest as review_latest_claude_analysi
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
 from claude_prompt_pack import build_prompt_pack, write_prompt_pack
 from claude_sandbox_boundary import evaluate_preflight as evaluate_claude_sandbox_preflight, simulate_sandbox as simulate_claude_sandbox, write_preflight as write_claude_sandbox_preflight, write_simulation as write_claude_sandbox_simulation
+from claude_sandbox_runner import build_runner_plan as build_claude_sandbox_runner_plan, status_payload as claude_sandbox_runner_status_payload, write_runner_plan as write_claude_sandbox_runner_plan, write_status as write_claude_sandbox_runner_status
 from openai_auditor import build_dry_run as build_openai_auditor_dry_run, write_dry_run as write_openai_auditor_dry_run, _status_payload as openai_auditor_status_payload, write_status as write_openai_auditor_status
 from multistep_loop import build_loop as build_multistep_loop, write_loop as write_multistep_loop
 from policy_test_fixtures import run as run_policy_fixture_suite
@@ -1233,6 +1234,41 @@ def run_claude_sandbox_simulate_cmd(project_id: str, task: str) -> int:
     return 0 if simulation.verdict == "SANDBOX_SIMULATION_PASS" else 2
 
 
+def run_claude_sandbox_runner_status_cmd(project_id: str) -> int:
+    project = load_project(project_id)
+    payload = claude_sandbox_runner_status_payload(project)
+    md_path, json_path = write_claude_sandbox_runner_status(project, payload)
+    print(f"Claude Sandbox Runner: {payload['runner_state']}")
+    print(f"  Approval status: {payload['approval_status']}")
+    print("  Worktree creation enabled: no")
+    print("  Builder execution enabled: no")
+    print("  External API called: NO")
+    print("  Real worktree created: no")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {payload['next_action']}")
+    return 0
+
+
+def run_claude_sandbox_runner_plan_cmd(project_id: str, task: str, mode: str) -> int:
+    project = load_project(project_id)
+    plan = build_claude_sandbox_runner_plan(project, task, mode=mode)
+    md_path, json_path = write_claude_sandbox_runner_plan(project, plan)
+    label = "Approval Preflight" if mode == "approval_preflight" else "Runner Dry-Run"
+    print(f"Claude Sandbox {label}: {plan.runner_state.state}")
+    print(f"  Approval status: {plan.runner_state.approval_status}")
+    print(f"  Dry-run result: {plan.runner_state.dry_run_result}")
+    print("  Worktree creation enabled: no")
+    print("  Builder execution enabled: no")
+    print("  External API called: NO")
+    print("  Real worktree created: no")
+    print(f"  Runner plan: {md_path}")
+    print(f"  Runner JSON: {json_path}")
+    print(f"  Approval contract: {plan.approval_contract_path}")
+    print(f"  Next action: {plan.runner_state.next_action}")
+    return 0 if plan.runner_state.state != "BLOCKED" else 2
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1667,6 +1703,9 @@ def main() -> int:
     group.add_argument("--multistep-dry-run", action="store_true", help="Preview the future planner-builder-review-policy loop without execution.")
     group.add_argument("--claude-sandbox-preflight", action="store_true", help="Evaluate future Claude sandbox boundary without executing Claude.")
     group.add_argument("--claude-sandbox-simulate", action="store_true", help="Simulate future Claude sandbox lifecycle without creating a worktree.")
+    group.add_argument("--claude-sandbox-runner-status", action="store_true", help="Show future Claude sandbox runner interface status.")
+    group.add_argument("--claude-sandbox-approval-preflight", action="store_true", help="Validate a future-only Claude sandbox approval contract preview.")
+    group.add_argument("--claude-sandbox-runner-dry-run", action="store_true", help="Dry-run future Claude sandbox runner interface without execution.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
     parser.add_argument("--objective", default="Improve MIRA result page design", help="Objective text for --multistep-dry-run.")
@@ -1733,6 +1772,12 @@ def main() -> int:
         return run_claude_sandbox_preflight_cmd(args.project, args.task)
     if args.claude_sandbox_simulate:
         return run_claude_sandbox_simulate_cmd(args.project, args.task)
+    if args.claude_sandbox_runner_status:
+        return run_claude_sandbox_runner_status_cmd(args.project)
+    if args.claude_sandbox_approval_preflight:
+        return run_claude_sandbox_runner_plan_cmd(args.project, args.task, mode="approval_preflight")
+    if args.claude_sandbox_runner_dry_run:
+        return run_claude_sandbox_runner_plan_cmd(args.project, args.task, mode="dry_run")
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

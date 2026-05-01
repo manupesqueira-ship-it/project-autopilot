@@ -263,3 +263,14 @@ Project Autopilot v2 now models the boundary needed before Claude can ever act a
 The boundary requires one agent per worktree, no direct master writes, no auto-merge, no force-push, no env/secret access, no SQL/RLS/deploy/paid API commands, no scheduler activation, no automatic Claude execution, a rollback plan, an evidence bundle, and post-builder policy review.
 
 This is still not builder execution. Future sandboxed Claude execution requires a separate human-approved sprint after the preflight and simulation remain green.
+
+## 20. Human-Approved Claude Sandbox Runner Interface
+
+The runner interface defines the approval contract and state machine for future sandboxed Claude work:
+
+- `claude_sandbox_approval.py` defines approval request, decision, status, contract, and validation result.
+- `claude_sandbox_runner.py` defines dry-run runner status, approval preflight, runner dry-run, rollback/rejection/cancellation checklists, and evidence paths.
+- `APPROVED_FOR_WORKTREE_CREATION_FUTURE` and `APPROVED_FOR_BUILDER_EXECUTION_FUTURE` are future-only statuses. They do not enable execution now.
+- `RUNNER_DISABLED`, `APPROVAL_REQUIRED`, `APPROVAL_VALIDATED_DRY_RUN_ONLY`, `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`, `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`, `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`, `REJECTED`, and `BLOCKED` are the runner states.
+
+The runner must reject missing approval, missing rollback, missing post-builder policy, env/secret scope, direct master writes, auto-merge, real worktree creation, and builder execution. Control Center and Autopilot Health surface the latest runner and approval status.

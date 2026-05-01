@@ -144,3 +144,21 @@ The boundary must include:
 - OpenAI Auditor review for blocked/retry cases.
 
 Passing preflight means only that the boundary design is coherent. It is not permission to execute Claude as a builder. Human-approved sandbox execution remains a later phase.
+
+## Human-Approved Runner Interface
+
+The next safety layer is the runner interface and approval contract:
+
+```bash
+python -B project_autopilot/claude_sandbox_runner.py --project mira --status
+python -B project_autopilot/claude_sandbox_runner.py --project mira --approval-preflight --task "<task>"
+python -B project_autopilot/claude_sandbox_runner.py --project mira --dry-run --task "<task>"
+python -B project_autopilot/claude_sandbox_runner.py --project mira --rollback-plan --task "<task>"
+```
+
+The approval contract is future-only. It may validate `APPROVED_FOR_DRY_RUN_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_FUTURE`, or `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`, but worktree creation and builder execution remain disabled in this sprint.
+
+See:
+
+- `CLAUDE_SANDBOX_APPROVAL_CONTRACT.md`
+- `CLAUDE_SANDBOX_RUNNER_INTERFACE.md`

@@ -123,6 +123,8 @@ def build_dry_run(project: ProjectConfig, task: str, source_report_path: str = "
         required_policy_gates.append("flow_qa_gate")
     if research_status != "NO_RESEARCH_REQUIRED":
         required_policy_gates.append("research_gate")
+    if any(phrase in task.lower() for phrase in ["claude sandbox", "sandboxed claude", "sandboxed builder", "claude builder"]):
+        required_policy_gates.extend(["sandbox_preflight_gate", "sandbox_runner_approval_gate", "rollback_gate"])
 
     if review_mode:
         task_understanding = "Dry-run review of a builder report. The auditor should diagnose blockers, extract required fixes, and prepare correction instructions."
@@ -151,6 +153,7 @@ def build_dry_run(project: ProjectConfig, task: str, source_report_path: str = "
             "Stop if the auditor output conflicts with policy gates.",
             "Stop if a builder report lacks evidence.",
             "Stop if a live OpenAI call would be required without explicit approval.",
+            "Stop if Claude sandbox approval, rollback, worktree isolation, or post-builder policy is missing.",
         ],
         correction_strategy=[
             "Summarize the blocker or failure from evidence only.",

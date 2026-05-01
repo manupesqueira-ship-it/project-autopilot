@@ -78,6 +78,8 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Claude sandbox boundary module exists", (ap / "claude_sandbox_boundary.py").exists())
     add("Claude prompt pack module exists", (ap / "claude_prompt_pack.py").exists())
     add("Worktree sandbox planner exists", (ap / "worktree_sandbox.py").exists())
+    add("Claude sandbox approval module exists", (ap / "claude_sandbox_approval.py").exists())
+    add("Claude sandbox runner module exists", (ap / "claude_sandbox_runner.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -143,6 +145,7 @@ def run_check(project: ProjectConfig) -> V2Report:
         multistep.get("verdict", "NOT_RUN"),
     )
     add("Claude sandbox safety fixtures exist", _contains(ap / "policy_test_fixtures.py", "claude_sandbox_missing_post_builder_policy_blocked"))
+    add("Claude sandbox runner approval fixtures exist", _contains(ap / "policy_test_fixtures.py", "sandbox_runner_valid_dry_run_safe"))
     sandbox_preflight = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_preflight.json")
     add(
         "Claude sandbox preflight acceptable",
@@ -157,6 +160,16 @@ def run_check(project: ProjectConfig) -> V2Report:
         and not bool(sandbox_simulation.get("external_api_called", False))
         and not bool(sandbox_simulation.get("real_worktree_created", False)),
         sandbox_simulation.get("verdict", "WARN: no latest sandbox simulation yet"),
+    )
+    sandbox_runner = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_runner_plan.json")
+    runner_state = sandbox_runner.get("runner_state", {}) if sandbox_runner else {}
+    add(
+        "Claude sandbox runner interface acceptable",
+        not bool(runner_state.get("worktree_creation_enabled", False))
+        and not bool(runner_state.get("builder_execution_enabled", False))
+        and not bool(runner_state.get("external_api_called", False))
+        and not bool(runner_state.get("real_worktree_created", False)),
+        runner_state.get("state", "WARN: no latest runner dry-run yet"),
     )
     add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
     add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)

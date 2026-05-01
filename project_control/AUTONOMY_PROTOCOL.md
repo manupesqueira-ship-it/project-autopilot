@@ -214,3 +214,16 @@ Required boundary:
 9. Blocked/retry cases return to OpenAI Auditor for correction planning.
 
 `SANDBOX_PREFLIGHT_PASS` or `SANDBOX_SIMULATION_PASS` allows only a later human-approved execution design. It does not permit Project Autopilot to execute Claude.
+
+## Claude Sandbox Runner Approval Gate
+
+The runner interface adds a deterministic approval contract before any future worktree creation or builder execution:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-approval-preflight --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner-dry-run --task "<task>"
+```
+
+Current runner approvals are dry-run/future-only. Even a valid approval contract must not create a real worktree, execute Claude, call external APIs, or enable scheduler/automatic execution in this sprint.
+
+Runner work is blocked if approval is missing, rollback is missing, post-builder policy is missing, env/secret scope appears, direct master writes are allowed, auto-merge is allowed, worktree creation happens, or builder execution happens.
