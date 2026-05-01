@@ -164,6 +164,14 @@ Pre-Claude readiness requires local `ANTHROPIC_API_KEY`, provider dry-run mode, 
 
 The controlled live Claude analysis call is a future phase. It must be analysis-only, human-approved, budget-gated, and unable to edit files. Sandboxed builder execution is a later phase after that.
 
+The controlled analysis command is:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-approved --task "<analysis task>"
+```
+
+It may make exactly one Anthropic call only when explicitly approved. It must sanitize the prompt, send no secrets, use no tools, edit no files, execute no commands, and save ignored evidence. This is not builder execution and does not enable automatic Claude execution.
+
 ## 12. Human Approval Gates
 
 Human approval is required for:

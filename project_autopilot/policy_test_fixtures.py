@@ -326,6 +326,21 @@ def fixtures() -> list[PolicyFixture]:
                 forbidden_verdicts={"BLOCKED"},
             ),
         ),
+        PolicyFixture(
+            fixture_id="controlled_claude_analysis_approved_safe",
+            description="Approved analysis-only Claude SDK calls should not be treated as builder execution.",
+            changed_files=["project_autopilot/claude_analysis_call.py"],
+            builder_report=(
+                "Controlled Claude Agent SDK live analysis with explicit human approval. "
+                "Analysis-only; no tools; no commands; no file edits; no secrets sent. "
+                "Automatic Claude execution remains disabled."
+            ),
+            expectation=FixtureExpectation(
+                _allowed("SAFE_TO_COMMIT", "HUMAN_REVIEW_REQUIRED"),
+                safe_commit_allowed=None,
+                forbidden_verdicts={"BLOCKED"},
+            ),
+        ),
     ]
 
 

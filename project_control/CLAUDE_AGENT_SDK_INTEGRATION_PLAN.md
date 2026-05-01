@@ -52,7 +52,31 @@ The SDK package may be missing and dry-run can still pass. Package detection is 
 
 ### Phase 1: Controlled Analysis Call
 
-One human-approved live Claude analysis call. No file edits. No command execution. No secrets. Output is reviewed by Project Autopilot and the human.
+One human-approved live Claude analysis call. No file edits. No command execution. No tools. No secrets. Output is reviewed by Project Autopilot and the human.
+
+Commands:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-approved --task "Review Project Autopilot v2 architecture and identify top 5 risks"
+```
+
+Evidence:
+
+```text
+logs/claude/<project_id>/latest/claude_analysis_request_redacted.md
+logs/claude/<project_id>/latest/claude_analysis_response.md
+logs/claude/<project_id>/latest/claude_analysis_metadata.json
+```
+
+Prompt safety:
+
+- Do not read `.env` files.
+- Redact secret-like strings before sending.
+- Block prompts that cannot be safely redacted.
+- Never print key values.
+
+Allowed output is structured analysis only. The call must not suggest direct edits, live mutation commands, deployment, scheduler activation, or automatic Claude execution.
 
 ### Phase 2: Sandboxed Builder
 

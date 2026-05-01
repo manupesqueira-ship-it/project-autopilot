@@ -126,4 +126,22 @@ Before any live Claude SDK call:
 
 The first live call, when approved later, must be analysis-only and unable to edit files.
 
+## Controlled Claude Analysis Call
+
+The first live Claude path is now a controlled analysis call, not builder execution.
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-approved --task "Review Project Autopilot v2 architecture and identify top 5 risks"
+```
+
+Rules:
+
+- `--claude-analysis-dry-run` must not call Anthropic.
+- `--claude-analysis-approved` may make exactly one analysis-only Anthropic call.
+- Claude must not receive secrets, use tools, edit files, execute commands, deploy, mutate live systems, or enable scheduler/automatic execution.
+- Prompt redaction must run before any live call.
+- Evidence must be saved under `logs/claude/<project_id>/latest/`.
+- Sandboxed builder execution remains a future phase requiring separate approval.
+
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

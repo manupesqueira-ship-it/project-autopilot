@@ -128,6 +128,29 @@ logs/<project_id>_claude_sdk_dry_run_latest.json
 
 The next phase is a single controlled analysis call, only after explicit human approval. Sandboxed builder execution and limited automatic execution are later phases.
 
+### Controlled Claude Analysis Call
+
+The first live Claude SDK path is analysis-only and requires an explicit approval flag:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-approved --task "Review Project Autopilot v2 architecture and identify top 5 risks"
+```
+
+`--claude-analysis-dry-run` never calls Anthropic. It builds the same sanitized prompt, applies redaction, checks budget guardrails, and writes evidence.
+
+`--claude-analysis-approved` may make exactly one Anthropic call. It is forbidden to use tools, edit files, execute commands, deploy, mutate databases, request secrets, or enable automatic execution. The prompt is sanitized by `claude_prompt_safety.py`; secret-like strings are redacted before sending.
+
+Evidence is written to ignored files:
+
+```text
+logs/claude/<project_id>/latest/claude_analysis_request_redacted.md
+logs/claude/<project_id>/latest/claude_analysis_response.md
+logs/claude/<project_id>/latest/claude_analysis_metadata.json
+```
+
+This is not builder execution. The next phase remains sandboxed builder execution in a dedicated worktree, only after separate human approval.
+
 ## Quality Standard
 
 Project Autopilot enforces a world-class quality bar:

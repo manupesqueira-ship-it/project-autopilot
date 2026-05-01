@@ -39,6 +39,7 @@ from validation_report import create_validation_report
 from backend_audit import run_backend_audit
 from control_center import generate_control_center
 from autopilot_health import build_health, claude_sdk_dry_run_health, policy_fixture_health, write_reports as write_autopilot_health_reports
+from claude_analysis_call import run_analysis as run_claude_analysis_call
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
 from policy_test_fixtures import run as run_policy_fixture_suite
 
@@ -1063,6 +1064,7 @@ def run_autopilot_health(project_id: str) -> int:
     print(f"  ANTHROPIC_API_KEY: {claude['anthropic_api_key_status']}")
     print(f"  SDK package detected: {'yes' if claude['sdk_package_detected'] else 'no'}")
     print(f"  Claude SDK dry-run: {claude['claude_sdk_dry_run_verdict']}")
+    print(f"  Controlled Claude analysis: {claude.get('controlled_analysis_verdict', 'UNKNOWN')}")
     print(f"  Claude Agent SDK external call tested: {'yes' if claude['claude_agent_sdk_external_call_tested'] else 'no'}")
     print("Top blockers:")
     for blocker in payload["blockers"] or ["none"]:
@@ -1087,6 +1089,22 @@ def run_claude_sdk_dry_run_cmd(project_id: str) -> int:
     print(f"  Next action: {payload['next_recommended_action']}")
     print(f"  Report: {md_path}")
     print(f"  JSON: {json_path}")
+    return exit_code
+
+
+def run_claude_analysis_cmd(project_id: str, task: str, approved_live_call: bool) -> int:
+    exit_code, metadata = run_claude_analysis_call(project_id, task=task, approved_live_call=approved_live_call)
+    print(f"Claude Analysis: {metadata['verdict']}")
+    print(f"  Live call made: {'yes' if metadata['live_call_made'] else 'no'}")
+    print(f"  Secrets sent: {metadata['secrets_sent']}")
+    print(f"  Redactions: {metadata['redaction_count']}")
+    print(f"  Request: {metadata['request_redacted_path']}")
+    print(f"  Response: {metadata['response_path']}")
+    print(f"  Metadata: {Path(metadata['request_redacted_path']).parent / 'claude_analysis_metadata.json'}")
+    print(f"  Policy review: {metadata['policy_review_path']}")
+    if metadata.get("blocked_reason"):
+        print(f"  Note: {metadata['blocked_reason']}")
+    print("  Next action: Review saved evidence; keep scheduler and automatic Claude execution disabled.")
     return exit_code
 
 
@@ -1483,6 +1501,7 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --policy-fixtures\n"
             "  python -B project_autopilot/agent_loop.py --project mira --autopilot-health\n"
             "  python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -1512,7 +1531,10 @@ def main() -> int:
     group.add_argument("--policy-fixtures", action="store_true", help="Run deterministic v2 policy fixture regression tests.")
     group.add_argument("--autopilot-health", action="store_true", help="Print consolidated Project Autopilot operational health.")
     group.add_argument("--claude-sdk-dry-run", action="store_true", help="Validate Claude Agent SDK dry-run readiness without external calls.")
+    group.add_argument("--claude-analysis-dry-run", action="store_true", help="Build a sanitized Claude analysis prompt without calling Anthropic.")
+    group.add_argument("--claude-analysis-approved", action="store_true", help="Make one explicit analysis-only Anthropic call.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
+    parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
 
     args = parser.parse_args()
 
@@ -1560,6 +1582,10 @@ def main() -> int:
         return run_autopilot_health(args.project)
     if args.claude_sdk_dry_run:
         return run_claude_sdk_dry_run_cmd(args.project)
+    if args.claude_analysis_dry_run:
+        return run_claude_analysis_cmd(args.project, args.task, approved_live_call=False)
+    if args.claude_analysis_approved:
+        return run_claude_analysis_cmd(args.project, args.task, approved_live_call=True)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

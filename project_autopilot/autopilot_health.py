@@ -81,6 +81,39 @@ def claude_sdk_dry_run_health(project: ProjectConfig) -> dict[str, Any]:
     }
 
 
+def claude_analysis_health(project: ProjectConfig) -> dict[str, Any]:
+    json_path = project.repo_path / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_metadata.json"
+    request_path = project.repo_path / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_request_redacted.md"
+    response_path = project.repo_path / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_response.md"
+    payload = _read_json(json_path)
+    if not payload:
+        return {
+            "verdict": "NOT_RUN",
+            "live_call_made": False,
+            "anthropic_call_count": 0,
+            "secrets_sent": False,
+            "no_tools": True,
+            "no_commands": True,
+            "no_file_edits": True,
+            "metadata_path": str(json_path),
+            "request_path": str(request_path),
+            "response_path": str(response_path),
+        }
+    return {
+        "verdict": payload.get("verdict", "UNKNOWN"),
+        "live_call_made": bool(payload.get("live_call_made", False)),
+        "anthropic_call_count": payload.get("anthropic_call_count", 0),
+        "secrets_sent": bool(payload.get("secrets_sent", False)),
+        "no_tools": bool(payload.get("no_tools", True)),
+        "no_commands": bool(payload.get("no_commands", True)),
+        "no_file_edits": bool(payload.get("no_file_edits", True)),
+        "metadata_path": str(json_path),
+        "request_path": str(request_path),
+        "response_path": str(response_path),
+        "policy_review_path": payload.get("policy_review_path", ""),
+    }
+
+
 def _latest_flow_status(project: ProjectConfig) -> dict[str, Any]:
     results_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "flow_results.json"
     report_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "validation_summary.md"
@@ -136,6 +169,7 @@ def _claude_readiness(project: ProjectConfig, provider_payload: dict[str, Any]) 
     sdk_meta = claude_sdk.get("metadata", {})
     key_status = sdk_meta.get("env_status", "MISSING")
     sdk_dry = claude_sdk_dry_run_health(project)
+    analysis = claude_analysis_health(project)
     return {
         "claude_code_cli_detected": claude_cli_detected,
         "claude_code_manual_handoff_ready": bool(claude_code.get("configured")),
@@ -145,10 +179,11 @@ def _claude_readiness(project: ProjectConfig, provider_payload: dict[str, Any]) 
         "anthropic_api_key_present": key_status == "PRESENT_VALUE_HIDDEN",
         "sdk_package_detected": bool(sdk_meta.get("sdk_package_detected", False)),
         "claude_sdk_dry_run_verdict": sdk_dry["verdict"],
-        "claude_agent_sdk_external_call_tested": False,
-        "live_claude_calls": "DISABLED_EXPECTED",
+        "controlled_analysis_verdict": analysis["verdict"],
+        "claude_agent_sdk_external_call_tested": analysis["live_call_made"],
+        "live_claude_calls": "CONTROLLED_ANALYSIS_ONLY" if analysis["live_call_made"] else "DISABLED_UNTIL_APPROVED",
         "automatic_claude_execution": "DISABLED_EXPECTED" if not project.allow_automatic_builder_execution else "ENABLED",
-        "status": "DRY_RUN_READY" if sdk_dry["verdict"] == "CLAUDE_SDK_DRY_RUN_READY" else ("READY_FOR_MANUAL_HANDOFF" if claude_code.get("configured") else "PARTIAL"),
+        "status": "CONTROLLED_ANALYSIS_ATTEMPTED" if analysis["live_call_made"] else ("DRY_RUN_READY" if sdk_dry["verdict"] == "CLAUDE_SDK_DRY_RUN_READY" else ("READY_FOR_MANUAL_HANDOFF" if claude_code.get("configured") else "PARTIAL")),
         "required_before_sdk_integration": [
             "ANTHROPIC_API_KEY added locally.",
             "Provider dry-run mode.",
@@ -181,6 +216,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     halt_active = halt_path.exists()
     claude = _claude_readiness(project, provider_payload)
     claude_dry = claude_sdk_dry_run_health(project)
+    claude_analysis = claude_analysis_health(project)
 
     subsystem_statuses = {
         "provider_registry": "PASS" if provider_payload.get("configured_provider_count", 0) >= 1 else "FAIL",
@@ -201,6 +237,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "automatic_claude_execution": "DISABLED_EXPECTED" if not project.allow_automatic_builder_execution else "ENABLED",
         "claude_agent_sdk_provider": "DRY_RUN_CONFIGURED" if claude["anthropic_api_key_present"] else "NOT_CONFIGURED",
         "claude_sdk_dry_run": claude_dry["verdict"],
+        "controlled_claude_analysis": claude_analysis["verdict"],
     }
 
     blockers: list[str] = []
@@ -216,6 +253,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("Automatic builder execution is enabled unexpectedly.")
     if claude_dry["verdict"] == "CLAUDE_SDK_DRY_RUN_BLOCKED":
         blockers.append("Claude SDK dry-run validator is blocked.")
+    if claude_analysis["secrets_sent"]:
+        blockers.append("Controlled Claude analysis metadata reports secrets sent.")
+    if claude_analysis["live_call_made"] and claude_analysis["anthropic_call_count"] != 1:
+        blockers.append("Controlled Claude analysis call count is not exactly one.")
 
     warnings: list[str] = []
     if fixture["status"] == "UNKNOWN":
@@ -226,6 +267,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("Claude SDK dry-run validator has no latest result.")
     elif claude_dry["verdict"] == "CLAUDE_SDK_DRY_RUN_PARTIAL":
         warnings.append("Claude SDK dry-run validator is partial; live Claude calls remain disabled.")
+    if claude_analysis["verdict"] == "CLAUDE_ANALYSIS_CALL_BLOCKED":
+        warnings.append("Latest controlled Claude analysis was blocked by provider/auth/model handling; no retry was attempted.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -245,6 +288,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     ]
     if not claude["anthropic_api_key_present"]:
         next_actions.append("For Claude SDK later: add ANTHROPIC_API_KEY locally, then implement dry-run mode before any live call.")
+    elif claude_analysis["verdict"] == "CLAUDE_ANALYSIS_CALL_BLOCKED":
+        next_actions.append("Fix Anthropic auth/billing/model configuration, then rerun one approved analysis call when ready.")
     else:
         next_actions.append("For Claude SDK later: request explicit approval before the first controlled analysis call.")
     next_actions.append("Keep scheduler and automatic Claude execution disabled until explicit approval.")
@@ -257,6 +302,9 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "autopilot_v2_check_report": str(logs / f"{project.project_id}_autopilot_v2_check_latest.md"),
         "claude_sdk_dry_run_report": str(logs / f"{project.project_id}_claude_sdk_dry_run_latest.md"),
         "claude_sdk_dry_run_json": str(logs / f"{project.project_id}_claude_sdk_dry_run_latest.json"),
+        "claude_analysis_request_redacted": claude_analysis["request_path"],
+        "claude_analysis_response": claude_analysis["response_path"],
+        "claude_analysis_metadata": claude_analysis["metadata_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
@@ -294,6 +342,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         },
         "claude_integration_readiness": claude,
         "claude_sdk_dry_run": claude_dry,
+        "controlled_claude_analysis": claude_analysis,
         "policy_fixture_suite": fixture,
         "provider_registry": {
             "provider_count": provider_payload.get("provider_count", 0),
@@ -336,6 +385,7 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- ANTHROPIC_API_KEY status: {claude['anthropic_api_key_status']}",
         f"- SDK package detected: {'yes' if claude['sdk_package_detected'] else 'no'}",
         f"- Claude SDK dry-run verdict: {claude['claude_sdk_dry_run_verdict']}",
+        f"- Controlled analysis verdict: {claude['controlled_analysis_verdict']}",
         f"- Live Claude calls: {claude['live_claude_calls']}",
         f"- Claude Agent SDK external call tested: {'yes' if claude['claude_agent_sdk_external_call_tested'] else 'no'}",
         "",
@@ -352,7 +402,20 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
     lines.extend(f"- {item}" for item in payload["next_actions"])
     lines.extend(["", "## Evidence Paths"])
     lines.extend(f"- {name}: {path}" for name, path in payload["evidence_paths"].items())
-    lines.extend(["", "Safety: no external APIs were called, no secrets were printed, no SQL was executed, and no builders were executed."])
+    analysis = payload["controlled_claude_analysis"]
+    lines.extend([
+        "",
+        "## Controlled Claude Analysis",
+        f"- Verdict: {analysis['verdict']}",
+        f"- Live call made: {'yes' if analysis['live_call_made'] else 'no'}",
+        f"- Anthropic call count: {analysis['anthropic_call_count']}",
+        f"- Secrets sent: {'yes' if analysis['secrets_sent'] else 'no'}",
+        f"- No tools: {'yes' if analysis['no_tools'] else 'no'}",
+        f"- No commands: {'yes' if analysis['no_commands'] else 'no'}",
+        f"- No file edits: {'yes' if analysis['no_file_edits'] else 'no'}",
+        "",
+        "Safety: no secrets were printed, no SQL was executed, no builders were executed, and any Anthropic call is limited to the explicit approved analysis command.",
+    ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
 
@@ -370,6 +433,7 @@ def main() -> int:
     print(f"  Providers configured: {payload['provider_registry']['configured_provider_count']}/{payload['provider_registry']['provider_count']}")
     print(f"  Claude SDK key status: {payload['claude_integration_readiness']['anthropic_api_key_status']}")
     print(f"  Claude SDK dry-run: {payload['claude_integration_readiness']['claude_sdk_dry_run_verdict']}")
+    print(f"  Controlled Claude analysis: {payload['controlled_claude_analysis']['verdict']}")
     print(f"  Scheduler: {payload['subsystem_statuses']['scheduler']}")
     print(f"  Automatic Claude execution: {payload['subsystem_statuses']['automatic_claude_execution']}")
     print(f"  Blockers: {', '.join(payload['blockers']) if payload['blockers'] else 'none'}")

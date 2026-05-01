@@ -67,3 +67,6 @@ Builders must:
 - Claude SDK dry-run is allowed only through `python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run` or `project_autopilot/claude_sdk_dry_run.py`.
 - Claude SDK dry-run may report `PRESENT_VALUE_HIDDEN`, `MISSING`, or `EMPTY`; it must never expose the key, install dependencies, import live SDK behavior that makes network calls, or execute a builder.
 - A controlled live Claude analysis call is a future phase and requires explicit approval for that exact call. It must be analysis-only until sandboxed builder execution is separately approved.
+- Controlled Claude analysis is allowed only with `--claude-analysis-approved`; dry-run uses `--claude-analysis-dry-run`.
+- Controlled Claude analysis must sanitize prompts, send no secrets, use no tools, edit no files, execute no commands, and write evidence under ignored `logs/claude/`.
+- Claude builder execution remains blocked until a separate sandboxed worktree sprint explicitly enables it.

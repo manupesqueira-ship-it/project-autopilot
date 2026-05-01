@@ -413,6 +413,9 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Autopilot health JSON", "Machine-readable operational health", logs / f"{pid}_autopilot_health_latest.json", "observability"),
         _entry("Claude SDK dry-run report", "Dry-run readiness for future Claude Agent SDK integration", logs / f"{pid}_claude_sdk_dry_run_latest.md", "planning"),
         _entry("Claude SDK dry-run JSON", "Machine-readable Claude SDK dry-run verdict", logs / f"{pid}_claude_sdk_dry_run_latest.json", "planning"),
+        _entry("Claude analysis redacted request", "Sanitized request used for controlled Claude analysis", logs / "claude" / pid / "latest" / "claude_analysis_request_redacted.md", "planning"),
+        _entry("Claude analysis response", "Saved analysis-only Claude response", logs / "claude" / pid / "latest" / "claude_analysis_response.md", "planning"),
+        _entry("Claude analysis metadata", "Machine-readable controlled analysis safety metadata", logs / "claude" / pid / "latest" / "claude_analysis_metadata.json", "planning"),
     ]
     return items
 
@@ -531,6 +534,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["policy_fixture_tests"] = _read_json(logs / "policy_tests" / pid / "latest" / "policy_test_results.json")
     data["autopilot_health"] = _read_json(logs / f"{pid}_autopilot_health_latest.json")
     data["claude_sdk_dry_run"] = _read_json(logs / f"{pid}_claude_sdk_dry_run_latest.json")
+    data["claude_analysis"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_metadata.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1581,6 +1585,31 @@ def _render_claude_sdk_readiness(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_controlled_claude_analysis(d: dict[str, Any]) -> str:
+    analysis = d.get("claude_analysis", {})
+    if not analysis:
+        return '<div class="empty-state">No controlled Claude analysis evidence yet. Run --claude-analysis-dry-run first.</div>'
+    pid = d.get("project_id")
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Verdict", analysis.get("verdict", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("Live call", "yes" if analysis.get("live_call_made") else "no")}</div>')
+    lines.append(f'<div>{_kv("Anthropic calls", str(analysis.get("anthropic_call_count", 0)))}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Secrets sent", "yes" if analysis.get("secrets_sent") else "false")}</div>')
+    lines.append(f'<div>{_kv("No tools", "true" if analysis.get("no_tools", True) else "false")}</div>')
+    lines.append(f'<div>{_kv("No commands", "true" if analysis.get("no_commands", True) else "false")}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("No file edits", "true" if analysis.get("no_file_edits", True) else "false")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Request", f"logs/claude/{pid}/latest/claude_analysis_request_redacted.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Response", f"logs/claude/{pid}/latest/claude_analysis_response.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Metadata", f"logs/claude/{pid}/latest/claude_analysis_metadata.json", mono=True)}</div>')
+    lines.append('<div style="margin-top:8px"><span class="kv-label">Next phase</span><div>Sandboxed builder in a dedicated worktree only after separate approval.</div></div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1874,6 +1903,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7f. Claude Agent SDK readiness
         _section("claude-sdk", "Claude Agent SDK Readiness", _render_claude_sdk_readiness(d)),
+
+        # 7g. Controlled Claude analysis
+        _section("claude-analysis", "Controlled Claude Analysis", _render_controlled_claude_analysis(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

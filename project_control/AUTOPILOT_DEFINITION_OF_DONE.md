@@ -99,6 +99,23 @@ The dry-run gate must confirm:
 
 The first live Claude SDK call is a future controlled analysis call, not a builder execution. Sandboxed builder execution and automatic execution require separate approvals.
 
+## Controlled Claude Analysis Gate
+
+Controlled Claude analysis is permitted only when explicitly invoked:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-approved --task "<analysis task>"
+```
+
+Completion requires:
+
+1. Prompt redaction ran.
+2. `secrets_sent` is false.
+3. `no_tools`, `no_commands`, and `no_file_edits` are true.
+4. Anthropic call count is zero for dry-run or exactly one for approved live analysis.
+5. Evidence exists under ignored `logs/claude/<project_id>/latest/`.
+6. Scheduler and automatic Claude execution remain disabled.
+
 ## Stop Conditions
 
 Stop and ask for human approval before secrets, env files, git history, destructive commands, deployment, live Supabase changes, SQL/RLS/storage policies, paid APIs, scheduler enablement, automatic Claude execution, or parallel writes without worktrees.

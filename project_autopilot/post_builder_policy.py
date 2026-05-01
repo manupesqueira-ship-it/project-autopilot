@@ -36,6 +36,7 @@ FORBIDDEN_FILE_PATTERNS = [
 ]
 
 SECRET_WORDS = ["secret", "jwt", "cookie", "service_role", "password", "private key", "api key"]
+SECRET_NEGATION_WORDS = ["no secrets", "secrets sent false", "secrets_sent false", "without secrets", "secret values remain hidden"]
 SQL_WORDS = ["execute sql", "ran sql", "enable rls", "create policy", "drop table", "truncate", "alter table"]
 PAID_WORDS = ["paid api", "openai image", "seedance", "byteplus", "billing", "charged", "real generation"]
 SCHEDULER_WORDS = ["enabled scheduler", "systemd timer enabled", "automatic schedule"]
@@ -166,7 +167,8 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
     touches_research = any("research" in path or "research" in lower for path in paths)
     touches_flow_qa = any("flow_qa" in path or "browser_qa" in path for path in paths)
     touches_control_center = any("control_center" in path for path in paths)
-    touches_env = any(re.search(pattern, path, flags=re.IGNORECASE) for path in paths for pattern in FORBIDDEN_FILE_PATTERNS[:3]) or _mentions_any(lower, SECRET_WORDS)
+    secret_language_risk = _mentions_any(lower, SECRET_WORDS) and not _mentions_any(lower, SECRET_NEGATION_WORDS)
+    touches_env = any(re.search(pattern, path, flags=re.IGNORECASE) for path in paths for pattern in FORBIDDEN_FILE_PATTERNS[:3]) or secret_language_risk
     touches_deploy = any(word in lower for word in ["deploy", "vercel", "production deployment", "dockerfile", "systemd"])
     touches_paid = _mentions_any(lower, PAID_WORDS)
     touches_claude_sdk_live = _mentions_any(lower, CLAUDE_SDK_LIVE_WORDS)

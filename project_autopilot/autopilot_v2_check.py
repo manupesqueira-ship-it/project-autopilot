@@ -69,6 +69,8 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Claude Code provider exists", (ap / "providers" / "claude_code_provider.py").exists())
     add("Claude Agent SDK provider exists", (ap / "providers" / "claude_agent_sdk_provider.py").exists())
     add("Claude SDK dry-run validator exists", (ap / "claude_sdk_dry_run.py").exists())
+    add("Controlled Claude analysis module exists", (ap / "claude_analysis_call.py").exists())
+    add("Claude prompt safety module exists", (ap / "claude_prompt_safety.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -93,6 +95,15 @@ def run_check(project: ProjectConfig) -> V2Report:
         )
     else:
         add("Latest Claude SDK dry-run report acceptable", True, "WARN: no latest dry-run report yet; run --claude-sdk-dry-run")
+    claude_analysis = _read_json(root / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_metadata.json")
+    if claude_analysis:
+        add(
+            "Latest controlled Claude analysis report acceptable",
+            claude_analysis.get("secrets_sent") is False and claude_analysis.get("no_tools") is True and claude_analysis.get("no_commands") is True,
+            claude_analysis.get("verdict", "UNKNOWN"),
+        )
+    else:
+        add("Latest controlled Claude analysis report acceptable", True, "WARN: no latest analysis report yet; live call is not required")
     add("Autopilot Definition of Done exists", (pc / "AUTOPILOT_DEFINITION_OF_DONE.md").exists())
     add("Autopilot v2 spec exists", (pc / "AUTOPILOT_V2_SPEC.md").exists())
     add("Control Center exists", (ap / "control_center.py").exists())
