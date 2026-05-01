@@ -418,6 +418,10 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Claude analysis metadata", "Machine-readable controlled analysis safety metadata", logs / "claude" / pid / "latest" / "claude_analysis_metadata.json", "planning"),
         _entry("Claude analysis review", "Maps saved Claude analysis to policy gates and sandbox-design decision", logs / "claude" / pid / "latest" / "claude_analysis_review.md", "planning"),
         _entry("Claude analysis review JSON", "Machine-readable Claude analysis review decision", logs / "claude" / pid / "latest" / "claude_analysis_review.json", "planning"),
+        _entry("OpenAI Auditor dry-run", "Planner/reviewer dry-run artifact; no OpenAI API call", logs / "openai_auditor" / pid / "latest" / "openai_auditor_dry_run.md", "planning"),
+        _entry("OpenAI Auditor dry-run JSON", "Machine-readable OpenAI Auditor dry-run", logs / "openai_auditor" / pid / "latest" / "openai_auditor_dry_run.json", "planning"),
+        _entry("Multi-step loop dry-run", "Future planner-builder-review-policy lifecycle", logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.md", "planning"),
+        _entry("Multi-step loop dry-run JSON", "Machine-readable multi-step loop preview", logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.json", "planning"),
     ]
     return items
 
@@ -538,6 +542,8 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["claude_sdk_dry_run"] = _read_json(logs / f"{pid}_claude_sdk_dry_run_latest.json")
     data["claude_analysis"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_metadata.json")
     data["claude_analysis_review"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_review.json")
+    data["openai_auditor"] = _read_json(logs / "openai_auditor" / pid / "latest" / "openai_auditor_dry_run.json")
+    data["multistep_loop"] = _read_json(logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1640,6 +1646,31 @@ def _render_claude_analysis_review(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_openai_auditor_loop(d: dict[str, Any]) -> str:
+    auditor = d.get("openai_auditor", {})
+    loop = d.get("multistep_loop", {})
+    pid = d.get("project_id")
+    if not auditor and not loop:
+        return '<div class="empty-state">No OpenAI Auditor or multi-step loop dry-run yet. Run --openai-auditor-plan and --multistep-dry-run.</div>'
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Auditor", auditor.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("OpenAI live calls", "enabled" if auditor.get("live_call_made") else "disabled")}</div>')
+    lines.append(f'<div>{_kv("OpenAI calls", str(auditor.get("openai_call_count", 0)))}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv_badge("Multi-step", loop.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Loop execution", "enabled" if loop.get("execution_enabled") else "disabled")}</div>')
+    lines.append(f'<div>{_kv("External API", "yes" if loop.get("external_api_called") else "NO")}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Recommended builder", loop.get("recommended_builder") or auditor.get("recommended_builder", "unknown"))}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Next action", loop.get("next_action") or auditor.get("next_action", ""))}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Auditor report", f"logs/openai_auditor/{pid}/latest/openai_auditor_dry_run.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Loop report", f"logs/multistep_loop/{pid}/latest/multistep_loop_dry_run.md", mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1939,6 +1970,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7h. Claude analysis review
         _section("claude-analysis-review", "Claude Analysis Review", _render_claude_analysis_review(d)),
+
+        # 7i. OpenAI auditor / multi-step loop
+        _section("openai-auditor-loop", "OpenAI Auditor / Multi-Step Loop", _render_openai_auditor_loop(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

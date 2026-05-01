@@ -66,6 +66,9 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
     is_paid = any(word in text for word in ["paid", "billing", "image generation", "video generation", "seedance"])
     is_refactor = any(word in text for word in ["refactor", "complex", "architecture", "migration"])
     is_docs = any(word in text for word in ["doc", "readme", "runbook", "spec"])
+    is_high_level_objective = any(word in text for word in ["objective", "strategy", "roadmap", "loop", "orchestration", "autonomous", "sandboxed"])
+    is_builder_blocked = any(word in text for word in ["builder blocked", "claude blocked", "blocked output", "diagnose blocker"])
+    is_builder_done = any(word in text for word in ["builder done", "review builder output", "builder report", "review output"])
     is_claude_sdk_fit = any(
         phrase in text
         for phrase in [
@@ -96,6 +99,17 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
     live_call_required = False
     explicit_approval_required = False
 
+    if is_high_level_objective or is_builder_blocked or is_builder_done:
+        provider = "openai_auditor"
+        fallback = "codex"
+        execution = "dry_run_planning"
+        auto_commit = "not_applicable_planning_only"
+        notes.append("OpenAI Auditor should plan/review first; it does not build or approve its own output.")
+        if is_builder_blocked:
+            notes.append("Blocked builder output returns to OpenAI Auditor for diagnosis and correction prompt drafting.")
+        if is_builder_done:
+            notes.append("Completed builder output returns to OpenAI Auditor for evidence review before Project Autopilot policy gates.")
+
     if is_ui:
         validations.append("python -B project_autopilot/design_director.py --project mira")
         validations.append("python -B project_autopilot/flow_qa.py --project mira --validate-mock-e2e")
@@ -109,19 +123,19 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
         notes.append("Backend/security changes require backend audit and may require research.")
 
     if is_refactor:
-        provider = "claude_code"
+        provider = "claude_code" if not (is_high_level_objective or is_builder_blocked or is_builder_done) else provider
         fallback = "codex"
         auto_commit = "manual_review_recommended_for_complex_refactor"
         notes.append("Complex refactors may fit Claude Code manual handoff, with Codex QA fallback.")
 
     if is_claude_sdk_fit and not is_docs:
-        provider = "claude_agent_sdk"
+        provider = "claude_agent_sdk" if not is_high_level_objective else provider
         fallback = "codex"
-        execution = "dry_run_only"
+        execution = "dry_run_only" if provider == "claude_agent_sdk" else execution
         explicit_approval_required = True
         approvals.append("explicit human approval before any live Claude Agent SDK call")
         auto_commit = "manual_review_required_before_live_claude_sdk_use"
-        notes.append("Claude Agent SDK is dry-run only; no live Claude call is made or required for this plan.")
+        notes.append("Claude Agent SDK is dry-run only; OpenAI Auditor may prepare prompts/reviews but no live builder call is made.")
 
     if is_claude_sdk_fit and is_backend:
         provider = "claude_agent_sdk"

@@ -143,6 +143,64 @@ def claude_analysis_review_health(project: ProjectConfig) -> dict[str, Any]:
     }
 
 
+def openai_auditor_health(project: ProjectConfig) -> dict[str, Any]:
+    base = project.repo_path / project.logs_dir / "openai_auditor" / project.project_id / "latest"
+    json_path = base / "openai_auditor_dry_run.json"
+    report_path = base / "openai_auditor_dry_run.md"
+    status_path = base / "openai_auditor_status.json"
+    payload = _read_json(json_path)
+    status_payload = _read_json(status_path)
+    provider = status_payload.get("provider", {})
+    if not payload:
+        return {
+            "verdict": "NOT_RUN",
+            "provider_status": provider.get("current_status", "UNKNOWN"),
+            "configured": bool(provider.get("configured", False)),
+            "live_calls_enabled": False,
+            "openai_call_count": 0,
+            "report_path": str(report_path),
+            "json_path": str(json_path),
+            "status_json_path": str(status_path),
+        }
+    return {
+        "verdict": payload.get("verdict", "UNKNOWN"),
+        "provider_status": provider.get("current_status", payload.get("provider_status", {}).get("current_status", "UNKNOWN")),
+        "configured": bool(provider.get("configured", payload.get("provider_status", {}).get("configured", False))),
+        "live_calls_enabled": bool(payload.get("live_call_made", False)),
+        "openai_call_count": payload.get("openai_call_count", 0),
+        "recommended_builder": payload.get("recommended_builder", ""),
+        "report_path": str(report_path),
+        "json_path": str(json_path),
+        "status_json_path": str(status_path),
+    }
+
+
+def multistep_loop_health(project: ProjectConfig) -> dict[str, Any]:
+    base = project.repo_path / project.logs_dir / "multistep_loop" / project.project_id / "latest"
+    json_path = base / "multistep_loop_dry_run.json"
+    report_path = base / "multistep_loop_dry_run.md"
+    payload = _read_json(json_path)
+    if not payload:
+        return {
+            "verdict": "NOT_RUN",
+            "scaffold_status": "AVAILABLE" if (project.repo_path / "project_autopilot" / "multistep_loop.py").exists() else "MISSING",
+            "execution_enabled": False,
+            "external_api_called": False,
+            "report_path": str(report_path),
+            "json_path": str(json_path),
+        }
+    return {
+        "verdict": payload.get("verdict", "UNKNOWN"),
+        "scaffold_status": "AVAILABLE",
+        "objective": payload.get("objective", ""),
+        "recommended_builder": payload.get("recommended_builder", ""),
+        "execution_enabled": bool(payload.get("execution_enabled", False)),
+        "external_api_called": bool(payload.get("external_api_called", False)),
+        "report_path": str(report_path),
+        "json_path": str(json_path),
+    }
+
+
 def _latest_flow_status(project: ProjectConfig) -> dict[str, Any]:
     results_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "flow_results.json"
     report_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "validation_summary.md"
@@ -250,6 +308,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     claude_dry = claude_sdk_dry_run_health(project)
     claude_analysis = claude_analysis_health(project)
     claude_review = claude_analysis_review_health(project)
+    openai_auditor = openai_auditor_health(project)
+    multistep = multistep_loop_health(project)
 
     subsystem_statuses = {
         "provider_registry": "PASS" if provider_payload.get("configured_provider_count", 0) >= 1 else "FAIL",
@@ -272,6 +332,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_sdk_dry_run": claude_dry["verdict"],
         "controlled_claude_analysis": claude_analysis["verdict"],
         "claude_analysis_review": claude_review["decision"],
+        "openai_auditor": openai_auditor["verdict"],
+        "multistep_loop": multistep["verdict"],
     }
 
     blockers: list[str] = []
@@ -293,6 +355,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("Controlled Claude analysis call count is not exactly one.")
     if claude_review["decision"] == "BLOCKED":
         blockers.append("Claude analysis review is blocked.")
+    if openai_auditor["live_calls_enabled"] or openai_auditor["openai_call_count"]:
+        blockers.append("OpenAI Auditor live calls are unexpectedly enabled or recorded.")
+    if multistep["execution_enabled"] or multistep["external_api_called"]:
+        blockers.append("Multi-step loop reports execution or external API activity.")
 
     warnings: list[str] = []
     if fixture["status"] == "UNKNOWN":
@@ -311,6 +377,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("Claude analysis review has not run yet; use saved Claude evidence before sandbox design.")
     elif claude_review["decision"] in {"NEEDS_POLICY_FIXTURE", "NEEDS_RESEARCH", "HUMAN_REVIEW_REQUIRED"}:
         warnings.append(f"Claude analysis review requires follow-up: {claude_review['decision']}.")
+    if openai_auditor["verdict"] == "NOT_RUN":
+        warnings.append("OpenAI Auditor dry-run has not run yet.")
+    if multistep["verdict"] == "NOT_RUN":
+        warnings.append("Multi-step loop dry-run has not run yet.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -353,6 +423,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_analysis_metadata": claude_analysis["metadata_path"],
         "claude_analysis_review": claude_review["report_path"],
         "claude_analysis_review_json": claude_review["json_path"],
+        "openai_auditor_dry_run": openai_auditor["report_path"],
+        "openai_auditor_dry_run_json": openai_auditor["json_path"],
+        "multistep_loop_dry_run": multistep["report_path"],
+        "multistep_loop_dry_run_json": multistep["json_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
@@ -398,6 +472,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_sdk_dry_run": claude_dry,
         "controlled_claude_analysis": claude_analysis,
         "claude_analysis_review": claude_review,
+        "openai_auditor": openai_auditor,
+        "multistep_loop": multistep,
         "policy_fixture_suite": fixture,
         "provider_registry": {
             "provider_count": provider_payload.get("provider_count", 0),
@@ -462,6 +538,8 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
     lines.extend(f"- {name}: {path}" for name, path in payload["evidence_paths"].items())
     analysis = payload["controlled_claude_analysis"]
     review = payload["claude_analysis_review"]
+    auditor = payload["openai_auditor"]
+    multistep = payload["multistep_loop"]
     lines.extend([
         "",
         "## Controlled Claude Analysis",
@@ -484,6 +562,18 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Fixture recommendations: {', '.join(review['fixture_recommendations']) if review['fixture_recommendations'] else 'none'}",
         f"- Research recommendations: {len(review['research_recommendations'])}",
         f"- Report: {review['report_path']}",
+        "",
+        "## OpenAI Auditor / Multi-Step Loop",
+        f"- OpenAI Auditor verdict: {auditor['verdict']}",
+        f"- OpenAI Auditor provider status: {auditor['provider_status']}",
+        f"- OpenAI live calls enabled: {'yes' if auditor['live_calls_enabled'] else 'no'}",
+        f"- OpenAI call count: {auditor['openai_call_count']}",
+        f"- OpenAI Auditor report: {auditor['report_path']}",
+        f"- Multi-step loop verdict: {multistep['verdict']}",
+        f"- Multi-step scaffold: {multistep['scaffold_status']}",
+        f"- Multi-step execution enabled: {'yes' if multistep['execution_enabled'] else 'no'}",
+        f"- Multi-step external API called: {'yes' if multistep['external_api_called'] else 'no'}",
+        f"- Multi-step report: {multistep['report_path']}",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
@@ -504,6 +594,8 @@ def main() -> int:
     print(f"  Claude SDK dry-run: {payload['claude_integration_readiness']['claude_sdk_dry_run_verdict']}")
     print(f"  Controlled Claude analysis: {payload['controlled_claude_analysis']['verdict']}")
     print(f"  Claude analysis review: {payload['claude_analysis_review']['decision']}")
+    print(f"  OpenAI Auditor: {payload['openai_auditor']['verdict']}")
+    print(f"  Multi-step loop: {payload['multistep_loop']['verdict']}")
     print(f"  Scheduler: {payload['subsystem_statuses']['scheduler']}")
     print(f"  Automatic Claude execution: {payload['subsystem_statuses']['automatic_claude_execution']}")
     print(f"  Blockers: {', '.join(payload['blockers']) if payload['blockers'] else 'none'}")

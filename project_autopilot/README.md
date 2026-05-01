@@ -923,6 +923,47 @@ Review decisions:
 
 The review is still not builder execution. Claude cannot edit files, run commands, use tools, auto-merge, deploy, touch live databases, or enable scheduler/automatic execution.
 
+## OpenAI Auditor and Multi-Step Loop
+
+OpenAI Auditor is a dry-run planner/reviewer provider. It formalizes the role ChatGPT/Codex has been playing manually:
+
+- plan the task
+- improve the builder prompt
+- diagnose blocked builder output
+- generate correction strategy
+- review evidence
+- recommend the next step
+
+OpenAI Auditor is not a default builder and cannot approve its own output. Project Autopilot policy remains the final judge.
+
+Commands:
+
+```bash
+python -B project_autopilot/openai_auditor.py --project mira --status
+python -B project_autopilot/openai_auditor.py --project mira --plan "Build a sandboxed Claude builder loop"
+python -B project_autopilot/agent_loop.py --project mira --openai-auditor-status
+python -B project_autopilot/agent_loop.py --project mira --openai-auditor-plan --task "Build a sandboxed Claude builder loop"
+python -B project_autopilot/multistep_loop.py --project mira --dry-run-objective "Improve MIRA result page design"
+python -B project_autopilot/agent_loop.py --project mira --multistep-dry-run --objective "Improve MIRA result page design"
+```
+
+All of these are dry-run/local only. They must not call OpenAI or Anthropic, execute Claude, enable scheduler, enable automatic Claude execution, deploy, mutate Supabase, or stage generated logs.
+
+The future loop is:
+
+```text
+Human objective -> OpenAI Auditor plan -> builder selected -> Claude/Codex handoff -> builder blocked/done -> OpenAI Auditor review -> validation -> policy review -> SAFE_TO_COMMIT / NEEDS_FIX / BLOCKED
+```
+
+Generated reports:
+
+```text
+logs/openai_auditor/<project_id>/latest/openai_auditor_dry_run.md
+logs/openai_auditor/<project_id>/latest/openai_auditor_dry_run.json
+logs/multistep_loop/<project_id>/latest/multistep_loop_dry_run.md
+logs/multistep_loop/<project_id>/latest/multistep_loop_dry_run.json
+```
+
 ### Systemd Templates
 
 Template files for future VPS deployment:

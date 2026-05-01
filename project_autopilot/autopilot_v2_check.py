@@ -66,18 +66,22 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Provider registry exists", (ap / "provider_registry.py").exists())
     add("Provider registry CLI works", provider_summary.get("provider_count", 0) >= 3, f"{provider_summary.get('provider_count', 0)} providers")
     add("Codex provider exists", (ap / "providers" / "codex_provider.py").exists())
+    add("OpenAI Auditor provider exists", (ap / "providers" / "openai_auditor_provider.py").exists())
     add("Claude Code provider exists", (ap / "providers" / "claude_code_provider.py").exists())
     add("Claude Agent SDK provider exists", (ap / "providers" / "claude_agent_sdk_provider.py").exists())
     add("Claude SDK dry-run validator exists", (ap / "claude_sdk_dry_run.py").exists())
     add("Controlled Claude analysis module exists", (ap / "claude_analysis_call.py").exists())
     add("Claude prompt safety module exists", (ap / "claude_prompt_safety.py").exists())
     add("Claude analysis review module exists", (ap / "claude_analysis_review.py").exists())
+    add("OpenAI Auditor module exists", (ap / "openai_auditor.py").exists())
+    add("Multi-step loop module exists", (ap / "multistep_loop.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
     add("Post-builder policy enforcement exists", (ap / "post_builder_policy.py").exists())
     add("Policy fixture suite exists", (ap / "policy_test_fixtures.py").exists())
     add("Policy fixture suite command documented", _contains(ap / "README.md", "policy_test_fixtures.py"))
+    add("OpenAI Auditor safety fixtures exist", _contains(ap / "policy_test_fixtures.py", "openai_auditor_live_call_without_approval_blocked"))
     policy_fixture_results = _read_json(root / project.logs_dir / "policy_tests" / project.project_id / "latest" / "policy_test_results.json")
     if policy_fixture_results:
         add(
@@ -123,6 +127,18 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("No-human mock E2E exists", _contains(ap / "flow_qa.py", "--validate-mock-e2e"))
     add("Scheduler disabled", not (root / "project_control" / "SCHEDULER_ENABLED.md").exists(), "No scheduler enable marker found")
     add("Automatic Claude execution disabled", project.allow_automatic_builder_execution is False)
+    openai_auditor = _read_json(root / project.logs_dir / "openai_auditor" / project.project_id / "latest" / "openai_auditor_dry_run.json")
+    add(
+        "OpenAI Auditor live calls disabled",
+        not bool(openai_auditor.get("live_call_made", False)) and int(openai_auditor.get("openai_call_count", 0) or 0) == 0,
+        openai_auditor.get("verdict", "NOT_RUN"),
+    )
+    multistep = _read_json(root / project.logs_dir / "multistep_loop" / project.project_id / "latest" / "multistep_loop_dry_run.json")
+    add(
+        "Multi-step loop is dry-run only",
+        not bool(multistep.get("execution_enabled", False)) and not bool(multistep.get("external_api_called", False)),
+        multistep.get("verdict", "NOT_RUN"),
+    )
     add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
     add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)
     add("Paid APIs disabled by default", project.paid_api_mode == "disabled_by_default" and not project.allow_paid_image_generation and not project.allow_paid_video_generation)

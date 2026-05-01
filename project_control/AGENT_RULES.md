@@ -72,3 +72,7 @@ Builders must:
 - Saved Claude analysis must be reviewed locally with `python -B project_autopilot/claude_analysis_review.py --project mira --latest` before sandboxed Claude builder design starts.
 - Claude analysis review may recommend sandbox design, fixtures, research, blockers, or human review, but it must not call external APIs or grant builder execution permission.
 - Claude builder execution remains blocked until a separate sandboxed worktree sprint explicitly enables it.
+- OpenAI Auditor is a planner/reviewer provider, not a default builder.
+- OpenAI Auditor dry-run may plan work, refine prompts, diagnose blockers, and review evidence, but it must not call OpenAI, edit files, execute builders, or approve its own output.
+- Multi-step loop dry-runs may model planner -> builder -> reviewer -> policy flow, but must not execute providers.
+- Project Autopilot policy remains the final judge for commits.

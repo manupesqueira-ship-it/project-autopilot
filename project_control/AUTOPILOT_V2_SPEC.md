@@ -216,6 +216,8 @@ These are not enabled in v2 foundation.
 ## 15. What v2 Can Do
 
 - Describe available providers.
+- Model OpenAI Auditor as a planner/reviewer provider in dry-run mode.
+- Preview a multi-step planner-builder-review-policy lifecycle without execution.
 - Route tasks to an appropriate builder mode.
 - Create strict design and research gates.
 - Enforce unified post-builder policy gates before commit.
@@ -226,6 +228,8 @@ These are not enabled in v2 foundation.
 ## 16. What v2 Cannot Do Yet
 
 - Execute Claude automatically.
+- Execute OpenAI Auditor live calls automatically.
+- Run the multi-step agent loop automatically.
 - Run scheduled autonomous cycles.
 - Deploy.
 - Perform live database/RLS/storage changes.
@@ -239,6 +243,8 @@ See `AUTOPILOT_DEFINITION_OF_DONE.md`.
 ## 18. Remaining Limitations
 
 - Provider execution is metadata/manual only.
+- OpenAI Auditor is dry-run only until a controlled live auditor-call sprint is explicitly approved.
+- Multi-step loop is a scaffold, not an execution engine.
 - Design scoring is heuristic and requires screenshots/human review for final UI approval.
 - Research is request-based and does not browse automatically.
 - Multi-agent parallel writes require explicit worktree discipline.
