@@ -172,6 +172,16 @@ python -B project_autopilot/agent_loop.py --project mira --claude-analysis-appro
 
 It may make exactly one Anthropic call only when explicitly approved. It must sanitize the prompt, send no secrets, use no tools, edit no files, execute no commands, and save ignored evidence. This is not builder execution and does not enable automatic Claude execution.
 
+After the call, Project Autopilot must run a local Claude analysis review:
+
+```bash
+python -B project_autopilot/claude_analysis_review.py --project mira --latest
+```
+
+The review reads saved evidence only, makes no external API calls, extracts Claude risks/recommendations, maps them to policy gates, and emits `PROCEED_TO_SANDBOX_DESIGN`, `NEEDS_POLICY_FIXTURE`, `NEEDS_RESEARCH`, `BLOCKED`, or `HUMAN_REVIEW_REQUIRED`.
+
+`PROCEED_TO_SANDBOX_DESIGN` means only that a sandbox design sprint may begin. It does not enable Claude builder execution, scheduler, deploy automation, auto-merge, live DB changes, or paid APIs.
+
 ## 12. Human Approval Gates
 
 Human approval is required for:

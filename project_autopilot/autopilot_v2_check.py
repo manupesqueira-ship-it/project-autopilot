@@ -71,6 +71,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Claude SDK dry-run validator exists", (ap / "claude_sdk_dry_run.py").exists())
     add("Controlled Claude analysis module exists", (ap / "claude_analysis_call.py").exists())
     add("Claude prompt safety module exists", (ap / "claude_prompt_safety.py").exists())
+    add("Claude analysis review module exists", (ap / "claude_analysis_review.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -104,6 +105,15 @@ def run_check(project: ProjectConfig) -> V2Report:
         )
     else:
         add("Latest controlled Claude analysis report acceptable", True, "WARN: no latest analysis report yet; live call is not required")
+    claude_review = _read_json(root / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_review.json")
+    if claude_review:
+        add(
+            "Latest Claude analysis review acceptable",
+            claude_review.get("decision") != "BLOCKED",
+            claude_review.get("decision", "UNKNOWN"),
+        )
+    else:
+        add("Latest Claude analysis review acceptable", True, "WARN: no latest review yet; run claude_analysis_review.py before sandbox design")
     add("Autopilot Definition of Done exists", (pc / "AUTOPILOT_DEFINITION_OF_DONE.md").exists())
     add("Autopilot v2 spec exists", (pc / "AUTOPILOT_V2_SPEC.md").exists())
     add("Control Center exists", (ap / "control_center.py").exists())

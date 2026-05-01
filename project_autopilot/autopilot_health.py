@@ -117,6 +117,32 @@ def claude_analysis_health(project: ProjectConfig) -> dict[str, Any]:
     }
 
 
+def claude_analysis_review_health(project: ProjectConfig) -> dict[str, Any]:
+    json_path = project.repo_path / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_review.json"
+    report_path = project.repo_path / project.logs_dir / "claude" / project.project_id / "latest" / "claude_analysis_review.md"
+    payload = _read_json(json_path)
+    if not payload:
+        return {
+            "decision": "NOT_RUN",
+            "proceed_to_sandbox_design": False,
+            "findings_count": 0,
+            "fixture_recommendations": [],
+            "research_recommendations": [],
+            "report_path": str(report_path),
+            "json_path": str(json_path),
+        }
+    return {
+        "decision": payload.get("decision", "UNKNOWN"),
+        "proceed_to_sandbox_design": bool(payload.get("proceed_to_sandbox_design", False)),
+        "findings_count": len(payload.get("findings", [])),
+        "fixture_recommendations": payload.get("fixture_recommendations", []),
+        "research_recommendations": payload.get("research_recommendations", []),
+        "next_action": payload.get("next_action", ""),
+        "report_path": str(report_path),
+        "json_path": str(json_path),
+    }
+
+
 def _latest_flow_status(project: ProjectConfig) -> dict[str, Any]:
     results_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "flow_results.json"
     report_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "validation_summary.md"
@@ -223,6 +249,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     claude = _claude_readiness(project, provider_payload)
     claude_dry = claude_sdk_dry_run_health(project)
     claude_analysis = claude_analysis_health(project)
+    claude_review = claude_analysis_review_health(project)
 
     subsystem_statuses = {
         "provider_registry": "PASS" if provider_payload.get("configured_provider_count", 0) >= 1 else "FAIL",
@@ -244,6 +271,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_agent_sdk_provider": "DRY_RUN_CONFIGURED" if claude["anthropic_api_key_present"] else "NOT_CONFIGURED",
         "claude_sdk_dry_run": claude_dry["verdict"],
         "controlled_claude_analysis": claude_analysis["verdict"],
+        "claude_analysis_review": claude_review["decision"],
     }
 
     blockers: list[str] = []
@@ -263,6 +291,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("Controlled Claude analysis metadata reports secrets sent.")
     if claude_analysis["live_call_made"] and claude_analysis["anthropic_call_count"] != 1:
         blockers.append("Controlled Claude analysis call count is not exactly one.")
+    if claude_review["decision"] == "BLOCKED":
+        blockers.append("Claude analysis review is blocked.")
 
     warnings: list[str] = []
     if fixture["status"] == "UNKNOWN":
@@ -277,6 +307,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("Latest controlled Claude analysis was blocked by provider/auth/model handling; no retry was attempted.")
     if claude_analysis["verdict"] == "CLAUDE_ANALYSIS_MODEL_NOT_FOUND":
         warnings.append("Latest controlled Claude analysis failed because the configured model was unavailable.")
+    if claude_review["decision"] == "NOT_RUN":
+        warnings.append("Claude analysis review has not run yet; use saved Claude evidence before sandbox design.")
+    elif claude_review["decision"] in {"NEEDS_POLICY_FIXTURE", "NEEDS_RESEARCH", "HUMAN_REVIEW_REQUIRED"}:
+        warnings.append(f"Claude analysis review requires follow-up: {claude_review['decision']}.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -298,8 +332,12 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         next_actions.append("For Claude SDK later: add ANTHROPIC_API_KEY locally, then implement dry-run mode before any live call.")
     elif claude_analysis["verdict"] in {"CLAUDE_ANALYSIS_CALL_BLOCKED", "CLAUDE_ANALYSIS_MODEL_NOT_FOUND"}:
         next_actions.append("Fix Anthropic auth/billing/model configuration, then rerun one approved analysis call when ready.")
+    elif claude_review["decision"] == "NEEDS_POLICY_FIXTURE":
+        next_actions.append("Add or update policy fixtures recommended by Claude analysis review.")
+    elif claude_review["decision"] == "PROCEED_TO_SANDBOX_DESIGN":
+        next_actions.append("Start a sandboxed Claude builder design sprint; keep execution disabled.")
     else:
-        next_actions.append("For Claude SDK later: request explicit approval before the first controlled analysis call.")
+        next_actions.append("Review latest Claude analysis and map it to a policy decision before sandbox design.")
     next_actions.append("Keep scheduler and automatic Claude execution disabled until explicit approval.")
 
     evidence_paths = {
@@ -313,10 +351,18 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_analysis_request_redacted": claude_analysis["request_path"],
         "claude_analysis_response": claude_analysis["response_path"],
         "claude_analysis_metadata": claude_analysis["metadata_path"],
+        "claude_analysis_review": claude_review["report_path"],
+        "claude_analysis_review_json": claude_review["json_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
     }
+
+    safe_next_sprint = (
+        "Design sandboxed Claude builder execution in a dedicated worktree; do not enable execution yet."
+        if claude_review["decision"] == "PROCEED_TO_SANDBOX_DESIGN"
+        else "Prepare a human-approved controlled Claude SDK analysis call; do not enable builder execution yet."
+    )
 
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -328,7 +374,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "external_manual_blockers": _open_blockers(project, limit=5),
         "warnings": warnings[:10],
         "next_actions": next_actions[:5],
-        "safe_next_sprint_recommendation": "Prepare a human-approved controlled Claude SDK analysis call; do not enable builder execution yet.",
+        "safe_next_sprint_recommendation": safe_next_sprint,
         "commands_to_run": [
             f"python -B project_autopilot/agent_loop.py --project {project.project_id} --doctor",
             f"python -B project_autopilot/agent_loop.py --project {project.project_id} --autopilot-health",
@@ -351,6 +397,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_integration_readiness": claude,
         "claude_sdk_dry_run": claude_dry,
         "controlled_claude_analysis": claude_analysis,
+        "claude_analysis_review": claude_review,
         "policy_fixture_suite": fixture,
         "provider_registry": {
             "provider_count": provider_payload.get("provider_count", 0),
@@ -414,6 +461,7 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
     lines.extend(["", "## Evidence Paths"])
     lines.extend(f"- {name}: {path}" for name, path in payload["evidence_paths"].items())
     analysis = payload["controlled_claude_analysis"]
+    review = payload["claude_analysis_review"]
     lines.extend([
         "",
         "## Controlled Claude Analysis",
@@ -428,6 +476,14 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- No file edits: {'yes' if analysis['no_file_edits'] else 'no'}",
         "",
         "Safety: no secrets were printed, no SQL was executed, no builders were executed, and any Anthropic call is limited to the explicit approved analysis command.",
+        "",
+        "## Claude Analysis Review",
+        f"- Decision: {review['decision']}",
+        f"- Proceed to sandbox design: {'yes' if review['proceed_to_sandbox_design'] else 'no'}",
+        f"- Findings: {review['findings_count']}",
+        f"- Fixture recommendations: {', '.join(review['fixture_recommendations']) if review['fixture_recommendations'] else 'none'}",
+        f"- Research recommendations: {len(review['research_recommendations'])}",
+        f"- Report: {review['report_path']}",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
@@ -447,6 +503,7 @@ def main() -> int:
     print(f"  Claude SDK key status: {payload['claude_integration_readiness']['anthropic_api_key_status']}")
     print(f"  Claude SDK dry-run: {payload['claude_integration_readiness']['claude_sdk_dry_run_verdict']}")
     print(f"  Controlled Claude analysis: {payload['controlled_claude_analysis']['verdict']}")
+    print(f"  Claude analysis review: {payload['claude_analysis_review']['decision']}")
     print(f"  Scheduler: {payload['subsystem_statuses']['scheduler']}")
     print(f"  Automatic Claude execution: {payload['subsystem_statuses']['automatic_claude_execution']}")
     print(f"  Blockers: {', '.join(payload['blockers']) if payload['blockers'] else 'none'}")

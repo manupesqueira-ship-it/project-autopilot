@@ -92,6 +92,23 @@ Allowed output is structured analysis only. The call must not suggest direct edi
 
 Claude works only inside a dedicated worktree with strict allowlist/denylist, bounded commands, no secrets, no live DB mutations, and post-builder policy review.
 
+Before this phase, Project Autopilot must review the saved Claude analysis and turn it into a policy decision:
+
+```bash
+python -B project_autopilot/claude_analysis_review.py --project mira --latest
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-review
+```
+
+The review does not call Anthropic. It reads ignored evidence from `logs/claude/<project_id>/latest/`, extracts risks, maps them to policy gates, identifies fixture/research/documentation gaps, and emits one of:
+
+- `PROCEED_TO_SANDBOX_DESIGN`
+- `NEEDS_POLICY_FIXTURE`
+- `NEEDS_RESEARCH`
+- `BLOCKED`
+- `HUMAN_REVIEW_REQUIRED`
+
+Proceeding to sandbox design is not permission for builder execution. Scheduler, automatic Claude execution, auto-merge, deploy automation, live database work, and paid APIs remain disabled.
+
 ### Phase 3: Limited Automatic Execution
 
 Only after repeated dry-run and sandbox success. Scheduler, automatic Claude execution, and auto-commit remain separate approvals.

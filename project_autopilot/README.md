@@ -897,6 +897,32 @@ The scheduler should wait until manual cycles are boringly reliable. Before sche
 - Retry/backoff policy reviewed for production use.
 - Telegram alerts confirmed working for error and success paths.
 
+## Claude Analysis Review
+
+After a controlled Claude analysis call, convert the saved response into a local policy decision:
+
+```bash
+python -B project_autopilot/claude_analysis_review.py --project mira --latest
+python -B project_autopilot/agent_loop.py --project mira --claude-analysis-review
+```
+
+This review does not call Anthropic or any other external API. It reads `logs/claude/<project_id>/latest/`, extracts risks/recommendations, maps them to Project Autopilot gates, and writes:
+
+```text
+logs/claude/<project_id>/latest/claude_analysis_review.md
+logs/claude/<project_id>/latest/claude_analysis_review.json
+```
+
+Review decisions:
+
+- `PROCEED_TO_SANDBOX_DESIGN`: begin the sandbox design sprint only.
+- `NEEDS_POLICY_FIXTURE`: add deterministic fixture coverage first.
+- `NEEDS_RESEARCH`: create/approve research before implementation.
+- `BLOCKED`: stop and resolve missing safety coverage.
+- `HUMAN_REVIEW_REQUIRED`: record the decision before proceeding.
+
+The review is still not builder execution. Claude cannot edit files, run commands, use tools, auto-merge, deploy, touch live databases, or enable scheduler/automatic execution.
+
 ### Systemd Templates
 
 Template files for future VPS deployment:

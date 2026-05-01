@@ -116,6 +116,24 @@ Completion requires:
 5. Evidence exists under ignored `logs/claude/<project_id>/latest/`.
 6. Scheduler and automatic Claude execution remain disabled.
 
+## Claude Analysis Review Gate
+
+After controlled Claude analysis, the saved response must be reviewed locally:
+
+```bash
+python -B project_autopilot/claude_analysis_review.py --project mira --latest
+```
+
+The review must:
+
+1. Read saved evidence only.
+2. Make no external API calls.
+3. Map Claude risks to Project Autopilot gates.
+4. Identify policy fixture, research, blocker, documentation, sandbox, worktree, rollback, and commit-safety implications.
+5. Produce a formal decision before sandbox design.
+
+`PROCEED_TO_SANDBOX_DESIGN` allows only the next design sprint. It does not permit Claude builder execution, scheduler activation, auto-merge, deployment, live database work, or paid APIs.
+
 ## Stop Conditions
 
 Stop and ask for human approval before secrets, env files, git history, destructive commands, deployment, live Supabase changes, SQL/RLS/storage policies, paid APIs, scheduler enablement, automatic Claude execution, or parallel writes without worktrees.

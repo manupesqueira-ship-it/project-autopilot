@@ -147,3 +147,23 @@ Rules:
 - Do not use deprecated 3.5/3.7 Claude model aliases. Use `claude-sonnet-4-6` only when stronger analysis is explicitly needed and available.
 
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.
+
+## Claude Analysis Review Gate
+
+After a controlled Claude analysis call, Project Autopilot must convert the saved analysis into a local policy decision before starting sandboxed builder design:
+
+```bash
+python -B project_autopilot/claude_analysis_review.py --project mira --latest
+```
+
+The review reads ignored evidence only and must not call Anthropic, OpenAI, Supabase, or paid APIs. It maps Claude recommendations to provider, post-builder policy, evidence, blocker, sandbox/tool, command, commit, rollback, worktree, research, and fixture gates.
+
+Allowed review verdicts:
+
+- `PROCEED_TO_SANDBOX_DESIGN`: design the sandbox only; do not execute builders.
+- `NEEDS_POLICY_FIXTURE`: add deterministic policy fixture coverage first.
+- `NEEDS_RESEARCH`: create/approve a research request before implementation.
+- `BLOCKED`: stop and resolve the missing safety gate.
+- `HUMAN_REVIEW_REQUIRED`: record the human decision before proceeding.
+
+Sandboxed Claude builder execution remains a separate future approval even when the review says sandbox design may proceed.

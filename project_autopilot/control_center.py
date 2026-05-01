@@ -416,6 +416,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Claude analysis redacted request", "Sanitized request used for controlled Claude analysis", logs / "claude" / pid / "latest" / "claude_analysis_request_redacted.md", "planning"),
         _entry("Claude analysis response", "Saved analysis-only Claude response", logs / "claude" / pid / "latest" / "claude_analysis_response.md", "planning"),
         _entry("Claude analysis metadata", "Machine-readable controlled analysis safety metadata", logs / "claude" / pid / "latest" / "claude_analysis_metadata.json", "planning"),
+        _entry("Claude analysis review", "Maps saved Claude analysis to policy gates and sandbox-design decision", logs / "claude" / pid / "latest" / "claude_analysis_review.md", "planning"),
+        _entry("Claude analysis review JSON", "Machine-readable Claude analysis review decision", logs / "claude" / pid / "latest" / "claude_analysis_review.json", "planning"),
     ]
     return items
 
@@ -535,6 +537,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["autopilot_health"] = _read_json(logs / f"{pid}_autopilot_health_latest.json")
     data["claude_sdk_dry_run"] = _read_json(logs / f"{pid}_claude_sdk_dry_run_latest.json")
     data["claude_analysis"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_metadata.json")
+    data["claude_analysis_review"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_review.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1614,6 +1617,29 @@ def _render_controlled_claude_analysis(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_claude_analysis_review(d: dict[str, Any]) -> str:
+    review = d.get("claude_analysis_review", {})
+    if not review:
+        return '<div class="empty-state">No Claude analysis review yet. Run project_autopilot/claude_analysis_review.py --project mira --latest.</div>'
+    pid = d.get("project_id")
+    findings = review.get("findings", [])
+    fixture_recs = review.get("fixture_recommendations", [])
+    top_categories = [item.get("category", "unknown") for item in findings[:5] if isinstance(item, dict)]
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Decision", review.get("decision", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("Proceed to sandbox design", "yes" if review.get("proceed_to_sandbox_design") else "no")}</div>')
+    lines.append(f'<div>{_kv("Findings", str(len(findings)))}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Top risks", ", ".join(top_categories) if top_categories else "none")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Fixture gaps", ", ".join(fixture_recs) if fixture_recs else "none")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Next action", review.get("next_action", ""))}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Report", f"logs/claude/{pid}/latest/claude_analysis_review.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("JSON", f"logs/claude/{pid}/latest/claude_analysis_review.json", mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1910,6 +1936,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7g. Controlled Claude analysis
         _section("claude-analysis", "Controlled Claude Analysis", _render_controlled_claude_analysis(d)),
+
+        # 7h. Claude analysis review
+        _section("claude-analysis-review", "Claude Analysis Review", _render_claude_analysis_review(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

@@ -45,6 +45,12 @@ AUTO_CLAUDE_NEGATION_WORDS = ["automatic claude execution remains disabled", "au
 CLAUDE_SDK_LIVE_WORDS = ["claude agent sdk live", "live claude sdk", "called claude agent sdk", "anthropic api call"]
 CLAUDE_SDK_APPROVAL_WORDS = ["explicit human approval", "approval granted", "human approved live claude"]
 CLAUDE_SDK_NEGATION_WORDS = ["no anthropic api call", "no live claude", "no external call", "without calling anthropic"]
+PROVIDER_ROUTING_RISK_WORDS = ["provider routing mismatch", "unapproved provider", "provider whitelist bypass"]
+POLICY_BYPASS_WORDS = ["policy gate bypass", "skip policy gates", "bypass post-builder policy"]
+EVIDENCE_INTEGRITY_WORDS = ["fabricated evidence", "missing evidence bundle", "ignored blockers", "stale blockers"]
+SANDBOX_ESCAPE_WORDS = ["sandbox escape", "unintended tool access", "enabled shell command execution", "host system access", "credential api access"]
+WORKTREE_RISK_WORDS = ["builder execution without worktree", "parallel writes without worktree", "without dedicated worktree"]
+ROLLBACK_RISK_WORDS = ["auto-merge without rollback", "rollback missing", "unsafe commit without rollback"]
 
 
 @dataclass(frozen=True)
@@ -336,6 +342,18 @@ def evaluate_post_builder_policy(
     )
     if claude_live_without_approval:
         safety_blocks.append("Claude Agent SDK live call without explicit approval detected.")
+    if _mentions_any(lower, PROVIDER_ROUTING_RISK_WORDS):
+        safety_blocks.append("Provider routing/whitelist risk detected.")
+    if _mentions_any(lower, POLICY_BYPASS_WORDS):
+        safety_blocks.append("Policy gate bypass risk detected.")
+    if _mentions_any(lower, EVIDENCE_INTEGRITY_WORDS):
+        safety_blocks.append("Evidence/blocker integrity risk detected.")
+    if _mentions_any(lower, SANDBOX_ESCAPE_WORDS):
+        safety_blocks.append("Sandbox/tool/command escape risk detected.")
+    if _mentions_any(lower, WORKTREE_RISK_WORDS):
+        safety_blocks.append("Builder worktree isolation risk detected.")
+    if _mentions_any(lower, ROLLBACK_RISK_WORDS):
+        safety_blocks.append("Commit rollback/readiness risk detected.")
     gates.append(_gate(
         "secrets_env_gate",
         "BLOCKED" if any("Secrets/env" in item for item in safety_blocks) else "PASS",

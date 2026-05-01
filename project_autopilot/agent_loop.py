@@ -40,6 +40,7 @@ from backend_audit import run_backend_audit
 from control_center import generate_control_center
 from autopilot_health import build_health, claude_sdk_dry_run_health, policy_fixture_health, write_reports as write_autopilot_health_reports
 from claude_analysis_call import run_analysis as run_claude_analysis_call
+from claude_analysis_review import review_latest as review_latest_claude_analysis, write_review as write_claude_analysis_review
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
 from policy_test_fixtures import run as run_policy_fixture_suite
 
@@ -1108,6 +1109,21 @@ def run_claude_analysis_cmd(project_id: str, task: str, approved_live_call: bool
     return exit_code
 
 
+def run_claude_analysis_review_cmd(project_id: str) -> int:
+    project = load_project(project_id)
+    review = review_latest_claude_analysis(project)
+    md_path, json_path = write_claude_analysis_review(project, review)
+    print(f"Claude Analysis Review: {review.decision}")
+    print(f"  Proceed to sandbox design: {'yes' if review.proceed_to_sandbox_design else 'no'}")
+    print(f"  Extracted risks: {len(review.extracted_risks)}")
+    print(f"  Findings: {len(review.findings)}")
+    print(f"  Fixture recommendations: {', '.join(review.fixture_recommendations) if review.fixture_recommendations else 'none'}")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {review.next_action}")
+    return 2 if review.decision == "BLOCKED" else 0
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1502,6 +1518,7 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --autopilot-health\n"
             "  python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run\n"
             "  python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --claude-analysis-review\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -1533,6 +1550,7 @@ def main() -> int:
     group.add_argument("--claude-sdk-dry-run", action="store_true", help="Validate Claude Agent SDK dry-run readiness without external calls.")
     group.add_argument("--claude-analysis-dry-run", action="store_true", help="Build a sanitized Claude analysis prompt without calling Anthropic.")
     group.add_argument("--claude-analysis-approved", action="store_true", help="Make one explicit analysis-only Anthropic call.")
+    group.add_argument("--claude-analysis-review", action="store_true", help="Review saved Claude analysis evidence and map it to policy decisions.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
 
@@ -1586,6 +1604,8 @@ def main() -> int:
         return run_claude_analysis_cmd(args.project, args.task, approved_live_call=False)
     if args.claude_analysis_approved:
         return run_claude_analysis_cmd(args.project, args.task, approved_live_call=True)
+    if args.claude_analysis_review:
+        return run_claude_analysis_review_cmd(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

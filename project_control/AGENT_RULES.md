@@ -69,4 +69,6 @@ Builders must:
 - A controlled live Claude analysis call is a future phase and requires explicit approval for that exact call. It must be analysis-only until sandboxed builder execution is separately approved.
 - Controlled Claude analysis is allowed only with `--claude-analysis-approved`; dry-run uses `--claude-analysis-dry-run`.
 - Controlled Claude analysis must sanitize prompts, send no secrets, use no tools, edit no files, execute no commands, and write evidence under ignored `logs/claude/`.
+- Saved Claude analysis must be reviewed locally with `python -B project_autopilot/claude_analysis_review.py --project mira --latest` before sandboxed Claude builder design starts.
+- Claude analysis review may recommend sandbox design, fixtures, research, blockers, or human review, but it must not call external APIs or grant builder execution permission.
 - Claude builder execution remains blocked until a separate sandboxed worktree sprint explicitly enables it.
