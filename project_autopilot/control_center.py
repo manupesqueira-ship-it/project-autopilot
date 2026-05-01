@@ -362,6 +362,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Builder prompt", "Latest prompt sent to builder", Path(data.get("builder_prompt_path", "")) if data.get("builder_prompt_path") else logs / f"{pid}_builder_prompt_latest.md", "builder_handoff"),
         _entry("Correction prompt", "QA-generated fix instructions", logs / f"{pid}_correction_prompt_latest.md", "qa_verdict"),
         _entry("Post-builder report", "Builder output QA intake", logs / f"{pid}_post_builder_latest.md", "qa_verdict"),
+        _entry("Post-builder policy report", "Unified v2 post-builder safety verdict", logs / f"{pid}_post_builder_policy_latest.md", "qa_verdict"),
+        _entry("Post-builder policy JSON", "Machine-readable v2 policy verdict", logs / f"{pid}_post_builder_policy_latest.json", "qa_verdict"),
         _entry("Run history", "JSONL event stream", logs / f"run_history/{pid}.jsonl", "observability"),
         _entry("Research index", "Research request log", logs / f"research/{pid}_index.jsonl", "research"),
         _entry("Task state", "Current task lifecycle state", logs / f"{pid}_task_state.json", "planning"),
@@ -519,6 +521,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["research_director"] = _read_json(logs / f"{pid}_research_director_latest.json")
     data["builder_orchestrator"] = _read_json(logs / f"{pid}_builder_orchestrator_latest.json")
     data["autopilot_v2_check"] = _read_json(logs / f"{pid}_autopilot_v2_check_latest.json")
+    data["post_builder_policy"] = _read_json(logs / f"{pid}_post_builder_policy_latest.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1458,6 +1461,35 @@ def _render_autopilot_v2(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_post_builder_policy(d: dict[str, Any]) -> str:
+    policy = d.get("post_builder_policy", {})
+    if not policy:
+        return '<div class="empty-state">No post-builder policy report yet. Run --post-builder or --policy-check.</div>'
+    verdict = policy.get("policy_verdict", {})
+    failed = policy.get("failed_gates", [])
+    fixes = policy.get("required_fixes", [])
+    decisions = policy.get("human_decisions_needed", [])
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Policy verdict", verdict.get("verdict", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("Safe commit", "yes" if verdict.get("safe_commit_allowed") else "no")}</div>')
+    lines.append(f'<div>{_kv("Human review", "yes" if verdict.get("human_review_required") else "no")}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Failed gates", ", ".join(failed) if failed else "none")}</div>')
+    lines.append(f'<div>{_kv("Required fixes", str(len(fixes)))}</div>')
+    lines.append(f'<div>{_kv("Human decisions", str(len(decisions)))}</div>')
+    lines.append('</div>')
+    if fixes:
+        lines.append('<div style="margin-top:8px"><span class="kv-label">Top fixes</span><ul style="margin:4px 0 0 18px">')
+        for fix in fixes[:5]:
+            lines.append(f"<li>{_h(fix)}</li>")
+        lines.append("</ul></div>")
+    lines.append(f'<div style="margin-top:8px">{_kv("Report", f"logs/{d.get('project_id')}_post_builder_policy_latest.md", mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1739,6 +1771,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7b. Autopilot v2 readiness
         _section("autopilot-v2", "Project Autopilot v2 Readiness", _render_autopilot_v2(d)),
+
+        # 7c. Post-builder policy
+        _section("post-builder-policy", "Post-Builder Policy Enforcement", _render_post_builder_policy(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

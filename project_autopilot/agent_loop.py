@@ -27,6 +27,7 @@ from state_manager import load_state, record_blocker, save_state, write_failure_
 from task_state import load_task_state, transition_task_state
 from browser_qa import diagnose_browser_qa, report_to_evidence, run_browser_qa, write_browser_qa_diagnostics_report, write_browser_qa_report
 from builder_intake import intake_builder_report, verdict_as_dict, verdict_to_state
+from post_builder_policy import check_current, write_policy_report
 from claude_runner import detect_claude_cli, handoff_execute, handoff_manual, resolve_prompt_path
 from telegram_alerts import send_alert
 from risk_classifier import classify_task, format_risk_assessment
@@ -891,20 +892,45 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
     transition_task_state(project, "validating", "Post-builder intake started.", run_id=run_id)
     result = intake_builder_report(project, report_path, run_validation=True, run_id=run_id)
     verdict = result["verdict"]
+    policy_report = result.get("policy_report")
     append_event(
         project,
         run_id,
         "qa_verdict_created",
         {"verdict": verdict.verdict, "risk_level": verdict.risk_level, "recommended_next_action": verdict.recommended_next_action},
     )
-    target_state = verdict_to_state(verdict)
-    transition_task_state(project, target_state, f"Post-builder verdict: {verdict.verdict}.", run_id=run_id)
+    if policy_report:
+        append_event(
+            project,
+            run_id,
+            "post_builder_policy_created",
+            {
+                "verdict": policy_report.policy_verdict.verdict,
+                "safe_commit_allowed": policy_report.policy_verdict.safe_commit_allowed,
+                "failed_gates": policy_report.failed_gates,
+            },
+        )
+        if policy_report.policy_verdict.verdict in {"SAFE_TO_COMMIT", "SAFE_NO_CHANGES"}:
+            target_state = "passed"
+        elif policy_report.policy_verdict.verdict == "NEEDS_FIX":
+            target_state = "needs_fix"
+        elif policy_report.policy_verdict.verdict in {"BLOCKED", "HUMAN_REVIEW_REQUIRED"}:
+            target_state = "blocked"
+        else:
+            target_state = verdict_to_state(verdict)
+        transition_task_state(project, target_state, f"Post-builder policy verdict: {policy_report.policy_verdict.verdict}.", run_id=run_id)
+    else:
+        target_state = verdict_to_state(verdict)
+        transition_task_state(project, target_state, f"Post-builder verdict: {verdict.verdict}.", run_id=run_id)
 
     state = load_state(project)
-    state["last_status"] = f"post_builder_{verdict.verdict.lower()}"
+    status_suffix = policy_report.policy_verdict.verdict.lower() if policy_report else verdict.verdict.lower()
+    state["last_status"] = f"post_builder_{status_suffix}"
     state["last_qa_verdict"] = verdict_as_dict(verdict)
     state["last_log"] = str(result["intake_log_path"].relative_to(project.repo_path))
     state["last_evidence_bundle"] = str(result["bundle_path"].relative_to(project.repo_path))
+    if result.get("policy_report_path"):
+        state["last_post_builder_policy"] = str(result["policy_report_path"].relative_to(project.repo_path))
     correction_prompt_path = result.get("correction_prompt_path")
     if correction_prompt_path:
         state["last_correction_prompt"] = str(correction_prompt_path.relative_to(project.repo_path))
@@ -916,22 +942,33 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
         )
     save_state(project, state)
 
-    if verdict.verdict in {"BLOCKED", "HUMAN_DECISION_REQUIRED"}:
+    policy_blocked = policy_report and policy_report.policy_verdict.verdict in {"BLOCKED", "HUMAN_REVIEW_REQUIRED"}
+    if verdict.verdict in {"BLOCKED", "HUMAN_DECISION_REQUIRED"} or policy_blocked:
+        policy_text = ""
+        if policy_report:
+            policy_text = (
+                f"\n\nUnified policy verdict:\n{policy_report.policy_verdict.verdict}\n\n"
+                f"Failed gates:\n{', '.join(policy_report.failed_gates) or 'none'}\n\n"
+                "Human decisions needed:\n"
+                + "\n".join(f"- {item}" for item in policy_report.human_decisions_needed or ["None"])
+            )
         body = (
             "Status: open\nSeverity: blocking\nSource: Project Autopilot post-builder QA\n\n"
-            f"Question or blocker:\n{verdict.verdict}\n\n"
+            f"Question or blocker:\n{policy_report.policy_verdict.verdict if policy_report else verdict.verdict}\n\n"
             f"Post-builder log:\n{state['last_log']}\n\n"
-            f"Recommended action:\n{verdict.recommended_next_action}"
+            f"Recommended action:\n{policy_report.next_action if policy_report else verdict.recommended_next_action}"
+            f"{policy_text}"
         )
-        record_blocker(project, f"Post-builder QA: {verdict.verdict}", body)
+        blocker_title = f"Post-builder QA: {policy_report.policy_verdict.verdict if policy_report else verdict.verdict}"
+        record_blocker(project, blocker_title, body)
         append_event(
             project,
             run_id,
             "blocker_recorded",
-            {"title": f"Post-builder QA: {verdict.verdict}", "log": state["last_log"]},
+            {"title": blocker_title, "log": state["last_log"]},
         )
 
-    if verdict.verdict == "RESEARCH_REQUIRED":
+    if verdict.verdict == "RESEARCH_REQUIRED" or (policy_report and policy_report.policy_verdict.verdict == "HUMAN_REVIEW_REQUIRED" and policy_report.characteristics.requires_research_review):
         record_research_request(
             project,
             run_id,
@@ -943,12 +980,12 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
     record_run_finished(
         project,
         run_id,
-        f"post_builder_{verdict.verdict.lower()}",
+        f"post_builder_{status_suffix}",
         _cost_finish_details(
             project,
             CostController(project),
             result["evidence"],
-            outcome=verdict.verdict,
+            outcome=policy_report.policy_verdict.verdict if policy_report else verdict.verdict,
             qa_verdict=verdict.verdict,
             risk_level=verdict.risk_level,
         ),
@@ -958,13 +995,40 @@ def run_builder_intake(project_id: str, report_path: str) -> int:
     print(f"Run id: {run_id}")
     print(f"Verdict: {verdict.verdict}")
     print(f"Risk level: {verdict.risk_level}")
+    if policy_report:
+        print(f"Unified policy verdict: {policy_report.policy_verdict.verdict}")
+        print(f"Safe commit allowed: {policy_report.policy_verdict.safe_commit_allowed}")
+        print(f"Failed gates: {', '.join(policy_report.failed_gates) if policy_report.failed_gates else 'none'}")
+        print(f"Policy report: {result['policy_report_path']}")
     print(f"Post-builder log: {result['intake_log_path']}")
     print(f"Evidence bundle: {result['bundle_path']}")
     if correction_prompt_path:
         print(f"Correction prompt: {correction_prompt_path}")
-    print(f"Recommended next action: {verdict.recommended_next_action}")
+    print(f"Recommended next action: {policy_report.next_action if policy_report else verdict.recommended_next_action}")
 
+    if policy_report:
+        return 0 if policy_report.policy_verdict.verdict in {"SAFE_TO_COMMIT", "SAFE_NO_CHANGES"} else 1
     return 0 if verdict.verdict == "PASS" else 1
+
+
+def run_policy_check(project_id: str) -> int:
+    project = load_project(project_id)
+    ensure_project_dirs(project)
+    report = check_current(project)
+    md_path, json_path = write_policy_report(project, report)
+    state = load_state(project)
+    state["last_post_builder_policy"] = str(md_path.relative_to(project.repo_path))
+    state["last_status"] = f"policy_check_{report.policy_verdict.verdict.lower()}"
+    save_state(project, state)
+    print(f"Policy check: {project.project_name} ({project.project_id})")
+    print(f"Verdict: {report.policy_verdict.verdict}")
+    print(f"Safe commit allowed: {report.policy_verdict.safe_commit_allowed}")
+    print(f"Failed gates: {', '.join(report.failed_gates) if report.failed_gates else 'none'}")
+    print(f"Warnings: {len(report.warnings)}")
+    print(f"Report: {md_path}")
+    print(f"JSON: {json_path}")
+    print(f"Next action: {report.next_action}")
+    return 0
 
 
 def run_doctor(project_id: str) -> int:
@@ -1345,6 +1409,7 @@ def main() -> int:
     group.add_argument("--new-validation-report", action="store_true", help="Create a blank product validation report draft.")
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
     group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
+    group.add_argument("--policy-check", action="store_true", help="Evaluate current working tree with v2 post-builder policy gates.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
 
     args = parser.parse_args()
@@ -1385,6 +1450,8 @@ def main() -> int:
         return run_builder_intake(args.project, args.intake_builder_report)
     if args.post_builder:
         return run_builder_intake(args.project, args.post_builder)
+    if args.policy_check:
+        return run_policy_check(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

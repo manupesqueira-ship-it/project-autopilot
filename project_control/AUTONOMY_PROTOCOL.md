@@ -74,3 +74,15 @@ Project Autopilot coordinates work; it does not replace Codex, Claude Code, Lova
 - Paid APIs remain disabled by default.
 - Worktrees are required for parallel writes.
 - Live DB/RLS/storage changes require explicit human approval and must never run as hidden side effects.
+
+## v2 Post-Builder Policy
+
+After builder work, Project Autopilot must run `--post-builder` or `--policy-check` to produce a unified verdict.
+
+- `SAFE_TO_COMMIT`: commit may proceed if generated logs/screenshots are not staged.
+- `NEEDS_FIX`: create or use a correction prompt, then rerun validation.
+- `BLOCKED`: stop and record blocker or human decision need.
+- `HUMAN_REVIEW_REQUIRED`: pause for human review, design review, research approval, or risk acceptance.
+- `SAFE_NO_CHANGES`: no commit required.
+
+Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

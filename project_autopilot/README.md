@@ -34,9 +34,28 @@ python -B project_autopilot/research_director.py --project mira --status
 python -B project_autopilot/builder_orchestrator.py --project mira --status
 python -B project_autopilot/builder_orchestrator.py --project mira --plan "Improve MIRA result page design"
 python -B project_autopilot/autopilot_v2_check.py --project mira
+python -B project_autopilot/agent_loop.py --project mira --policy-check
 ```
 
 These commands do not execute builders, call Anthropic/OpenAI, call paid APIs, deploy, or mutate live databases.
+
+### v2 Post-Builder Policy
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --post-builder logs/<builder_report>.md
+```
+
+`--post-builder` now produces one unified policy verdict:
+
+| Verdict | Meaning |
+|---|---|
+| `SAFE_TO_COMMIT` | All applicable hard gates passed. Commit may proceed if generated logs/screenshots are not staged. |
+| `NEEDS_FIX` | Fixable gate failure. Use the correction prompt and rerun validation. |
+| `BLOCKED` | Hard safety gate. Do not bypass; record blocker or request human decision. |
+| `HUMAN_REVIEW_REQUIRED` | Human visual/research/security/strategic review is required. |
+| `SAFE_NO_CHANGES` | No working-tree changes were detected. |
+
+Policy gates include provider status, risk, scope, forbidden files, secrets/env, validation, design, research, backend, Flow QA/mock E2E, evidence, Definition of Done, and human approval gates.
 
 ## Quality Standard
 

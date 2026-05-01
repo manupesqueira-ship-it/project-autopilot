@@ -54,3 +54,8 @@ Builders must:
 - Paid APIs are disabled by default.
 - Worktrees are required for parallel writes.
 - No live database, RLS, storage, or Supabase changes may happen without explicit human approval.
+- `--post-builder` must produce a unified v2 policy verdict before work is considered committable.
+- `SAFE_TO_COMMIT` is the only v2 post-builder verdict that permits commit without additional fixes or review.
+- `NEEDS_FIX` requires a correction prompt and a new validation pass.
+- `BLOCKED` must not be bypassed by a builder; request human decision or choose a safer alternative.
+- `HUMAN_REVIEW_REQUIRED` requires an explicit human decision before commit.

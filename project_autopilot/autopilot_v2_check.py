@@ -61,6 +61,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
+    add("Post-builder policy enforcement exists", (ap / "post_builder_policy.py").exists())
     add("Autopilot Definition of Done exists", (pc / "AUTOPILOT_DEFINITION_OF_DONE.md").exists())
     add("Autopilot v2 spec exists", (pc / "AUTOPILOT_V2_SPEC.md").exists())
     add("Control Center exists", (ap / "control_center.py").exists())

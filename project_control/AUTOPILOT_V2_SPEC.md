@@ -118,6 +118,20 @@ Every meaningful run should leave evidence:
 - Research requests when relevant.
 - Blockers and human questions.
 
+## 11.1 Post-Builder Policy Enforcement
+
+After a builder finishes, Project Autopilot must decide whether the work is safe to commit. The v2 post-builder policy consumes provider status, risk classification, changed files, forbidden path checks, validation evidence, Design Director, Research Director, backend audit, Flow QA, evidence bundles, and the Definition of Done.
+
+Unified verdicts:
+
+- `SAFE_TO_COMMIT`
+- `NEEDS_FIX`
+- `BLOCKED`
+- `HUMAN_REVIEW_REQUIRED`
+- `SAFE_NO_CHANGES`
+
+`SAFE_TO_COMMIT` requires all applicable hard gates to pass. `NEEDS_FIX` means a builder can safely correct the work. `BLOCKED` means the builder must not bypass the gate and a human decision or safer alternative is required. `HUMAN_REVIEW_REQUIRED` means the system cannot honestly approve the work without human visual, research, security, or strategic review.
+
 ## 12. Human Approval Gates
 
 Human approval is required for:
@@ -154,6 +168,7 @@ These are not enabled in v2 foundation.
 - Describe available providers.
 - Route tasks to an appropriate builder mode.
 - Create strict design and research gates.
+- Enforce unified post-builder policy gates before commit.
 - Produce readiness reports.
 - Generate evidence and Control Center state.
 - Block unsafe work before execution.
