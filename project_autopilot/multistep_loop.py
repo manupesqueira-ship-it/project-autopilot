@@ -29,6 +29,8 @@ STATES = [
     "WORKTREE_CREATED",
     "WORKTREE_CLEANUP_REQUIRED",
     "WORKTREE_CLEANED_UP",
+    "MANUAL_CLAUDE_HANDOFF_READY",
+    "WAITING_FOR_MANUAL_CLAUDE_REPORT",
     "ASSIGNED_TO_CLAUDE",
     "ASSIGNED_TO_CODEX",
     "BUILDER_RUNNING",
@@ -133,6 +135,7 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
             "sandbox_simulation_gate",
             "sandbox_runner_approval_gate",
             "worktree_creation_only_gate",
+            "manual_handoff_gate",
             *auditor.required_policy_gates,
         }
     )
@@ -149,6 +152,8 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
         LoopStep("WORKTREE_CREATED", "project_autopilot", "Create a sandbox worktree outside the main repo and write evidence; do not run Claude.", ["worktree_creation_only_gate", "evidence_gate"]),
         LoopStep("WORKTREE_CLEANUP_REQUIRED", "project_autopilot", "Mark cleanup as required immediately after creation.", ["rollback_gate"]),
         LoopStep("WORKTREE_CLEANED_UP", "project_autopilot", "Remove only the recorded sandbox worktree path with explicit cleanup approval.", ["rollback_gate", "evidence_gate"]),
+        LoopStep("MANUAL_CLAUDE_HANDOFF_READY", "project_autopilot", "Generate a no-secret manual Claude Code handoff packet for the approved sandbox worktree.", ["manual_handoff_gate", "prompt_safety_gate"]),
+        LoopStep("WAITING_FOR_MANUAL_CLAUDE_REPORT", "human", "Human runs Claude Code manually in the sandbox and returns a builder report.", ["evidence_gate"]),
         LoopStep(assigned_state, "project_autopilot", f"Prepare handoff for {builder_label}; execution remains disabled.", ["human_approval_gate"]),
         LoopStep("BUILDER_BLOCKED", "builder", "If blocked, return blocker report to OpenAI Auditor.", ["evidence_gate"]),
         LoopStep("OPENAI_REVIEWING_BLOCKER", "openai_auditor", "Diagnose blocker and draft correction instructions.", ["research_gate"]),

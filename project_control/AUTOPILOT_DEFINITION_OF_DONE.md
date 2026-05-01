@@ -201,3 +201,15 @@ If a sprint implements approved sandbox worktree creation, completion additional
 7. Claude execution remains disabled.
 8. No file edits, commits, merges, external APIs, SQL/RLS, deploy, scheduler, automatic Claude execution, or product code changes occur.
 9. Policy fixtures cover worktree creation without approval, inside-main-repo paths, arbitrary cleanup, missing evidence, missing cleanup plan, auto-merge, and builder execution.
+
+## Manual Claude Handoff Gates
+
+If a sprint implements manual Claude handoff into a sandbox worktree, completion additionally requires:
+
+1. `python -B project_autopilot/claude_manual_handoff.py --project mira --task "<task>" --dry-run`.
+2. `python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "<task>"`.
+3. One create-approved handoff smoke command succeeds or is cleanly blocked.
+4. Any created sandbox worktree is clean and documented.
+5. The handoff packet includes sandbox path, branch, allowlists, denylists, no-secret/no-env/no-SQL/no-deploy/no-paid-API rules, stop conditions, builder report format, post-builder command, and cleanup command.
+6. Project Autopilot does not execute Claude, call Anthropic/OpenAI, edit sandbox files, commit in the sandbox, merge, deploy, run SQL/RLS, or touch product code.
+7. Policy fixtures cover manual handoff dry-run, approved worktree requirement, no Claude execution, no Anthropic call, secret exclusion, env denial, SQL/deploy/paid API denial, builder report format, post-builder policy, and cleanup command.

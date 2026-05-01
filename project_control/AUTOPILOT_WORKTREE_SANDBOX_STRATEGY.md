@@ -378,4 +378,17 @@ Current behavior:
 - Approval statuses are future-only.
 - Runner plan and approval preview are evidence only.
 
-Future first execution phase should be limited to human-approved worktree creation only. Claude builder execution must remain a separate later approval.
+## 16. Manual Claude Handoff
+
+After an approved sandbox worktree exists, Project Autopilot may generate a manual Claude Code handoff packet:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-create-approved --task "<task>"
+```
+
+The handoff packet tells the human to open Claude Code in the sandbox worktree path and paste the packet manually. It includes allowlists, denylists, stop conditions, validation commands, the required builder report format, the post-builder intake command, and cleanup instructions.
+
+This is still manual-only. Project Autopilot must not execute Claude, call Anthropic/OpenAI, run Claude Code, edit sandbox files, commit in the sandbox, merge to master, read env files, deploy, execute SQL/RLS, call paid APIs, enable scheduler, or enable automatic Claude execution.
+
+The next phase is the first real manual Claude builder task inside an approved sandbox worktree, followed by `--post-builder <report>` policy review.

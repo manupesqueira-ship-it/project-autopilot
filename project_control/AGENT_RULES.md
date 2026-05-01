@@ -84,3 +84,6 @@ Builders must:
 - The runner must reject missing approval, missing rollback, missing post-builder policy, env/secret scope, direct master writes, auto-merge, unapproved worktree creation, arbitrary cleanup paths, and builder execution.
 - `--claude-sandbox-runner-dry-run` may write ignored evidence only; it must not execute Claude or create a worktree.
 - `--claude-worktree-smoke-test` may create and cleanup one temporary sandbox worktree; it must not execute Claude, edit files, commit, merge, call external APIs, or touch product code.
+- `--claude-manual-handoff-dry-run` may generate a no-secret manual Claude Code handoff packet only; it must not create a worktree or execute Claude.
+- `--claude-manual-handoff-create-approved` may create one approved sandbox worktree and packet for a human-operated Claude Code session; Project Autopilot must not run Claude Code, call Anthropic/OpenAI, edit sandbox files, commit, merge, auto-merge, deploy, read env files, run SQL/RLS, call paid APIs, enable scheduler, or enable automatic Claude execution.
+- Manual Claude handoff output must require a builder report and `--post-builder <report>` before any commit/merge decision.

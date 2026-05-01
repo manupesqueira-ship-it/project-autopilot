@@ -437,6 +437,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Claude worktree creation JSON", "Machine-readable worktree creation evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_creation.json", "planning"),
         _entry("Claude worktree cleanup", "Approved sandbox worktree cleanup evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.md", "planning"),
         _entry("Claude worktree cleanup JSON", "Machine-readable worktree cleanup evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.json", "planning"),
+        _entry("Manual Claude handoff packet", "Human-paste Claude Code handoff packet", logs / "claude_sandbox" / pid / "latest" / "manual_handoff_packet.md", "planning"),
+        _entry("Manual Claude handoff JSON", "Machine-readable manual handoff metadata", logs / "claude_sandbox" / pid / "latest" / "manual_handoff_metadata.json", "planning"),
     ]
     return items
 
@@ -567,6 +569,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["claude_sandbox_approval"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_approval_contract_preview.json")
     data["claude_worktree_creation"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_creation.json")
     data["claude_worktree_cleanup"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.json")
+    data["manual_claude_handoff"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "manual_handoff_metadata.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1791,6 +1794,26 @@ def _render_claude_worktree_creation(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_manual_claude_handoff(d: dict[str, Any]) -> str:
+    handoff = d.get("manual_claude_handoff", {})
+    pid = d.get("project_id")
+    if not handoff:
+        return '<div class="empty-state">No manual Claude handoff packet yet. Run --claude-manual-handoff-dry-run.</div>'
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Verdict", handoff.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Waiting for report", "yes" if handoff.get("waiting_for_manual_claude_report") else "no")}</div>')
+    lines.append(f'<div>{_kv("Auto Claude", "enabled" if handoff.get("automatic_claude_execution_enabled") else "disabled")}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Sandbox path", handoff.get("worktree_path", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Branch", handoff.get("branch_name", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Cleanup command", handoff.get("cleanup_command", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Post-builder command", handoff.get("post_builder_policy_command", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Packet", f"logs/claude_sandbox/{pid}/latest/manual_handoff_packet.md", mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -2102,6 +2125,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7l. Claude worktree creation
         _section("claude-worktree-creation", "Claude Worktree Creation", _render_claude_worktree_creation(d)),
+
+        # 7m. Manual Claude handoff
+        _section("manual-claude-handoff", "Manual Claude Handoff", _render_manual_claude_handoff(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

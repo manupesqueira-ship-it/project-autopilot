@@ -280,3 +280,15 @@ The runner must reject missing approval, missing rollback, missing post-builder 
 Project Autopilot may create a real sandbox worktree only through `APPROVED_FOR_WORKTREE_CREATION_ONLY` and the explicit `--claude-worktree-create-approved` or `--claude-worktree-smoke-test` command. The worktree is created outside the main repo at `mira-sandbox-<task_id>` on branch `sandbox/claude-<task_id>`.
 
 This is still not Claude builder execution. The flow writes creation and cleanup evidence, performs only safe git status/branch verification, and removes only the recorded sandbox path during cleanup. It forbids Claude execution, file edits, commits, merges, auto-merge, external APIs, env/secrets access, SQL/RLS, deploy, scheduler changes, automatic Claude execution, and product code changes.
+
+## 22. Manual Claude Handoff
+
+Project Autopilot may generate a manual Claude Code handoff packet for a human-operated sandbox session:
+
+- `claude_manual_handoff.py` generates the packet and metadata.
+- `--claude-manual-handoff-dry-run` writes packet evidence without creating a worktree.
+- `--claude-manual-handoff-create-approved` creates one approved sandbox worktree and writes the packet.
+
+The packet includes the sandbox path, branch, task objective, allowed files, denied files, allowed commands, denied commands, stop conditions, validation commands, required builder report format, post-builder command, cleanup command, and evidence paths.
+
+Manual handoff is not automatic execution. Project Autopilot does not run Claude Code, call Anthropic/OpenAI, edit files in the sandbox, commit, merge, deploy, execute SQL/RLS, access env files, call paid APIs, enable scheduler, or enable automatic Claude execution.

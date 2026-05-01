@@ -73,6 +73,13 @@ WORKTREE_INSIDE_MAIN_REPO_WORDS = ["worktree inside main repo", "sandbox path in
 WORKTREE_CLEANUP_ARBITRARY_WORDS = ["cleanup arbitrary path", "remove arbitrary path", "deleted arbitrary path"]
 WORKTREE_MISSING_EVIDENCE_WORDS = ["worktree creation without evidence", "missing worktree evidence", "did not write worktree evidence"]
 WORKTREE_MISSING_CLEANUP_WORDS = ["worktree creation without cleanup plan", "missing cleanup plan", "cleanup plan missing"]
+MANUAL_HANDOFF_SAFE_WORDS = ["manual claude handoff", "manual handoff packet", "open claude code in this sandbox path"]
+MANUAL_HANDOFF_UNAPPROVED_WORKTREE_WORDS = ["manual handoff without approved worktree", "real handoff packet without approved worktree"]
+MANUAL_HANDOFF_EXECUTE_WORDS = ["project autopilot executed claude", "ran claude code automatically", "claude execution by project autopilot"]
+MANUAL_HANDOFF_SECRET_WORDS = ["handoff packet included secrets", "secret included in handoff", "env content included in handoff"]
+MANUAL_HANDOFF_MISSING_REPORT_WORDS = ["missing builder report format", "builder report format omitted"]
+MANUAL_HANDOFF_MISSING_POST_POLICY_WORDS = ["missing post-builder return command", "post-builder command omitted"]
+MANUAL_HANDOFF_MISSING_CLEANUP_WORDS = ["manual handoff missing cleanup command", "cleanup command omitted"]
 
 
 @dataclass(frozen=True)
@@ -232,6 +239,36 @@ def _safe_worktree_creation_only_scope(changed_files: list[str], report_text: st
     return bool(paths) and paths.issubset(allowed_paths) and has_approval and has_creation and has_no_execution and has_cleanup and has_evidence and not dangerous
 
 
+def _safe_manual_handoff_scope(changed_files: list[str], report_text: str) -> bool:
+    paths = {_norm(path) for path in changed_files}
+    allowed_paths = {
+        "project_autopilot/claude_manual_handoff.py",
+        "project_autopilot/agent_loop.py",
+        "project_autopilot/post_builder_policy.py",
+        "project_autopilot/policy_test_fixtures.py",
+    }
+    lower = report_text.lower()
+    has_handoff = _mentions_any(lower, MANUAL_HANDOFF_SAFE_WORDS)
+    has_no_execution = any(phrase in lower for phrase in ["does not execute claude", "no claude execution", "manual-only"])
+    has_no_external = any(phrase in lower for phrase in ["no external api", "no anthropic call", "no openai call"])
+    has_report = "builder report format" in lower
+    has_post_policy = "post-builder" in lower
+    has_cleanup = "cleanup command" in lower
+    dangerous = (
+        _mentions_any(lower, MANUAL_HANDOFF_UNAPPROVED_WORKTREE_WORDS)
+        or _mentions_any(lower, MANUAL_HANDOFF_EXECUTE_WORDS)
+        or _mentions_any(lower, MANUAL_HANDOFF_SECRET_WORDS)
+        or _mentions_any(lower, MANUAL_HANDOFF_MISSING_REPORT_WORDS)
+        or _mentions_any(lower, MANUAL_HANDOFF_MISSING_POST_POLICY_WORDS)
+        or _mentions_any(lower, MANUAL_HANDOFF_MISSING_CLEANUP_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_ENV_ACCESS_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_SQL_COMMAND_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_DEPLOY_COMMAND_WORDS)
+        or _mentions_any(lower, SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS)
+    )
+    return bool(paths) and paths.issubset(allowed_paths) and has_handoff and has_no_execution and has_no_external and has_report and has_post_policy and has_cleanup and not dangerous
+
+
 def _extract_report_paths(report_text: str) -> list[str]:
     paths: list[str] = []
     for line in report_text.splitlines():
@@ -389,6 +426,13 @@ def evaluate_post_builder_policy(
             ["Approved sandbox worktree creation-only flow does not execute Claude, auto-merge, touch env files, or call external APIs."],
             "proceed",
         )
+    elif _safe_manual_handoff_scope(changed_files, builder_report_text):
+        risk = RiskAssessment(
+            "low",
+            ["safe_local_change", "manual_claude_handoff"],
+            ["Manual Claude handoff packet is manual-only, includes report/cleanup/post-builder instructions, and does not execute providers."],
+            "proceed",
+        )
     characteristics = classify_task_characteristics(changed_files, builder_report_text, risk)
     gates: list[PolicyGateResult] = []
     evidence_paths: list[str] = []
@@ -498,6 +542,18 @@ def evaluate_post_builder_policy(
         safety_blocks.append("Sandbox worktree creation evidence missing.")
     if _mentions_any(lower, WORKTREE_MISSING_CLEANUP_WORDS):
         safety_blocks.append("Sandbox worktree cleanup plan missing.")
+    if _mentions_any(lower, MANUAL_HANDOFF_UNAPPROVED_WORKTREE_WORDS):
+        safety_blocks.append("Manual Claude handoff without approved worktree detected.")
+    if _mentions_any(lower, MANUAL_HANDOFF_EXECUTE_WORDS):
+        safety_blocks.append("Manual Claude handoff attempted to execute Claude from Project Autopilot.")
+    if _mentions_any(lower, MANUAL_HANDOFF_SECRET_WORDS):
+        safety_blocks.append("Manual Claude handoff secret exposure detected.")
+    if _mentions_any(lower, MANUAL_HANDOFF_MISSING_REPORT_WORDS):
+        safety_blocks.append("Manual Claude handoff builder report format missing.")
+    if _mentions_any(lower, MANUAL_HANDOFF_MISSING_POST_POLICY_WORDS):
+        safety_blocks.append("Manual Claude handoff post-builder policy command missing.")
+    if _mentions_any(lower, MANUAL_HANDOFF_MISSING_CLEANUP_WORDS):
+        safety_blocks.append("Manual Claude handoff cleanup command missing.")
     secret_blocked = any("Secrets/env" in item or "env/secret" in item for item in safety_blocks)
     gates.append(_gate(
         "secrets_env_gate",

@@ -837,6 +837,120 @@ def fixtures() -> list[PolicyFixture]:
                 required_gates={"human_approval_gate": {"BLOCKED"}},
             ),
         ),
+        PolicyFixture(
+            fixture_id="manual_handoff_dry_run_safe",
+            description="Manual Claude handoff dry-run is safe when it does not execute providers.",
+            changed_files=["project_autopilot/claude_manual_handoff.py", "project_autopilot/agent_loop.py"],
+            builder_report=(
+                "Added manual Claude handoff packet dry-run. It is manual-only, does not execute Claude, "
+                "no external API, no Anthropic call, no OpenAI call, includes builder report format, "
+                "post-builder policy command, and cleanup command."
+            ),
+            expectation=FixtureExpectation(
+                _allowed("SAFE_TO_COMMIT"),
+                safe_commit_allowed=True,
+                forbidden_verdicts={"BLOCKED"},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_requires_approved_worktree_for_real_packet",
+            description="A real handoff packet requires approved sandbox worktree evidence.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual handoff without approved worktree; real handoff packet without approved worktree.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_does_not_execute_claude",
+            description="Project Autopilot must not execute Claude during manual handoff.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Project Autopilot executed Claude and ran Claude Code automatically from the manual handoff.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_does_not_call_anthropic",
+            description="Manual handoff must not call Anthropic.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff made an Anthropic API call while generating packet.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_packet_must_exclude_secrets",
+            description="Manual handoff packet must not contain secrets.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Handoff packet included secrets and env content included in handoff.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"secrets_env_gate": {"BLOCKED"}, "human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_denies_env_access",
+            description="Manual handoff must deny env access.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff allowed env access enabled and read .env.local.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"secrets_env_gate": {"BLOCKED"}, "human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_denies_sql_deploy_paid_api",
+            description="Manual handoff must block SQL/deploy/paid APIs.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff allowed SQL command allowed, deploy command allowed, and paid API execution.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_requires_builder_report_format",
+            description="Manual handoff must include builder report format.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff missing builder report format; builder report format omitted.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_requires_post_builder_policy",
+            description="Manual handoff must include post-builder policy command.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff missing post-builder return command; post-builder command omitted.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="manual_handoff_requires_cleanup_command",
+            description="Manual handoff must include cleanup command.",
+            changed_files=["project_autopilot/claude_manual_handoff.py"],
+            builder_report="Manual Claude handoff missing cleanup command; cleanup command omitted.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
     ]
 
 

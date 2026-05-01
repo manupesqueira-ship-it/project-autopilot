@@ -6,7 +6,7 @@ Purpose: define the exact human approval object required before any future Claud
 
 ## Current Rule
 
-No approval status enables actual Claude builder execution in the current sprint. Worktree creation and builder execution are both future-only.
+`APPROVED_FOR_WORKTREE_CREATION_ONLY` may create one explicitly approved sandbox worktree outside the main repo. No approval status enables Claude builder execution, automatic Claude execution, auto-merge, deploy, SQL/RLS work, env access, or paid APIs.
 
 ## Approval Statuses
 
@@ -72,7 +72,7 @@ The contract is invalid if it lacks:
 - Post-builder policy requirement.
 - OpenAI Auditor review requirement.
 
-The contract is also invalid if it enables worktree creation or builder execution in the current sprint.
+The contract is also invalid if it enables worktree creation beyond `APPROVED_FOR_WORKTREE_CREATION_ONLY`, or if it enables Claude builder execution in the current sprint.
 
 ## Evidence
 

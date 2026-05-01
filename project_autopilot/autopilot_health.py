@@ -219,6 +219,8 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
     worktree_creation_json = base / "worktree_creation.json"
     worktree_cleanup_md = base / "worktree_cleanup.md"
     worktree_cleanup_json = base / "worktree_cleanup.json"
+    manual_handoff_md = base / "manual_handoff_packet.md"
+    manual_handoff_json = base / "manual_handoff_metadata.json"
     preflight = _read_json(preflight_json)
     simulation = _read_json(simulation_json)
     boundary = preflight.get("boundary", {}) if preflight else {}
@@ -231,6 +233,7 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
     approval_contract = _read_json(approval_contract_json)
     worktree_creation = _read_json(worktree_creation_json)
     worktree_cleanup = _read_json(worktree_cleanup_json)
+    manual_handoff = _read_json(manual_handoff_json)
     active_worktree = bool(
         worktree_creation.get("created")
         and worktree_creation.get("cleanup_required")
@@ -277,6 +280,13 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
         "worktree_creation_json_path": str(worktree_creation_json),
         "worktree_cleanup_path": str(worktree_cleanup_md),
         "worktree_cleanup_json_path": str(worktree_cleanup_json),
+        "manual_handoff_verdict": manual_handoff.get("verdict", "NOT_RUN"),
+        "manual_handoff_packet_path": str(manual_handoff_md),
+        "manual_handoff_json_path": str(manual_handoff_json),
+        "manual_handoff_waiting_for_report": bool(manual_handoff.get("waiting_for_manual_claude_report", False)),
+        "manual_handoff_worktree_path": manual_handoff.get("worktree_path", ""),
+        "manual_handoff_branch": manual_handoff.get("branch_name", ""),
+        "manual_handoff_cleanup_command": manual_handoff.get("cleanup_command", ""),
         "next_action": "Run --claude-sandbox-preflight and --claude-sandbox-simulate before any human-approved sandbox execution.",
     }
 
@@ -421,6 +431,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_sandbox_approval": claude_sandbox["approval_status"],
         "claude_worktree_creation": claude_sandbox["latest_worktree_creation_verdict"],
         "claude_worktree_cleanup": claude_sandbox["latest_worktree_cleanup_verdict"],
+        "manual_claude_handoff": claude_sandbox["manual_handoff_verdict"],
         "claude_builder_execution": "DISABLED_EXPECTED" if not claude_sandbox["builder_execution_enabled"] else "ENABLED",
     }
 
@@ -559,6 +570,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_worktree_creation_json": claude_sandbox["worktree_creation_json_path"],
         "claude_worktree_cleanup": claude_sandbox["worktree_cleanup_path"],
         "claude_worktree_cleanup_json": claude_sandbox["worktree_cleanup_json_path"],
+        "manual_claude_handoff": claude_sandbox["manual_handoff_packet_path"],
+        "manual_claude_handoff_json": claude_sandbox["manual_handoff_json_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
@@ -746,6 +759,14 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Latest branch: {sandbox['latest_worktree_branch'] or 'none'}",
         f"- Latest path: {sandbox['latest_worktree_path'] or 'none'}",
         "- Claude builder execution enabled: no",
+        "",
+        "## Manual Claude Handoff",
+        f"- Handoff verdict: {sandbox['manual_handoff_verdict']}",
+        f"- Waiting for manual Claude report: {'yes' if sandbox['manual_handoff_waiting_for_report'] else 'no'}",
+        f"- Sandbox path: {sandbox['manual_handoff_worktree_path'] or 'none'}",
+        f"- Branch: {sandbox['manual_handoff_branch'] or 'none'}",
+        f"- Packet: {sandbox['manual_handoff_packet_path']}",
+        f"- Cleanup command: {sandbox['manual_handoff_cleanup_command'] or 'none'}",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path

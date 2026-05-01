@@ -172,3 +172,22 @@ See:
 
 - `CLAUDE_SANDBOX_APPROVAL_CONTRACT.md`
 - `CLAUDE_SANDBOX_RUNNER_INTERFACE.md`
+
+## Manual Claude Code Handoff
+
+The first builder bridge is manual only:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-create-approved --task "<task>"
+```
+
+The create-approved command may create one sandbox worktree and a handoff packet for the human to paste into Claude Code. Project Autopilot still does not call Anthropic, run Claude Code, pass tools to Claude, edit sandbox files, commit, merge, deploy, run SQL/RLS, read env files, call paid APIs, enable scheduler, or enable automatic Claude execution.
+
+After the human completes the Claude Code session, the returned report must go through:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --post-builder <path_to_claude_builder_report>
+```
+
+See `CLAUDE_MANUAL_HANDOFF_PROTOCOL.md`.

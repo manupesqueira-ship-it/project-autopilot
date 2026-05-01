@@ -82,10 +82,21 @@ The approved creation flow may create one sandbox worktree at `C:\Users\manup\pr
 
 Cleanup uses only recorded evidence and refuses arbitrary paths. It removes only a path matching the `mira-sandbox-*` pattern under the project parent directory.
 
+## Manual Claude Handoff
+
+The manual handoff flow may generate a no-secret packet for a human to paste into Claude Code after an approved sandbox worktree exists:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-create-approved --task "<task>"
+```
+
+The packet must include the sandbox path, branch, allowed files, denied files, allowed commands, denied commands, stop conditions, required builder report format, post-builder command, and cleanup command. Project Autopilot still does not run Claude Code, call Anthropic/OpenAI, edit files inside the sandbox, commit, merge, or deploy.
+
 ## Rollback, Rejection, Cancellation
 
 Rollback/rejection/cancellation are dry-run checklists now. Future implementation must preserve evidence, avoid rewriting history, park rejected worktrees, and return blocked work to OpenAI Auditor for correction planning.
 
 ## Next Phase
 
-The next phase may create a human-approved worktree only. Claude builder execution remains a later, separately approved phase.
+The next phase may run the first real manual Claude Code task inside an already approved sandbox worktree. Claude builder execution by Project Autopilot remains a later, separately approved phase.

@@ -227,3 +227,20 @@ python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner
 Current runner approvals are dry-run/future-only except `APPROVED_FOR_WORKTREE_CREATION_ONLY`, which may create one sandbox worktree through an explicit create-approved command. That approval still must not execute Claude, edit files, commit, merge, call external APIs, or enable scheduler/automatic execution.
 
 Runner work is blocked if approval is missing, rollback is missing, post-builder policy is missing, env/secret scope appears, direct master writes are allowed, auto-merge is allowed, unapproved worktree creation happens, or builder execution happens. Cleanup must be scoped to the recorded `mira-sandbox-*` path only.
+
+## Manual Claude Handoff Gate
+
+Manual Claude handoff is the first allowed bridge from Project Autopilot into a human-operated Claude Code session. It may generate a no-secret packet and, with explicit approval, create one sandbox worktree:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-create-approved --task "<task>"
+```
+
+The packet must tell the human to open Claude Code manually inside the sandbox worktree. Project Autopilot must not run Claude Code, call Anthropic/OpenAI, edit sandbox files, commit, merge, deploy, execute SQL/RLS, read env files, call paid APIs, enable scheduler, or enable automatic Claude execution.
+
+The handoff is incomplete until the human returns a Claude builder report and runs:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --post-builder <path_to_claude_builder_report>
+```

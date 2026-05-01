@@ -43,6 +43,7 @@ from claude_analysis_call import run_analysis as run_claude_analysis_call
 from claude_analysis_review import review_latest as review_latest_claude_analysis, write_review as write_claude_analysis_review
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
 from claude_prompt_pack import build_prompt_pack, write_prompt_pack
+from claude_manual_handoff import build_handoff_packet as build_claude_manual_handoff, write_handoff_packet as write_claude_manual_handoff
 from claude_sandbox_boundary import evaluate_preflight as evaluate_claude_sandbox_preflight, simulate_sandbox as simulate_claude_sandbox, write_preflight as write_claude_sandbox_preflight, write_simulation as write_claude_sandbox_simulation
 from claude_sandbox_runner import build_runner_plan as build_claude_sandbox_runner_plan, status_payload as claude_sandbox_runner_status_payload, write_runner_plan as write_claude_sandbox_runner_plan, write_status as write_claude_sandbox_runner_status
 from openai_auditor import build_dry_run as build_openai_auditor_dry_run, write_dry_run as write_openai_auditor_dry_run, _status_payload as openai_auditor_status_payload, write_status as write_openai_auditor_status
@@ -1319,6 +1320,24 @@ def run_claude_worktree_smoke_test_cmd(project_id: str) -> int:
     return 0 if payload["verdict"] == "WORKTREE_SMOKE_PASS" else 2
 
 
+def run_claude_manual_handoff_cmd(project_id: str, task: str, create_worktree: bool) -> int:
+    project = load_project(project_id)
+    payload = build_claude_manual_handoff(project, task, create_worktree=create_worktree)
+    md_path, json_path = write_claude_manual_handoff(project, payload)
+    label = "Create-Approved" if create_worktree else "Dry-Run"
+    print(f"Manual Claude Handoff {label}: {payload['verdict']}")
+    print(f"  Worktree created: {'yes' if payload['worktree_created'] else 'no'}")
+    print(f"  Worktree path: {payload['worktree_path']}")
+    print(f"  Branch: {payload['branch_name']}")
+    print("  Claude executed by Project Autopilot: no")
+    print("  External API called: NO")
+    print(f"  Packet: {md_path}")
+    print(f"  Metadata: {json_path}")
+    print(f"  Cleanup command: {payload['cleanup_command']}")
+    print(f"  Next human action: {payload['next_human_action']}")
+    return 0 if payload["verdict"] != "MANUAL_HANDOFF_BLOCKED" else 2
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1759,6 +1778,8 @@ def main() -> int:
     group.add_argument("--claude-worktree-create-approved", action="store_true", help="Create a sandbox worktree only under explicit approval; does not execute Claude.")
     group.add_argument("--claude-worktree-cleanup-approved", action="store_true", help="Cleanup a recorded sandbox worktree by --task-id only.")
     group.add_argument("--claude-worktree-smoke-test", action="store_true", help="Create and cleanup one approved sandbox worktree smoke test; does not execute Claude.")
+    group.add_argument("--claude-manual-handoff-dry-run", action="store_true", help="Generate a manual Claude Code handoff packet without creating a worktree.")
+    group.add_argument("--claude-manual-handoff-create-approved", action="store_true", help="Create one approved sandbox worktree and generate manual Claude handoff packet; does not execute Claude.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
     parser.add_argument("--task-id", default="", help="Task id for approved sandbox cleanup commands.")
@@ -1838,6 +1859,10 @@ def main() -> int:
         return run_claude_worktree_cleanup_approved_cmd(args.project, args.task_id)
     if args.claude_worktree_smoke_test:
         return run_claude_worktree_smoke_test_cmd(args.project)
+    if args.claude_manual_handoff_dry_run:
+        return run_claude_manual_handoff_cmd(args.project, args.task, create_worktree=False)
+    if args.claude_manual_handoff_create_approved:
+        return run_claude_manual_handoff_cmd(args.project, args.task, create_worktree=True)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

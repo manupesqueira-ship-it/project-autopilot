@@ -80,6 +80,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Worktree sandbox planner exists", (ap / "worktree_sandbox.py").exists())
     add("Claude sandbox approval module exists", (ap / "claude_sandbox_approval.py").exists())
     add("Claude sandbox runner module exists", (ap / "claude_sandbox_runner.py").exists())
+    add("Claude manual handoff module exists", (ap / "claude_manual_handoff.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -147,6 +148,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Claude sandbox safety fixtures exist", _contains(ap / "policy_test_fixtures.py", "claude_sandbox_missing_post_builder_policy_blocked"))
     add("Claude sandbox runner approval fixtures exist", _contains(ap / "policy_test_fixtures.py", "sandbox_runner_valid_dry_run_safe"))
     add("Claude worktree creation fixtures exist", _contains(ap / "policy_test_fixtures.py", "worktree_creation_only_approval_safe"))
+    add("Manual Claude handoff fixtures exist", _contains(ap / "policy_test_fixtures.py", "manual_handoff_dry_run_safe"))
     sandbox_preflight = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_preflight.json")
     add(
         "Claude sandbox preflight acceptable",
@@ -187,6 +189,14 @@ def run_check(project: ProjectConfig) -> V2Report:
         and bool(worktree_creation.get("no_claude_execution", True))
         and bool(worktree_creation.get("no_external_api", True)),
         worktree_creation.get("verdict", "WARN: no latest worktree creation evidence yet"),
+    )
+    manual_handoff = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "manual_handoff_metadata.json")
+    add(
+        "Manual Claude handoff acceptable",
+        not bool(manual_handoff.get("claude_executed_by_project_autopilot", False))
+        and not bool(manual_handoff.get("external_api_called", False))
+        and not bool(manual_handoff.get("automatic_claude_execution_enabled", False)),
+        manual_handoff.get("verdict", "WARN: no latest manual handoff packet yet"),
     )
     add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
     add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)

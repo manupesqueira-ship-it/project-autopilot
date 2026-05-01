@@ -1035,6 +1035,31 @@ logs/multistep_loop/<project_id>/latest/multistep_loop_dry_run.md
 logs/multistep_loop/<project_id>/latest/multistep_loop_dry_run.json
 ```
 
+## Manual Claude Sandbox Handoff
+
+Project Autopilot can now prepare a manual Claude Code handoff packet without executing Claude:
+
+```bash
+python -B project_autopilot/claude_manual_handoff.py --project mira --task "Improve Project Autopilot docs" --dry-run
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-dry-run --task "Improve Project Autopilot docs"
+python -B project_autopilot/agent_loop.py --project mira --claude-manual-handoff-create-approved --task "Improve Project Autopilot docs"
+```
+
+The create-approved command creates one approved sandbox worktree and writes:
+
+```text
+logs/claude_sandbox/<project_id>/latest/manual_handoff_packet.md
+logs/claude_sandbox/<project_id>/latest/manual_handoff_metadata.json
+```
+
+The human opens Claude Code in the sandbox path from the packet and pastes the packet manually. Project Autopilot does not run Claude Code, call Anthropic/OpenAI, edit sandbox files, commit, merge, deploy, read env files, run SQL/RLS, call paid APIs, enable scheduler, or enable automatic Claude execution.
+
+When Claude returns a builder report, run:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --post-builder <path_to_claude_builder_report>
+```
+
 ### Systemd Templates
 
 Template files for future VPS deployment:
