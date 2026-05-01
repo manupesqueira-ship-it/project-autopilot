@@ -38,6 +38,8 @@ from run_lock import LockActiveError, acquire_lock, lock_status, release_lock
 from validation_report import create_validation_report
 from backend_audit import run_backend_audit
 from control_center import generate_control_center
+from autopilot_health import build_health, policy_fixture_health, write_reports as write_autopilot_health_reports
+from policy_test_fixtures import run as run_policy_fixture_suite
 
 
 # ---------------------------------------------------------------------------
@@ -1031,6 +1033,46 @@ def run_policy_check(project_id: str) -> int:
     return 0
 
 
+def run_policy_fixtures(project_id: str) -> int:
+    project = load_project(project_id)
+    exit_code, results, json_path, md_path = run_policy_fixture_suite(project, ["all"])
+    passed = sum(1 for result in results if result.passed)
+    failed = len(results) - passed
+    failed_names = [result.fixture_id for result in results if not result.passed]
+    print(f"Policy fixtures: {'PASS' if failed == 0 else 'FAIL'} ({passed}/{len(results)})")
+    print(f"Failed fixtures: {', '.join(failed_names) if failed_names else 'none'}")
+    print(f"Report: {md_path}")
+    print(f"JSON: {json_path}")
+    return exit_code
+
+
+def run_autopilot_health(project_id: str) -> int:
+    project = load_project(project_id)
+    payload = build_health(project)
+    md_path, json_path = write_autopilot_health_reports(project, payload)
+    print(f"Autopilot Health: {payload['overall_verdict']}")
+    print(f"Policy fixtures: {payload['policy_fixture_suite']['status']} ({payload['policy_fixture_suite']['passed']}/{payload['policy_fixture_suite']['total']})")
+    print(f"Providers configured: {payload['provider_registry']['configured_provider_count']}/{payload['provider_registry']['provider_count']}")
+    print("Claude Integration Readiness:")
+    claude = payload["claude_integration_readiness"]
+    print(f"  Claude Code CLI detected: {'yes' if claude['claude_code_cli_detected'] else 'no'}")
+    print(f"  Claude Code manual handoff ready: {'yes' if claude['claude_code_manual_handoff_ready'] else 'no'}")
+    print(f"  Claude Code automatic execution enabled: {'yes' if claude['claude_code_automatic_execution_enabled'] else 'no'}")
+    print(f"  Claude Agent SDK scaffold exists: {'yes' if claude['claude_agent_sdk_provider_scaffold_exists'] else 'no'}")
+    print(f"  ANTHROPIC_API_KEY present: {'yes' if claude['anthropic_api_key_present'] else 'no'}")
+    print(f"  Claude Agent SDK external call tested: {'yes' if claude['claude_agent_sdk_external_call_tested'] else 'no'}")
+    print("Top blockers:")
+    for blocker in payload["blockers"] or ["none"]:
+        print(f"  - {blocker}")
+    print("Next actions:")
+    for action in payload["next_actions"]:
+        print(f"  - {action}")
+    print(f"Safe next sprint: {payload['safe_next_sprint_recommendation']}")
+    print(f"Report: {md_path}")
+    print(f"JSON: {json_path}")
+    return 2 if payload["overall_verdict"] == "AUTOPILOT_BLOCKED" else 0
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1180,6 +1222,15 @@ def run_doctor(project_id: str) -> int:
     halt = _halt_active(project)
     add("warn" if halt else "pass", "HALT_AUTOPILOT", f"HALT_AUTOPILOT active: {'YES' if halt else 'no'}", "Remove project_control/HALT_AUTOPILOT.md to resume cycles." if halt else "No action needed.")
 
+    fixture_health = policy_fixture_health(project)
+    fixture_severity = fixture_health["severity"]
+    add(
+        "pass" if fixture_severity == "pass" else ("fail" if fixture_severity == "fail" else "warn"),
+        "POLICY_FIXTURE_SUITE",
+        f"policy fixtures: {fixture_health['status']} ({fixture_health['passed']}/{fixture_health['total']} passed)",
+        fixture_health["command"],
+    )
+
     severity_rank = {"pass": 0, "warn": 1, "fail": 2}
     for item in sorted(issues, key=lambda issue: (severity_rank[issue.severity], issue.code)):
         print(f"{item.severity.upper():4} {item.code}: {item.message}")
@@ -1196,8 +1247,29 @@ def run_doctor(project_id: str) -> int:
     _print_scheduler_readiness(project)
     print()
     _print_product_validation_readiness(project)
+    print()
+    _print_policy_fixture_readiness(project)
 
     return 2 if result_severity == "fail" else 0
+
+
+def _print_policy_fixture_readiness(project: ProjectConfig) -> None:
+    info = policy_fixture_health(project)
+    status = info["status"]
+    if status == "PASS":
+        result = "PASS"
+    elif status == "FAIL":
+        result = "FAIL"
+    else:
+        result = "WARN"
+    print("POLICY_FIXTURE_SUITE:")
+    print(f"  status: {result}")
+    print(f"  latest result: {info['result_path']}")
+    print(f"  latest report: {info['report_path']}")
+    print(f"  passed/total: {info['passed']}/{info['total']}")
+    print(f"  failed count: {info['failed']}")
+    print(f"  failed fixtures: {', '.join(info['failed_fixtures']) if info['failed_fixtures'] else 'none'}")
+    print(f"  command: {info['command']}")
 
 
 def _print_product_validation_readiness(project: ProjectConfig) -> None:
@@ -1384,6 +1456,8 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --metrics\n"
             "  python -B project_autopilot/agent_loop.py --project mira --e2e-plan\n"
             "  python -B project_autopilot/agent_loop.py --project mira --handoff-claude\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --policy-fixtures\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --autopilot-health\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -1410,6 +1484,8 @@ def main() -> int:
     group.add_argument("--intake-builder-report", metavar="PATH", help="Ingest a builder report and produce a QA verdict.")
     group.add_argument("--post-builder", metavar="PATH", help="Alias for --intake-builder-report.")
     group.add_argument("--policy-check", action="store_true", help="Evaluate current working tree with v2 post-builder policy gates.")
+    group.add_argument("--policy-fixtures", action="store_true", help="Run deterministic v2 policy fixture regression tests.")
+    group.add_argument("--autopilot-health", action="store_true", help="Print consolidated Project Autopilot operational health.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
 
     args = parser.parse_args()
@@ -1452,6 +1528,10 @@ def main() -> int:
         return run_builder_intake(args.project, args.post_builder)
     if args.policy_check:
         return run_policy_check(args.project)
+    if args.policy_fixtures:
+        return run_policy_fixtures(args.project)
+    if args.autopilot_health:
+        return run_autopilot_health(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

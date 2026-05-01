@@ -140,6 +140,20 @@ python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 
 The fixtures use simulated changed files and builder reports. They do not touch real env files, mutate Supabase, call external APIs, execute SQL, deploy, enable scheduler, or execute builders. The suite must pass before Project Autopilot expands into Claude Agent SDK execution, scheduler runs, or automatic builder execution.
 
+## 11.2 Operational Health
+
+Project Autopilot exposes a consolidated operator command:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --autopilot-health
+```
+
+This command summarizes provider registry, Design Director, Research Director, Builder Orchestrator, Autopilot v2 check, post-builder policy availability, policy fixture health, Flow QA/mock E2E, backend audit, MIRA readiness, Control Center, HALT/run lock, scheduler status, automatic Claude execution status, Claude Agent SDK readiness, blockers, next actions, and evidence paths.
+
+MIRA real-data blockers should not make the control plane blocked unless they block Project Autopilot itself. Scheduler disabled and automatic Claude execution disabled are expected/pass states.
+
+Pre-Claude readiness requires local `ANTHROPIC_API_KEY`, provider dry-run mode, sandbox/worktree policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live Claude SDK call. Project Autopilot must not call Anthropic during readiness checks.
+
 ## 12. Human Approval Gates
 
 Human approval is required for:

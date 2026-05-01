@@ -91,6 +91,18 @@ python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 ```
 
 The fixture suite is local and deterministic. It simulates changed files and builder reports for safe docs, UI, backend, Supabase/security, env/secrets, paid API, scheduler, automatic Claude, generated logs, research, design failure, and validation failure cases. It must not call external APIs, execute SQL, mutate Supabase, or stage generated logs.
+
+## Operational Health Workflow
+
+Use the consolidated operator workflow before starting or accepting builder work:
+
+```text
+--doctor -> --autopilot-health -> --policy-fixtures -> --local-plan or --post-builder -> --control-center
+```
+
+`--autopilot-health` reports the overall control-plane verdict, provider readiness, policy fixture health, Flow QA/mock E2E status, backend audit status, MIRA readiness status, Control Center availability, HALT/run lock state, scheduler status, automatic Claude execution status, Claude Agent SDK readiness, blockers, next actions, and evidence paths.
+
+Pre-Claude readiness requires local `ANTHROPIC_API_KEY`, dry-run provider mode, worktree/sandbox policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval before the first live Claude SDK call. Scheduler and automatic Claude execution remain disabled.
 - `SAFE_NO_CHANGES`: no commit required.
 
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

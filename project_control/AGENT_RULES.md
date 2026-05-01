@@ -61,3 +61,6 @@ Builders must:
 - `HUMAN_REVIEW_REQUIRED` requires an explicit human decision before commit.
 - `python -B project_autopilot/policy_test_fixtures.py --project mira --run all` must pass before changing policy gates, enabling Claude SDK execution, enabling scheduler, or enabling automatic builder execution.
 - Policy fixture results are generated logs and must not be staged.
+- Operators should run `--doctor`, `--autopilot-health`, `--policy-fixtures`, then `--local-plan` or `--post-builder`, then `--control-center`.
+- Claude Agent SDK readiness checks may report whether `ANTHROPIC_API_KEY` is present, but must never print the value or call Anthropic.
+- Claude SDK integration requires dry-run mode, worktree/sandbox policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live call.

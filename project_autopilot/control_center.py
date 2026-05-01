@@ -409,6 +409,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Research Director status", "Latest research status", logs / f"{pid}_research_director_latest.md", "research"),
         _entry("Builder Orchestrator status", "Latest builder routing status", logs / f"{pid}_builder_orchestrator_latest.md", "planning"),
         _entry("Autopilot v2 check", "Local v2 readiness verdict", logs / f"{pid}_autopilot_v2_check_latest.md", "validation"),
+        _entry("Autopilot health report", "Consolidated operational health", logs / f"{pid}_autopilot_health_latest.md", "observability"),
+        _entry("Autopilot health JSON", "Machine-readable operational health", logs / f"{pid}_autopilot_health_latest.json", "observability"),
     ]
     return items
 
@@ -525,6 +527,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["autopilot_v2_check"] = _read_json(logs / f"{pid}_autopilot_v2_check_latest.json")
     data["post_builder_policy"] = _read_json(logs / f"{pid}_post_builder_policy_latest.json")
     data["policy_fixture_tests"] = _read_json(logs / "policy_tests" / pid / "latest" / "policy_test_results.json")
+    data["autopilot_health"] = _read_json(logs / f"{pid}_autopilot_health_latest.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1515,6 +1518,35 @@ def _render_policy_fixture_tests(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_autopilot_health(d: dict[str, Any]) -> str:
+    health = d.get("autopilot_health", {})
+    if not health:
+        return '<div class="empty-state">No operational health report yet. Run --autopilot-health.</div>'
+    subsystems = health.get("subsystem_statuses", {})
+    fixtures = health.get("policy_fixture_suite", {})
+    claude = health.get("claude_integration_readiness", {})
+    next_actions = health.get("next_actions", [])
+    fixture_text = f"{fixtures.get('status', 'UNKNOWN')} {fixtures.get('passed', 0)}/{fixtures.get('total', 0)}"
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Health verdict", health.get("overall_verdict", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("Policy fixtures", fixture_text)}</div>')
+    lines.append(f'<div>{_kv("Providers", subsystems.get("provider_registry", "UNKNOWN"))}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Claude SDK key", "present" if claude.get("anthropic_api_key_present") else "missing")}</div>')
+    lines.append(f'<div>{_kv("Scheduler", subsystems.get("scheduler", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("Auto-Claude", subsystems.get("automatic_claude_execution", "UNKNOWN"))}</div>')
+    lines.append('</div>')
+    if next_actions:
+        lines.append('<div style="margin-top:8px"><span class="kv-label">Next recommended action</span>')
+        lines.append(f'<div>{_h(next_actions[0])}</div></div>')
+    report_path = f"logs/{d.get('project_id')}_autopilot_health_latest.md"
+    lines.append(f'<div style="margin-top:8px">{_kv("Report", report_path, mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1802,6 +1834,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7d. Policy fixture tests
         _section("policy-fixtures", "Policy Fixture Tests", _render_policy_fixture_tests(d)),
+
+        # 7e. Operational health
+        _section("autopilot-health", "Project Autopilot Operational Health", _render_autopilot_health(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

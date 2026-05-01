@@ -36,6 +36,8 @@ python -B project_autopilot/builder_orchestrator.py --project mira --plan "Impro
 python -B project_autopilot/autopilot_v2_check.py --project mira
 python -B project_autopilot/agent_loop.py --project mira --policy-check
 python -B project_autopilot/policy_test_fixtures.py --project mira --run all
+python -B project_autopilot/agent_loop.py --project mira --policy-fixtures
+python -B project_autopilot/agent_loop.py --project mira --autopilot-health
 ```
 
 These commands do not execute builders, call Anthropic/OpenAI, call paid APIs, deploy, or mutate live databases.
@@ -71,6 +73,31 @@ python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 The suite covers safe docs, UI/design gates, backend/Flow QA gates, Supabase/security human review, forbidden env files, secret-like report text, paid APIs, scheduler activation, automatic Claude execution, generated logs, research-required decisions, forced design failure, and validation failure. Results are written to ignored files under `logs/policy_tests/<project_id>/latest/`.
 
 This suite must pass before enabling Claude Agent SDK execution, scheduler runs, or automatic builder execution. Add new fixtures by extending `fixtures()` in `project_autopilot/policy_test_fixtures.py`; keep assertions focused on policy outcomes instead of duplicating policy logic.
+
+### Operational Health
+
+Use one consolidated operator command before new autonomy work:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --autopilot-health
+```
+
+It summarizes provider registry, Design Director, Research Director, Builder Orchestrator, Autopilot v2 check, post-builder policy availability, policy fixture health, Flow QA/mock E2E, backend audit, MIRA readiness, Control Center, HALT/run lock, scheduler status, automatic Claude execution status, Claude Agent SDK readiness, blockers, next actions, and evidence paths. It writes ignored reports to:
+
+```text
+logs/mira_autopilot_health_latest.md
+logs/mira_autopilot_health_latest.json
+```
+
+Recommended operator flow:
+
+```text
+--doctor -> --autopilot-health -> --policy-fixtures -> --local-plan or --post-builder -> --control-center
+```
+
+`--doctor` also surfaces latest policy fixture health. A missing fixture report is a warning; a failing fixture report is a failure.
+
+Pre-Claude readiness requires local `ANTHROPIC_API_KEY` presence, provider dry-run mode, sandbox/worktree policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live Claude SDK call. Scheduler and automatic Claude execution remain disabled.
 
 ## Quality Standard
 
