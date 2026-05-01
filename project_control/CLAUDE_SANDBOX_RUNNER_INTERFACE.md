@@ -12,6 +12,10 @@ Purpose: define how Project Autopilot will eventually coordinate a human-approve
 - `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`
 - `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`
 - `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`
+- `WORKTREE_CREATION_APPROVED`
+- `WORKTREE_CREATED`
+- `WORKTREE_CLEANUP_REQUIRED`
+- `WORKTREE_CLEANED_UP`
 - `REJECTED`
 - `BLOCKED`
 
@@ -32,6 +36,14 @@ python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-approv
 python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner-dry-run --task "<task>"
 ```
 
+Worktree creation-only commands:
+
+```bash
+python -B project_autopilot/worktree_sandbox.py --project mira --create-approved --task "Sandbox worktree creation smoke test"
+python -B project_autopilot/worktree_sandbox.py --project mira --cleanup-approved --task-id "<task_id>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke-test
+```
+
 ## Current Guarantees
 
 The runner interface must not:
@@ -39,7 +51,7 @@ The runner interface must not:
 - Execute Claude.
 - Call Anthropic.
 - Call OpenAI.
-- Create a real worktree.
+- Create a real worktree except through the explicit worktree creation-only approval command.
 - Edit product code.
 - Read env files.
 - Print secrets.
@@ -58,7 +70,17 @@ The runner writes ignored evidence:
 logs/claude_sandbox/<project_id>/latest/claude_sandbox_runner_plan.md
 logs/claude_sandbox/<project_id>/latest/claude_sandbox_runner_plan.json
 logs/claude_sandbox/<project_id>/latest/claude_sandbox_approval_contract_preview.json
+logs/claude_sandbox/<project_id>/latest/worktree_creation.md
+logs/claude_sandbox/<project_id>/latest/worktree_creation.json
+logs/claude_sandbox/<project_id>/latest/worktree_cleanup.md
+logs/claude_sandbox/<project_id>/latest/worktree_cleanup.json
 ```
+
+## Worktree Creation-Only Flow
+
+The approved creation flow may create one sandbox worktree at `C:\Users\manup\projects\mira-sandbox-<task_id>` on branch `sandbox/claude-<task_id>`. It may verify branch/status and write evidence. It may not run Claude, edit files, commit, merge, call providers, read env files, or run arbitrary commands.
+
+Cleanup uses only recorded evidence and refuses arbitrary paths. It removes only a path matching the `mira-sandbox-*` pattern under the project parent directory.
 
 ## Rollback, Rejection, Cancellation
 

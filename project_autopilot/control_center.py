@@ -433,6 +433,10 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Claude sandbox runner plan", "Future runner interface dry-run plan", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.md", "planning"),
         _entry("Claude sandbox runner JSON", "Machine-readable runner interface state", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.json", "planning"),
         _entry("Claude sandbox approval contract", "Future-only human approval contract preview", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_approval_contract_preview.json", "planning"),
+        _entry("Claude worktree creation", "Approved sandbox worktree creation evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_creation.md", "planning"),
+        _entry("Claude worktree creation JSON", "Machine-readable worktree creation evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_creation.json", "planning"),
+        _entry("Claude worktree cleanup", "Approved sandbox worktree cleanup evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.md", "planning"),
+        _entry("Claude worktree cleanup JSON", "Machine-readable worktree cleanup evidence", logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.json", "planning"),
     ]
     return items
 
@@ -561,6 +565,8 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["worktree_sandbox"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.json")
     data["claude_sandbox_runner"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_runner_plan.json")
     data["claude_sandbox_approval"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_approval_contract_preview.json")
+    data["claude_worktree_creation"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_creation.json")
+    data["claude_worktree_cleanup"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_cleanup.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1759,6 +1765,32 @@ def _render_claude_sandbox_runner(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_claude_worktree_creation(d: dict[str, Any]) -> str:
+    creation = d.get("claude_worktree_creation", {})
+    cleanup = d.get("claude_worktree_cleanup", {})
+    pid = d.get("project_id")
+    if not creation and not cleanup:
+        return '<div class="empty-state">No approved worktree creation evidence yet. Run --claude-worktree-smoke-test.</div>'
+    active = bool(creation.get("created") and creation.get("cleanup_required") and not cleanup.get("cleanup_completed"))
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Creation", creation.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv_badge("Cleanup", cleanup.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Active sandbox", "yes" if active else "no")}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Cleanup required", "yes" if active else "no")}</div>')
+    lines.append(f'<div>{_kv("Claude execution", "enabled" if not creation.get("no_claude_execution", True) else "disabled")}</div>')
+    lines.append(f'<div>{_kv("Auto-merge", "enabled" if creation.get("auto_merge_enabled") else "disabled")}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Latest branch", creation.get("branch_name", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Latest path", creation.get("worktree_path", "none"), mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Creation report", f"logs/claude_sandbox/{pid}/latest/worktree_creation.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Cleanup report", f"logs/claude_sandbox/{pid}/latest/worktree_cleanup.md", mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -2067,6 +2099,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7k. Claude sandbox runner interface
         _section("claude-sandbox-runner", "Claude Sandbox Runner Interface", _render_claude_sandbox_runner(d)),
+
+        # 7l. Claude worktree creation
+        _section("claude-worktree-creation", "Claude Worktree Creation", _render_claude_worktree_creation(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

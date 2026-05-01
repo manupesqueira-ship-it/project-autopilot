@@ -13,11 +13,23 @@ No approval status enables actual Claude builder execution in the current sprint
 - `APPROVAL_NOT_REQUESTED`
 - `APPROVAL_REQUESTED`
 - `APPROVED_FOR_DRY_RUN_ONLY`
+- `APPROVED_FOR_WORKTREE_CREATION_ONLY`
 - `APPROVED_FOR_WORKTREE_CREATION_FUTURE`
 - `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`
 - `REJECTED`
 - `EXPIRED`
 - `INVALID`
+
+## Worktree Creation-Only Approval
+
+`APPROVED_FOR_WORKTREE_CREATION_ONLY` is the first approval that permits a real local side effect: creating one sandbox git worktree outside the main repository. It permits only:
+
+- `git worktree add` for a generated `mira-sandbox-*` path under the project parent directory.
+- Safe verification checks such as branch/status checks.
+- Evidence writing under ignored `logs/`.
+- Cleanup using the recorded sandbox path.
+
+It still forbids Claude execution, file edits by Claude, commits in the sandbox, merges, force-pushes, env/secrets access, SQL/RLS, deploys, paid APIs, scheduler changes, and automatic Claude execution.
 
 ## Required Contract Fields
 

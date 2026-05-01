@@ -146,6 +146,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     )
     add("Claude sandbox safety fixtures exist", _contains(ap / "policy_test_fixtures.py", "claude_sandbox_missing_post_builder_policy_blocked"))
     add("Claude sandbox runner approval fixtures exist", _contains(ap / "policy_test_fixtures.py", "sandbox_runner_valid_dry_run_safe"))
+    add("Claude worktree creation fixtures exist", _contains(ap / "policy_test_fixtures.py", "worktree_creation_only_approval_safe"))
     sandbox_preflight = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_preflight.json")
     add(
         "Claude sandbox preflight acceptable",
@@ -170,6 +171,22 @@ def run_check(project: ProjectConfig) -> V2Report:
         and not bool(runner_state.get("external_api_called", False))
         and not bool(runner_state.get("real_worktree_created", False)),
         runner_state.get("state", "WARN: no latest runner dry-run yet"),
+    )
+    worktree_creation = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "worktree_creation.json")
+    worktree_cleanup = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "worktree_cleanup.json")
+    active_worktree = bool(
+        worktree_creation.get("created")
+        and worktree_creation.get("cleanup_required")
+        and not worktree_cleanup.get("cleanup_completed")
+    )
+    add(
+        "Claude worktree creation flow acceptable",
+        not active_worktree
+        and not bool(worktree_creation.get("claude_builder_execution_enabled", False))
+        and not bool(worktree_creation.get("auto_merge_enabled", False))
+        and bool(worktree_creation.get("no_claude_execution", True))
+        and bool(worktree_creation.get("no_external_api", True)),
+        worktree_creation.get("verdict", "WARN: no latest worktree creation evidence yet"),
     )
     add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
     add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)

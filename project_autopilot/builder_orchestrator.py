@@ -156,9 +156,11 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
         validations.append(f"python -B project_autopilot/agent_loop.py --project {project.project_id} --claude-sandbox-simulate --task \"{task}\"")
         validations.append(f"python -B project_autopilot/agent_loop.py --project {project.project_id} --claude-sandbox-approval-preflight --task \"{task}\"")
         validations.append(f"python -B project_autopilot/agent_loop.py --project {project.project_id} --claude-sandbox-runner-dry-run --task \"{task}\"")
+        validations.append(f"python -B project_autopilot/agent_loop.py --project {project.project_id} --claude-worktree-smoke-test")
         auto_commit = "no_auto_commit_for_builder_execution_enablement"
         stop.append("Stop if Claude execution, worktree creation, auto-merge, or scheduler activation would occur.")
         notes.append("Claude-suitable builder work must pass OpenAI Auditor planning, sandbox preflight, sandbox simulation, runner approval preflight, runner dry-run, and human approval before future execution.")
+        notes.append("Worktree creation is a separate human-approved stage; it does not imply Claude builder execution.")
         notes.append("If sandbox preflight fails, return to OpenAI Auditor for correction planning; do not execute Claude.")
 
     if is_paid:

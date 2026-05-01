@@ -17,6 +17,7 @@ from config import ProjectConfig, load_project_config
 APPROVAL_NOT_REQUESTED = "APPROVAL_NOT_REQUESTED"
 APPROVAL_REQUESTED = "APPROVAL_REQUESTED"
 APPROVED_FOR_DRY_RUN_ONLY = "APPROVED_FOR_DRY_RUN_ONLY"
+APPROVED_FOR_WORKTREE_CREATION_ONLY = "APPROVED_FOR_WORKTREE_CREATION_ONLY"
 APPROVED_FOR_WORKTREE_CREATION_FUTURE = "APPROVED_FOR_WORKTREE_CREATION_FUTURE"
 APPROVED_FOR_BUILDER_EXECUTION_FUTURE = "APPROVED_FOR_BUILDER_EXECUTION_FUTURE"
 REJECTED = "REJECTED"
@@ -27,6 +28,7 @@ VALID_APPROVAL_STATUSES = {
     APPROVAL_NOT_REQUESTED,
     APPROVAL_REQUESTED,
     APPROVED_FOR_DRY_RUN_ONLY,
+    APPROVED_FOR_WORKTREE_CREATION_ONLY,
     APPROVED_FOR_WORKTREE_CREATION_FUTURE,
     APPROVED_FOR_BUILDER_EXECUTION_FUTURE,
     REJECTED,
@@ -148,6 +150,7 @@ def build_contract_preview(
     task: str,
     status: str = APPROVED_FOR_DRY_RUN_ONLY,
     human_approver: str = "human_required_before_future_execution",
+    allow_worktree_creation_now: bool = False,
 ) -> SandboxApprovalContract:
     preflight = evaluate_preflight(project, task)
     boundary = preflight.boundary
@@ -176,16 +179,21 @@ def build_contract_preview(
         human_approver=human_approver,
         approval_timestamp=now.isoformat(),
         expiration_timestamp=expires.isoformat(),
-        approval_scope="dry_run_only; worktree_creation_and_builder_execution_are_future_only",
+        approval_scope=(
+            "worktree_creation_only; builder_execution_is_disabled"
+            if status == APPROVED_FOR_WORKTREE_CREATION_ONLY
+            else "dry_run_only; worktree_creation_and_builder_execution_are_future_only"
+        ),
         approval_status=status,
         explicit_forbidden_actions=[
             "read_or_modify_env_files",
             "print_secret_values",
             "call_anthropic_or_openai_from_runner",
             "execute_claude_builder",
-            "create_real_worktree_this_sprint",
+            "create_real_worktree_without_create_approved_command",
             "write_directly_to_master",
             "auto_merge",
+            "commit_in_sandbox_worktree",
             "force_push",
             "execute_sql_or_enable_rls",
             "deploy",
@@ -193,8 +201,8 @@ def build_contract_preview(
             "enable_scheduler",
             "enable_automatic_claude_execution",
         ],
-        future_only=True,
-        worktree_creation_enabled_now=False,
+        future_only=status != APPROVED_FOR_WORKTREE_CREATION_ONLY,
+        worktree_creation_enabled_now=bool(allow_worktree_creation_now and status == APPROVED_FOR_WORKTREE_CREATION_ONLY),
         builder_execution_enabled_now=False,
     )
 
@@ -226,15 +234,19 @@ def validate_contract(contract: SandboxApprovalContract) -> ApprovalValidationRe
         blocked.append("Approval contract missing command allowlist.")
     if not contract.denied_commands:
         blocked.append("Approval contract missing command denylist.")
-    if contract.worktree_creation_enabled_now:
-        blocked.append("Worktree creation is enabled now; this sprint must keep it disabled.")
+    if contract.worktree_creation_enabled_now and contract.approval_status != APPROVED_FOR_WORKTREE_CREATION_ONLY:
+        blocked.append("Worktree creation is enabled without worktree-creation-only approval.")
     if contract.builder_execution_enabled_now:
         blocked.append("Builder execution is enabled now; this sprint must keep it disabled.")
-    if not contract.future_only:
+    if not contract.future_only and contract.approval_status != APPROVED_FOR_WORKTREE_CREATION_ONLY:
         blocked.append("Approval contract is not marked future-only.")
 
     if contract.approval_status == APPROVAL_NOT_REQUESTED:
         warnings.append("Approval has not been requested; dry-run only.")
+    elif contract.approval_status == APPROVED_FOR_WORKTREE_CREATION_ONLY:
+        if not contract.worktree_creation_enabled_now:
+            blocked.append("Worktree-creation-only approval does not enable worktree creation.")
+        warnings.append("Approval allows only sandbox worktree creation; builder execution remains disabled.")
     elif contract.approval_status in {APPROVED_FOR_WORKTREE_CREATION_FUTURE, APPROVED_FOR_BUILDER_EXECUTION_FUTURE}:
         warnings.append("Approval status is future-only and cannot execute in this sprint.")
     elif contract.approval_status in {REJECTED, EXPIRED, INVALID}:
@@ -273,12 +285,17 @@ def approval_status_from_contract(contract: SandboxApprovalContract) -> SandboxA
         status=contract.approval_status,
         allows_dry_run=contract.approval_status in {
             APPROVED_FOR_DRY_RUN_ONLY,
+            APPROVED_FOR_WORKTREE_CREATION_ONLY,
             APPROVED_FOR_WORKTREE_CREATION_FUTURE,
             APPROVED_FOR_BUILDER_EXECUTION_FUTURE,
         },
-        allows_worktree_creation_now=False,
+        allows_worktree_creation_now=contract.approval_status == APPROVED_FOR_WORKTREE_CREATION_ONLY and contract.worktree_creation_enabled_now,
         allows_builder_execution_now=False,
-        reason="All approvals are dry-run/future-only in this sprint.",
+        reason=(
+            "Approval allows worktree creation only; builder execution remains disabled."
+            if contract.approval_status == APPROVED_FOR_WORKTREE_CREATION_ONLY
+            else "Approval is dry-run/future-only; builder execution remains disabled."
+        ),
     )
 
 

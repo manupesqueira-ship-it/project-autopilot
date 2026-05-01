@@ -187,3 +187,17 @@ If a sprint touches the Claude sandbox runner interface, completion additionally
 9. Approval contract preview is generated under ignored logs.
 10. Runner plan is generated under ignored logs.
 11. Policy fixtures cover missing approval, future-only approval, blocked worktree creation, blocked builder execution, rollback, post-builder policy, env scope, direct master write, auto-merge, and safe dry-run.
+
+## Worktree Creation-Only Gates
+
+If a sprint implements approved sandbox worktree creation, completion additionally requires:
+
+1. `python -B project_autopilot/worktree_sandbox.py --project mira --plan --task "<task>"`.
+2. `python -B project_autopilot/worktree_sandbox.py --project mira --simulate --task "<task>"`.
+3. `python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke-test`.
+4. Evidence written under `logs/claude_sandbox/<project_id>/latest/worktree_creation.*` and `worktree_cleanup.*`.
+5. The sandbox worktree is outside the main repository and matches `mira-sandbox-*`.
+6. Cleanup removes only the recorded sandbox path.
+7. Claude execution remains disabled.
+8. No file edits, commits, merges, external APIs, SQL/RLS, deploy, scheduler, automatic Claude execution, or product code changes occur.
+9. Policy fixtures cover worktree creation without approval, inside-main-repo paths, arbitrary cleanup, missing evidence, missing cleanup plan, auto-merge, and builder execution.

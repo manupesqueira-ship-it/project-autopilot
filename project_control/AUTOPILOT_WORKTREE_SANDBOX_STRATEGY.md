@@ -5,6 +5,22 @@
 
 ---
 
+## Current Worktree Creation-Only Phase
+
+Project Autopilot may create one sandbox worktree only through explicit human approval:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-create-approved --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-cleanup-approved --task-id "<task_id>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke-test
+```
+
+The worktree path must be outside the main repo and match `C:\Users\manup\projects\mira-sandbox-<task_id>`. The branch must match `sandbox/claude-<task_id>`. This phase writes evidence and cleanup records, but it still forbids Claude execution, file edits, commits, auto-merge, deploy, SQL/RLS, env/secrets access, paid APIs, scheduler changes, and automatic Claude execution.
+
+Cleanup is evidence-scoped: Project Autopilot removes only the recorded `mira-sandbox-*` path and refuses arbitrary paths.
+
+---
+
 ## 1. Why Worktrees Are Required for Parallel Writes
 
 Git worktrees allow multiple checked-out branches from a single repository simultaneously, each in its own directory.

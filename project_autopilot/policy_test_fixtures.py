@@ -720,6 +720,123 @@ def fixtures() -> list[PolicyFixture]:
                 forbidden_verdicts={"BLOCKED"},
             ),
         ),
+        PolicyFixture(
+            fixture_id="worktree_creation_without_approval_blocked",
+            description="Creating a sandbox worktree without explicit approval is blocked.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Sandbox worktree creation without approval; git worktree add without approval.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_with_future_builder_approval_still_blocks_execution",
+            description="Future builder approval still cannot execute Claude.",
+            changed_files=["project_autopilot/worktree_sandbox.py", "project_autopilot/claude_sandbox_approval.py"],
+            builder_report="Approved for worktree creation only, then builder execution enabled now and executed Claude builder.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_only_approval_safe",
+            description="Approved worktree creation-only flow is safe when it writes evidence and cleanup plan.",
+            changed_files=["project_autopilot/worktree_sandbox.py", "project_autopilot/claude_sandbox_approval.py", "project_autopilot/agent_loop.py"],
+            builder_report=(
+                "Added create-approved sandbox worktree flow with approved worktree creation only. "
+                "It creates a sandbox worktree outside main repo, writes evidence, includes cleanup plan, "
+                "no Claude execution, no external API call, builder execution remains disabled, auto-merge disabled."
+            ),
+            expectation=FixtureExpectation(
+                _allowed("SAFE_TO_COMMIT"),
+                safe_commit_allowed=True,
+                forbidden_verdicts={"BLOCKED"},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_inside_main_repo_blocked",
+            description="Sandbox worktree path inside the main repo must be blocked.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Created worktree under main repo; sandbox path inside main repo.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_cleanup_arbitrary_path_blocked",
+            description="Cleanup must refuse arbitrary paths.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Cleanup arbitrary path accepted and remove arbitrary path deleted arbitrary path.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_cleanup_known_sandbox_path_safe",
+            description="Cleanup of a recorded sandbox path is safe.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report=(
+                "Added cleanup-approved for a recorded mira-sandbox path only. It uses recorded evidence, "
+                "includes cleanup plan, no Claude execution, no external API call, and refuses non-sandbox cleanup targets."
+            ),
+            expectation=FixtureExpectation(
+                _allowed("SAFE_TO_COMMIT"),
+                safe_commit_allowed=True,
+                forbidden_verdicts={"BLOCKED"},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_does_not_enable_claude_execution",
+            description="Worktree creation cannot turn on Claude execution.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Worktree creation enabled builder execution enabled now and Claude edited files through Autopilot.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_does_not_enable_auto_merge",
+            description="Worktree creation cannot turn on auto-merge.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Approved worktree creation only but auto-merge enabled and merged automatically.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_requires_evidence",
+            description="Worktree creation must write evidence.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Approved worktree creation only but missing worktree evidence; did not write worktree evidence.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
+        PolicyFixture(
+            fixture_id="worktree_creation_requires_cleanup_plan",
+            description="Worktree creation must include cleanup plan.",
+            changed_files=["project_autopilot/worktree_sandbox.py"],
+            builder_report="Approved worktree creation only but cleanup plan missing; worktree creation without cleanup plan.",
+            expectation=FixtureExpectation(
+                _allowed("BLOCKED"),
+                safe_commit_allowed=False,
+                required_gates={"human_approval_gate": {"BLOCKED"}},
+            ),
+        ),
     ]
 
 

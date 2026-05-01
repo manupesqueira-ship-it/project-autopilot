@@ -67,6 +67,12 @@ SANDBOX_RUNNER_MISSING_APPROVAL_WORDS = ["sandbox runner missing approval", "wit
 SANDBOX_RUNNER_WORKTREE_CREATE_WORDS = ["created real worktree", "worktree creation enabled now", "git worktree add executed"]
 SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS = ["builder execution enabled now", "executed claude builder", "claude edited files through autopilot"]
 SANDBOX_RUNNER_FUTURE_APPROVAL_SAFE_WORDS = ["approved for worktree creation future", "future-only approval", "does not execute"]
+WORKTREE_CREATION_WITHOUT_APPROVAL_WORDS = ["worktree creation without approval", "created sandbox worktree without approval", "git worktree add without approval"]
+WORKTREE_CREATION_ONLY_SAFE_WORDS = ["worktree creation only approval", "approved worktree creation only", "approved for worktree creation only"]
+WORKTREE_INSIDE_MAIN_REPO_WORDS = ["worktree inside main repo", "sandbox path inside main repo", "created worktree under main repo"]
+WORKTREE_CLEANUP_ARBITRARY_WORDS = ["cleanup arbitrary path", "remove arbitrary path", "deleted arbitrary path"]
+WORKTREE_MISSING_EVIDENCE_WORDS = ["worktree creation without evidence", "missing worktree evidence", "did not write worktree evidence"]
+WORKTREE_MISSING_CLEANUP_WORDS = ["worktree creation without cleanup plan", "missing cleanup plan", "cleanup plan missing"]
 
 
 @dataclass(frozen=True)
@@ -198,6 +204,32 @@ def _safe_sandbox_runner_dry_run_scope(changed_files: list[str], report_text: st
         or _mentions_any(lower, CLAUDE_SANDBOX_DEPLOY_COMMAND_WORDS)
     )
     return bool(paths) and paths.issubset(allowed_paths) and has_safe_mode and has_no_execution and has_no_worktree and has_no_external and not dangerous
+
+
+def _safe_worktree_creation_only_scope(changed_files: list[str], report_text: str) -> bool:
+    paths = {_norm(path) for path in changed_files}
+    allowed_paths = {
+        "project_autopilot/worktree_sandbox.py",
+        "project_autopilot/claude_sandbox_approval.py",
+        "project_autopilot/agent_loop.py",
+    }
+    lower = report_text.lower()
+    has_approval = _mentions_any(lower, WORKTREE_CREATION_ONLY_SAFE_WORDS) or "create-approved" in lower
+    has_creation = "sandbox worktree" in lower or "git worktree add" in lower
+    has_no_execution = any(phrase in lower for phrase in ["no claude execution", "builder execution remains disabled", "does not execute claude"])
+    has_cleanup = "cleanup" in lower and "cleanup plan" in lower
+    has_evidence = "evidence" in lower
+    dangerous = (
+        _mentions_any(lower, WORKTREE_CREATION_WITHOUT_APPROVAL_WORDS)
+        or _mentions_any(lower, WORKTREE_INSIDE_MAIN_REPO_WORDS)
+        or _mentions_any(lower, WORKTREE_CLEANUP_ARBITRARY_WORDS)
+        or _mentions_any(lower, WORKTREE_MISSING_EVIDENCE_WORDS)
+        or _mentions_any(lower, WORKTREE_MISSING_CLEANUP_WORDS)
+        or _mentions_any(lower, SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_ENV_ACCESS_WORDS)
+        or _mentions_any(lower, CLAUDE_SANDBOX_AUTO_MERGE_WORDS)
+    )
+    return bool(paths) and paths.issubset(allowed_paths) and has_approval and has_creation and has_no_execution and has_cleanup and has_evidence and not dangerous
 
 
 def _extract_report_paths(report_text: str) -> list[str]:
@@ -350,6 +382,13 @@ def evaluate_post_builder_policy(
             ["Claude sandbox runner change is dry-run/future-only and explicitly does not execute Claude, create a worktree, or call external APIs."],
             "proceed",
         )
+    elif _safe_worktree_creation_only_scope(changed_files, builder_report_text):
+        risk = RiskAssessment(
+            "low",
+            ["safe_local_change", "worktree_creation_only_approved"],
+            ["Approved sandbox worktree creation-only flow does not execute Claude, auto-merge, touch env files, or call external APIs."],
+            "proceed",
+        )
     characteristics = classify_task_characteristics(changed_files, builder_report_text, risk)
     gates: list[PolicyGateResult] = []
     evidence_paths: list[str] = []
@@ -449,6 +488,16 @@ def evaluate_post_builder_policy(
         safety_blocks.append("Claude sandbox runner real worktree creation detected.")
     if _mentions_any(lower, SANDBOX_RUNNER_BUILDER_EXECUTE_WORDS):
         safety_blocks.append("Claude sandbox runner builder execution detected.")
+    if _mentions_any(lower, WORKTREE_CREATION_WITHOUT_APPROVAL_WORDS):
+        safety_blocks.append("Sandbox worktree creation without approval detected.")
+    if _mentions_any(lower, WORKTREE_INSIDE_MAIN_REPO_WORDS):
+        safety_blocks.append("Sandbox worktree path inside main repo detected.")
+    if _mentions_any(lower, WORKTREE_CLEANUP_ARBITRARY_WORDS):
+        safety_blocks.append("Sandbox cleanup arbitrary path risk detected.")
+    if _mentions_any(lower, WORKTREE_MISSING_EVIDENCE_WORDS):
+        safety_blocks.append("Sandbox worktree creation evidence missing.")
+    if _mentions_any(lower, WORKTREE_MISSING_CLEANUP_WORDS):
+        safety_blocks.append("Sandbox worktree cleanup plan missing.")
     secret_blocked = any("Secrets/env" in item or "env/secret" in item for item in safety_blocks)
     gates.append(_gate(
         "secrets_env_gate",

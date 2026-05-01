@@ -48,7 +48,7 @@ from claude_sandbox_runner import build_runner_plan as build_claude_sandbox_runn
 from openai_auditor import build_dry_run as build_openai_auditor_dry_run, write_dry_run as write_openai_auditor_dry_run, _status_payload as openai_auditor_status_payload, write_status as write_openai_auditor_status
 from multistep_loop import build_loop as build_multistep_loop, write_loop as write_multistep_loop
 from policy_test_fixtures import run as run_policy_fixture_suite
-from worktree_sandbox import build_worktree_sandbox_plan, write_worktree_sandbox_plan
+from worktree_sandbox import build_worktree_sandbox_plan, cleanup_approved_worktree, create_approved_worktree, smoke_test_worktree, write_worktree_cleanup, write_worktree_creation, write_worktree_sandbox_plan
 
 
 # ---------------------------------------------------------------------------
@@ -1269,6 +1269,56 @@ def run_claude_sandbox_runner_plan_cmd(project_id: str, task: str, mode: str) ->
     return 0 if plan.runner_state.state != "BLOCKED" else 2
 
 
+def run_claude_worktree_create_approved_cmd(project_id: str, task: str) -> int:
+    project = load_project(project_id)
+    payload = create_approved_worktree(project, task)
+    md_path, json_path = write_worktree_creation(project, payload)
+    print(f"Claude Worktree Creation: {payload.get('verdict')}")
+    print(f"  Task id: {payload['task_id']}")
+    print(f"  Worktree path: {payload['worktree_path']}")
+    print(f"  Branch: {payload['branch_name']}")
+    print(f"  Cleanup required: {'yes' if payload['cleanup_required'] else 'no'}")
+    print("  Claude execution: no")
+    print("  External API called: NO")
+    print("  Product code touched: no")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {payload['next_action']}")
+    return 0 if payload.get("verdict") in {"WORKTREE_CREATION_PASS", "WORKTREE_CREATION_WARN"} else 2
+
+
+def run_claude_worktree_cleanup_approved_cmd(project_id: str, task_id: str) -> int:
+    project = load_project(project_id)
+    payload = cleanup_approved_worktree(project, task_id)
+    md_path, json_path = write_worktree_cleanup(project, payload)
+    print(f"Claude Worktree Cleanup: {payload.get('verdict')}")
+    print(f"  Task id: {payload['task_id']}")
+    print(f"  Worktree path: {payload.get('worktree_path', '')}")
+    print(f"  Cleanup completed: {'yes' if payload.get('cleanup_completed') else 'no'}")
+    print("  Claude execution: no")
+    print("  External API called: NO")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {payload.get('next_action', '')}")
+    return 0 if payload.get("verdict") == "WORKTREE_CLEANUP_PASS" else 2
+
+
+def run_claude_worktree_smoke_test_cmd(project_id: str) -> int:
+    project = load_project(project_id)
+    payload = smoke_test_worktree(project)
+    print(f"Claude Worktree Smoke Test: {payload['verdict']}")
+    print(f"  Task id: {payload['task_id']}")
+    print(f"  Worktree path: {payload['worktree_path']}")
+    print(f"  Branch: {payload['branch_name']}")
+    print(f"  Cleanup completed: {'yes' if payload['cleanup_completed'] else 'no'}")
+    print("  Claude execution: no")
+    print("  External API called: NO")
+    print("  Product code touched: no")
+    print(f"  Creation report: {payload['creation_report']}")
+    print(f"  Cleanup report: {payload['cleanup_report']}")
+    return 0 if payload["verdict"] == "WORKTREE_SMOKE_PASS" else 2
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1706,8 +1756,12 @@ def main() -> int:
     group.add_argument("--claude-sandbox-runner-status", action="store_true", help="Show future Claude sandbox runner interface status.")
     group.add_argument("--claude-sandbox-approval-preflight", action="store_true", help="Validate a future-only Claude sandbox approval contract preview.")
     group.add_argument("--claude-sandbox-runner-dry-run", action="store_true", help="Dry-run future Claude sandbox runner interface without execution.")
+    group.add_argument("--claude-worktree-create-approved", action="store_true", help="Create a sandbox worktree only under explicit approval; does not execute Claude.")
+    group.add_argument("--claude-worktree-cleanup-approved", action="store_true", help="Cleanup a recorded sandbox worktree by --task-id only.")
+    group.add_argument("--claude-worktree-smoke-test", action="store_true", help="Create and cleanup one approved sandbox worktree smoke test; does not execute Claude.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
+    parser.add_argument("--task-id", default="", help="Task id for approved sandbox cleanup commands.")
     parser.add_argument("--objective", default="Improve MIRA result page design", help="Objective text for --multistep-dry-run.")
 
     args = parser.parse_args()
@@ -1778,6 +1832,12 @@ def main() -> int:
         return run_claude_sandbox_runner_plan_cmd(args.project, args.task, mode="approval_preflight")
     if args.claude_sandbox_runner_dry_run:
         return run_claude_sandbox_runner_plan_cmd(args.project, args.task, mode="dry_run")
+    if args.claude_worktree_create_approved:
+        return run_claude_worktree_create_approved_cmd(args.project, args.task)
+    if args.claude_worktree_cleanup_approved:
+        return run_claude_worktree_cleanup_approved_cmd(args.project, args.task_id)
+    if args.claude_worktree_smoke_test:
+        return run_claude_worktree_smoke_test_cmd(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

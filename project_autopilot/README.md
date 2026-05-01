@@ -206,9 +206,9 @@ python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-approv
 python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-runner-dry-run --task "Improve Project Autopilot docs"
 ```
 
-Runner states include `RUNNER_DISABLED`, `APPROVAL_REQUIRED`, `APPROVAL_VALIDATED_DRY_RUN_ONLY`, `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`, `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`, `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`, `REJECTED`, and `BLOCKED`.
+Runner states include `RUNNER_DISABLED`, `APPROVAL_REQUIRED`, `APPROVAL_VALIDATED_DRY_RUN_ONLY`, `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`, `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`, `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`, `WORKTREE_CREATION_APPROVED`, `WORKTREE_CREATED`, `WORKTREE_CLEANUP_REQUIRED`, `WORKTREE_CLEANED_UP`, `REJECTED`, and `BLOCKED`.
 
-Approval statuses include `APPROVAL_NOT_REQUESTED`, `APPROVAL_REQUESTED`, `APPROVED_FOR_DRY_RUN_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_FUTURE`, `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`, `REJECTED`, `EXPIRED`, and `INVALID`. All worktree/builder approvals are future-only in the current mode.
+Approval statuses include `APPROVAL_NOT_REQUESTED`, `APPROVAL_REQUESTED`, `APPROVED_FOR_DRY_RUN_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_FUTURE`, `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`, `REJECTED`, `EXPIRED`, and `INVALID`. `APPROVED_FOR_WORKTREE_CREATION_ONLY` permits one explicit sandbox worktree creation/cleanup flow; builder approvals remain future-only.
 
 Evidence is written to ignored files:
 
@@ -218,7 +218,17 @@ logs/claude_sandbox/<project_id>/latest/claude_sandbox_runner_plan.json
 logs/claude_sandbox/<project_id>/latest/claude_sandbox_approval_contract_preview.json
 ```
 
-The next phase may be first human-approved worktree creation only. Claude builder execution remains a later, separate approval.
+### Claude Worktree Creation-Only Flow
+
+```bash
+python -B project_autopilot/worktree_sandbox.py --project mira --create-approved --task "Sandbox worktree creation smoke test"
+python -B project_autopilot/worktree_sandbox.py --project mira --cleanup-approved --task-id "<task_id>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke-test
+```
+
+The smoke test creates one temporary `mira-sandbox-*` worktree outside the main repo, verifies branch/status, writes ignored evidence, and removes only the recorded sandbox path. It does not execute Claude, edit files, commit, merge, call external APIs, touch env files, deploy, run SQL/RLS, enable scheduler, or enable automatic Claude execution.
+
+The next phase may be first manual Claude prompt handoff into an existing sandbox worktree. Claude builder execution remains a later, separate approval.
 
 ## Quality Standard
 

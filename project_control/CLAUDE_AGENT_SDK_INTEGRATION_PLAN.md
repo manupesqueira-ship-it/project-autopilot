@@ -156,7 +156,17 @@ python -B project_autopilot/claude_sandbox_runner.py --project mira --dry-run --
 python -B project_autopilot/claude_sandbox_runner.py --project mira --rollback-plan --task "<task>"
 ```
 
-The approval contract is future-only. It may validate `APPROVED_FOR_DRY_RUN_ONLY`, `APPROVED_FOR_WORKTREE_CREATION_FUTURE`, or `APPROVED_FOR_BUILDER_EXECUTION_FUTURE`, but worktree creation and builder execution remain disabled in this sprint.
+The approval contract is future-only except for `APPROVED_FOR_WORKTREE_CREATION_ONLY`, which may create one sandbox worktree through an explicit create-approved command. Builder execution remains disabled.
+
+Worktree creation-only commands:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-create-approved --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-cleanup-approved --task-id "<task_id>"
+python -B project_autopilot/agent_loop.py --project mira --claude-worktree-smoke-test
+```
+
+These commands must not call Anthropic/OpenAI, execute Claude, edit files in the sandbox, commit, merge, deploy, run SQL/RLS, read env files, call paid APIs, or enable scheduler/automatic Claude execution.
 
 See:
 

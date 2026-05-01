@@ -273,4 +273,10 @@ The runner interface defines the approval contract and state machine for future 
 - `APPROVED_FOR_WORKTREE_CREATION_FUTURE` and `APPROVED_FOR_BUILDER_EXECUTION_FUTURE` are future-only statuses. They do not enable execution now.
 - `RUNNER_DISABLED`, `APPROVAL_REQUIRED`, `APPROVAL_VALIDATED_DRY_RUN_ONLY`, `WORKTREE_CREATION_BLOCKED_THIS_SPRINT`, `BUILDER_EXECUTION_BLOCKED_THIS_SPRINT`, `READY_FOR_FUTURE_HUMAN_APPROVED_WORKTREE`, `REJECTED`, and `BLOCKED` are the runner states.
 
-The runner must reject missing approval, missing rollback, missing post-builder policy, env/secret scope, direct master writes, auto-merge, real worktree creation, and builder execution. Control Center and Autopilot Health surface the latest runner and approval status.
+The runner must reject missing approval, missing rollback, missing post-builder policy, env/secret scope, direct master writes, auto-merge, unapproved worktree creation, arbitrary cleanup paths, and builder execution. Control Center and Autopilot Health surface the latest runner and approval status.
+
+## 21. Worktree Creation-Only Flow
+
+Project Autopilot may create a real sandbox worktree only through `APPROVED_FOR_WORKTREE_CREATION_ONLY` and the explicit `--claude-worktree-create-approved` or `--claude-worktree-smoke-test` command. The worktree is created outside the main repo at `mira-sandbox-<task_id>` on branch `sandbox/claude-<task_id>`.
+
+This is still not Claude builder execution. The flow writes creation and cleanup evidence, performs only safe git status/branch verification, and removes only the recorded sandbox path during cleanup. It forbids Claude execution, file edits, commits, merges, auto-merge, external APIs, env/secrets access, SQL/RLS, deploy, scheduler changes, automatic Claude execution, and product code changes.

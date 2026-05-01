@@ -484,6 +484,8 @@ sandbox preflight
 -> later future builder execution sprint
 ```
 
-The runner states are documented in `CLAUDE_SANDBOX_RUNNER_INTERFACE.md`. In the current mode, `APPROVED_FOR_WORKTREE_CREATION_FUTURE` and `APPROVED_FOR_BUILDER_EXECUTION_FUTURE` are audit labels only, not executable permissions.
+The runner states are documented in `CLAUDE_SANDBOX_RUNNER_INTERFACE.md`. `APPROVED_FOR_WORKTREE_CREATION_ONLY` permits one explicit sandbox worktree creation/cleanup flow. `APPROVED_FOR_WORKTREE_CREATION_FUTURE` and `APPROVED_FOR_BUILDER_EXECUTION_FUTURE` remain audit labels only, not executable permissions.
 
 If approval is rejected, expired, invalid, missing rollback, missing post-builder policy, or includes forbidden actions, the runner must stop and preserve evidence.
+
+The worktree creation-only flow does not start Claude. It only creates a `mira-sandbox-*` worktree outside the main repo, verifies it, writes evidence, and removes it through recorded cleanup.

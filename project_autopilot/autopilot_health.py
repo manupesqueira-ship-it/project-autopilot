@@ -215,6 +215,10 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
     runner_json = base / "claude_sandbox_runner_plan.json"
     runner_status_json = base / "claude_sandbox_runner_status.json"
     approval_contract_json = base / "claude_sandbox_approval_contract_preview.json"
+    worktree_creation_md = base / "worktree_creation.md"
+    worktree_creation_json = base / "worktree_creation.json"
+    worktree_cleanup_md = base / "worktree_cleanup.md"
+    worktree_cleanup_json = base / "worktree_cleanup.json"
     preflight = _read_json(preflight_json)
     simulation = _read_json(simulation_json)
     boundary = preflight.get("boundary", {}) if preflight else {}
@@ -225,6 +229,13 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
     runner_state = runner.get("runner_state", {}) if runner else {}
     runner_status = _read_json(runner_status_json)
     approval_contract = _read_json(approval_contract_json)
+    worktree_creation = _read_json(worktree_creation_json)
+    worktree_cleanup = _read_json(worktree_cleanup_json)
+    active_worktree = bool(
+        worktree_creation.get("created")
+        and worktree_creation.get("cleanup_required")
+        and not worktree_cleanup.get("cleanup_completed")
+    )
     return {
         "preflight_verdict": preflight.get("verdict", "NOT_RUN"),
         "simulation_verdict": simulation.get("verdict", "NOT_RUN"),
@@ -256,6 +267,16 @@ def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
         "runner_plan_json_path": str(runner_json),
         "runner_status_json_path": str(runner_status_json),
         "approval_contract_path": str(approval_contract_json),
+        "latest_worktree_creation_verdict": worktree_creation.get("verdict", "NOT_RUN"),
+        "latest_worktree_cleanup_verdict": worktree_cleanup.get("verdict", "NOT_RUN"),
+        "active_sandbox_worktree": active_worktree,
+        "cleanup_required": bool(worktree_creation.get("cleanup_required", False) and not worktree_cleanup.get("cleanup_completed", False)),
+        "latest_worktree_path": worktree_creation.get("worktree_path", ""),
+        "latest_worktree_branch": worktree_creation.get("branch_name", ""),
+        "worktree_creation_path": str(worktree_creation_md),
+        "worktree_creation_json_path": str(worktree_creation_json),
+        "worktree_cleanup_path": str(worktree_cleanup_md),
+        "worktree_cleanup_json_path": str(worktree_cleanup_json),
         "next_action": "Run --claude-sandbox-preflight and --claude-sandbox-simulate before any human-approved sandbox execution.",
     }
 
@@ -398,6 +419,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_sandbox_simulation": claude_sandbox["simulation_verdict"],
         "claude_sandbox_runner": claude_sandbox["runner_state"],
         "claude_sandbox_approval": claude_sandbox["approval_status"],
+        "claude_worktree_creation": claude_sandbox["latest_worktree_creation_verdict"],
+        "claude_worktree_cleanup": claude_sandbox["latest_worktree_cleanup_verdict"],
         "claude_builder_execution": "DISABLED_EXPECTED" if not claude_sandbox["builder_execution_enabled"] else "ENABLED",
     }
 
@@ -438,6 +461,8 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("Claude sandbox runner reports external API activity.")
     if claude_sandbox["runner_real_worktree_created"]:
         blockers.append("Claude sandbox runner reports a real worktree was created.")
+    if claude_sandbox["active_sandbox_worktree"]:
+        blockers.append("A sandbox worktree is active and cleanup is required.")
     if claude_sandbox["preflight_verdict"] == "SANDBOX_PREFLIGHT_BLOCKED":
         blockers.append("Claude sandbox preflight is blocked.")
     if claude_sandbox["simulation_verdict"] == "SANDBOX_SIMULATION_BLOCKED":
@@ -494,7 +519,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     elif claude_review["decision"] == "NEEDS_POLICY_FIXTURE":
         next_actions.append("Add or update policy fixtures recommended by Claude analysis review.")
     elif claude_review["decision"] == "PROCEED_TO_SANDBOX_DESIGN":
-        next_actions.append("Run Claude sandbox preflight and simulation; keep execution disabled.")
+        if claude_sandbox["latest_worktree_creation_verdict"] == "WORKTREE_CREATION_PASS" and claude_sandbox["latest_worktree_cleanup_verdict"] == "WORKTREE_CLEANUP_PASS":
+            next_actions.append("Design first manual Claude prompt handoff into a human-approved sandbox worktree; keep builder execution disabled.")
+        else:
+            next_actions.append("Run Claude worktree smoke test; keep builder execution disabled.")
     else:
         next_actions.append("Review latest Claude analysis and map it to a policy decision before sandbox design.")
     next_actions.append("Keep scheduler and automatic Claude execution disabled until explicit approval.")
@@ -527,13 +555,19 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_sandbox_runner_plan": claude_sandbox["runner_plan_path"],
         "claude_sandbox_runner_plan_json": claude_sandbox["runner_plan_json_path"],
         "claude_sandbox_approval_contract": claude_sandbox["approval_contract_path"],
+        "claude_worktree_creation": claude_sandbox["worktree_creation_path"],
+        "claude_worktree_creation_json": claude_sandbox["worktree_creation_json_path"],
+        "claude_worktree_cleanup": claude_sandbox["worktree_cleanup_path"],
+        "claude_worktree_cleanup_json": claude_sandbox["worktree_cleanup_json_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
     }
 
     safe_next_sprint = (
-        "Design sandboxed Claude builder execution in a dedicated worktree; do not enable execution yet."
+        "Design first manual Claude prompt handoff into a human-approved sandbox worktree; do not enable automatic execution yet."
+        if claude_sandbox["latest_worktree_creation_verdict"] == "WORKTREE_CREATION_PASS" and claude_sandbox["latest_worktree_cleanup_verdict"] == "WORKTREE_CLEANUP_PASS"
+        else "Design sandboxed Claude builder execution in a dedicated worktree; do not enable execution yet."
         if claude_review["decision"] == "PROCEED_TO_SANDBOX_DESIGN"
         else "Prepare a human-approved controlled Claude SDK analysis call; do not enable builder execution yet."
     )
@@ -703,6 +737,15 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Runner real worktree created: {'yes' if sandbox['runner_real_worktree_created'] else 'no'}",
         f"- Runner plan: {sandbox['runner_plan_path']}",
         f"- Approval contract: {sandbox['approval_contract_path']}",
+        "",
+        "## Claude Worktree Creation",
+        f"- Latest creation verdict: {sandbox['latest_worktree_creation_verdict']}",
+        f"- Latest cleanup verdict: {sandbox['latest_worktree_cleanup_verdict']}",
+        f"- Active sandbox worktree: {'yes' if sandbox['active_sandbox_worktree'] else 'no'}",
+        f"- Cleanup required: {'yes' if sandbox['cleanup_required'] else 'no'}",
+        f"- Latest branch: {sandbox['latest_worktree_branch'] or 'none'}",
+        f"- Latest path: {sandbox['latest_worktree_path'] or 'none'}",
+        "- Claude builder execution enabled: no",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
