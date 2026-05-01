@@ -11,9 +11,17 @@ CONTROL_FILE_ORDER = [
     "QUALITY_BAR.md",
     "WORLD_CLASS_STANDARD.md",
     "QA_PROTOCOL.md",
+    "AUTOPILOT_V2_SPEC.md",
+    "AUTOPILOT_DEFINITION_OF_DONE.md",
     "CUSTOMER_DATA_POLICY.md",
     "RESEARCH_PROTOCOL.md",
+    "RESEARCH_DIRECTOR_STANDARD.md",
+    "DEEP_RESEARCH_PROTOCOL.md",
     "DESIGN_REFERENCES.md",
+    "DESIGN_DIRECTOR_STANDARD.md",
+    "DESIGN_RUBRIC.md",
+    "INNOVATION_STANDARD.md",
+    "COPYWRITING_STANDARD.md",
     "TECHNICAL_ARCHITECTURE.md",
     "COST_POLICY.md",
     "DECISIONS.md",
@@ -47,4 +55,3 @@ def relative_to_repo(project: ProjectConfig, path: Path) -> str:
         return str(path.relative_to(project.repo_path))
     except ValueError:
         return str(path)
-

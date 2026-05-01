@@ -12,6 +12,32 @@ MIRA is the first configured project.
 
 The generated builder prompt includes quality expectations from `WORLD_CLASS_STANDARD.md`, `QA_PROTOCOL.md`, `CUSTOMER_DATA_POLICY.md`, and `RESEARCH_PROTOCOL.md`.
 
+## v2 Control Plane Foundation
+
+Project Autopilot v2 formalizes Autopilot as a control plane:
+
+- Codex is the current primary builder.
+- Claude Code is a future/manual/CLI provider.
+- Claude Agent SDK is a future formal provider requiring `ANTHROPIC_API_KEY`.
+- Design Director is required for UI/design changes.
+- Research Director is required for uncertain provider, security, privacy, paid API, legal, architecture, deployment, or RLS decisions.
+- Builder Orchestrator recommends provider routing, QA gates, stop conditions, allowed files, and auto-commit policy.
+- Scheduler, automatic Claude execution, deploy automation, and paid APIs remain disabled by default.
+- Worktrees are required for parallel writes.
+
+### v2 Commands
+
+```bash
+python -B project_autopilot/provider_registry.py --project mira
+python -B project_autopilot/design_director.py --project mira
+python -B project_autopilot/research_director.py --project mira --status
+python -B project_autopilot/builder_orchestrator.py --project mira --status
+python -B project_autopilot/builder_orchestrator.py --project mira --plan "Improve MIRA result page design"
+python -B project_autopilot/autopilot_v2_check.py --project mira
+```
+
+These commands do not execute builders, call Anthropic/OpenAI, call paid APIs, deploy, or mutate live databases.
+
 ## Quality Standard
 
 Project Autopilot enforces a world-class quality bar:

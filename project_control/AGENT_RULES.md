@@ -39,3 +39,18 @@ Builders must:
 - Provide evidence after changes.
 - Stop when blocked and write blockers to `BLOCKERS.md`.
 - Accumulate non-blocking questions in `HUMAN_QUESTIONS.md`.
+
+## Project Autopilot v2 Rules
+
+- Project Autopilot is the control plane.
+- Codex is the primary builder for now.
+- Claude Code is available only as a manual/future CLI provider depending on provider status.
+- Claude Agent SDK requires `ANTHROPIC_API_KEY` and is not enabled automatically.
+- Design Director review is required for UI/design changes.
+- Research Director review is required for uncertain vendor, security, privacy, paid API, legal, architecture, or deployment decisions.
+- Scheduler remains disabled.
+- Automatic Claude execution remains disabled.
+- Deploy automation remains disabled.
+- Paid APIs are disabled by default.
+- Worktrees are required for parallel writes.
+- No live database, RLS, storage, or Supabase changes may happen without explicit human approval.

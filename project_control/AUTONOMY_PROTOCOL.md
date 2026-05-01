@@ -58,3 +58,19 @@ Send Telegram alerts when `telegram_enabled` is true and credentials are availab
 - Approval required.
 
 If Telegram credentials are missing, record the issue in `BLOCKERS.md` only when the current task requires Telegram delivery; otherwise record a non-blocking question.
+
+## Project Autopilot v2 Control Plane
+
+Project Autopilot coordinates work; it does not replace Codex, Claude Code, Lovable, Replit, or future builder tools.
+
+- Codex is the primary builder for now.
+- Claude Code is manual/future CLI handoff unless automatic execution is explicitly enabled later.
+- Claude Agent SDK is a future provider and requires `ANTHROPIC_API_KEY`; it is not called automatically.
+- Design Director is required for UI/design changes.
+- Research Director is required when decisions involve uncertain providers, security, paid APIs, legal/privacy, cloud/VPS/deployment architecture, AI model/vendor choice, or RLS/security design.
+- Scheduler remains disabled until manual cycles are reliable and explicitly approved.
+- Automatic Claude execution remains disabled.
+- Deploy automation remains disabled.
+- Paid APIs remain disabled by default.
+- Worktrees are required for parallel writes.
+- Live DB/RLS/storage changes require explicit human approval and must never run as hidden side effects.

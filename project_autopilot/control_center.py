@@ -392,6 +392,19 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Visual QA report", "Page layout, accessibility, state rendering checks", logs / f"{pid}_visual_qa_latest.md", "validation"),
         _entry("Visual Quality Standard", "Visual design rules and quality bar", ctrl / "visual" / "MIRA_VISUAL_QUALITY_STANDARD.md", "planning"),
         _entry("External Builder Policy", "External tool intake governance", ctrl / "EXTERNAL_BUILDER_POLICY.md", "planning"),
+        _entry("Autopilot v2 spec", "Control-plane target architecture", ctrl / "AUTOPILOT_V2_SPEC.md", "planning"),
+        _entry("Autopilot Definition of Done", "Universal completion gates", ctrl / "AUTOPILOT_DEFINITION_OF_DONE.md", "planning"),
+        _entry("Design Director Standard", "Strict UI/design quality standard", ctrl / "DESIGN_DIRECTOR_STANDARD.md", "validation"),
+        _entry("Design Rubric", "Design scoring categories", ctrl / "DESIGN_RUBRIC.md", "validation"),
+        _entry("Innovation Standard", "Originality without gimmicks", ctrl / "INNOVATION_STANDARD.md", "validation"),
+        _entry("Copywriting Standard", "CTA, error, and product-copy rules", ctrl / "COPYWRITING_STANDARD.md", "validation"),
+        _entry("Research Director Standard", "Research trigger and approval rules", ctrl / "RESEARCH_DIRECTOR_STANDARD.md", "research"),
+        _entry("Deep Research Protocol", "Human-approved deep research rules", ctrl / "DEEP_RESEARCH_PROTOCOL.md", "research"),
+        _entry("Provider registry report", "Builder provider metadata", logs / f"{pid}_provider_registry_latest.md", "planning"),
+        _entry("Design Director report", "Latest design quality verdict", logs / f"{pid}_design_director_latest.md", "validation"),
+        _entry("Research Director status", "Latest research status", logs / f"{pid}_research_director_latest.md", "research"),
+        _entry("Builder Orchestrator status", "Latest builder routing status", logs / f"{pid}_builder_orchestrator_latest.md", "planning"),
+        _entry("Autopilot v2 check", "Local v2 readiness verdict", logs / f"{pid}_autopilot_v2_check_latest.md", "validation"),
     ]
     return items
 
@@ -497,6 +510,15 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
 
     # Backend audit
     data["backend_audit"] = _backend_audit_json(project)
+
+    # Autopilot v2 reports
+    pid = project.project_id
+    logs = project.repo_path / project.logs_dir
+    data["provider_registry"] = _read_json(logs / f"{pid}_provider_registry_latest.json")
+    data["design_director"] = _read_json(logs / f"{pid}_design_director_latest.json")
+    data["research_director"] = _read_json(logs / f"{pid}_research_director_latest.json")
+    data["builder_orchestrator"] = _read_json(logs / f"{pid}_builder_orchestrator_latest.json")
+    data["autopilot_v2_check"] = _read_json(logs / f"{pid}_autopilot_v2_check_latest.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1386,6 +1408,56 @@ def _render_capability_map(d: dict[str, Any]) -> str:
     return f'<div class="cap-grid">{"".join(cards)}</div>'
 
 
+def _render_autopilot_v2(d: dict[str, Any]) -> str:
+    providers = d.get("provider_registry", {})
+    design = d.get("design_director", {})
+    research = d.get("research_director", {})
+    orchestrator = d.get("builder_orchestrator", {})
+    v2 = d.get("autopilot_v2_check", {})
+
+    configured = providers.get("configured_provider_count", 0)
+    total = providers.get("provider_count", 0)
+    missing_env = sorted({
+        name
+        for provider in providers.get("providers", [])
+        for name in provider.get("missing_env_vars", [])
+    })
+    provider_rows = []
+    for provider in providers.get("providers", []):
+        provider_rows.append(
+            f"<tr><td>{_h(provider.get('display_name', ''))}</td>"
+            f"<td>{_badge('yes' if provider.get('configured') else 'no', 'ok' if provider.get('configured') else 'na')}</td>"
+            f"<td>{_h(provider.get('current_status', ''))}</td>"
+            f"<td>{_h(', '.join(provider.get('supported_execution_modes', [])))}</td></tr>"
+        )
+
+    lines = ['<div class="grid grid-2">']
+    lines.append('<div class="card">')
+    lines.append('<h3>v2 Readiness</h3>')
+    lines.append('<div class="grid grid-2" style="margin-top:6px">')
+    lines.append(f'<div>{_kv_badge("Autopilot v2", v2.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Providers", f"{configured}/{total} configured")}</div>')
+    lines.append(f'<div>{_kv_badge("Design Director", design.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv_badge("Research Director", research.get("status", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv_badge("Builder Orchestrator", orchestrator.get("status", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Missing provider env", ", ".join(missing_env) if missing_env else "none")}</div>')
+    lines.append('</div>')
+    action = providers.get("recommended_next_provider_action") or "Run provider registry and v2 check."
+    lines.append(f'<div style="margin-top:8px">{_kv("Next action", action)}</div>')
+    lines.append('</div>')
+
+    lines.append('<div class="card">')
+    lines.append('<h3>Configured Providers</h3>')
+    if provider_rows:
+        lines.append('<table><tr><th>Provider</th><th>Configured</th><th>Status</th><th>Modes</th></tr>')
+        lines.extend(provider_rows)
+        lines.append('</table>')
+    else:
+        lines.append('<div class="empty-state" style="margin-top:6px">Provider registry has not been run.</div>')
+    lines.append('</div></div>')
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1664,6 +1736,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7. Capability map
         _section("capabilities", "Capability Map", _render_capability_map(d)),
+
+        # 7b. Autopilot v2 readiness
+        _section("autopilot-v2", "Project Autopilot v2 Readiness", _render_autopilot_v2(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),
