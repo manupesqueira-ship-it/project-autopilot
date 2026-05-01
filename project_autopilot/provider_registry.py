@@ -9,7 +9,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import load_project_config
+from env_loader import load_env
 from providers.registry import discover_providers
+
+load_env()
 
 
 def _write_reports(project_id: str, payload: dict) -> tuple[Path, Path]:
@@ -40,6 +43,7 @@ def _write_reports(project_id: str, payload: dict) -> tuple[Path, Path]:
             f"- Missing env vars: {', '.join(item['missing_env_vars']) or 'none'}",
             f"- Risks: {', '.join(item['risks']) or 'none'}",
             f"- Notes: {'; '.join(item['notes']) or 'none'}",
+            f"- Metadata: {json.dumps(item.get('metadata', {}), sort_keys=True)}",
             "",
         ])
     lines.extend([

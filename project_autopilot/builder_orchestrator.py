@@ -22,6 +22,8 @@ class BuilderPlan:
     recommended_provider: str
     fallback_provider: str
     execution_mode: str
+    live_call_required: bool = False
+    explicit_approval_required: bool = False
     required_approvals: list[str] = field(default_factory=list)
     research_required: bool = False
     research_status: str = "NO_RESEARCH_REQUIRED"
@@ -64,6 +66,18 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
     is_paid = any(word in text for word in ["paid", "billing", "image generation", "video generation", "seedance"])
     is_refactor = any(word in text for word in ["refactor", "complex", "architecture", "migration"])
     is_docs = any(word in text for word in ["doc", "readme", "runbook", "spec"])
+    is_claude_sdk_fit = any(
+        phrase in text
+        for phrase in [
+            "review architecture",
+            "architecture review",
+            "codebase analysis",
+            "design review assistance",
+            "refactor planning",
+            "claude sdk",
+            "claude agent sdk",
+        ]
+    )
 
     provider = "codex"
     fallback = "claude_code"
@@ -79,6 +93,8 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
     auto_commit = "allowed_if_all_gates_pass"
     allowed = DEFAULT_ALLOWED.copy()
     notes: list[str] = ["Project Autopilot plans and validates; it does not execute builders in this sprint."]
+    live_call_required = False
+    explicit_approval_required = False
 
     if is_ui:
         validations.append("python -B project_autopilot/design_director.py --project mira")
@@ -97,6 +113,23 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
         fallback = "codex"
         auto_commit = "manual_review_recommended_for_complex_refactor"
         notes.append("Complex refactors may fit Claude Code manual handoff, with Codex QA fallback.")
+
+    if is_claude_sdk_fit and not is_docs:
+        provider = "claude_agent_sdk"
+        fallback = "codex"
+        execution = "dry_run_only"
+        explicit_approval_required = True
+        approvals.append("explicit human approval before any live Claude Agent SDK call")
+        auto_commit = "manual_review_required_before_live_claude_sdk_use"
+        notes.append("Claude Agent SDK is dry-run only; no live Claude call is made or required for this plan.")
+
+    if is_claude_sdk_fit and is_backend:
+        provider = "claude_agent_sdk"
+        fallback = "codex"
+        execution = "dry_run_only"
+        explicit_approval_required = True
+        approvals.append("explicit human approval for backend/security analysis scope")
+        notes.append("Backend/security work routed to Claude SDK only as a future dry-run analysis candidate.")
 
     if is_paid:
         approvals.append("budget approval")
@@ -120,6 +153,8 @@ def plan_task(project: ProjectConfig, task: str) -> BuilderPlan:
         recommended_provider=provider,
         fallback_provider=fallback,
         execution_mode=execution,
+        live_call_required=live_call_required,
+        explicit_approval_required=explicit_approval_required,
         required_approvals=sorted(set(approvals)),
         research_required=research_status in {"RESEARCH_REQUIRED", "DECISION_BLOCKED_RESEARCH_REQUIRED"},
         research_status=research_status,
@@ -189,6 +224,8 @@ def write_plan(project: ProjectConfig, plan: BuilderPlan) -> tuple[Path, Path]:
         f"Recommended provider: {plan.recommended_provider}",
         f"Fallback provider: {plan.fallback_provider}",
         f"Execution mode: {plan.execution_mode}",
+        f"Live call required: {plan.live_call_required}",
+        f"Explicit approval required: {plan.explicit_approval_required}",
         f"Risk: {plan.risk_level} ({', '.join(plan.risk_categories)})",
         f"Research: {plan.research_status}",
         f"Design review required: {plan.design_review_required}",
@@ -226,6 +263,8 @@ def main() -> int:
         print(f"Builder Orchestrator Plan: {plan.task}")
         print(f"  Provider: {plan.recommended_provider} (fallback: {plan.fallback_provider})")
         print(f"  Mode: {plan.execution_mode}")
+        print(f"  Live call required: {plan.live_call_required}")
+        print(f"  Explicit approval required: {plan.explicit_approval_required}")
         print(f"  Risk: {plan.risk_level}")
         print(f"  Research: {plan.research_status}")
         print(f"  Design review: {'yes' if plan.design_review_required else 'no'}")

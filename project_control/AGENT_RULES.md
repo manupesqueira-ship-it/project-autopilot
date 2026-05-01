@@ -64,3 +64,6 @@ Builders must:
 - Operators should run `--doctor`, `--autopilot-health`, `--policy-fixtures`, then `--local-plan` or `--post-builder`, then `--control-center`.
 - Claude Agent SDK readiness checks may report whether `ANTHROPIC_API_KEY` is present, but must never print the value or call Anthropic.
 - Claude SDK integration requires dry-run mode, worktree/sandbox policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live call.
+- Claude SDK dry-run is allowed only through `python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run` or `project_autopilot/claude_sdk_dry_run.py`.
+- Claude SDK dry-run may report `PRESENT_VALUE_HIDDEN`, `MISSING`, or `EMPTY`; it must never expose the key, install dependencies, import live SDK behavior that makes network calls, or execute a builder.
+- A controlled live Claude analysis call is a future phase and requires explicit approval for that exact call. It must be analysis-only until sandboxed builder execution is separately approved.

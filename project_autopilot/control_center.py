@@ -411,6 +411,8 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("Autopilot v2 check", "Local v2 readiness verdict", logs / f"{pid}_autopilot_v2_check_latest.md", "validation"),
         _entry("Autopilot health report", "Consolidated operational health", logs / f"{pid}_autopilot_health_latest.md", "observability"),
         _entry("Autopilot health JSON", "Machine-readable operational health", logs / f"{pid}_autopilot_health_latest.json", "observability"),
+        _entry("Claude SDK dry-run report", "Dry-run readiness for future Claude Agent SDK integration", logs / f"{pid}_claude_sdk_dry_run_latest.md", "planning"),
+        _entry("Claude SDK dry-run JSON", "Machine-readable Claude SDK dry-run verdict", logs / f"{pid}_claude_sdk_dry_run_latest.json", "planning"),
     ]
     return items
 
@@ -528,6 +530,7 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["post_builder_policy"] = _read_json(logs / f"{pid}_post_builder_policy_latest.json")
     data["policy_fixture_tests"] = _read_json(logs / "policy_tests" / pid / "latest" / "policy_test_results.json")
     data["autopilot_health"] = _read_json(logs / f"{pid}_autopilot_health_latest.json")
+    data["claude_sdk_dry_run"] = _read_json(logs / f"{pid}_claude_sdk_dry_run_latest.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1534,14 +1537,45 @@ def _render_autopilot_health(d: dict[str, Any]) -> str:
     lines.append(f'<div>{_kv("Providers", subsystems.get("provider_registry", "UNKNOWN"))}</div>')
     lines.append('</div>')
     lines.append('<div class="grid grid-3" style="margin-top:8px">')
-    lines.append(f'<div>{_kv("Claude SDK key", "present" if claude.get("anthropic_api_key_present") else "missing")}</div>')
+    lines.append(f'<div>{_kv("Claude SDK key", claude.get("anthropic_api_key_status", "UNKNOWN"))}</div>')
     lines.append(f'<div>{_kv("Scheduler", subsystems.get("scheduler", "UNKNOWN"))}</div>')
     lines.append(f'<div>{_kv("Auto-Claude", subsystems.get("automatic_claude_execution", "UNKNOWN"))}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv_badge("Claude dry-run", claude.get("claude_sdk_dry_run_verdict", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("SDK package", "detected" if claude.get("sdk_package_detected") else "not detected")}</div>')
+    lines.append(f'<div>{_kv("Live calls", claude.get("live_claude_calls", "DISABLED_EXPECTED"))}</div>')
     lines.append('</div>')
     if next_actions:
         lines.append('<div style="margin-top:8px"><span class="kv-label">Next recommended action</span>')
         lines.append(f'<div>{_h(next_actions[0])}</div></div>')
     report_path = f"logs/{d.get('project_id')}_autopilot_health_latest.md"
+    lines.append(f'<div style="margin-top:8px">{_kv("Report", report_path, mono=True)}</div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
+def _render_claude_sdk_readiness(d: dict[str, Any]) -> str:
+    dry = d.get("claude_sdk_dry_run", {})
+    health = d.get("autopilot_health", {})
+    claude = health.get("claude_integration_readiness", {})
+    if not dry and not claude:
+        return '<div class="empty-state">No Claude SDK dry-run report yet. Run --claude-sdk-dry-run.</div>'
+    verdict = dry.get("verdict") or claude.get("claude_sdk_dry_run_verdict", "UNKNOWN")
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Dry-run verdict", verdict)}</div>')
+    lines.append(f'<div>{_kv("ANTHROPIC_API_KEY", dry.get("anthropic_api_key_status") or claude.get("anthropic_api_key_status", "UNKNOWN"))}</div>')
+    lines.append(f'<div>{_kv("SDK package", "detected" if (dry.get("sdk_package_detected") or claude.get("sdk_package_detected")) else "not detected")}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Automatic execution", dry.get("automatic_claude_execution", claude.get("automatic_claude_execution", "DISABLED_EXPECTED")))}</div>')
+    lines.append(f'<div>{_kv("Live calls", dry.get("live_claude_calls", claude.get("live_claude_calls", "DISABLED_EXPECTED")))}</div>')
+    lines.append(f'<div>{_kv("External calls made", "yes" if dry.get("external_calls_made") else "NO")}</div>')
+    lines.append('</div>')
+    next_action = dry.get("next_recommended_action") or "Controlled live Claude analysis requires explicit human approval."
+    lines.append(f'<div style="margin-top:8px">{_kv("Next action", next_action)}</div>')
+    report_path = f"logs/{d.get('project_id')}_claude_sdk_dry_run_latest.md"
     lines.append(f'<div style="margin-top:8px">{_kv("Report", report_path, mono=True)}</div>')
     lines.append("</div>")
     return "\n".join(lines)
@@ -1837,6 +1871,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7e. Operational health
         _section("autopilot-health", "Project Autopilot Operational Health", _render_autopilot_health(d)),
+
+        # 7f. Claude Agent SDK readiness
+        _section("claude-sdk", "Claude Agent SDK Readiness", _render_claude_sdk_readiness(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

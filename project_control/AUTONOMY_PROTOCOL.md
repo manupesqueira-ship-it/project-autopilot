@@ -105,4 +105,25 @@ Use the consolidated operator workflow before starting or accepting builder work
 Pre-Claude readiness requires local `ANTHROPIC_API_KEY`, dry-run provider mode, worktree/sandbox policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval before the first live Claude SDK call. Scheduler and automatic Claude execution remain disabled.
 - `SAFE_NO_CHANGES`: no commit required.
 
+## Claude Agent SDK Dry-Run Gate
+
+Claude Agent SDK may be checked only in dry-run mode until a human explicitly approves a controlled live analysis call.
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run
+```
+
+Dry-run mode may report `ANTHROPIC_API_KEY` as `PRESENT_VALUE_HIDDEN`, `MISSING`, or `EMPTY`. It must not print the key, call Anthropic, execute Claude Code, install SDK packages, edit files, or enable automatic execution.
+
+Before any live Claude SDK call:
+
+1. Policy fixtures must pass.
+2. Post-builder policy must be active.
+3. Worktree/sandbox policy must be followed.
+4. Allowlist/denylist must be in place.
+5. Cost/budget gates must be reviewed.
+6. The human must approve the specific call.
+
+The first live call, when approved later, must be analysis-only and unable to edit files.
+
 Automatic commit remains allowed only for scoped, local, non-secret, non-deployment, non-paid, non-live-database work where all required gates pass.

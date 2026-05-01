@@ -38,6 +38,7 @@ python -B project_autopilot/agent_loop.py --project mira --policy-check
 python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 python -B project_autopilot/agent_loop.py --project mira --policy-fixtures
 python -B project_autopilot/agent_loop.py --project mira --autopilot-health
+python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run
 ```
 
 These commands do not execute builders, call Anthropic/OpenAI, call paid APIs, deploy, or mutate live databases.
@@ -98,6 +99,34 @@ Recommended operator flow:
 `--doctor` also surfaces latest policy fixture health. A missing fixture report is a warning; a failing fixture report is a failure.
 
 Pre-Claude readiness requires local `ANTHROPIC_API_KEY` presence, provider dry-run mode, sandbox/worktree policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live Claude SDK call. Scheduler and automatic Claude execution remain disabled.
+
+### Claude Agent SDK Dry-Run
+
+Claude Agent SDK integration is currently dry-run only:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run
+python -B project_autopilot/claude_sdk_dry_run.py --project mira --status
+python -B project_autopilot/claude_sdk_dry_run.py --project mira --plan "Review MIRA result page design"
+```
+
+The dry-run validator:
+
+- Detects `ANTHROPIC_API_KEY` as `PRESENT_VALUE_HIDDEN`, `MISSING`, or `EMPTY`.
+- Never prints the value.
+- Does not call Anthropic, Claude Code, OpenAI, Supabase, or paid APIs.
+- Confirms automatic Claude execution and scheduler remain disabled.
+- Confirms future live calls require explicit human approval.
+- Confirms provider routing can choose Claude Agent SDK in `dry_run_only` mode.
+
+Reports are written to ignored files:
+
+```text
+logs/<project_id>_claude_sdk_dry_run_latest.md
+logs/<project_id>_claude_sdk_dry_run_latest.json
+```
+
+The next phase is a single controlled analysis call, only after explicit human approval. Sandboxed builder execution and limited automatic execution are later phases.
 
 ## Quality Standard
 
@@ -760,6 +789,7 @@ Project Autopilot loads `.env` and `.env.local` from the repo root. Required var
 | `OPENAI_API_KEY` | `--cycle` (optional — falls back to local plan) |
 | `TELEGRAM_BOT_TOKEN` | Telegram alerts (optional) |
 | `TELEGRAM_CHAT_ID` | Telegram alerts (optional) |
+| `ANTHROPIC_API_KEY` | Claude Agent SDK future provider dry-run/live-readiness detection only |
 
 ## VPS Readiness and Scheduler Foundation
 

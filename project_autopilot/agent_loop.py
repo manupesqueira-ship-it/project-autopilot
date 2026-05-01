@@ -38,7 +38,8 @@ from run_lock import LockActiveError, acquire_lock, lock_status, release_lock
 from validation_report import create_validation_report
 from backend_audit import run_backend_audit
 from control_center import generate_control_center
-from autopilot_health import build_health, policy_fixture_health, write_reports as write_autopilot_health_reports
+from autopilot_health import build_health, claude_sdk_dry_run_health, policy_fixture_health, write_reports as write_autopilot_health_reports
+from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
 from policy_test_fixtures import run as run_policy_fixture_suite
 
 
@@ -1059,7 +1060,9 @@ def run_autopilot_health(project_id: str) -> int:
     print(f"  Claude Code manual handoff ready: {'yes' if claude['claude_code_manual_handoff_ready'] else 'no'}")
     print(f"  Claude Code automatic execution enabled: {'yes' if claude['claude_code_automatic_execution_enabled'] else 'no'}")
     print(f"  Claude Agent SDK scaffold exists: {'yes' if claude['claude_agent_sdk_provider_scaffold_exists'] else 'no'}")
-    print(f"  ANTHROPIC_API_KEY present: {'yes' if claude['anthropic_api_key_present'] else 'no'}")
+    print(f"  ANTHROPIC_API_KEY: {claude['anthropic_api_key_status']}")
+    print(f"  SDK package detected: {'yes' if claude['sdk_package_detected'] else 'no'}")
+    print(f"  Claude SDK dry-run: {claude['claude_sdk_dry_run_verdict']}")
     print(f"  Claude Agent SDK external call tested: {'yes' if claude['claude_agent_sdk_external_call_tested'] else 'no'}")
     print("Top blockers:")
     for blocker in payload["blockers"] or ["none"]:
@@ -1071,6 +1074,20 @@ def run_autopilot_health(project_id: str) -> int:
     print(f"Report: {md_path}")
     print(f"JSON: {json_path}")
     return 2 if payload["overall_verdict"] == "AUTOPILOT_BLOCKED" else 0
+
+
+def run_claude_sdk_dry_run_cmd(project_id: str) -> int:
+    exit_code, payload, md_path, json_path = run_claude_sdk_dry_run_report(project_id)
+    print(f"Claude SDK Dry-Run: {payload['verdict']}")
+    print(f"  ANTHROPIC_API_KEY: {payload['anthropic_api_key_status']}")
+    print(f"  SDK package detected: {'yes' if payload['sdk_package_detected'] else 'no'}")
+    print(f"  Provider configured: {'yes' if payload['provider_configured'] else 'no'}")
+    print(f"  External calls made: {'yes' if payload['external_calls_made'] else 'NO'}")
+    print(f"  Automatic Claude execution: {payload['automatic_claude_execution']}")
+    print(f"  Next action: {payload['next_recommended_action']}")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    return exit_code
 
 
 def run_doctor(project_id: str) -> int:
@@ -1229,6 +1246,13 @@ def run_doctor(project_id: str) -> int:
         "POLICY_FIXTURE_SUITE",
         f"policy fixtures: {fixture_health['status']} ({fixture_health['passed']}/{fixture_health['total']} passed)",
         fixture_health["command"],
+    )
+    claude_dry = claude_sdk_dry_run_health(project)
+    add(
+        "pass" if claude_dry["severity"] == "pass" else ("fail" if claude_dry["severity"] == "fail" else "warn"),
+        "CLAUDE_SDK_DRY_RUN",
+        f"Claude SDK dry-run: {claude_dry['verdict']}; ANTHROPIC_API_KEY={claude_dry.get('anthropic_api_key_status', 'UNKNOWN')}",
+        claude_dry["command"],
     )
 
     severity_rank = {"pass": 0, "warn": 1, "fail": 2}
@@ -1458,6 +1482,7 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --handoff-claude\n"
             "  python -B project_autopilot/agent_loop.py --project mira --policy-fixtures\n"
             "  python -B project_autopilot/agent_loop.py --project mira --autopilot-health\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -1486,6 +1511,7 @@ def main() -> int:
     group.add_argument("--policy-check", action="store_true", help="Evaluate current working tree with v2 post-builder policy gates.")
     group.add_argument("--policy-fixtures", action="store_true", help="Run deterministic v2 policy fixture regression tests.")
     group.add_argument("--autopilot-health", action="store_true", help="Print consolidated Project Autopilot operational health.")
+    group.add_argument("--claude-sdk-dry-run", action="store_true", help="Validate Claude Agent SDK dry-run readiness without external calls.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
 
     args = parser.parse_args()
@@ -1532,6 +1558,8 @@ def main() -> int:
         return run_policy_fixtures(args.project)
     if args.autopilot_health:
         return run_autopilot_health(args.project)
+    if args.claude_sdk_dry_run:
+        return run_claude_sdk_dry_run_cmd(args.project)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

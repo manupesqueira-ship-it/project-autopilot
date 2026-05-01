@@ -11,7 +11,10 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import ProjectConfig, load_project_config
+from env_loader import load_env
 from provider_registry import build_registry
+
+load_env()
 
 
 @dataclass
@@ -65,6 +68,7 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Codex provider exists", (ap / "providers" / "codex_provider.py").exists())
     add("Claude Code provider exists", (ap / "providers" / "claude_code_provider.py").exists())
     add("Claude Agent SDK provider exists", (ap / "providers" / "claude_agent_sdk_provider.py").exists())
+    add("Claude SDK dry-run validator exists", (ap / "claude_sdk_dry_run.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -80,6 +84,15 @@ def run_check(project: ProjectConfig) -> V2Report:
         )
     else:
         add("Latest policy fixture suite passed", True, "WARN: no latest fixture report yet; run policy_test_fixtures.py")
+    claude_dry_run = _read_json(root / project.logs_dir / f"{project.project_id}_claude_sdk_dry_run_latest.json")
+    if claude_dry_run:
+        add(
+            "Latest Claude SDK dry-run report acceptable",
+            claude_dry_run.get("verdict") != "CLAUDE_SDK_DRY_RUN_BLOCKED",
+            claude_dry_run.get("verdict", "UNKNOWN"),
+        )
+    else:
+        add("Latest Claude SDK dry-run report acceptable", True, "WARN: no latest dry-run report yet; run --claude-sdk-dry-run")
     add("Autopilot Definition of Done exists", (pc / "AUTOPILOT_DEFINITION_OF_DONE.md").exists())
     add("Autopilot v2 spec exists", (pc / "AUTOPILOT_V2_SPEC.md").exists())
     add("Control Center exists", (ap / "control_center.py").exists())

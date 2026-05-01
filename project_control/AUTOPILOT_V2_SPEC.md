@@ -84,7 +84,15 @@ Claude Code is a future/manual/CLI provider. It may be used through manual promp
 
 Automatic Claude execution remains disabled.
 
-Claude Agent SDK is a future formal provider requiring `ANTHROPIC_API_KEY`. Its provider may detect whether the env var name is present, but it must not print values or call Anthropic APIs until explicitly approved and budget-gated.
+Claude Agent SDK is a future formal provider requiring `ANTHROPIC_API_KEY`. Its provider may detect whether the env var is `PRESENT_VALUE_HIDDEN`, `MISSING`, or `EMPTY`, but it must not print values or call Anthropic APIs until explicitly approved and budget-gated.
+
+Claude Agent SDK dry-run readiness is validated with:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run
+```
+
+Dry-run mode confirms provider routing, key presence, policy fixtures, post-builder gates, cost/budget controls, worktree/sandbox documentation, and explicit approval requirements. It does not import or call the live SDK in a way that can make network requests.
 
 ## 8. Codex Integration Model
 
@@ -153,6 +161,8 @@ This command summarizes provider registry, Design Director, Research Director, B
 MIRA real-data blockers should not make the control plane blocked unless they block Project Autopilot itself. Scheduler disabled and automatic Claude execution disabled are expected/pass states.
 
 Pre-Claude readiness requires local `ANTHROPIC_API_KEY`, provider dry-run mode, sandbox/worktree policy, allowlist/denylist, cost/budget gates, passing policy fixtures, and explicit human approval for the first live Claude SDK call. Project Autopilot must not call Anthropic during readiness checks.
+
+The controlled live Claude analysis call is a future phase. It must be analysis-only, human-approved, budget-gated, and unable to edit files. Sandboxed builder execution is a later phase after that.
 
 ## 12. Human Approval Gates
 

@@ -40,6 +40,10 @@ SQL_WORDS = ["execute sql", "ran sql", "enable rls", "create policy", "drop tabl
 PAID_WORDS = ["paid api", "openai image", "seedance", "byteplus", "billing", "charged", "real generation"]
 SCHEDULER_WORDS = ["enabled scheduler", "systemd timer enabled", "automatic schedule"]
 AUTO_CLAUDE_WORDS = ["automatic claude execution", "--claude-execute", "allow_automatic_builder_execution: true"]
+AUTO_CLAUDE_NEGATION_WORDS = ["automatic claude execution remains disabled", "automatic claude execution disabled", "auto-claude disabled"]
+CLAUDE_SDK_LIVE_WORDS = ["claude agent sdk live", "live claude sdk", "called claude agent sdk", "anthropic api call"]
+CLAUDE_SDK_APPROVAL_WORDS = ["explicit human approval", "approval granted", "human approved live claude"]
+CLAUDE_SDK_NEGATION_WORDS = ["no anthropic api call", "no live claude", "no external call", "without calling anthropic"]
 
 
 @dataclass(frozen=True)
@@ -165,12 +169,13 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
     touches_env = any(re.search(pattern, path, flags=re.IGNORECASE) for path in paths for pattern in FORBIDDEN_FILE_PATTERNS[:3]) or _mentions_any(lower, SECRET_WORDS)
     touches_deploy = any(word in lower for word in ["deploy", "vercel", "production deployment", "dockerfile", "systemd"])
     touches_paid = _mentions_any(lower, PAID_WORDS)
+    touches_claude_sdk_live = _mentions_any(lower, CLAUDE_SDK_LIVE_WORDS)
     touches_product_api = any(path.startswith("app/api/") for path in paths)
 
     code_paths = [p for p in paths if not p.startswith("project_control/") and not p.endswith(".md")]
     docs_only = bool(paths) and not code_paths
     risk_categories = set(risk.categories if risk else [])
-    requires_research = touches_paid or touches_security or touches_deploy or "research_required" in risk_categories
+    requires_research = touches_paid or touches_security or touches_deploy or touches_claude_sdk_live or "research_required" in risk_categories
     requires_backend = touches_backend or touches_security or touches_supabase or "data_schema_change" in risk_categories
 
     return TaskCharacteristics(
@@ -320,8 +325,15 @@ def evaluate_post_builder_policy(
         safety_blocks.append("Paid API risk detected.")
     if _mentions_any(lower, SCHEDULER_WORDS):
         safety_blocks.append("Scheduler enablement language detected.")
-    if _mentions_any(lower, AUTO_CLAUDE_WORDS):
+    if _mentions_any(lower, AUTO_CLAUDE_WORDS) and not _mentions_any(lower, AUTO_CLAUDE_NEGATION_WORDS):
         safety_blocks.append("Automatic Claude execution language detected.")
+    claude_live_without_approval = (
+        _mentions_any(lower, CLAUDE_SDK_LIVE_WORDS)
+        and not _mentions_any(lower, CLAUDE_SDK_APPROVAL_WORDS)
+        and not _mentions_any(lower, CLAUDE_SDK_NEGATION_WORDS)
+    )
+    if claude_live_without_approval:
+        safety_blocks.append("Claude Agent SDK live call without explicit approval detected.")
     gates.append(_gate(
         "secrets_env_gate",
         "BLOCKED" if any("Secrets/env" in item for item in safety_blocks) else "PASS",
