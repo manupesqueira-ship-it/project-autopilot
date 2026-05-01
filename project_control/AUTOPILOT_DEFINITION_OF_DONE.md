@@ -134,6 +134,20 @@ The review must:
 
 `PROCEED_TO_SANDBOX_DESIGN` allows only the next design sprint. It does not permit Claude builder execution, scheduler activation, auto-merge, deployment, live database work, or paid APIs.
 
+## OpenAI Auditor / Multi-Step Loop Gate
+
+OpenAI Auditor and the multi-step loop are dry-run only until a future controlled live-call or sandbox-execution sprint is explicitly approved.
+
+Required checks:
+
+1. Provider registry includes `openai_auditor`.
+2. `openai_auditor.py --status` runs without calling OpenAI.
+3. `openai_auditor.py --plan` writes ignored planning evidence only.
+4. `multistep_loop.py --dry-run-objective` previews lifecycle states without execution.
+5. Policy fixtures cover OpenAI Auditor live-call, self-approval, and policy-bypass risks.
+6. Autopilot health and Control Center show live OpenAI calls disabled.
+7. Project Autopilot remains final judge; OpenAI Auditor cannot skip policy, QA, Design Director, Research Director, backend audit, or Definition of Done.
+
 ## Stop Conditions
 
 Stop and ask for human approval before secrets, env files, git history, destructive commands, deployment, live Supabase changes, SQL/RLS/storage policies, paid APIs, scheduler enablement, automatic Claude execution, or parallel writes without worktrees.

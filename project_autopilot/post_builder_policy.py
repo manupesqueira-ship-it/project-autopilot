@@ -45,6 +45,10 @@ AUTO_CLAUDE_NEGATION_WORDS = ["automatic claude execution remains disabled", "au
 CLAUDE_SDK_LIVE_WORDS = ["claude agent sdk live", "live claude sdk", "called claude agent sdk", "anthropic api call"]
 CLAUDE_SDK_APPROVAL_WORDS = ["explicit human approval", "approval granted", "human approved live claude"]
 CLAUDE_SDK_NEGATION_WORDS = ["no anthropic api call", "no live claude", "no external call", "without calling anthropic"]
+OPENAI_LIVE_WORDS = ["openai api call", "called openai", "live openai", "openai auditor live"]
+OPENAI_APPROVAL_WORDS = ["explicit human approval", "approval granted", "human approved openai", "approved openai auditor"]
+OPENAI_NEGATION_WORDS = ["no openai api call", "openai api called: no", "openai api called no", "no live openai", "without calling openai"]
+OPENAI_POLICY_BYPASS_WORDS = ["openai auditor approved its own output", "auditor self-approved", "skip policy engine", "without policy review", "bypass project autopilot policy"]
 PROVIDER_ROUTING_RISK_WORDS = ["provider routing mismatch", "unapproved provider", "provider whitelist bypass"]
 POLICY_BYPASS_WORDS = ["policy gate bypass", "skip policy gates", "bypass post-builder policy"]
 EVIDENCE_INTEGRITY_WORDS = ["fabricated evidence", "missing evidence bundle", "ignored blockers", "stale blockers"]
@@ -160,7 +164,9 @@ def classify_task_characteristics(changed_files: list[str], report_text: str, ri
     text = f"{report_text}\n" + "\n".join(paths)
     lower = text.lower()
 
-    touches_ui = any(path.startswith(("app/", "components/")) for path in paths) or any(word in lower for word in ["ui", "design", "visual", "page"])
+    touches_ui = any(path.startswith(("app/", "components/")) for path in paths) or bool(re.search(r"\bui\b", lower)) or any(
+        word in lower for word in ["design", "visual", "page"]
+    )
     touches_backend = any(path.startswith(("app/api/", "lib/supabase", "supabase/")) for path in paths) or any(word in lower for word in ["backend", "database", "api route"])
     # Treat security/database policy work as sensitive, but do not flag generic
     # Project Autopilot policy modules/docs as live Supabase/RLS policy changes.
@@ -342,6 +348,15 @@ def evaluate_post_builder_policy(
     )
     if claude_live_without_approval:
         safety_blocks.append("Claude Agent SDK live call without explicit approval detected.")
+    openai_live_without_approval = (
+        _mentions_any(lower, OPENAI_LIVE_WORDS)
+        and not _mentions_any(lower, OPENAI_APPROVAL_WORDS)
+        and not _mentions_any(lower, OPENAI_NEGATION_WORDS)
+    )
+    if openai_live_without_approval:
+        safety_blocks.append("OpenAI Auditor live call without explicit approval detected.")
+    if _mentions_any(lower, OPENAI_POLICY_BYPASS_WORDS):
+        safety_blocks.append("OpenAI Auditor policy bypass or self-approval detected.")
     if _mentions_any(lower, PROVIDER_ROUTING_RISK_WORDS):
         safety_blocks.append("Provider routing/whitelist risk detected.")
     if _mentions_any(lower, POLICY_BYPASS_WORDS):

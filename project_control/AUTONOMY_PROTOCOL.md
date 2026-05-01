@@ -167,3 +167,25 @@ Allowed review verdicts:
 - `HUMAN_REVIEW_REQUIRED`: record the human decision before proceeding.
 
 Sandboxed Claude builder execution remains a separate future approval even when the review says sandbox design may proceed.
+
+## OpenAI Auditor and Multi-Step Loop Gate
+
+OpenAI Auditor is a dry-run planner/reviewer provider. It may organize objectives, improve builder prompts, diagnose blocked builder reports, draft correction instructions, review evidence, and recommend next steps. It must not build, self-approve, or bypass Project Autopilot policy.
+
+Dry-run commands:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --openai-auditor-status
+python -B project_autopilot/agent_loop.py --project mira --openai-auditor-plan --task "Build a sandboxed Claude builder loop"
+python -B project_autopilot/agent_loop.py --project mira --multistep-dry-run --objective "Improve MIRA result page design"
+```
+
+The intended future loop is:
+
+```text
+human objective -> OpenAI planning -> builder selected -> Claude/Codex handoff -> builder blocked or done -> OpenAI review -> validation -> policy review -> final verdict
+```
+
+Project Autopilot remains the final judge. OpenAI Auditor cannot skip Design Director, Research Director, backend audit, Flow QA, post-builder policy, or Definition of Done.
+
+Live OpenAI calls require explicit future approval and are disabled in the current mode.

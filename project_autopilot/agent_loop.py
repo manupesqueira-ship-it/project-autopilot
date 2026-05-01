@@ -42,6 +42,8 @@ from autopilot_health import build_health, claude_sdk_dry_run_health, policy_fix
 from claude_analysis_call import run_analysis as run_claude_analysis_call
 from claude_analysis_review import review_latest as review_latest_claude_analysis, write_review as write_claude_analysis_review
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
+from openai_auditor import build_dry_run as build_openai_auditor_dry_run, write_dry_run as write_openai_auditor_dry_run, _status_payload as openai_auditor_status_payload, write_status as write_openai_auditor_status
+from multistep_loop import build_loop as build_multistep_loop, write_loop as write_multistep_loop
 from policy_test_fixtures import run as run_policy_fixture_suite
 
 
@@ -1124,6 +1126,49 @@ def run_claude_analysis_review_cmd(project_id: str) -> int:
     return 2 if review.decision == "BLOCKED" else 0
 
 
+def run_openai_auditor_status_cmd(project_id: str) -> int:
+    project = load_project(project_id)
+    payload = openai_auditor_status_payload(project)
+    md_path, json_path = write_openai_auditor_status(project, payload)
+    provider = payload["provider"]
+    print(f"OpenAI Auditor: {provider['current_status']}")
+    print(f"  Configured: {'yes' if provider['configured'] else 'no'}")
+    print(f"  OPENAI_API_KEY: {provider.get('metadata', {}).get('env_status', 'UNKNOWN')}")
+    print("  Live calls enabled: no")
+    print("  OpenAI API called: NO")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    return 0
+
+
+def run_openai_auditor_plan_cmd(project_id: str, task: str) -> int:
+    project = load_project(project_id)
+    payload = build_openai_auditor_dry_run(project, task)
+    md_path, json_path = write_openai_auditor_dry_run(project, payload)
+    print(f"OpenAI Auditor Dry-Run: {payload.verdict}")
+    print(f"  Recommended builder: {payload.recommended_builder}")
+    print("  OpenAI API called: NO")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {payload.next_action}")
+    return 0
+
+
+def run_multistep_dry_run_cmd(project_id: str, objective: str) -> int:
+    project = load_project(project_id)
+    payload = build_multistep_loop(project, objective)
+    md_path, json_path = write_multistep_loop(project, payload)
+    print(f"Multi-Step Loop Dry-Run: {payload.verdict}")
+    print(f"  Objective: {payload.objective}")
+    print(f"  Recommended builder: {payload.recommended_builder}")
+    print("  Execution enabled: no")
+    print("  External API called: NO")
+    print(f"  Report: {md_path}")
+    print(f"  JSON: {json_path}")
+    print(f"  Next action: {payload.next_action}")
+    return 0
+
+
 def run_doctor(project_id: str) -> int:
     """Validate environment and project health. No API calls, no Telegram sends."""
     project = load_project(project_id)
@@ -1519,6 +1564,8 @@ def main() -> int:
             "  python -B project_autopilot/agent_loop.py --project mira --claude-sdk-dry-run\n"
             "  python -B project_autopilot/agent_loop.py --project mira --claude-analysis-dry-run\n"
             "  python -B project_autopilot/agent_loop.py --project mira --claude-analysis-review\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --openai-auditor-status\n"
+            "  python -B project_autopilot/agent_loop.py --project mira --multistep-dry-run --objective \"Improve MIRA result page design\"\n"
         ),
     )
     parser.add_argument("--project", default="mira", help="Project id from project_autopilot/config/projects/.")
@@ -1551,8 +1598,12 @@ def main() -> int:
     group.add_argument("--claude-analysis-dry-run", action="store_true", help="Build a sanitized Claude analysis prompt without calling Anthropic.")
     group.add_argument("--claude-analysis-approved", action="store_true", help="Make one explicit analysis-only Anthropic call.")
     group.add_argument("--claude-analysis-review", action="store_true", help="Review saved Claude analysis evidence and map it to policy decisions.")
+    group.add_argument("--openai-auditor-status", action="store_true", help="Show OpenAI Auditor dry-run provider status without API calls.")
+    group.add_argument("--openai-auditor-plan", action="store_true", help="Create an OpenAI Auditor dry-run plan for --task without API calls.")
+    group.add_argument("--multistep-dry-run", action="store_true", help="Preview the future planner-builder-review-policy loop without execution.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
+    parser.add_argument("--objective", default="Improve MIRA result page design", help="Objective text for --multistep-dry-run.")
 
     args = parser.parse_args()
 
@@ -1606,6 +1657,12 @@ def main() -> int:
         return run_claude_analysis_cmd(args.project, args.task, approved_live_call=True)
     if args.claude_analysis_review:
         return run_claude_analysis_review_cmd(args.project)
+    if args.openai_auditor_status:
+        return run_openai_auditor_status_cmd(args.project)
+    if args.openai_auditor_plan:
+        return run_openai_auditor_plan_cmd(args.project, args.task)
+    if args.multistep_dry_run:
+        return run_multistep_dry_run_cmd(args.project, args.objective)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 
