@@ -189,3 +189,28 @@ human objective -> OpenAI planning -> builder selected -> Claude/Codex handoff -
 Project Autopilot remains the final judge. OpenAI Auditor cannot skip Design Director, Research Director, backend audit, Flow QA, post-builder policy, or Definition of Done.
 
 Live OpenAI calls require explicit future approval and are disabled in the current mode.
+
+## Claude Sandbox Boundary Gate
+
+Sandboxed Claude builder execution remains disabled. Before a future execution sprint can be proposed, Project Autopilot must pass:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"
+```
+
+The preflight and simulation are planning tools only. They must not call Anthropic or OpenAI, execute Claude, create a real worktree, edit product code, deploy, run SQL/RLS, access env files, or enable scheduler/automatic Claude execution.
+
+Required boundary:
+
+1. Worktree required; one agent per worktree.
+2. Direct master/main writes prohibited.
+3. Auto-merge and force-push prohibited.
+4. File allowlist/denylist applied before handoff.
+5. Command allowlist/denylist applied before handoff.
+6. Prompt pack contains no secrets and no env content.
+7. Rollback/rejection plan exists.
+8. Evidence bundle and post-builder policy are required.
+9. Blocked/retry cases return to OpenAI Auditor for correction planning.
+
+`SANDBOX_PREFLIGHT_PASS` or `SANDBOX_SIMULATION_PASS` allows only a later human-approved execution design. It does not permit Project Autopilot to execute Claude.

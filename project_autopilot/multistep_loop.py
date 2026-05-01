@@ -20,6 +20,8 @@ STATES = [
     "OBJECTIVE_RECEIVED",
     "OPENAI_PLANNING",
     "BUILDER_SELECTED",
+    "CLAUDE_SANDBOX_PREFLIGHT",
+    "CLAUDE_SANDBOX_SIMULATION",
     "ASSIGNED_TO_CLAUDE",
     "ASSIGNED_TO_CODEX",
     "BUILDER_RUNNING",
@@ -120,6 +122,8 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
             "validation_gate",
             "post_builder_policy",
             "definition_of_done_gate",
+            "sandbox_preflight_gate",
+            "sandbox_simulation_gate",
             *auditor.required_policy_gates,
         }
     )
@@ -127,6 +131,8 @@ def build_loop(project: ProjectConfig, objective: str) -> MultiStepLoopDryRun:
         LoopStep("OBJECTIVE_RECEIVED", "human", "State objective and constraints.", ["scope_gate"]),
         LoopStep("OPENAI_PLANNING", "openai_auditor", "Dry-run planner prepares builder prompt outline.", ["provider_gate", "risk_gate"]),
         LoopStep("BUILDER_SELECTED", "builder_orchestrator", f"Select {plan.recommended_provider} with fallback {plan.fallback_provider}.", ["provider_gate"]),
+        LoopStep("CLAUDE_SANDBOX_PREFLIGHT", "project_autopilot", "If Claude is the future builder, evaluate worktree, file, command, prompt, rollback, and policy boundaries before execution.", ["sandbox_preflight_gate", "human_approval_gate"]),
+        LoopStep("CLAUDE_SANDBOX_SIMULATION", "project_autopilot", "Simulate the Claude sandbox lifecycle without creating a worktree or calling providers.", ["sandbox_simulation_gate"]),
         LoopStep(assigned_state, "project_autopilot", f"Prepare handoff for {builder_label}; execution remains disabled.", ["human_approval_gate"]),
         LoopStep("BUILDER_BLOCKED", "builder", "If blocked, return blocker report to OpenAI Auditor.", ["evidence_gate"]),
         LoopStep("OPENAI_REVIEWING_BLOCKER", "openai_auditor", "Diagnose blocker and draft correction instructions.", ["research_gate"]),

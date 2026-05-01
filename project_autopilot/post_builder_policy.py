@@ -55,6 +55,14 @@ EVIDENCE_INTEGRITY_WORDS = ["fabricated evidence", "missing evidence bundle", "i
 SANDBOX_ESCAPE_WORDS = ["sandbox escape", "unintended tool access", "enabled shell command execution", "host system access", "credential api access"]
 WORKTREE_RISK_WORDS = ["builder execution without worktree", "parallel writes without worktree", "without dedicated worktree"]
 ROLLBACK_RISK_WORDS = ["auto-merge without rollback", "rollback missing", "unsafe commit without rollback"]
+CLAUDE_SANDBOX_DIRECT_MASTER_WORDS = ["direct master write", "write directly to master", "wrote to master without worktree"]
+CLAUDE_SANDBOX_ENV_ACCESS_WORDS = ["read .env", "printed env", "env access enabled", "accessed .env.local"]
+CLAUDE_SANDBOX_SQL_COMMAND_WORDS = ["ran supabase sql", "executed supabase sql", "sql command allowed", "enable rls command"]
+CLAUDE_SANDBOX_DEPLOY_COMMAND_WORDS = ["deploy command allowed", "deployment command allowed", "vercel --prod allowed"]
+CLAUDE_SANDBOX_AUTO_MERGE_WORDS = ["auto-merge enabled", "automatic merge enabled", "merged automatically"]
+CLAUDE_SANDBOX_MISSING_ROLLBACK_WORDS = ["missing rollback", "without rollback plan", "rollback plan missing"]
+CLAUDE_SANDBOX_MISSING_POST_POLICY_WORDS = ["without post-builder policy", "post-builder policy skipped", "missing post-builder policy"]
+CLAUDE_SANDBOX_UNAPPROVED_PRODUCT_WORDS = ["without explicit product-file approval", "unapproved product file", "product file without approval"]
 
 
 @dataclass(frozen=True)
@@ -369,11 +377,28 @@ def evaluate_post_builder_policy(
         safety_blocks.append("Builder worktree isolation risk detected.")
     if _mentions_any(lower, ROLLBACK_RISK_WORDS):
         safety_blocks.append("Commit rollback/readiness risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_DIRECT_MASTER_WORDS):
+        safety_blocks.append("Claude sandbox direct master write risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_ENV_ACCESS_WORDS):
+        safety_blocks.append("Claude sandbox env/secret access risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_SQL_COMMAND_WORDS):
+        safety_blocks.append("Claude sandbox SQL/RLS command risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_DEPLOY_COMMAND_WORDS):
+        safety_blocks.append("Claude sandbox deploy command risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_AUTO_MERGE_WORDS):
+        safety_blocks.append("Claude sandbox auto-merge risk detected.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_MISSING_ROLLBACK_WORDS):
+        safety_blocks.append("Claude sandbox rollback plan missing.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_MISSING_POST_POLICY_WORDS):
+        safety_blocks.append("Claude sandbox post-builder policy missing.")
+    if _mentions_any(lower, CLAUDE_SANDBOX_UNAPPROVED_PRODUCT_WORDS):
+        safety_blocks.append("Claude sandbox unapproved product-file write detected.")
+    secret_blocked = any("Secrets/env" in item or "env/secret" in item for item in safety_blocks)
     gates.append(_gate(
         "secrets_env_gate",
-        "BLOCKED" if any("Secrets/env" in item for item in safety_blocks) else "PASS",
-        "Secrets/env risk blocked." if any("Secrets/env" in item for item in safety_blocks) else "No secrets/env risk detected.",
-        decisions=["Human approval required for any env/secret handling."] if any("Secrets/env" in item for item in safety_blocks) else [],
+        "BLOCKED" if secret_blocked else "PASS",
+        "Secrets/env risk blocked." if secret_blocked else "No secrets/env risk detected.",
+        decisions=["Human approval required for any env/secret handling."] if secret_blocked else [],
     ))
     gates.append(_gate(
         "human_approval_gate",

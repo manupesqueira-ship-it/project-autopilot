@@ -436,3 +436,35 @@ These actions are forbidden for all agents, in all contexts, permanently:
 | Include secrets in evidence records | Permanent prohibition |
 
 **If an agent produces output that violates any prohibition:** reject the output, write HALT, escalate to human immediately. Do not attempt to sanitize or partially apply the output.
+
+---
+
+## 13. Claude Sandboxed Builder Boundary
+
+Claude can become a builder only after a separate human-approved sandbox execution phase. The current operating model supports boundary preflight only:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"
+```
+
+Future flow:
+
+```text
+Human objective
+-> OpenAI Auditor dry-run planning
+-> Builder Orchestrator selects future Claude sandbox
+-> Sandbox preflight
+-> Sandbox simulation
+-> Human approval
+-> Dedicated worktree execution in a later sprint
+-> Builder report
+-> OpenAI Auditor review if blocked/done
+-> Validation
+-> Post-builder policy
+-> Human-controlled commit/merge decision
+```
+
+Preflight and simulation do not execute providers. They only prove that worktree lifecycle, file scope, command scope, no-secret prompt pack, rollback/rejection, evidence, and policy review requirements are present.
+
+Claude builder execution remains disabled until a later sprint explicitly implements human-approved sandbox execution.

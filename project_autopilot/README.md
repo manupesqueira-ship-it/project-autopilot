@@ -71,7 +71,7 @@ python -B project_autopilot/policy_test_fixtures.py --project mira --run docs_on
 python -B project_autopilot/policy_test_fixtures.py --project mira --run all
 ```
 
-The suite covers safe docs, UI/design gates, backend/Flow QA gates, Supabase/security human review, forbidden env files, secret-like report text, paid APIs, scheduler activation, automatic Claude execution, generated logs, research-required decisions, forced design failure, and validation failure. Results are written to ignored files under `logs/policy_tests/<project_id>/latest/`.
+The suite covers safe docs, UI/design gates, backend/Flow QA gates, Supabase/security human review, forbidden env files, secret-like report text, paid APIs, scheduler activation, automatic Claude execution, generated logs, research-required decisions, forced design failure, validation failure, OpenAI Auditor safety, and Claude sandbox boundary risks. Results are written to ignored files under `logs/policy_tests/<project_id>/latest/`.
 
 This suite must pass before enabling Claude Agent SDK execution, scheduler runs, or automatic builder execution. Add new fixtures by extending `fixtures()` in `project_autopilot/policy_test_fixtures.py`; keep assertions focused on policy outcomes instead of duplicating policy logic.
 
@@ -158,6 +158,39 @@ claude_analysis_model: claude-haiku-4-5-20251001
 ```
 
 Use `claude-haiku-4-5-20251001` for low-cost analysis. Use `claude-sonnet-4-6` only when stronger analysis is explicitly needed and available to the account. Do not use deprecated or retired 3.5/3.7 model aliases such as `claude-3-5-haiku-latest`.
+
+### Claude Sandbox Boundary Preflight
+
+Before any future Claude builder execution, Project Autopilot must prove the sandbox boundary without executing Claude:
+
+```bash
+python -B project_autopilot/claude_prompt_pack.py --project mira --task "Improve Project Autopilot docs"
+python -B project_autopilot/worktree_sandbox.py --project mira --plan --task "Improve Project Autopilot docs"
+python -B project_autopilot/worktree_sandbox.py --project mira --simulate --task "Improve Project Autopilot docs"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "Improve Project Autopilot docs"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "Improve Project Autopilot docs"
+```
+
+These commands are non-executing. They do not call Anthropic or OpenAI, do not create a real worktree, do not execute Claude, do not edit product code, and do not enable scheduler or automatic Claude execution.
+
+The boundary models:
+
+- Worktree lifecycle: one builder agent per dedicated worktree, no direct master writes, no auto-merge, no force-push.
+- File scope: Project Autopilot/control docs allowed by default; env/secrets, generated dirs, deployment configs, live migration paths, and product files are denied unless explicitly scoped and approved.
+- Command scope: validation commands allowed; env reads, SQL/RLS, deploy, scheduler, destructive git, package install, paid API, and force-push commands denied.
+- Prompt pack: no secrets, no env content, allowed/denied files, allowed/denied commands, stop conditions, validation commands, and builder report format.
+- Rollback/rejection: failed or blocked builder work is parked or sent back for correction; Project Autopilot post-builder policy remains final.
+
+Evidence is written to ignored files:
+
+```text
+logs/claude_sandbox/<project_id>/latest/claude_sandbox_preflight.md
+logs/claude_sandbox/<project_id>/latest/claude_sandbox_simulation.md
+logs/claude_sandbox/<project_id>/latest/claude_prompt_pack_preview.md
+logs/claude_sandbox/<project_id>/latest/worktree_sandbox_plan.md
+```
+
+`SANDBOX_PREFLIGHT_PASS` or `SANDBOX_SIMULATION_PASS` is not permission to run Claude. It only means Project Autopilot is ready for a later human-approved sandbox execution design sprint.
 
 ## Quality Standard
 

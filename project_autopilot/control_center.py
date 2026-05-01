@@ -422,6 +422,14 @@ def _collect_evidence_paths(project: ProjectConfig, data: dict[str, Any]) -> lis
         _entry("OpenAI Auditor dry-run JSON", "Machine-readable OpenAI Auditor dry-run", logs / "openai_auditor" / pid / "latest" / "openai_auditor_dry_run.json", "planning"),
         _entry("Multi-step loop dry-run", "Future planner-builder-review-policy lifecycle", logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.md", "planning"),
         _entry("Multi-step loop dry-run JSON", "Machine-readable multi-step loop preview", logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.json", "planning"),
+        _entry("Claude sandbox preflight", "Future Claude builder boundary evaluation", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_preflight.md", "planning"),
+        _entry("Claude sandbox preflight JSON", "Machine-readable sandbox preflight verdict", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_preflight.json", "planning"),
+        _entry("Claude sandbox simulation", "Non-executing future builder lifecycle simulation", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_simulation.md", "planning"),
+        _entry("Claude sandbox simulation JSON", "Machine-readable sandbox simulation verdict", logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_simulation.json", "planning"),
+        _entry("Claude prompt pack preview", "No-secret future builder prompt pack preview", logs / "claude_sandbox" / pid / "latest" / "claude_prompt_pack_preview.md", "planning"),
+        _entry("Claude prompt pack JSON", "Machine-readable prompt pack metadata", logs / "claude_sandbox" / pid / "latest" / "claude_prompt_pack_metadata.json", "planning"),
+        _entry("Worktree sandbox plan", "Planned worktree lifecycle without creation", logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.md", "planning"),
+        _entry("Worktree sandbox plan JSON", "Machine-readable worktree sandbox plan", logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.json", "planning"),
     ]
     return items
 
@@ -544,6 +552,10 @@ def collect_control_center_data(project: ProjectConfig) -> dict[str, Any]:
     data["claude_analysis_review"] = _read_json(logs / "claude" / pid / "latest" / "claude_analysis_review.json")
     data["openai_auditor"] = _read_json(logs / "openai_auditor" / pid / "latest" / "openai_auditor_dry_run.json")
     data["multistep_loop"] = _read_json(logs / "multistep_loop" / pid / "latest" / "multistep_loop_dry_run.json")
+    data["claude_sandbox_preflight"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_preflight.json")
+    data["claude_sandbox_simulation"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_sandbox_simulation.json")
+    data["claude_prompt_pack"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "claude_prompt_pack_metadata.json")
+    data["worktree_sandbox"] = _read_json(logs / "claude_sandbox" / pid / "latest" / "worktree_sandbox_plan.json")
 
     # Flow QA
     data["flow_qa"] = _flow_qa_data(project)
@@ -1671,6 +1683,48 @@ def _render_openai_auditor_loop(d: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_claude_sandbox_boundary(d: dict[str, Any]) -> str:
+    preflight = d.get("claude_sandbox_preflight", {})
+    simulation = d.get("claude_sandbox_simulation", {})
+    prompt_pack = d.get("claude_prompt_pack", {})
+    worktree = d.get("worktree_sandbox", {})
+    pid = d.get("project_id")
+    if not preflight and not simulation and not prompt_pack and not worktree:
+        return '<div class="empty-state">No Claude sandbox boundary evidence yet. Run --claude-sandbox-preflight and --claude-sandbox-simulate.</div>'
+
+    boundary = preflight.get("boundary", {}) if preflight else {}
+    file_policy = boundary.get("file_policy", {}) if boundary else {}
+    command_policy = boundary.get("command_policy", {}) if boundary else {}
+    rollback = boundary.get("rollback_plan", {}) if boundary else {}
+    builder_execution = bool(boundary.get("execution_enabled", False)) or bool(simulation.get("claude_builder_execution_enabled", False))
+    external_api = bool(simulation.get("external_api_called", False))
+    real_worktree = bool(simulation.get("real_worktree_created", False)) or bool(worktree.get("real_worktree_created", False))
+    lines = ['<div class="card">']
+    lines.append('<div class="grid grid-3">')
+    lines.append(f'<div>{_kv_badge("Preflight", preflight.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv_badge("Simulation", simulation.get("verdict", "NOT_RUN"))}</div>')
+    lines.append(f'<div>{_kv("Builder execution", "enabled" if builder_execution else "disabled")}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("External API", "yes" if external_api else "NO")}</div>')
+    lines.append(f'<div>{_kv("Real worktree", "yes" if real_worktree else "no")}</div>')
+    lines.append(f'<div>{_kv("Rollback plan", "yes" if rollback.get("exists", worktree.get("rollback_steps")) else "unknown")}</div>')
+    lines.append('</div>')
+    lines.append('<div class="grid grid-3" style="margin-top:8px">')
+    lines.append(f'<div>{_kv("Allowed files", str(len(file_policy.get("allowed_files", []))))}</div>')
+    lines.append(f'<div>{_kv("Denied files", str(len(file_policy.get("denied_files", []))))}</div>')
+    lines.append(f'<div>{_kv("Denied commands", str(len(command_policy.get("denied_commands", []))))}</div>')
+    lines.append('</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Post-builder policy required", "yes" if boundary.get("post_builder_policy_required", True) else "no")}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Prompt pack", f"logs/claude_sandbox/{pid}/latest/claude_prompt_pack_preview.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Worktree plan", f"logs/claude_sandbox/{pid}/latest/worktree_sandbox_plan.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Preflight report", f"logs/claude_sandbox/{pid}/latest/claude_sandbox_preflight.md", mono=True)}</div>')
+    lines.append(f'<div style="margin-top:8px">{_kv("Simulation report", f"logs/claude_sandbox/{pid}/latest/claude_sandbox_simulation.md", mono=True)}</div>')
+    lines.append('<div style="margin-top:8px"><span class="kv-label">Next action</span><div>Design human-approved sandbox execution separately; keep automatic Claude execution disabled.</div></div>')
+    lines.append("</div>")
+    return "\n".join(lines)
+
+
 # -- Latest Run -------------------------------------------------------------
 
 def _render_latest_run(d: dict[str, Any]) -> str:
@@ -1973,6 +2027,9 @@ def render_html(d: dict[str, Any]) -> str:
 
         # 7i. OpenAI auditor / multi-step loop
         _section("openai-auditor-loop", "OpenAI Auditor / Multi-Step Loop", _render_openai_auditor_loop(d)),
+
+        # 7j. Claude sandbox boundary
+        _section("claude-sandbox", "Claude Sandbox Boundary", _render_claude_sandbox_boundary(d)),
 
         # 8. Latest run
         _section("latest-run", "Latest Run", _render_latest_run(d)),

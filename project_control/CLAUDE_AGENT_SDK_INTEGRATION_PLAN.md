@@ -112,3 +112,35 @@ Proceeding to sandbox design is not permission for builder execution. Scheduler,
 ### Phase 3: Limited Automatic Execution
 
 Only after repeated dry-run and sandbox success. Scheduler, automatic Claude execution, and auto-commit remain separate approvals.
+
+## Claude Sandboxed Builder Boundary Preflight
+
+Before any Claude builder execution sprint, Project Autopilot must run the non-executing sandbox boundary checks:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"
+```
+
+These commands do not call Anthropic, do not call OpenAI, do not execute Claude Code, do not create a real worktree, and do not edit product code. They generate ignored evidence under:
+
+```text
+logs/claude_sandbox/<project_id>/latest/
+```
+
+The boundary must include:
+
+- Dedicated worktree required.
+- One agent per worktree.
+- No direct master/main writes.
+- No auto-merge or force-push.
+- No env/secret access.
+- No SQL/RLS/deploy/paid API commands.
+- No scheduler or automatic Claude execution enablement.
+- No-secret prompt pack.
+- Required evidence bundle.
+- Required rollback/rejection plan.
+- Required post-builder policy review.
+- OpenAI Auditor review for blocked/retry cases.
+
+Passing preflight means only that the boundary design is coherent. It is not permission to execute Claude as a builder. Human-approved sandbox execution remains a later phase.

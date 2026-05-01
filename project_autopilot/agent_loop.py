@@ -42,9 +42,12 @@ from autopilot_health import build_health, claude_sdk_dry_run_health, policy_fix
 from claude_analysis_call import run_analysis as run_claude_analysis_call
 from claude_analysis_review import review_latest as review_latest_claude_analysis, write_review as write_claude_analysis_review
 from claude_sdk_dry_run import run as run_claude_sdk_dry_run_report
+from claude_prompt_pack import build_prompt_pack, write_prompt_pack
+from claude_sandbox_boundary import evaluate_preflight as evaluate_claude_sandbox_preflight, simulate_sandbox as simulate_claude_sandbox, write_preflight as write_claude_sandbox_preflight, write_simulation as write_claude_sandbox_simulation
 from openai_auditor import build_dry_run as build_openai_auditor_dry_run, write_dry_run as write_openai_auditor_dry_run, _status_payload as openai_auditor_status_payload, write_status as write_openai_auditor_status
 from multistep_loop import build_loop as build_multistep_loop, write_loop as write_multistep_loop
 from policy_test_fixtures import run as run_policy_fixture_suite
+from worktree_sandbox import build_worktree_sandbox_plan, write_worktree_sandbox_plan
 
 
 # ---------------------------------------------------------------------------
@@ -1069,6 +1072,12 @@ def run_autopilot_health(project_id: str) -> int:
     print(f"  Claude SDK dry-run: {claude['claude_sdk_dry_run_verdict']}")
     print(f"  Controlled Claude analysis: {claude.get('controlled_analysis_verdict', 'UNKNOWN')}")
     print(f"  Claude Agent SDK external call tested: {'yes' if claude['claude_agent_sdk_external_call_tested'] else 'no'}")
+    sandbox = payload.get("claude_sandbox", {})
+    print("Claude Sandbox Boundary:")
+    print(f"  Preflight: {sandbox.get('preflight_verdict', 'UNKNOWN')}")
+    print(f"  Simulation: {sandbox.get('simulation_verdict', 'UNKNOWN')}")
+    print(f"  Builder execution enabled: {'yes' if sandbox.get('builder_execution_enabled') else 'no'}")
+    print(f"  Real worktree created: {'yes' if sandbox.get('real_worktree_created') else 'no'}")
     print("Top blockers:")
     for blocker in payload["blockers"] or ["none"]:
         print(f"  - {blocker}")
@@ -1167,6 +1176,61 @@ def run_multistep_dry_run_cmd(project_id: str, objective: str) -> int:
     print(f"  JSON: {json_path}")
     print(f"  Next action: {payload.next_action}")
     return 0
+
+
+def run_claude_sandbox_preflight_cmd(project_id: str, task: str) -> int:
+    project = load_project(project_id)
+    preflight = evaluate_claude_sandbox_preflight(project, task)
+    preflight_md, preflight_json = write_claude_sandbox_preflight(project, preflight)
+    prompt_pack = build_prompt_pack(project, task)
+    prompt_md, prompt_json = write_prompt_pack(project, prompt_pack)
+    worktree_plan = build_worktree_sandbox_plan(project, task)
+    worktree_md, worktree_json = write_worktree_sandbox_plan(project, worktree_plan)
+    print(f"Claude Sandbox Preflight: {preflight.verdict}")
+    print("  Claude builder execution enabled: no")
+    print("  External API called: NO")
+    print("  Real worktree created: no")
+    print(f"  Allowed file entries: {len(preflight.boundary.file_policy.allowed_files)}")
+    print(f"  Denied file entries: {len(preflight.boundary.file_policy.denied_files)}")
+    print(f"  Allowed commands: {len(preflight.boundary.command_policy.allowed_commands)}")
+    print(f"  Denied commands: {len(preflight.boundary.command_policy.denied_commands)}")
+    print(f"  Human approval needed: {'yes' if preflight.boundary.file_policy.requires_human_approval else 'no'}")
+    print(f"  Preflight report: {preflight_md}")
+    print(f"  Preflight JSON: {preflight_json}")
+    print(f"  Prompt pack: {prompt_md}")
+    print(f"  Prompt pack JSON: {prompt_json}")
+    print(f"  Worktree plan: {worktree_md}")
+    print(f"  Worktree plan JSON: {worktree_json}")
+    print(f"  Next action: {preflight.next_action}")
+    return 0 if preflight.verdict != "SANDBOX_PREFLIGHT_BLOCKED" else 2
+
+
+def run_claude_sandbox_simulate_cmd(project_id: str, task: str) -> int:
+    project = load_project(project_id)
+    preflight = evaluate_claude_sandbox_preflight(project, task)
+    preflight_md, preflight_json = write_claude_sandbox_preflight(project, preflight)
+    prompt_pack = build_prompt_pack(project, task)
+    prompt_md, prompt_json = write_prompt_pack(project, prompt_pack)
+    worktree_plan = build_worktree_sandbox_plan(project, task)
+    worktree_md, worktree_json = write_worktree_sandbox_plan(project, worktree_plan)
+    simulation = simulate_claude_sandbox(project, task)
+    simulation_md, simulation_json = write_claude_sandbox_simulation(project, simulation)
+    print(f"Claude Sandbox Simulation: {simulation.verdict}")
+    print("  Lifecycle simulated: task -> OpenAI Auditor -> future Claude sandbox -> validation -> policy")
+    print("  Claude builder execution enabled: no")
+    print("  External API called: NO")
+    print("  Real worktree created: no")
+    print(f"  Denied command tests: {len(simulation.denied_command_tests)}")
+    print(f"  Preflight report: {preflight_md}")
+    print(f"  Preflight JSON: {preflight_json}")
+    print(f"  Prompt pack: {prompt_md}")
+    print(f"  Prompt pack JSON: {prompt_json}")
+    print(f"  Worktree plan: {worktree_md}")
+    print(f"  Worktree plan JSON: {worktree_json}")
+    print(f"  Simulation report: {simulation_md}")
+    print(f"  Simulation JSON: {simulation_json}")
+    print(f"  Next action: {simulation.next_action}")
+    return 0 if simulation.verdict == "SANDBOX_SIMULATION_PASS" else 2
 
 
 def run_doctor(project_id: str) -> int:
@@ -1601,6 +1665,8 @@ def main() -> int:
     group.add_argument("--openai-auditor-status", action="store_true", help="Show OpenAI Auditor dry-run provider status without API calls.")
     group.add_argument("--openai-auditor-plan", action="store_true", help="Create an OpenAI Auditor dry-run plan for --task without API calls.")
     group.add_argument("--multistep-dry-run", action="store_true", help="Preview the future planner-builder-review-policy loop without execution.")
+    group.add_argument("--claude-sandbox-preflight", action="store_true", help="Evaluate future Claude sandbox boundary without executing Claude.")
+    group.add_argument("--claude-sandbox-simulate", action="store_true", help="Simulate future Claude sandbox lifecycle without creating a worktree.")
     parser.add_argument("--research-mode", default="quick_check", choices=["quick_check", "standard_research", "deep_research"], help="Research mode for --request-research.")
     parser.add_argument("--task", default="Review Project Autopilot v2 architecture and identify top 5 risks.", help="Task text for Claude analysis or planning commands.")
     parser.add_argument("--objective", default="Improve MIRA result page design", help="Objective text for --multistep-dry-run.")
@@ -1663,6 +1729,10 @@ def main() -> int:
         return run_openai_auditor_plan_cmd(args.project, args.task)
     if args.multistep_dry_run:
         return run_multistep_dry_run_cmd(args.project, args.objective)
+    if args.claude_sandbox_preflight:
+        return run_claude_sandbox_preflight_cmd(args.project, args.task)
+    if args.claude_sandbox_simulate:
+        return run_claude_sandbox_simulate_cmd(args.project, args.task)
     return run_cycle(project_id=args.project, dry_run=args.dry_run, cycle=args.cycle)
 
 

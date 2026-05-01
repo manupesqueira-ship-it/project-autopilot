@@ -75,6 +75,9 @@ def run_check(project: ProjectConfig) -> V2Report:
     add("Claude analysis review module exists", (ap / "claude_analysis_review.py").exists())
     add("OpenAI Auditor module exists", (ap / "openai_auditor.py").exists())
     add("Multi-step loop module exists", (ap / "multistep_loop.py").exists())
+    add("Claude sandbox boundary module exists", (ap / "claude_sandbox_boundary.py").exists())
+    add("Claude prompt pack module exists", (ap / "claude_prompt_pack.py").exists())
+    add("Worktree sandbox planner exists", (ap / "worktree_sandbox.py").exists())
     add("Design Director exists", (ap / "design_director.py").exists())
     add("Research Director exists", (ap / "research_director.py").exists())
     add("Builder Orchestrator exists", (ap / "builder_orchestrator.py").exists())
@@ -138,6 +141,22 @@ def run_check(project: ProjectConfig) -> V2Report:
         "Multi-step loop is dry-run only",
         not bool(multistep.get("execution_enabled", False)) and not bool(multistep.get("external_api_called", False)),
         multistep.get("verdict", "NOT_RUN"),
+    )
+    add("Claude sandbox safety fixtures exist", _contains(ap / "policy_test_fixtures.py", "claude_sandbox_missing_post_builder_policy_blocked"))
+    sandbox_preflight = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_preflight.json")
+    add(
+        "Claude sandbox preflight acceptable",
+        sandbox_preflight.get("verdict", "NOT_RUN") != "SANDBOX_PREFLIGHT_BLOCKED",
+        sandbox_preflight.get("verdict", "WARN: no latest sandbox preflight yet"),
+    )
+    sandbox_simulation = _read_json(root / project.logs_dir / "claude_sandbox" / project.project_id / "latest" / "claude_sandbox_simulation.json")
+    add(
+        "Claude sandbox simulation acceptable",
+        sandbox_simulation.get("verdict", "NOT_RUN") != "SANDBOX_SIMULATION_BLOCKED"
+        and not bool(sandbox_simulation.get("execution_occurred", False))
+        and not bool(sandbox_simulation.get("external_api_called", False))
+        and not bool(sandbox_simulation.get("real_worktree_created", False)),
+        sandbox_simulation.get("verdict", "WARN: no latest sandbox simulation yet"),
     )
     add("Claude analysis model configured", bool(project.claude_analysis_model), project.claude_analysis_model)
     add("Claude analysis model avoids deprecated 3.5 aliases", "claude-3-5" not in project.claude_analysis_model.lower(), project.claude_analysis_model)

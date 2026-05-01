@@ -305,3 +305,40 @@ Checklist (enforced by policy gate):
 - [ ] Telegram notification sent
 
 If any item fails: do NOT open PR. Write HALT, send Telegram, await human.
+
+---
+
+## 14. Claude Sandbox Boundary Preflight
+
+Claude builder execution is not enabled. The current safe step is boundary preflight and simulation only:
+
+```bash
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"
+python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"
+```
+
+The commands must:
+
+- Plan the worktree path and branch without creating them.
+- Require one builder agent per worktree.
+- Deny direct master/main writes.
+- Deny auto-merge and force-push.
+- Generate file allowlist/denylist.
+- Generate command allowlist/denylist.
+- Generate a no-secret prompt pack preview.
+- Generate rollback and rejection flow.
+- Require post-builder policy review and evidence bundle.
+- Return blocked/retry cases to OpenAI Auditor for correction planning.
+
+The commands must not:
+
+- Execute Claude.
+- Call Anthropic or OpenAI.
+- Create a real worktree.
+- Read or print env files.
+- Execute SQL/RLS/storage changes.
+- Deploy.
+- Call paid APIs.
+- Enable scheduler or automatic Claude execution.
+
+`SANDBOX_SIMULATION_PASS` means only that the boundary model is coherent enough for a future human-approved sandbox execution design sprint.

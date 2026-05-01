@@ -249,3 +249,17 @@ See `AUTOPILOT_DEFINITION_OF_DONE.md`.
 - Research is request-based and does not browse automatically.
 - Multi-agent parallel writes require explicit worktree discipline.
 - Cloud execution and GitHub PR workflows are future work.
+
+## 19. Claude Sandboxed Builder Boundary
+
+Project Autopilot v2 now models the boundary needed before Claude can ever act as a sandboxed builder:
+
+- `claude_sandbox_boundary.py` evaluates worktree, file, command, prompt, rollback, evidence, and post-builder policy requirements.
+- `claude_prompt_pack.py` generates a no-secret prompt pack preview for future manual/human-approved Claude builder handoff.
+- `worktree_sandbox.py` plans the branch/worktree lifecycle without creating a real worktree.
+- `--claude-sandbox-preflight` runs the boundary and writes ignored evidence.
+- `--claude-sandbox-simulate` simulates the future lifecycle without executing providers.
+
+The boundary requires one agent per worktree, no direct master writes, no auto-merge, no force-push, no env/secret access, no SQL/RLS/deploy/paid API commands, no scheduler activation, no automatic Claude execution, a rollback plan, an evidence bundle, and post-builder policy review.
+
+This is still not builder execution. Future sandboxed Claude execution requires a separate human-approved sprint after the preflight and simulation remain green.

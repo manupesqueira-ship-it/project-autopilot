@@ -151,3 +151,23 @@ Required checks:
 ## Stop Conditions
 
 Stop and ask for human approval before secrets, env files, git history, destructive commands, deployment, live Supabase changes, SQL/RLS/storage policies, paid APIs, scheduler enablement, automatic Claude execution, or parallel writes without worktrees.
+
+## Claude Sandbox Builder Boundary Gates
+
+If a sprint designs or prepares Claude builder execution, completion additionally requires:
+
+1. `python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-preflight --task "<task>"`.
+2. `python -B project_autopilot/agent_loop.py --project mira --claude-sandbox-simulate --task "<task>"`.
+3. No real worktree created during the preflight/simulation sprint.
+4. No Anthropic/OpenAI/external API calls from Project Autopilot during validation.
+5. Claude builder execution remains disabled.
+6. Scheduler remains disabled.
+7. File allowlist/denylist is documented.
+8. Command allowlist/denylist is documented.
+9. No-secret prompt pack is generated under ignored logs.
+10. Worktree lifecycle plan is generated under ignored logs.
+11. Rollback/rejection plan exists.
+12. Post-builder policy review is mandatory before commit/merge.
+13. Policy fixtures cover direct master write, env access, SQL/RLS, deploy, auto-merge, missing rollback, unapproved product files, and missing post-builder policy.
+
+These gates prove boundary readiness only. They do not enable sandboxed Claude builder execution.

@@ -201,6 +201,46 @@ def multistep_loop_health(project: ProjectConfig) -> dict[str, Any]:
     }
 
 
+def claude_sandbox_health(project: ProjectConfig) -> dict[str, Any]:
+    base = project.repo_path / project.logs_dir / "claude_sandbox" / project.project_id / "latest"
+    preflight_json = base / "claude_sandbox_preflight.json"
+    preflight_md = base / "claude_sandbox_preflight.md"
+    simulation_json = base / "claude_sandbox_simulation.json"
+    simulation_md = base / "claude_sandbox_simulation.md"
+    prompt_md = base / "claude_prompt_pack_preview.md"
+    prompt_json = base / "claude_prompt_pack_metadata.json"
+    worktree_md = base / "worktree_sandbox_plan.md"
+    worktree_json = base / "worktree_sandbox_plan.json"
+    preflight = _read_json(preflight_json)
+    simulation = _read_json(simulation_json)
+    boundary = preflight.get("boundary", {}) if preflight else {}
+    file_policy = boundary.get("file_policy", {}) if boundary else {}
+    command_policy = boundary.get("command_policy", {}) if boundary else {}
+    rollback = boundary.get("rollback_plan", {}) if boundary else {}
+    return {
+        "preflight_verdict": preflight.get("verdict", "NOT_RUN"),
+        "simulation_verdict": simulation.get("verdict", "NOT_RUN"),
+        "allowed_files_count": len(file_policy.get("allowed_files", [])),
+        "denied_files_count": len(file_policy.get("denied_files", [])),
+        "allowed_commands_count": len(command_policy.get("allowed_commands", [])),
+        "denied_commands_count": len(command_policy.get("denied_commands", [])),
+        "rollback_plan_exists": bool(rollback.get("exists", False)),
+        "post_builder_policy_required": bool(boundary.get("post_builder_policy_required", False)),
+        "builder_execution_enabled": bool(boundary.get("execution_enabled", False)) or bool(simulation.get("claude_builder_execution_enabled", False)),
+        "external_api_called": bool(simulation.get("external_api_called", False)),
+        "real_worktree_created": bool(simulation.get("real_worktree_created", False)),
+        "preflight_report_path": str(preflight_md),
+        "preflight_json_path": str(preflight_json),
+        "simulation_report_path": str(simulation_md),
+        "simulation_json_path": str(simulation_json),
+        "prompt_pack_path": str(prompt_md),
+        "prompt_pack_json_path": str(prompt_json),
+        "worktree_plan_path": str(worktree_md),
+        "worktree_plan_json_path": str(worktree_json),
+        "next_action": "Run --claude-sandbox-preflight and --claude-sandbox-simulate before any human-approved sandbox execution.",
+    }
+
+
 def _latest_flow_status(project: ProjectConfig) -> dict[str, Any]:
     results_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "flow_results.json"
     report_path = project.repo_path / project.logs_dir / "flow_qa" / project.project_id / "latest" / "validation_summary.md"
@@ -310,6 +350,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     claude_review = claude_analysis_review_health(project)
     openai_auditor = openai_auditor_health(project)
     multistep = multistep_loop_health(project)
+    claude_sandbox = claude_sandbox_health(project)
 
     subsystem_statuses = {
         "provider_registry": "PASS" if provider_payload.get("configured_provider_count", 0) >= 1 else "FAIL",
@@ -334,6 +375,9 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_analysis_review": claude_review["decision"],
         "openai_auditor": openai_auditor["verdict"],
         "multistep_loop": multistep["verdict"],
+        "claude_sandbox_preflight": claude_sandbox["preflight_verdict"],
+        "claude_sandbox_simulation": claude_sandbox["simulation_verdict"],
+        "claude_builder_execution": "DISABLED_EXPECTED" if not claude_sandbox["builder_execution_enabled"] else "ENABLED",
     }
 
     blockers: list[str] = []
@@ -359,6 +403,16 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         blockers.append("OpenAI Auditor live calls are unexpectedly enabled or recorded.")
     if multistep["execution_enabled"] or multistep["external_api_called"]:
         blockers.append("Multi-step loop reports execution or external API activity.")
+    if claude_sandbox["builder_execution_enabled"]:
+        blockers.append("Claude sandbox reports builder execution enabled.")
+    if claude_sandbox["external_api_called"]:
+        blockers.append("Claude sandbox reports external API activity.")
+    if claude_sandbox["real_worktree_created"]:
+        blockers.append("Claude sandbox reports a real worktree was created.")
+    if claude_sandbox["preflight_verdict"] == "SANDBOX_PREFLIGHT_BLOCKED":
+        blockers.append("Claude sandbox preflight is blocked.")
+    if claude_sandbox["simulation_verdict"] == "SANDBOX_SIMULATION_BLOCKED":
+        blockers.append("Claude sandbox simulation is blocked.")
 
     warnings: list[str] = []
     if fixture["status"] == "UNKNOWN":
@@ -381,6 +435,10 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         warnings.append("OpenAI Auditor dry-run has not run yet.")
     if multistep["verdict"] == "NOT_RUN":
         warnings.append("Multi-step loop dry-run has not run yet.")
+    if claude_sandbox["preflight_verdict"] == "NOT_RUN":
+        warnings.append("Claude sandbox preflight has not run yet.")
+    if claude_sandbox["simulation_verdict"] == "NOT_RUN":
+        warnings.append("Claude sandbox simulation has not run yet.")
     if backend.get("readiness") == "PARTIAL_READY":
         warnings.append("Backend audit is partial due to product/Supabase manual verification blockers.")
     if readiness.get("overall") and "BLOCKED" in str(readiness.get("overall")):
@@ -405,7 +463,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
     elif claude_review["decision"] == "NEEDS_POLICY_FIXTURE":
         next_actions.append("Add or update policy fixtures recommended by Claude analysis review.")
     elif claude_review["decision"] == "PROCEED_TO_SANDBOX_DESIGN":
-        next_actions.append("Start a sandboxed Claude builder design sprint; keep execution disabled.")
+        next_actions.append("Run Claude sandbox preflight and simulation; keep execution disabled.")
     else:
         next_actions.append("Review latest Claude analysis and map it to a policy decision before sandbox design.")
     next_actions.append("Keep scheduler and automatic Claude execution disabled until explicit approval.")
@@ -427,6 +485,14 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "openai_auditor_dry_run_json": openai_auditor["json_path"],
         "multistep_loop_dry_run": multistep["report_path"],
         "multistep_loop_dry_run_json": multistep["json_path"],
+        "claude_sandbox_preflight": claude_sandbox["preflight_report_path"],
+        "claude_sandbox_preflight_json": claude_sandbox["preflight_json_path"],
+        "claude_sandbox_simulation": claude_sandbox["simulation_report_path"],
+        "claude_sandbox_simulation_json": claude_sandbox["simulation_json_path"],
+        "claude_prompt_pack": claude_sandbox["prompt_pack_path"],
+        "claude_prompt_pack_json": claude_sandbox["prompt_pack_json_path"],
+        "worktree_sandbox_plan": claude_sandbox["worktree_plan_path"],
+        "worktree_sandbox_plan_json": claude_sandbox["worktree_plan_json_path"],
         "backend_audit_report": str(logs / f"{project.project_id}_backend_audit_latest.md"),
         "mira_readiness_report": str(logs / f"{project.project_id}_readiness_latest.json"),
         "control_center": str(control_center_path),
@@ -474,6 +540,7 @@ def build_health(project: ProjectConfig) -> dict[str, Any]:
         "claude_analysis_review": claude_review,
         "openai_auditor": openai_auditor,
         "multistep_loop": multistep,
+        "claude_sandbox": claude_sandbox,
         "policy_fixture_suite": fixture,
         "provider_registry": {
             "provider_count": provider_payload.get("provider_count", 0),
@@ -540,6 +607,7 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
     review = payload["claude_analysis_review"]
     auditor = payload["openai_auditor"]
     multistep = payload["multistep_loop"]
+    sandbox = payload["claude_sandbox"]
     lines.extend([
         "",
         "## Controlled Claude Analysis",
@@ -574,6 +642,22 @@ def write_reports(project: ProjectConfig, payload: dict[str, Any]) -> tuple[Path
         f"- Multi-step execution enabled: {'yes' if multistep['execution_enabled'] else 'no'}",
         f"- Multi-step external API called: {'yes' if multistep['external_api_called'] else 'no'}",
         f"- Multi-step report: {multistep['report_path']}",
+        "",
+        "## Claude Sandbox Boundary",
+        f"- Preflight verdict: {sandbox['preflight_verdict']}",
+        f"- Simulation verdict: {sandbox['simulation_verdict']}",
+        f"- Builder execution enabled: {'yes' if sandbox['builder_execution_enabled'] else 'no'}",
+        f"- External API called: {'yes' if sandbox['external_api_called'] else 'no'}",
+        f"- Real worktree created: {'yes' if sandbox['real_worktree_created'] else 'no'}",
+        f"- Allowed/denied files: {sandbox['allowed_files_count']}/{sandbox['denied_files_count']}",
+        f"- Allowed/denied commands: {sandbox['allowed_commands_count']}/{sandbox['denied_commands_count']}",
+        f"- Rollback plan exists: {'yes' if sandbox['rollback_plan_exists'] else 'no'}",
+        f"- Post-builder policy required: {'yes' if sandbox['post_builder_policy_required'] else 'no'}",
+        f"- Preflight report: {sandbox['preflight_report_path']}",
+        f"- Simulation report: {sandbox['simulation_report_path']}",
+        f"- Prompt pack: {sandbox['prompt_pack_path']}",
+        f"- Worktree plan: {sandbox['worktree_plan_path']}",
+        f"- Next action: {sandbox['next_action']}",
     ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return md_path, json_path
@@ -596,6 +680,8 @@ def main() -> int:
     print(f"  Claude analysis review: {payload['claude_analysis_review']['decision']}")
     print(f"  OpenAI Auditor: {payload['openai_auditor']['verdict']}")
     print(f"  Multi-step loop: {payload['multistep_loop']['verdict']}")
+    print(f"  Claude sandbox preflight: {payload['claude_sandbox']['preflight_verdict']}")
+    print(f"  Claude sandbox simulation: {payload['claude_sandbox']['simulation_verdict']}")
     print(f"  Scheduler: {payload['subsystem_statuses']['scheduler']}")
     print(f"  Automatic Claude execution: {payload['subsystem_statuses']['automatic_claude_execution']}")
     print(f"  Blockers: {', '.join(payload['blockers']) if payload['blockers'] else 'none'}")
