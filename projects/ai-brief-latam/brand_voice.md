@@ -100,3 +100,30 @@ Ejemplos comprobados:
 - Ángulo LATAM concreto
 - Voz neutral y respetuosa
 - Reconocer incertidumbre cuando existe ("WSJ reportó X, fuente no confirmada")
+
+## Voz narrada (audio en Reels)
+
+**Voz primaria:** Manuel (locutor humano, español neutro mexicano CDMX).
+**Voz backup:** ElevenLabs (solo multi-idioma o overflow, NO default).
+
+**Reglas de pronunciación neutralizada:**
+- SÍ: ustedes, carro, computadora, celular, manejar, platicar
+- SÍ: pronunciar "z" y "c" como "s" (no ceceo)
+- NO peninsular: vosotros, vale, tío, ordenador, móvil, coche, ceceo
+- NO MX extremo en narración: chido, padre, no manches, órale
+- NO AR extremo: vos sos, che, sheísmo (calle="cashe"), playa="plasha"
+- NO caribe extremo: pa'lante, elisiones fuertes de "s"
+
+**Estilo de lectura:**
+- Pausas marcadas en hook (3 segundos cuentan triple)
+- Bajada de tono en datos clave (autoridad)
+- Aceleración en lista de hechos (mantiene atención)
+- Cierre con ritmo ascendente en CTA
+
+**Setup técnico mínimo:**
+- iPhone + Voice Memos o Just Press Record
+- Habitación con ropa/cortinas/alfombra
+- 5-10 min de grabación por pieza
+- Edición/limpieza en Canva o Audacity
+
+**Justificación data:** Mexican Spanish es-MX es el estándar industrial de doblaje en LatAm desde 1950s (Netflix, Disney+, HBO Max LATAM lo usan). Comprensible de Argentina a California. Voz humana gana sobre IA en trust/loyalty/retención según estudio TikTok 2026 (ScienceDirect). Cero riesgo de "Made with AI" label penalty.
