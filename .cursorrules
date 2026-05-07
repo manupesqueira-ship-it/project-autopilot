@@ -1,0 +1,28 @@
+# Project Autopilot — Cursor Rules
+
+Este repo es Project Autopilot, una capa de CONTROL multi-agente para
+orquestar builders externos (Claude Code, Cursor, Codex). NO es un builder.
+
+## Reglas de seguridad
+- NUNCA leas, imprimas, ni modifiques variables de entorno con nombres que
+  contengan: KEY, SECRET, TOKEN, PASSWORD, CREDENTIAL.
+- NUNCA hagas commits que incluyan archivos .env*.
+- Toda llamada a un LLM debe ser loggeada (input + output) en evidence/{run_id}/.
+
+## Reglas de scope
+- NO agregues lógica que duplique lo que hacen Claude Code, Cursor o Codex.
+  Si una funcionalidad puede ser hecha por un builder externo, no la
+  reimplementes acá.
+- NO instales paquetes nuevos sin justificación explícita en el commit message.
+- NO crees nuevos archivos en docs/ salvo que sean runbooks operativos.
+
+## Reglas de arquitectura
+- Agentes nuevos van en core/agents/, NO directamente en core/.
+- Adapters de builders van en core/adapters/, uno por builder.
+- Toda decisión de policy debe pasar por core/policy_engine.py.
+- Tests de policy van en docs/security/ con fixtures correspondientes.
+
+## Reglas de proyectos
+- Cada proyecto que Autopilot orquesta vive en projects/{name}/config.yaml.
+- NO hardcodees paths a proyectos específicos en core/.
+- El repo de MIRA está en C:\Users\manup\projects\mira (proyecto externo).

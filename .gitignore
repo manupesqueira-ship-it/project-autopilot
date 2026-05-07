@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.venv/
+venv/
+
+# Node (por si algún script usa)
+node_modules/
+
+# Logs y evidencia (regenerable)
+logs/
+evidence/
+
+# Secrets — NUNCA commitear
+.env
+.env.*
+!.env.example
+secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Backup
+*.bak
+*.tmp
