@@ -1,8 +1,8 @@
 # PROJECT_STATE.md — Project Autopilot
 
-**Last updated:** 2026-05-07 (fin del día)
+**Last updated:** 2026-05-08 (overnight run)
 **Active phase:** Fase 1 — Manual MVP de AI Brief LATAM
-**Current status:** Piece #1 produced V2 (no publicada). Production stack LOCKED. Research completado en 3 sesiones (19 web searches). Próximo: piece #2 con stack en uso real.
+**Current status:** 6 pieces produced (0 published). Audit complete. Competitive research done. Production stack LOCKED. Next: create Instagram account + publish first batch.
 
 ---
 
@@ -27,11 +27,21 @@
 - 4 templates reusables: brief, video_script, caption, newsletter_section
 - `tagline_candidates.md` (deferred hasta naming)
 
-### Pieces produced
-- **Piece #001:** Anthropic + Wall Street + Claude Opus 4.7
-  - V2 lista, NOT published
-  - Path: `projects/ai-brief-latam/manual-mvp/pieces/2026-05-07_anthropic-wall-street-claude-opus-4-7.md`
-  - Includes: brief, video script (30s), caption (142 chars), newsletter section (350 words), production log
+### Pieces produced (6 total, 0 published)
+- **Piece #001:** Anthropic Wall Street + Claude Opus 4.7 (hook: cifra)
+- **Piece #002:** Corgi insurtech $1.3B unicornio (hook: pregunta)
+- **Piece #003:** Google mata Project Mariner (hook: contrarian)
+- **Piece #004:** Anthropic x SpaceX 220K GPUs (hook: cita irónica)
+- **Piece #005:** Uber x OpenAI drivers assistant (hook: predicción)
+- **Piece #006:** Claude Code vs Codex guerra coding (hook: benchmark)
+- Full index: `projects/ai-brief-latam/manual-mvp/pieces/_index.md`
+- All in: `projects/ai-brief-latam/manual-mvp/pieces/`
+
+### Overnight work completed (2026-05-08)
+- Audit of core/ (69 files) + docs/ (105 files) → `docs/audits/`
+- Competitive research on 8 benchmark accounts → `projects/ai-brief-latam/research/competitive/`
+- Pre-drafts for 3 pieces → `projects/ai-brief-latam/manual-mvp/pieces/_drafts/`
+- 5 full pieces produced (#002-#006) with varied hooks, angles, and tones
 
 ### Production stack LOCKED
 - `docs/PRODUCTION_STACK.md` con decisiones data-backed
@@ -67,16 +77,18 @@
 ---
 
 ## In Progress 🔄
-- (overnight: si se corre el prompt overnight, audit de core/docs + research competitivo)
+- (nothing actively in progress)
 
 ---
 
 ## Pending / Next Up ⏭️
 
 **Inmediato (próxima sesión):**
-1. Producir piece #2 (Corgi insurtech) end-to-end con stack en uso real
-2. Validar tiempos de grabación de voz + ensamble Canva
-3. Producir piece #3 (try formato carrusel para A/B vs Reel)
+1. Lock naming + create Instagram Business account
+2. Record voice + assemble first Reel in Canva (piece #001 or #002)
+3. Publish first 3 pieces to IG
+4. Compile first newsletter from 3 strongest newsletter sections
+5. Review audit results (`docs/audits/`) and approve archive actions
 
 **Mediano plazo:**
 4. Refinar voz/formato basado en pieces #2 y #3
