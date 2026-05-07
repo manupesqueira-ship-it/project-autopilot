@@ -1,28 +1,48 @@
-# Project Autopilot — Cursor Rules
+# Project Autopilot v2 — Cursor Rules
 
-Este repo es Project Autopilot, una capa de CONTROL multi-agente para
-orquestar builders externos (Claude Code, Cursor, Codex). NO es un builder.
+Este repo es Project Autopilot: un sistema multi-agente para construir, operar
+y escalar un portafolio de propiedades de medios digitales en LATAM.
+
+## Documentos clave — leer antes de trabajar
+- MASTER_PLAN.md (raíz) — plan estratégico completo, arquitectura, fases, catálogo de agentes
+- docs/PROJECT_STATE.md — estado actual del proyecto (living document, leer SIEMPRE primero)
+
+## Arquitectura — 3 capas (no negociable)
+- CAPA 1 — core/ — Control plane (kernel). Genérico, agnóstico al dominio.
+- CAPA 2 — agents/ — Content production agents (apps). Un directorio por agente.
+- CAPA 3 — projects/ — Properties (configuración por proyecto/marca).
 
 ## Reglas de seguridad
-- NUNCA leas, imprimas, ni modifiques variables de entorno con nombres que
-  contengan: KEY, SECRET, TOKEN, PASSWORD, CREDENTIAL.
+- NUNCA leas, imprimas ni modifiques variables con: KEY, SECRET, TOKEN, PASSWORD, CREDENTIAL.
 - NUNCA hagas commits que incluyan archivos .env*.
 - Toda llamada a un LLM debe ser loggeada (input + output) en evidence/{run_id}/.
 
 ## Reglas de scope
 - NO agregues lógica que duplique lo que hacen Claude Code, Cursor o Codex.
-  Si una funcionalidad puede ser hecha por un builder externo, no la
-  reimplementes acá.
 - NO instales paquetes nuevos sin justificación explícita en el commit message.
-- NO crees nuevos archivos en docs/ salvo que sean runbooks operativos.
+- NO construyas agentes (capa 2) que la operación no haya demandado todavía.
+  El error histórico de este proyecto fue construir antes de necesitar.
 
 ## Reglas de arquitectura
-- Agentes nuevos van en core/agents/, NO directamente en core/.
-- Adapters de builders van en core/adapters/, uno por builder.
+- Agentes de contenido van en agents/{nombre}/, NUNCA en core/.
+- core/ es el control plane genérico. NO meter lógica específica de una property ahí.
+- Toda config específica de una property va en projects/{property}/config.yaml y archivos asociados.
+- NO hardcodees paths a proyectos específicos en core/ ni en agents/.
 - Toda decisión de policy debe pasar por core/policy_engine.py.
-- Tests de policy van en docs/security/ con fixtures correspondientes.
 
-## Reglas de proyectos
-- Cada proyecto que Autopilot orquesta vive en projects/{name}/config.yaml.
-- NO hardcodees paths a proyectos específicos en core/.
-- El repo de MIRA está en C:\Users\manup\projects\mira (proyecto externo).
+## Reglas de properties (capa 3)
+- Cada property tiene su propio directorio en projects/{name}/.
+- Config obligatoria: config.yaml, brand_voice.md, sources.yaml, risk_profile.yaml, compliance_rules.yaml.
+- Las properties inactivas (crypto-brief-latam, startup-radar-latam) NO se tocan hasta su fase.
+
+## Estado actual — Fase 1 (Manual MVP)
+- Property activa: ai-brief-latam (priority #1).
+- MIRA: snapshot congelado en repo separado (manupesqueira-ship-it/mira). NO recibe sprints.
+- Foco: producir piezas manualmente, documentar cada una en projects/ai-brief-latam/manual-mvp/pieces/.
+- NO automatizar nada hasta Fase 3 (post análisis de Fase 2).
+- Cada pieza publicada DEBE tener su log completo (template en MASTER_PLAN.md Anexo C).
+
+## Reglas de commits
+- Mensajes descriptivos en inglés.
+- Si se instala un paquete, justificar en el commit message.
+- NO hacer commits de archivos vacíos o placeholder sin contenido útil.
