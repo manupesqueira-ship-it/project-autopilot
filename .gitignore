@@ -24,12 +24,32 @@ secrets/
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Editor
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # Backup
 *.bak
 *.tmp
+
+# Canva / design exports (pesados, no van en git)
+*.psd
+*.ai
+*.sketch
+*.fig
+
+# Media assets (imágenes finales van en Canva/drive, no en repo)
+projects/*/manual-mvp/pieces/*.png
+projects/*/manual-mvp/pieces/*.jpg
+projects/*/manual-mvp/pieces/*.jpeg
+projects/*/manual-mvp/pieces/*.mp4
+projects/*/manual-mvp/pieces/*.mov
+
+# Analytics exports
+*.csv
+*.xlsx
+!docs/**/*.csv
