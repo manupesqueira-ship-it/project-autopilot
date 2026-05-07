@@ -1,0 +1,10 @@
+---
+platform: instagram
+compliance:
+  - no_copyright_violation
+  - cite_sources
+  - distinguish_announced_vs_launched
+  - no_unverifiable_claims
+  - business_account_required
+financial_disclaimer_required: false
+---

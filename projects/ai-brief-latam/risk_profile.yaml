@@ -1,0 +1,13 @@
+---
+risk_level: low
+require_human_approval: always
+sensitive_topics:
+  - claims sin verificar sobre capacidades de modelos
+  - confundir rumor con anuncio oficial
+  - exagerar disponibilidad de herramientas
+forbidden_patterns:
+  - "esto va a cambiar el mundo"
+  - "el fin de [industria]"
+  - "reemplaza completamente a"
+required_disclaimers: []
+---

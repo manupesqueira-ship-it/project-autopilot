@@ -1,0 +1,19 @@
+---
+property: ai-brief-latam
+status: active
+phase: 1-manual-mvp
+priority: 1
+description: IA para founders, operadores y profesionales de LATAM
+language: es-neutral
+brand_voice_file: brand_voice.md
+sources_file: sources.yaml
+risk_profile_file: risk_profile.yaml
+compliance_rules_file: compliance_rules.yaml
+cadence:
+  instagram: 3-5 per week
+  newsletter: 1 weekly
+publishing:
+  platform: instagram
+  newsletter: beehiiv
+  scheduler: tbd-decided-in-phase-1
+---

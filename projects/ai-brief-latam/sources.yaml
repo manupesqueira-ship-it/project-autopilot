@@ -1,0 +1,20 @@
+---
+sources:
+  oficial:
+    - { name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml", type: rss }
+    - { name: "Anthropic Blog", url: "https://www.anthropic.com/news", type: scrape }
+    - { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", type: rss }
+    - { name: "Meta AI", url: "https://ai.meta.com/blog/rss/", type: rss }
+  newsletters:
+    - { name: "The Batch (Andrew Ng)", url: "TBD", type: rss }
+    - { name: "Latent Space", url: "TBD", type: rss }
+    - { name: "AI Snake Oil", url: "TBD", type: rss }
+  community:
+    - { name: "Hacker News", url: "https://hnrss.org/frontpage", type: rss }
+    - { name: "Product Hunt AI", url: "TBD", type: rss }
+  latam:
+    - { name: "Bloomberg Línea Tech", url: "TBD", type: rss }
+    - { name: "Contxto", url: "TBD", type: rss }
+    - { name: "LatamList", url: "TBD", type: rss }
+# TODO Fase 1: completar URLs y agregar 5-10 más
+---
