@@ -1,6 +1,8 @@
 # Brand Voice — AI Brief LATAM
 **Last updated:** 2026-05-07
-**Source:** projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md
+**Sources:**
+- projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md
+- projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md
 
 > Reglas data-backed para producción de contenido. Actualizar cuando research nueva justifique cambios.
 
@@ -18,7 +20,11 @@
 5. **Bottom line al final.** Cierre con la conclusión accionable.
 
 ## Idioma
-- **Español neutro LATAM.** Sin "vos" argentino, sin "vosotros" español, sin "padre/chido" puramente mexicano.
+- **Español neutro LATAM.** Sin peninsular, sin extremos regionales.
+- **NO usar (peninsular):** vosotros, vuestro, vale, tío/tía, hostia, mola
+- **NO usar (extremo MX):** chido, padre, no manches, qué onda
+- **NO usar (extremo AR):** vos sos, che, viste, boludo, posta
+- **SÍ usar:** ustedes, nuestro, está bien, ¿no?, listo, claro, dale
 - Vocabulario técnico en inglés cuando es estándar (AI, AGI, LLM, agent, deployment, enterprise, brief).
 - Cifras siempre con contexto (no "$1.5B" suelto, sino "$1.5B reportado por WSJ").
 
@@ -44,6 +50,41 @@
 - Estética profesional pero NO Bloomberg-frío.
 - Más cercano a Morning Brew (casual + sobrio + smart) que a Bloomberg puro.
 - Caras reales del equipo cuando aplique (autenticidad > postureo en LATAM 2026).
+
+## Hook framework (Rufusocial 2026)
+Todo hook (Reel o caption) debe pasar las 3 condiciones:
+1. **ATENCIÓN** — número inesperado, frase contraintuitiva, pregunta directa, claim sorprendente
+2. **TENSIÓN** — vacío de información, problema sin resolver, conflicto que el espectador quiere ver cerrado
+3. **PROMESA** — anticipa recompensa concreta (vas a aprender X, evitar error Y, descubrir Z)
+
+**Crítico:** hook debe funcionar SIN sonido. Subtítulos = parte del hook visual. Primeros frames deben comunicar por sí solos.
+
+## Comunidad como pilar
+- "Comunidad" pega más que "audiencia" o "lectores" en LATAM.
+- Mencionar comunidad explícitamente en bio, taglines, CTAs cuando aplique.
+- "Únete a la comunidad" > "Síguenos"
+- "Lectores" sirve como sinónimo neutral.
+
+## Tagline formula LATAM (probada)
+**Estructura:** VALOR + TIEMPO + IDIOMA/REGIÓN + PRECIO
+Ejemplos comprobados:
+- "Noticias del ecosistema startup en 2 minutos. Gratis, cada día hábil." (Ecosistema Startup, 12K IG)
+- "Newsletter más grande de IA de España y latinoamérica" (Digital Brain, 60K subs 42% open rate)
+- "El podcast sobre startups más escuchado en español" (Startupeable, 50K newsletter)
+
+## Multi-channel strategy
+- **NO all-in en Instagram.** El activo central es la newsletter (Beehiiv).
+- IG es UNO de varios canales de adquisición.
+- Considerar también: LinkedIn (Startupeable: 49K), podcast eventualmente, WhatsApp Channels.
+- Pattern probado: cross-pollination podcast → newsletter → IG → LinkedIn.
+
+## Benchmarks realistas LATAM (anclaje mental)
+- 1K followers = base creíble
+- 5K = niche success
+- 12-30K = top tier (Ecosistema Startup, Startupeable están acá)
+- 100K+ = excepcional (DotCSV, Nicolas Abril, son creators individuales con años)
+- 400K+ = no existe equivalente LATAM. The Rundown AI no tiene par regional.
+**Target realista para AI Brief LATAM:** 12-30K en 12-18 meses sería un home run.
 
 ## Hard NO's
 - Hype injustificado ("revolutionary", "game-changing" sin razón)
