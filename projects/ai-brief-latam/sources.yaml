@@ -5,8 +5,9 @@
 sources:
   oficial:
     - { name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml", type: rss, weight: 2.0 }
+    - { name: "Anthropic Blog", url: "https://www.anthropic.com/news", type: scrape, weight: 2.0 }
     - { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", type: rss, weight: 1.8 }
-    # Meta AI — no stable RSS feed found. Deferred to M5 (scrape) or Inoreader.
+    # Meta AI — JS-rendered SPA, no RSS. Deferred to Inoreader.
     # - { name: "Meta AI", url: "TBD", type: rss, weight: 1.5 }
 
   tech_media:

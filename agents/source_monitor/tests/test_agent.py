@@ -73,6 +73,27 @@ SAMPLE_RSS_XML = """\
 
 MALFORMED_RSS_XML = "this is not xml at all {{{}}}"
 
+SAMPLE_ANTHROPIC_HTML = """\
+<html><body>
+<a class="FeaturedGrid-module__content" href="/news/claude-opus-4-7">
+  <h2 class="headline-4">Introducing Claude Opus 4.7</h2>
+  <div><div><div class="meta">
+    <span class="caption bold">Product</span>
+    <time class="date caption bold">Apr 16, 2026</time>
+  </div></div></div>
+  <p class="body-3">Our latest Opus model brings stronger performance across coding and reasoning.</p>
+</a>
+<a class="PublicationList-module__listItem" href="/news/finance-agents">
+  <div class="meta">
+    <time class="date body-3">May 5, 2026</time>
+    <span class="subject body-3">Announcements</span>
+  </div>
+  <span class="title body-3">Agents for financial services</span>
+</a>
+<a href="/news/">Back to news</a>
+</body></html>
+"""
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -271,6 +292,80 @@ class TestT1FetchRSS:
             "500", request=resp.request, response=resp
         )):
             items, errors = fetcher.fetch(sample_source_config)
+
+        assert len(items) == 0
+        assert len(errors) == 1
+        assert errors[0].error_type == ErrorType.CONNECTION
+
+
+# ---------------------------------------------------------------------------
+# M5 — Selective scraping
+# ---------------------------------------------------------------------------
+
+class TestM5Scraping:
+    """M5: Scrape sources without RSS (Anthropic Blog)."""
+
+    @pytest.fixture
+    def scrape_source(self) -> SourceConfig:
+        return SourceConfig(
+            name="Anthropic Blog",
+            url="https://www.anthropic.com/news",
+            type=SourceType.SCRAPE,
+            category=SourceCategory.OFICIAL,
+            weight=2.0,
+        )
+
+    def test_scrape_anthropic_returns_items(self, scrape_source, fetcher):
+        """Anthropic scraper extracts items with title, URL, and date."""
+        with patch.object(fetcher._client, "get", return_value=_mock_response(SAMPLE_ANTHROPIC_HTML)):
+            items, errors = fetcher.fetch(scrape_source)
+
+        assert len(errors) == 0
+        assert len(items) == 2
+
+        # Featured item
+        opus = items[0]
+        assert opus.title == "Introducing Claude Opus 4.7"
+        assert "claude-opus-4-7" in str(opus.url)
+        assert opus.published_at.year == 2026
+        assert opus.published_at.month == 4
+        assert "performance" in opus.snippet.lower()
+        assert opus.source_name == "Anthropic Blog"
+
+        # List item
+        finance = items[1]
+        assert finance.title == "Agents for financial services"
+        assert "finance-agents" in str(finance.url)
+        assert "announcements" in finance.tags
+
+    def test_scrape_anthropic_builds_full_urls(self, scrape_source, fetcher):
+        """Relative /news/ hrefs are expanded to full URLs."""
+        with patch.object(fetcher._client, "get", return_value=_mock_response(SAMPLE_ANTHROPIC_HTML)):
+            items, _ = fetcher.fetch(scrape_source)
+
+        for item in items:
+            assert str(item.url).startswith("https://www.anthropic.com/news/")
+
+    def test_scrape_skips_unknown_source(self, fetcher):
+        """Source with no registered scraper returns empty, not error."""
+        unknown = SourceConfig(
+            name="Unknown Site", url="https://unknown.example.com",
+            type=SourceType.SCRAPE, category=SourceCategory.CUSTOM,
+        )
+        with patch.object(fetcher._client, "get", return_value=_mock_response("<html></html>")):
+            items, errors = fetcher.fetch(unknown)
+
+        assert len(items) == 0
+        assert len(errors) == 0  # Not an error, just unsupported
+
+    def test_scrape_handles_http_error(self, scrape_source, fetcher):
+        """HTTP errors from scrape sources are captured as SourceError."""
+        import httpx
+        resp = _mock_response("Forbidden", 403)
+        with patch.object(fetcher._client, "get", side_effect=httpx.HTTPStatusError(
+            "403", request=resp.request, response=resp
+        )):
+            items, errors = fetcher.fetch(scrape_source)
 
         assert len(items) == 0
         assert len(errors) == 1
