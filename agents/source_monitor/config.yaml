@@ -1,0 +1,85 @@
+# Source Monitor agent configuration
+# Property-specific sources are in projects/<property>/sources.yaml
+# This file contains agent-level settings that apply across all properties.
+
+agent:
+  name: source_monitor
+  version: "0.1.0"
+  log_level: INFO
+
+# Fetch settings
+fetch:
+  timeout_seconds: 30
+  max_retries: 2
+  retry_delay_seconds: 5
+  max_items_per_source: 50        # Don't fetch more than this from a single source
+  concurrent_sources: 5           # How many sources to fetch in parallel
+
+# Deduplication
+dedup:
+  history_file: "data/source_monitor/seen_items.json"
+  history_max_age_days: 30        # Prune entries older than this
+  similarity_threshold: 0.85     # For fuzzy title matching (future)
+
+# Preliminary scoring weights (must sum to ~100 for max possible score)
+scoring:
+  weights:
+    recency: 20                   # How fresh (0-20)
+    source_weight: 20             # Source trustworthiness (0-20)
+    keyword_match: 20             # Title/snippet keyword hits (0-20)
+    language_fit: 10              # Language match (0-10)
+    length_signal: 10             # Content substance proxy (0-10)
+    category_bonus: 10            # Priority category bonus (0-10)
+    # Max theoretical: 90 (penalty can subtract up to 10)
+
+  recency:
+    max_score_hours: 6            # Items < 6h old get full recency score
+    zero_score_hours: 72          # Items > 72h old get 0 recency score
+
+  # Priority keywords per property (can be overridden in property config)
+  keywords:
+    ai-brief-latam:
+      high_priority:               # 2x weight
+        - "anthropic"
+        - "openai"
+        - "claude"
+        - "gpt"
+        - "gemini"
+        - "llama"
+        - "latam"
+        - "latinoamerica"
+        - "regulacion"
+        - "startup"
+      normal:                      # 1x weight
+        - "machine learning"
+        - "deep learning"
+        - "transformer"
+        - "fine-tuning"
+        - "rag"
+        - "agent"
+        - "benchmark"
+        - "open source"
+
+  # Priority source categories (get category_bonus)
+  priority_categories:
+    ai-brief-latam:
+      - "oficial"
+      - "latam"
+
+# Output
+output:
+  evidence_dir: "evidence"
+  format: "json"                  # json | yaml
+  include_duplicates: false       # Whether to include dupes in output (marked)
+  min_score_threshold: 0          # Only output items above this score (0 = all)
+
+# Inoreader API
+inoreader:
+  base_url: "https://www.inoreader.com/reader/api/0"
+  # Credentials loaded from .env:
+  #   INOREADER_APP_ID
+  #   INOREADER_APP_KEY
+  #   INOREADER_TOKEN
+  folder_ai_brief: "AI Brief LATAM"    # Inoreader folder name for AI property
+  mark_as_read: false             # Whether to mark items as read after fetching
+  # Set to true only when confident the pipeline won't lose items
