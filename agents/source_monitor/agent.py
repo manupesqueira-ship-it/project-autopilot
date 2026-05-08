@@ -62,7 +62,10 @@ class SourceMonitorAgent:
             timeout=fetch_cfg.get("timeout_seconds", 30),
             max_items_per_source=fetch_cfg.get("max_items_per_source", 50),
         )
-        self.scorer: PreliminaryScorer | None = None
+        self.scorer = PreliminaryScorer(
+            config=self.agent_config.get("scoring", {}),
+            property_name=property_name,
+        )
         self._seen_ids: set[str] = self._load_dedup_history()
 
     def _load_agent_config(self) -> dict[str, Any]:
@@ -260,9 +263,7 @@ class SourceMonitorAgent:
         Returns:
             Same items with preliminary_score and score_breakdown populated.
         """
-        # TODO M3: Initialize PreliminaryScorer with config and score each item
-        # For now, return items unscored (score=0) so the pipeline is end-to-end testable
-        return items
+        return self.scorer.score_batch(items)
 
     def _compute_stats(
         self,

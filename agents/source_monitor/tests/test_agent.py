@@ -31,6 +31,7 @@ from agents.source_monitor.schemas import (
     SourceMonitorResult,
     SourceType,
 )
+from agents.source_monitor.scorer import PreliminaryScorer
 from agents.source_monitor.sources import SourceFetcher
 
 # ---------------------------------------------------------------------------
@@ -343,17 +344,114 @@ class TestT2Deduplication:
 class TestT3PreliminaryScoring:
     """T3: Scorer assigns 0-100 scores with breakdown."""
 
-    @pytest.mark.skip(reason="TODO M3: Implement scoring")
-    def test_scoring_assigns_valid_scores(self, sample_items):
-        pass
+    @pytest.fixture
+    def scorer(self, project_root) -> PreliminaryScorer:
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        return agent.scorer
 
-    @pytest.mark.skip(reason="TODO M3: Implement scoring")
-    def test_scoring_orders_by_score_descending(self, sample_items):
-        pass
+    def test_scoring_assigns_valid_scores(self, scorer, sample_items):
+        """All items get a score between 0 and 100 with breakdown."""
+        scored = scorer.score_batch(sample_items)
+        expected_keys = {"recency", "source_weight", "keyword_match",
+                         "language_fit", "length_signal", "category_bonus"}
+        for item in scored:
+            assert 0 <= item.preliminary_score <= 100
+            assert set(item.score_breakdown.keys()) == expected_keys
+            # Breakdown should sum to match total (within rounding)
+            assert abs(sum(item.score_breakdown.values()) - item.preliminary_score) < 0.1
 
-    @pytest.mark.skip(reason="TODO M3: Implement scoring")
-    def test_recency_affects_score(self, sample_items):
-        pass
+    def test_scoring_orders_by_score_descending(self, scorer, sample_items):
+        """Items are returned sorted by score, highest first."""
+        scored = scorer.score_batch(sample_items)
+        for i in range(len(scored) - 1):
+            assert scored[i].preliminary_score >= scored[i + 1].preliminary_score
+
+    def test_recency_affects_score(self, scorer, sample_items):
+        """More recent items score higher on the recency dimension."""
+        scorer.score_batch(sample_items)
+        # sample_items[0] is now, sample_items[4] is 24h ago
+        assert sample_items[0].score_breakdown["recency"] > sample_items[4].score_breakdown["recency"]
+
+    def test_keyword_match_boosts_score(self, scorer):
+        """Items with AI keywords in title score higher than generic items."""
+        now = datetime.now(tz=timezone.utc)
+        ai_item = SourceItem(
+            id="kw_001", title="OpenAI Launches GPT-5 Claude Integration",
+            url="https://example.com/ai", source_name="Test",
+            source_category=SourceCategory.OFICIAL, published_at=now,
+            snippet="Anthropic and OpenAI collaborate on multi-agent systems.",
+        )
+        generic_item = SourceItem(
+            id="kw_002", title="Weather Report for Tuesday",
+            url="https://example.com/weather", source_name="Test",
+            source_category=SourceCategory.OFICIAL, published_at=now,
+            snippet="It will be sunny with a high of 75 degrees.",
+        )
+        scorer.score_item(ai_item)
+        scorer.score_item(generic_item)
+        assert ai_item.score_breakdown["keyword_match"] > generic_item.score_breakdown["keyword_match"]
+
+    def test_latam_source_gets_category_bonus(self, scorer):
+        """Items from LATAM category sources get the category bonus."""
+        now = datetime.now(tz=timezone.utc)
+        latam_item = SourceItem(
+            id="cat_001", title="Test", url="https://example.com/1",
+            source_name="Contxto", source_category=SourceCategory.LATAM,
+            published_at=now,
+        )
+        community_item = SourceItem(
+            id="cat_002", title="Test", url="https://example.com/2",
+            source_name="HN", source_category=SourceCategory.COMMUNITY,
+            published_at=now,
+        )
+        scorer.score_item(latam_item)
+        scorer.score_item(community_item)
+        assert latam_item.score_breakdown["category_bonus"] == 10.0
+        assert community_item.score_breakdown["category_bonus"] == 0.0
+
+    def test_spanish_language_scores_higher(self, scorer):
+        """Spanish items score higher on language_fit than English."""
+        now = datetime.now(tz=timezone.utc)
+        es_item = SourceItem(
+            id="lang_001", title="Test", url="https://example.com/1",
+            source_name="T", source_category=SourceCategory.OFICIAL,
+            published_at=now, language="es",
+        )
+        en_item = SourceItem(
+            id="lang_002", title="Test", url="https://example.com/2",
+            source_name="T", source_category=SourceCategory.OFICIAL,
+            published_at=now, language="en",
+        )
+        scorer.score_item(es_item)
+        scorer.score_item(en_item)
+        assert es_item.score_breakdown["language_fit"] > en_item.score_breakdown["language_fit"]
+
+    def test_end_to_end_scoring_in_pipeline(self, project_root, tmp_path):
+        """Full scan with scoring produces items with non-zero scores."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        agent.agent_config["output"] = {"evidence_dir": str(tmp_path / "evidence")}
+        agent.agent_config["dedup"] = {
+            "history_file": str(tmp_path / "seen.json"),
+            "history_max_age_days": 30,
+        }
+        agent.sources = [SourceConfig(
+            name="Mock Feed", url="https://mock.example.com/feed.xml",
+            type=SourceType.RSS, category=SourceCategory.OFICIAL, weight=2.0,
+        )]
+
+        with patch.object(agent.fetcher._client, "get", return_value=_mock_response(SAMPLE_RSS_XML)):
+            result = agent.run()
+
+        assert len(result.items) == 3
+        # All items should have non-zero scores (they have AI keywords)
+        for item in result.items:
+            assert item.preliminary_score > 0
+            assert len(item.score_breakdown) == 6
+        # Items should be sorted descending
+        scores = [i.preliminary_score for i in result.items]
+        assert scores == sorted(scores, reverse=True)
+        # Stats should reflect scoring
+        assert result.stats.avg_preliminary_score > 0
 
 
 # ---------------------------------------------------------------------------
