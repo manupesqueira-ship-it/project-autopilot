@@ -51,7 +51,7 @@ class ComplianceAgent:
         content_list = composer_data.get("content", [])
         logger.info(f"Reviewing {len(content_list)} content sets from '{composer_run}'")
 
-        model = self.agent_config.get("llm", {}).get("model", "claude-sonnet-4-20250514")
+        model = self.agent_config.get("llm", {}).get("model", "claude-opus-4-20250514")
         max_tokens = self.agent_config.get("llm", {}).get("max_tokens", 1200)
         reviewer = ComplianceReviewer(api_key=self.api_key, model=model, max_tokens=max_tokens)
 

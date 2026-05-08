@@ -1,0 +1,15 @@
+# Analytics agent configuration
+
+agent:
+  name: analytics
+  version: "0.1.0"
+  log_level: INFO
+
+# No LLM — reads evidence files and aggregates
+output:
+  evidence_dir: "agents/analytics/evidence"
+
+# Cost tracking (Opus 4 pricing)
+cost:
+  input_per_million_tokens: 15.0
+  output_per_million_tokens: 75.0

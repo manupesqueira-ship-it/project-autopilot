@@ -7,7 +7,7 @@ agent:
 
 # LLM settings
 llm:
-  model: "claude-sonnet-4-20250514"
+  model: "claude-opus-4-20250514"
   max_tokens: 500
   # API key loaded from ANTHROPIC_API_KEY env var
 

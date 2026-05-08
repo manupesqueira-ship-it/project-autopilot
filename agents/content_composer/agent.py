@@ -52,7 +52,7 @@ class ContentComposerAgent:
         briefs = editorial_data.get("briefs", [])
         logger.info(f"Composing content for {len(briefs)} briefs from '{editorial_run}'")
 
-        model = self.agent_config.get("llm", {}).get("model", "claude-sonnet-4-20250514")
+        model = self.agent_config.get("llm", {}).get("model", "claude-opus-4-20250514")
         max_tokens = self.agent_config.get("llm", {}).get("max_tokens", 2500)
         generator = ContentGenerator(api_key=self.api_key, model=model, max_tokens=max_tokens)
 

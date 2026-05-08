@@ -72,7 +72,7 @@ class BriefGenerator:
     def __init__(
         self,
         api_key: str,
-        model: str = "claude-sonnet-4-20250514",
+        model: str = "claude-opus-4-20250514",
         max_tokens: int = 1500,
     ):
         self.client = anthropic.Anthropic(api_key=api_key)

@@ -97,7 +97,7 @@ class SignalScorerAgent:
         )
 
         # Step 3: Score via LLM
-        model = cfg.get("llm", {}).get("model", "claude-sonnet-4-20250514")
+        model = cfg.get("llm", {}).get("model", "claude-opus-4-20250514")
         max_tokens = cfg.get("llm", {}).get("max_tokens", 500)
         scorer = LLMScorer(api_key=self.api_key, model=model, max_tokens=max_tokens)
 
