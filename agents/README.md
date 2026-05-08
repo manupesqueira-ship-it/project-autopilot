@@ -5,8 +5,8 @@ Estos agentes son aplicaciones que corren sobre el control plane (core/). Cada a
 Ver MASTER_PLAN.md sección 6 para el catálogo completo.
 
 ## Estado del MVP (9 agentes)
-- [ ] source_monitor (F3)
-- [ ] signal_scorer (F3)
+- [x] source_monitor (F3) — 34 tests, RSS + scraping + dedup + scoring + CLI
+- [x] signal_scorer (F3) — 12 tests, LLM scoring via Claude API + CLI
 - [ ] editorial (F4)
 - [ ] fact_checker (F4)
 - [ ] content_composer (F4)

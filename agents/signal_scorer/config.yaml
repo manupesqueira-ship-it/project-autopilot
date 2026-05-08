@@ -1,0 +1,27 @@
+# Signal Scorer agent configuration
+
+agent:
+  name: signal_scorer
+  version: "0.1.0"
+  log_level: INFO
+
+# LLM settings
+llm:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 500
+  # API key loaded from ANTHROPIC_API_KEY env var
+
+# Scoring settings
+scoring:
+  min_preliminary_score: 30.0    # Only score items above this (saves API costs)
+  max_items_to_score: 20         # Cap per run (cost control: ~$0.40 at 20 items)
+
+# Output
+output:
+  evidence_dir: "agents/signal_scorer/evidence"
+
+# Classification thresholds
+thresholds:
+  strong: 70       # Score >70 = strong candidate
+  consider: 50     # Score 50-70 = manual review
+  # Below 50 = discard

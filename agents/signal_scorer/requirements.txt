@@ -1,0 +1,8 @@
+# Signal Scorer agent dependencies
+anthropic>=0.52.0
+pydantic>=2.7.0
+pyyaml>=6.0.1
+rich>=13.7.0
+
+# Testing
+pytest>=8.2.0

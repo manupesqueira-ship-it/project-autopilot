@@ -24,6 +24,7 @@ def main() -> int:
         print()
         print("Commands:")
         print("  scan    Run Source Monitor to discover and rank new items")
+        print("  score   Run Signal Scorer on Source Monitor output (requires ANTHROPIC_API_KEY)")
         return 1
 
     command = sys.argv[1]
@@ -31,9 +32,12 @@ def main() -> int:
     if command == "scan":
         from agents.source_monitor.cli import main as scan_main
         return scan_main(sys.argv[2:])
+    elif command == "score":
+        from agents.signal_scorer.cli import main as score_main
+        return score_main(sys.argv[2:])
     else:
         print(f"Unknown command: {command}")
-        print("Available: scan")
+        print("Available: scan, score")
         return 1
 
 
