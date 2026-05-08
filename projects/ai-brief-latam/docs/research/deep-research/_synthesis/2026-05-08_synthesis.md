@@ -136,7 +136,7 @@
 - Stack producción $15/mes (Inoreader + Claude Pro + Canva Pro + Beehiiv free) ✓
 - Caras reales > postureo pulido en LATAM ✓
 
-## Conclusión de la síntesis
+## Conclusión de la síntesis (round 1: 4 research)
 
 Los 4 nuevos research, leídos en conjunto con los 3 previos, **convergen fuerte sobre el posicionamiento de AI Brief LATAM** y **no obligan a cambios estructurales en MASTER_PLAN**. La mayoría de los insights útiles son refuerzos o sub-tácticas.
 
@@ -145,3 +145,115 @@ Los 2 cambios más sustantivos son:
 2. **Documentar explícitamente el rechazo de auto-replies + AI generation primary** como parte del compliance del proyecto, ahora que existe un research que sugiere lo contrario.
 
 El research multi-agente Instagram es la fuente más débil y debe tratarse como **antiejemplo documentado** de qué dirección NO tomar.
+
+---
+
+# Addendum — round 2: Multi-agent frameworks + Rundown AI business model
+
+> Agregado 2026-05-08 tras procesar 2 research adicionales:
+> - `2026-05-08_multi-agent-frameworks.md`
+> - `2026-05-08_rundown-ai-business-model.md`
+
+## Convergencias adicionales (involucran los 2 nuevos)
+
+1. **Vertical AI > general AI para newcomers — ahora con peso triple.**
+   - `social-media-niches-2026`: "AI for one profession instead of generic AI"
+   - `creators-ia-espanol-landscape`: 4 posicionamientos saturados, 5 huecos
+   - `rundown-ai-business-model`: "El nicho está saturado. Para nuevos entrants, el play es vertical AI — no general AI. La ventana cerró"
+   - **Peso: muy alto.** 3 fuentes independientes coinciden. Implicación directa para AI Brief LATAM: el ángulo LATAM + sectorial es no-negociable como diferenciador.
+
+2. **AI tooling stack como tabla, no diferenciador.**
+   - `production-stack-research` (previo): stack lockeado en $15/mes (Claude + Canva + Beehiiv + Inoreader).
+   - `rundown-ai-business-model`: "AI content production es ya tabla — no diferenciador"; el stack documentado de Rundown (Claude + HeyGen + ElevenLabs + Lindy) coincide ~80% con decisiones del proyecto.
+   - **Peso: alto.** Validación cruzada de las decisiones de stack del proyecto. Lo diferenciador es el ángulo editorial y el access, no el stack.
+
+3. **Bootstrapped + small team es viable hasta múltiples millones de ARR.**
+   - `rundown-ai-business-model`: $10M ARR + 12 empleados + bootstrapped, $833K revenue/empleado.
+   - `creators-ia-espanol-landscape`: Mafia IA con monetización mature sin VC documentado.
+   - **Peso: media-alta.** Confirma decisión implícita del MASTER_PLAN de no buscar VC en fases 1-6. Anchor financiero para Fase 8.
+
+4. **"Empezar single-agent y validar antes de invertir en framework" coincide con principio del MASTER_PLAN.**
+   - `multi-agent-frameworks`: "Tu caso no es claramente multi-agent… empieza single-agent + tools 2 semanas para validar"
+   - MASTER_PLAN §6.3: "no construir el agente N+1 hasta que la operación demuestre que el N+1 hace falta"
+   - **Peso: alto.** No es nueva idea, pero el research da framework analítico (Anthropic 3 criterios) para tomar la decisión, no solo intuición.
+
+## Contradicciones nuevas (round 2 vs lo previo)
+
+| # | Tema | Research dice | MASTER_PLAN / status quo dice | Resolución sugerida |
+|---|---|---|---|---|
+| 8 | **Orden de canales: Newsletter + IG paralelos vs primary platform → newsletter secondary** | `rundown-ai-business-model`: "Newsletter es monetization layer encima de audience-building engine en otra plataforma (X/LinkedIn primary)". El newsletter no debe ser el activo de adquisición primario. | MASTER_PLAN §3.1: "Cadencia inicial: 3-5 piezas/semana en Instagram, 1 newsletter weekly" — implica IG + newsletter en paralelo desde día 1. | **Tensión real.** Resolución: mantener IG en Fase 1 (validar voz/operación) pero **considerar LinkedIn español como primary audience-building** simultáneo o como pivot post-Fase 1. Discutir con Manuel. La regla "una property antes que tres" sigue, pero "una plataforma de adquisición primaria" no es la misma decisión. |
+| 9 | **Modelo de monetización: solo sponsorships vs dual stream** | `rundown-ai-business-model`: 50/50 sponsorships + University ($999/yr paid product). LTV 2-4× vs solo-ads. | MASTER_PLAN §3.1: monetización mencionada genéricamente, sin especificar mix. Fase 8 abre tracks (sponsorships, premium subscription, etc.) sin priorización. | **No es contradicción dura, es subespecificación.** Resolución: marcar dual stream como modelo target en Fase 8, con paid tier ($500-$1,000/yr equivalente LATAM) como driver financiero principal, no las sponsorships. |
+| 10 | **Stack del control plane: Python directo vs framework** | `multi-agent-frameworks`: LangGraph como recomendación a mediano plazo (Camino A); single-agent + tools como punto de partida (Camino C). | MASTER_PLAN §4.2: "LLM principal: Claude (Anthropic API directa) para v1. Más simple y controlable que SDKs intermedios." | **Coherencia parcial.** El "API directa" del MASTER_PLAN coincide con Camino C (single-agent + tools). LangGraph como Camino A llega cuando los 9 agentes se construyan en serio (Fase 4+). No hay contradicción, solo un orden temporal a explicitar. |
+
+## Lo que solo aparece en UN de los 2 nuevos research
+
+> Insights únicos de los 2 documentos round 2.
+
+- **`multi-agent-frameworks`: el check Anthropic de 3 criterios** (context pollution / paralelismo / tool selection) como framework decisional para multi-agent justification.
+  - **Veredicto: oro.** Convertir en checklist explícito al diseñar Fase 4. "¿Justifica este caso multi-agent o single-agent + más tools?"
+
+- **`multi-agent-frameworks`: deployment recommendation Fly.io/Railway/Render para agent engine, NO Vercel.**
+  - **Veredicto: útil para Fase 5+.** El proyecto está local hasta que demande cloud. Cuando llegue ese momento, hay default razonable.
+
+- **`multi-agent-frameworks`: AutoGen en maintenance mode + Mastra TS-only descartados explícitamente.**
+  - **Veredicto: oro defensivo.** Cierra 2 paths que estaban abiertos en el ecosistema y evita perder tiempo evaluándolos.
+
+- **`multi-agent-frameworks`: Claude Agent SDK como Camino B (intermedio).**
+  - **Veredicto: útil con cuidado.** Opción que el MASTER_PLAN no contemplaba. Vale documentar pero LangGraph sigue siendo Camino A para el caso del proyecto (multi-modelo opcional, control fino, Postgres saver).
+
+- **`rundown-ai-business-model`: regla "no other AI newsletters as sponsors" en rate card.**
+  - **Veredicto: oro táctico para Fase 8.** Cuando AI Brief LATAM abra advertising, copiar esta regla.
+
+- **`rundown-ai-business-model`: ratio $833K revenue/empleado como benchmark de eficiencia.**
+  - **Veredicto: anchor mental.** Si AI Brief LATAM llegara a $500K-$1M ARR, equipo de 1-2 personas full-time es realista. Útil para no over-hire.
+
+- **`rundown-ai-business-model`: University custom-built (no Skool/Circle) en escala.**
+  - **Veredicto: implicación Fase 7-8.** El paid product platform se construye in-house cuando llega a escala. No es decisión de día 1, pero es el destino. Implica diseñar el datamodel desde Fase 4-5 con esa salida en mente.
+
+- **`rundown-ai-business-model`: The Neuron acquired by TechnologyAdvice (ene 2025) a 500K subs.**
+  - **Veredicto: anchor de exit value.** 500K subs = adquisición. Para AI Brief LATAM (target 12-30K en 12-18 meses) es 1/15 a 1/40 de eso, pero da orden de magnitud para conversación M&A futura.
+
+- **`rundown-ai-business-model`: dual revenue stream + reinvest 25-50% en paid acquisition como flywheel matemático.**
+  - **Veredicto: oro.** El argumento financiero más fuerte de los 6 research. Convierte la decisión de "premium subscription tier" (Fase 8 MASTER_PLAN) de opcional a estructural.
+
+## Gaps que se cerraron parcialmente
+
+1. **"Caso real operando un sistema multi-agente para contenido"** — sigue sin haber caso LATAM, pero ahora hay benchmark global (Rundown) con métricas. El playbook está claro aunque no haya replicación regional.
+2. **Decisión de framework multi-agent** — antes era hueco; ahora hay recomendación explícita (single-agent → LangGraph) con criterios.
+
+## Gaps que siguen abiertos
+
+1. **Comparativa de scheduling tools 2026** (Buffer vs Later vs Metricool vs Publer) — ningún research lo cubre.
+2. **Datos de retention real de newsletters en español** (open rate, churn, engagement por nicho) — Rundown da el benchmark global pero no LATAM.
+3. **Vercel Workflow DevKit** como alternativa a LangGraph — el research no lo evalúa, sigue como gap.
+4. **Costos reales de produc por pieza en LATAM** (tiempo + tools) — Manual MVP del proyecto va a generarlo.
+
+## Comparación con research previo del proyecto (round 2)
+
+### Confirmaciones cruzadas
+
+- **`rundown-ai-business-model` valida `production-stack-research`** en el stack tooling: Claude como editor central + ElevenLabs como voz backup ✓. HeyGen y Lindy son nuevas referencias que vale considerar como tools auxiliares.
+- **`rundown-ai-business-model` extiende `format-and-voice-research`**: este último mencionaba Rundown como benchmark de formato (sin emojis, posteo masivo); ahora hay dimensión financiera + estructural completa.
+- **`multi-agent-frameworks` valida la decisión del proyecto sobre Python + Anthropic API directa** (§4.2 MASTER_PLAN). Camino C del research = exactamente lo que el MASTER_PLAN ya plantea para v1.
+
+### Contradicciones nuevas con research previo
+
+- Ninguna contradicción dura. Las 3 tensiones identificadas (orden de canales, modelo de monetización, stack del control plane) son sub-especificaciones del MASTER_PLAN, no contradicciones con research previo.
+
+### Ampliaciones
+
+- **Dimensión financiera explícita** que ningún research previo había dado. `format-and-voice-research` mencionaba Rundown como modelo a seguir; ahora se sabe la matemática del flywheel.
+- **Framework decisional para multi-agent** (Anthropic 3 criterios) que no existía. Pasa del campo "intuición" al campo "evaluación estructurada".
+
+## Conclusión addendum (round 2)
+
+Los 2 research adicionales **profundizan** sin contradecir el resto. Cierran gaps importantes de stack (multi-agent decision) y de modelo de negocio (Rundown business model deep dive). Convergen con la línea editorial-LATAM-sectorial-anti-hype del proyecto.
+
+**El cambio más sustantivo que emerge del round 2:**
+- **Considerar dual revenue stream (sponsorships + paid tier $500-$1,000/yr) como arquitectura de monetización target** desde el diseño, no como decisión Fase 8 abierta.
+
+**Tensiones nuevas a discutir con Manuel:**
+1. Orden de canales (¿LinkedIn español como primary audience-building, o IG?)
+2. Cuándo introducir LangGraph vs quedarse en single-agent + tools
+
+Ambas tensiones son **decisiones de Manuel**, no derivables de research. El roadmap las marca como "discutir antes de Fase 4-5".

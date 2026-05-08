@@ -48,3 +48,49 @@
 - El research multi-agente Instagram, si se hubiera tomado en serio sin filtro crítico, habría sugerido un MASTER_PLAN diferente y peor (HITL opcional, AI generation primary, n8n nuevo). El filtro funcionó.
 - La mayoría de los deltas son **refuerzos** y **especificaciones**, no pivotes.
 - Si Manuel siente la tentación de adoptar la cadencia masiva del research social-media-niches-2026, recordar que ese research está calibrado para un creator full-time con team. No aplica a Fase 1 manual con un fundador.
+
+---
+
+# Addendum — round 2: Deltas de multi-agent frameworks + Rundown AI
+
+> Agregado 2026-05-08. Deltas que emergen específicamente de los 2 research adicionales,
+> mantenidos separados para trazabilidad.
+
+## Tabla de deltas adicionales (round 2)
+
+| # | Sección del MASTER_PLAN | Estado actual | Cambio propuesto | Source del cambio | Fuerza de la evidencia | Acción recomendada |
+|---|---|---|---|---|---|---|
+| 17 | §4.2 stack tecnológico — orquestación de agentes | "LLM principal: Claude (Anthropic API directa) para v1. Más simple y controlable que SDKs intermedios." | Agregar nota: **"Para Fase 1-3: single-agent + tools (Camino C). Para Fase 4 cuando se construyan los 9 agentes: evaluar LangGraph (Camino A) si la operación demuestra que el control plane simple no alcanza."** | `multi-agent-frameworks` (camino C → A explícito) + MASTER_PLAN principio "no construir N+1 hasta demostrar necesidad" | **Alta** | **Editar ya.** Convierte una decisión implícita en explícita |
+| 18 | §4.4 diferido — Cloud/VPS para Autopilot | "no hasta tener razón clara (mantener local)" | Cuando se migre, agregar default: **"Fly.io / Railway / Render para agent engine; NO Vercel para los runs largos."** | `multi-agent-frameworks` recomendación deployment | Media-alta | **Editar ya** (es nota informativa, no compromiso) |
+| 19 | §3.1 ai-brief-latam — monetización (mencionada solo en §11 abierto y Fase 8) | "Decisiones abiertas: tier free vs premium" en §7.7. Fase 8 lista tracks sin priorización | **Lockear modelo target: dual revenue stream (sponsorships + paid tier ~$500-$1,000/yr equivalente LATAM, conversion target 0.5-1% de free list)** como arquitectura desde el diseño, no decisión abierta. Sponsorships sole es modelo inferior matemáticamente. | `rundown-ai-business-model` (50/50 mix, LTV 2-4× vs solo-ads) | **Alta** | **Editar ya.** Cambio más sustantivo del round 2 |
+| 20 | §Fase 8 scale + monetización | "Posibles tracks: newsletter sponsorships, premium subscription tier, etc." (sin orden) | Reordenar tracks priorizando **paid product/community** como driver financiero principal, sponsorships como secundario. Anchor benchmarks: $999/yr Rundown University, ~$833K revenue/empleado, 25-50% margen. | `rundown-ai-business-model` | Alta | Editar Fase 8 con prioridades claras |
+| 21 | §3.1 ai-brief-latam — cadencia inicial / canales | "3-5 piezas/semana en Instagram, 1 newsletter weekly" — implica IG + newsletter en paralelo desde día 1 | **Discutir:** ¿agregar LinkedIn español como canal primary de audience-building paralelo a IG en Fase 1, basado en insight Rundown ("newsletter es monetization layer encima de audience-building en otra plataforma")? Alternativas: (a) mantener IG-first como ya está; (b) IG + LinkedIn paralelo; (c) LinkedIn-first + IG secundario | `rundown-ai-business-model` | Media-alta | **Discutir con Manuel** (decisión meta-arquitectónica) |
+| 22 | §6.1 catálogo 9 agentes MVP — orden de construcción | Lista de 9 agentes para Fase 3-5 sin pre-validación de necesidad de framework | Agregar línea: **"Antes de construir el set de 9 agentes, validar 2 semanas con single-agent + tools (sin framework). Solo migrar a LangGraph cuando: (a) consistency entre 3 properties falla, (b) HITL formal es necesario, (c) critique loop demanda checkpointing/iteraciones explícitas."** | `multi-agent-frameworks` Camino C → A criterios | **Alta** | Editar §6.1 con esa nota como guard |
+| 23 | §6.2 catálogo intermedio — Brand Voice Agent (#19) | Listado en intermedio, sin priorización dentro del set | Subir prioridad de Brand Voice Agent dentro del intermedio. Razón nueva: el research multi-agent identifica **drift de voz de marca** como riesgo principal de multi-agent. Si llegamos a multi-agent en Fase 4+, drift es el riesgo material #1. | `multi-agent-frameworks` (drift identificado) + delta #7 anterior | Media-alta | Reordenar §6.2 cuando se llegue a Fase 4 |
+| 24 | §3.1 ai-brief-latam — fuentes / inputs operativos | Lista de fuentes target | Agregar **Rundown rate card** (rundown.ai/advertise-with-us) como **input de patrón táctico** (regla "no other AI newsletters as sponsors", demographics breakdown, CPM benchmarks). No fuente de contenido editorial; fuente de tactics. | `rundown-ai-business-model` (regla exclusión sponsors) | Baja | Cargar a `sources.yaml` con tag `business-pattern` |
+| 25 | §9 riesgos — agregar drift/quality | §9.1 cubre Meta rules, copyright, financial. No cubre drift de voz de marca | Agregar §9.5 "Drift de voz / quality": "Drift de voz de marca por uso de multi-agent es riesgo identificado. Mitigation: prompt caching + Brand Voice Agent + style guide en system prompt + revisión humana periódica + evaluations automáticas (LangSmith o equivalente)." | `multi-agent-frameworks` (drift como riesgo central) | Media-alta | **Editar ya** §9 con nueva subsección |
+| 26 | §10 métricas de éxito — agregar benchmark de eficiencia | DoD por fase no incluye métricas de eficiencia operativa | Agregar (en Fase 6+): **revenue per employee como métrica de eficiencia.** Anchor: Rundown $833K/empleado. Para AI Brief LATAM, target conservador: $200K-$400K/empleado en Fase 6 cuando 3 properties operen. | `rundown-ai-business-model` benchmark | Media | Editar §10 con métrica adicional Fase 6+ |
+| 27 | §4.3 decisiones diferidas Fase 1 — fact-checking helper | "Decidir si solo Claude o agregás Perplexity/Tavily/Exa" | Reforzar Claude como default basado en `rundown-ai-business-model` que confirma Claude como editor-in-chief de un newsletter de $10M ARR. Añadir Perplexity/Tavily solo si Claude search/research falla específicamente. | `rundown-ai-business-model` validation | Media | Editar §4.3 cerrando un grado de la decisión |
+
+## Resumen de deltas adicionales por fuerza de evidencia
+
+- **Alta (4 deltas):** #17 (single-agent → LangGraph orden), #19 (dual revenue stream), #20 (Fase 8 priorización), #22 (validación pre-framework)
+- **Media-alta (4 deltas):** #18 (deployment defaults), #21 (canales primary, **a discutir**), #23 (Brand Voice priorización), #25 (drift como riesgo §9)
+- **Media (2 deltas):** #26 (revenue/empleado métrica), #27 (Claude como default fact-check)
+- **Baja (1 delta):** #24 (Rundown rate card como input táctico)
+
+## Resumen de deltas adicionales por acción recomendada
+
+- **Editar ya** (alta evidencia + bajo costo): #17, #18, #19, #22, #25
+- **Editar Fase 8 cuando se acerque:** #20, #23
+- **Editar otros con bajo costo:** #26, #27
+- **Discutir con Manuel:** #21 (canal primary, decisión meta-arquitectónica)
+- **Cargar a configs sin tocar MASTER_PLAN:** #24
+
+## Notas de honestidad (round 2)
+
+- El delta más sustantivo (#19, dual revenue stream) **convierte una decisión Fase 8 abierta en una decisión arquitectónica desde el diseño**. Es el cambio más material que emerge de los 6 research procesados.
+- El delta #21 (canal primary IG vs LinkedIn) es la única tensión real con el MASTER_PLAN actual. No la resuelvo unilateralmente — es decisión meta-arquitectónica que vale la pena discutir.
+- El research multi-agent es **honesto sobre límites** (auto-confiesa biases, falta de benchmarks, opiniones marcadas). Lo trato con más confianza que el research multi-agente Instagram (que era opaco).
+- El research Rundown se basa fuertemente en envelope math derivada (RPS, mix 50/50, $200K Meta Ads). Los números absolutos son aproximados, pero las **direcciones** (dual stream > solo ads, paid product es la mitad del business) están bien soportadas. Las direcciones es lo que se traslada a deltas, no los números absolutos.
+- Si Manuel decide ir más conservador en monetización (solo sponsorships), el modelo igual funciona — pero llegar a $1M+ ARR requeriría 5-10× más subs que con dual stream. La math de Rundown es difícil de ignorar.

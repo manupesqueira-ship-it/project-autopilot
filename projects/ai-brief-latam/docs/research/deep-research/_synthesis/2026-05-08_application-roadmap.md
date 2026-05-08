@@ -160,7 +160,7 @@
 15. **Sumar followers cross-platform como métrica de comparación**
     - Razón: el research creators-ia-espanol-landscape lo hace; es manzanas con peras. Usar funnel real (impressions → newsletter signups → conversion).
 
-## Síntesis del roadmap
+## Síntesis del roadmap (round 1: 4 research)
 
 - **6 acciones inmediatas** (1-2 horas de trabajo total, todas reversibles).
 - **5 acciones tras 2-3 piezas reales** (esperan data del manual MVP).
@@ -168,3 +168,101 @@
 - **15 elementos descartados** con razón documentada para no revisitar.
 
 El roadmap está alineado con la regla central del MASTER_PLAN: **no construir el N+1 hasta que la operación demuestre que hace falta.** La mayoría de los findings de los 4 research se traducen en validaciones del status quo o ajustes menores; los que apuntan a build-más se posponen hasta tener data real del manual MVP.
+
+---
+
+# Addendum — round 2: Multi-agent frameworks + Rundown AI
+
+> Agregado 2026-05-08. Findings de los 2 research adicionales clasificados por momento de aplicación, separados de los de round 1.
+
+## Aplicar ahora (round 2)
+
+> Acciones inmediatas (1-3 horas total) con alta evidencia.
+
+1. **Editar §4.2 del MASTER_PLAN** con la nota: "Para Fase 1-3: single-agent + tools (Camino C). Para Fase 4: evaluar LangGraph (Camino A) cuando la operación demuestre que el control plane simple no alcanza." (delta #17)
+   - Costo: 5 min. Reversible. Alta evidencia.
+
+2. **Lockear modelo de monetización dual revenue stream** en §3.1 (no solo "Decisiones abiertas en §11"). Texto sugerido: "Modelo target Fase 8: dual revenue stream — sponsorships + paid tier ($500-$1,000/yr equivalente LATAM, conversion target 0.5-1% de free list). Sponsorships solo es modelo inferior matemáticamente (LTV 2-4× menor)." (delta #19)
+   - Costo: 10 min. Reversible. **Cambio más sustantivo del round 2.**
+
+3. **Editar Fase 8 con priorización**: "Posibles tracks (en orden de prioridad: 1) Premium subscription tier / paid community, 2) Sponsorships, 3) Reportes pagos, 4) Cursos/templates, 5) B2B intelligence subscription." Anchor benchmarks Rundown ($999/yr, 5K-7.5K members, $833K rev/empleado, 25-50% margen). (delta #20)
+   - Costo: 15 min. Reversible.
+
+4. **Agregar guard a §6.1**: "Antes de construir el set de 9 agentes Fase 4, validar 2 semanas con single-agent + tools (sin framework). Migrar a LangGraph solo cuando: consistency entre 3 properties falla, HITL formal es necesario, o critique loop demanda checkpointing." (delta #22)
+   - Costo: 5 min. Reversible. Alta evidencia.
+
+5. **Agregar §9.5 "Drift de voz / quality"**: "Drift de voz de marca por uso de multi-agent es riesgo identificado. Mitigation: prompt caching + Brand Voice Agent + style guide en system prompt + revisión humana periódica + evaluations automáticas (LangSmith o equivalente)." (delta #25)
+   - Costo: 10 min. Reversible.
+
+6. **Agregar §4.4 nota de deployment**: "Cuando se migre desde local: Fly.io / Railway / Render como defaults para agent engine. NO Vercel para los runs largos del control plane (sí Vercel para frontend de admin/dashboard)." (delta #18)
+   - Costo: 5 min. Reversible.
+
+7. **Cargar Rundown rate card a sources.yaml** con tag `business-pattern`: rundown.ai/advertise-with-us como referencia táctica (regla exclusión sponsors, demographics breakdown, CPMs). No fuente editorial. (delta #24)
+   - Costo: 5 min. Reversible.
+
+**Total round 2 acciones inmediatas: ~55 min de edición.**
+
+## Aplicar después de validar con 2-3 piezas reales (round 2)
+
+1. **Decidir orden de canales primary** (delta #21). Disparador: tras 5 piezas en IG, evaluar si LinkedIn español como primary audience-building da mejor conversion → newsletter que IG. Discutir con Manuel antes de Fase 1.5.
+
+2. **Empezar Camino C (single-agent + tools sin framework)** como implementation real cuando se llegue a Fase 4. Disparador: tras Fase 1 manual MVP completo (12-18 piezas) y workflow analysis Fase 2, evaluar si single-agent es viable para Fase 3+.
+
+3. **Evaluar uso de Claude search/research vs adopción de Perplexity/Tavily** (delta #27). Disparador: tras 5 piezas, medir cuántas veces el fact-check con Claude solo fue insuficiente. Si <20%, Claude solo. Si >20%, considerar Perplexity.
+
+4. **Evaluar HeyGen + Lindy como tools auxiliares** del stack Rundown documentado. HeyGen para video avatar (cuidado: viola "no AI look" del production-stack-research). Lindy para scheduling sponsor outreach (Fase 8 monetización). Disparador: cuando se diseñe outreach de sponsors.
+
+## Monitorear durante 30 días (round 2)
+
+1. **Microsoft Agent Framework** GA Q1 2026 — si llega y es viable con stack non-Azure, evaluar como alternativa a LangGraph. Improbable que cambie el default.
+
+2. **Claude Agent SDK V2** — el research nota que V2 emerge paralelo a V1. Esperar estabilidad antes de adoptar Camino B (Claude Agent SDK con subagents).
+
+3. **Vercel Workflow DevKit** — el research multi-agent NO lo evalúa, gap notable. Si Vercel publica caso real de WDK como agent orchestrator, evaluar como alternativa a LangGraph (mismo deployment como el resto del stack).
+
+4. **CrewAI Cognition Memory** — la API unificada de memoria (recently launched) podría madurar y volver CrewAI más viable. Improbable que cambie default LangGraph pero vale notar.
+
+5. **Mafia IA + Rundown como benchmarks comparativos** — re-evaluar trimestralmente. Mafia IA en español/LATAM, Rundown global. Mafia IA podría dar mejor calibración LATAM.
+
+6. **Transformación del paid product platform** — Rundown construyó University custom-built. Cuando AI Brief LATAM llegue a 1-3K subs y considere paid tier, decidir: Beehiiv premium vs Skool vs Circle vs custom. Default conservador: Beehiiv premium primero.
+
+## Descartar (round 2)
+
+> Findings de los 2 research que se ignoran intencionalmente.
+
+1. **AutoGen como framework** — maintenance mode desde 1 oct 2025. Cero pa'lante.
+
+2. **Mastra (TypeScript-only)** — rompe Python preference. Rechazado a menos que se invierta la decisión meta-arquitectónica del stack.
+
+3. **OpenAI Agents SDK con Claude por debajo** — forzado, pierde features Anthropic. Sin sentido.
+
+4. **CrewAI Enterprise pricing path ($60k-$120k/yr)** — irrelevante para operador solo. OSS self-hosted si se eligiera CrewAI, lo cual es improbable.
+
+5. **CrewAI como framework target para producción seria** — research dice "equipos migran a LangGraph cuando llegan a producción". Si se quiere atajo MVP de 1 día, CrewAI sirve, pero no para Fase 4+ formal.
+
+6. **Replicar founder access tier 1 (Zuckerberg, Altman, etc.)** — la ventana cerró. Para AI Brief LATAM, el equivalente realista sería founders LATAM (Bitso, Stori, Kavak, etc.) — distinto playbook.
+
+7. **First-mover en general AI newsletter** — saturado. Solo vertical AI tiene espacio.
+
+8. **Estrategia "100% sponsorships sin paid tier" (modelo Superhuman AI)** — matemática inferior. LTV 2-4× menor con misma base de subs. Descartar como modelo target.
+
+9. **Spend 25-50% del revenue en Meta Ads agresivamente desde día 1** — el modelo Rundown asume RPS competitivo *ya validado*. Para AI Brief LATAM, paid acquisition tiene sentido solo después de validar conversión orgánica y RPS. Posponer a Fase 8.
+
+10. **Adoptar Microsoft Agent Framework prematuramente** — está en preview, Azure-céntrico. Stack del proyecto es Vercel/Supabase/Anthropic. Wait & see.
+
+## Síntesis del roadmap (round 2)
+
+- **7 acciones inmediatas** adicionales (~55 min total).
+- **4 acciones tras 2-3 piezas reales** o triggers específicos.
+- **6 elementos en monitoreo 30 días.**
+- **10 elementos descartados** con razón documentada.
+
+El round 2 trae **un cambio sustantivo** que no estaba en round 1: lockear dual revenue stream como modelo target de monetización en lugar de dejarlo como "decisión Fase 8 abierta". Es el delta de mayor impacto financiero a largo plazo.
+
+El resto son refinamientos de stack (single-agent → LangGraph como secuencia explícita) y guardrails (drift como riesgo §9, deployment defaults).
+
+**Total acumulado (round 1 + round 2):**
+- 13 acciones inmediatas (~75 min de edición total)
+- 9 acciones tras 2-3 piezas reales
+- 16 elementos en monitoreo
+- 25 elementos descartados con razón documentada
