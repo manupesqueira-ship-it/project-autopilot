@@ -8,11 +8,18 @@ Run: pytest agents/source_monitor/tests/test_agent.py -v
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
 
+# Ensure project root is on sys.path for imports
+_project_root = Path(__file__).resolve().parents[3]
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+from agents.source_monitor.agent import SourceMonitorAgent
 from agents.source_monitor.schemas import (
     SourceCategory,
     SourceConfig,
@@ -25,6 +32,12 @@ from agents.source_monitor.schemas import (
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
+@pytest.fixture
+def project_root() -> Path:
+    """Return the real project root for config loading tests."""
+    return _project_root
+
 
 @pytest.fixture
 def sample_source_config() -> SourceConfig:
@@ -68,6 +81,96 @@ def seen_item_ids() -> set[str]:
 
 
 # ---------------------------------------------------------------------------
+# M1 — Config loading and project root detection
+# ---------------------------------------------------------------------------
+
+class TestM1ConfigLoading:
+    """M1 tests: agent initializes, finds project root, loads config and sources."""
+
+    def test_find_project_root(self):
+        """Agent auto-detects the project root via MASTER_PLAN.md."""
+        root = SourceMonitorAgent._find_project_root()
+        assert root.exists()
+        assert (root / "MASTER_PLAN.md").exists()
+
+    def test_agent_initializes(self, project_root):
+        """Agent initializes successfully for ai-brief-latam."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        assert agent.property_name == "ai-brief-latam"
+        assert agent.config_dir == project_root
+
+    def test_agent_config_loaded(self, project_root):
+        """Agent loads its own config.yaml with expected structure."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        assert agent.agent_config["agent"]["name"] == "source_monitor"
+        assert "scoring" in agent.agent_config
+        assert "weights" in agent.agent_config["scoring"]
+
+    def test_sources_loaded(self, project_root):
+        """Agent loads property sources from sources.yaml."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        assert len(agent.sources) > 0
+        # All loaded sources must be enabled and have valid URLs
+        for source in agent.sources:
+            assert source.enabled is True
+            assert source.url != "TBD"
+            assert source.name
+
+    def test_sources_have_categories(self, project_root):
+        """Each source has a valid category from the enum."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        categories = {s.category for s in agent.sources}
+        # We expect at least oficial and tech_media
+        assert SourceCategory.OFICIAL in categories
+
+    def test_sources_skip_tbd_urls(self, project_root):
+        """Sources with TBD URLs are not included in the loaded list."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        for source in agent.sources:
+            assert "TBD" not in source.url.upper()
+
+    def test_keywords_loaded(self, project_root):
+        """Agent loads keyword lists for the property."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        kw = agent.get_property_keywords()
+        assert len(kw.get("high_priority", [])) > 0
+        assert len(kw.get("normal", [])) > 0
+        # Spot-check a few keywords
+        hp = [k.lower() for k in kw["high_priority"]]
+        assert "anthropic" in hp
+        assert "openai" in hp
+
+    def test_scoring_config_loaded(self, project_root):
+        """Agent loads scoring weights from config."""
+        agent = SourceMonitorAgent("ai-brief-latam", config_dir=project_root)
+        sc = agent.get_scoring_config()
+        weights = sc["weights"]
+        assert weights["recency"] == 20
+        assert weights["keyword_match"] == 20
+        assert sum(weights.values()) == 90
+
+    def test_invalid_property_raises(self, project_root):
+        """Agent raises FileNotFoundError for non-existent property."""
+        with pytest.raises(FileNotFoundError, match="Sources config not found"):
+            SourceMonitorAgent("nonexistent-property", config_dir=project_root)
+
+    def test_generate_item_id_deterministic(self):
+        """generate_item_id produces the same hash for the same input."""
+        dt = datetime(2026, 5, 7, 12, 0, 0)
+        id1 = SourceMonitorAgent.generate_item_id("https://example.com/article", dt)
+        id2 = SourceMonitorAgent.generate_item_id("https://example.com/article", dt)
+        assert id1 == id2
+        assert len(id1) == 16
+
+    def test_generate_item_id_different_for_different_input(self):
+        """Different URLs produce different IDs."""
+        dt = datetime(2026, 5, 7, 12, 0, 0)
+        id1 = SourceMonitorAgent.generate_item_id("https://example.com/a", dt)
+        id2 = SourceMonitorAgent.generate_item_id("https://example.com/b", dt)
+        assert id1 != id2
+
+
+# ---------------------------------------------------------------------------
 # T1 — Fetch RSS feed and parse items
 # ---------------------------------------------------------------------------
 
@@ -77,19 +180,11 @@ class TestT1FetchRSS:
     @pytest.mark.skip(reason="TODO M2: Implement RSS fetching")
     def test_fetch_rss_returns_source_items(self, sample_source_config):
         """Fetch from a mocked RSS feed and verify SourceItem fields are populated."""
-        # TODO: Mock HTTP response with a valid RSS XML fixture
-        # TODO: Call fetcher._fetch_rss(source_config)
-        # TODO: Assert items is a non-empty list of SourceItem
-        # TODO: Assert each item has title, url, published_at populated
-        # TODO: Assert no errors in result
         pass
 
     @pytest.mark.skip(reason="TODO M2: Implement RSS fetching")
     def test_fetch_rss_handles_malformed_feed(self, sample_source_config):
         """Malformed RSS returns empty list + error, not an exception."""
-        # TODO: Mock HTTP response with invalid XML
-        # TODO: Assert returns empty items list
-        # TODO: Assert error captured in errors list
         pass
 
 
@@ -103,18 +198,11 @@ class TestT2Deduplication:
     @pytest.mark.skip(reason="TODO M2: Implement deduplication")
     def test_dedup_removes_seen_items(self, sample_items, seen_item_ids):
         """5 items with 3 already seen -> 2 new items returned."""
-        # TODO: Initialize agent with seen_item_ids as history
-        # TODO: Call agent._deduplicate(sample_items)
-        # TODO: Assert exactly 2 items returned (item_001, item_003)
-        # TODO: Assert returned items have is_duplicate=False
         pass
 
     @pytest.mark.skip(reason="TODO M2: Implement deduplication")
     def test_dedup_marks_duplicates(self, sample_items, seen_item_ids):
         """Duplicate items are marked with is_duplicate=True and duplicate_of set."""
-        # TODO: Call agent._deduplicate(sample_items) with full output
-        # TODO: Assert duplicates have is_duplicate=True
-        # TODO: Assert duplicate_of points to original ID
         pass
 
 
@@ -128,24 +216,16 @@ class TestT3PreliminaryScoring:
     @pytest.mark.skip(reason="TODO M3: Implement scoring")
     def test_scoring_assigns_valid_scores(self, sample_items):
         """All items get a score between 0 and 100."""
-        # TODO: Initialize PreliminaryScorer with default config
-        # TODO: Call scorer.score_batch(sample_items)
-        # TODO: Assert each item.preliminary_score is between 0 and 100
-        # TODO: Assert each item.score_breakdown has expected keys
         pass
 
     @pytest.mark.skip(reason="TODO M3: Implement scoring")
     def test_scoring_orders_by_score_descending(self, sample_items):
         """Items are returned sorted by score, highest first."""
-        # TODO: Score batch
-        # TODO: Assert items[0].preliminary_score >= items[1].preliminary_score >= ...
         pass
 
     @pytest.mark.skip(reason="TODO M3: Implement scoring")
     def test_recency_affects_score(self, sample_items):
         """More recent items score higher on the recency dimension."""
-        # TODO: Items spaced 6h apart — item_000 (now) should have higher recency
-        #       than item_004 (24h ago)
         pass
 
 
@@ -159,18 +239,11 @@ class TestT4GracefulFailures:
     @pytest.mark.skip(reason="TODO M2: Implement error handling")
     def test_failed_source_doesnt_stop_scan(self):
         """HTTP 500 from one source, other source works -> partial results."""
-        # TODO: Mock 2 sources: one returns 500, one returns valid RSS
-        # TODO: Call agent._fetch_all([source_ok, source_fail])
-        # TODO: Assert items from working source are returned
-        # TODO: Assert error for failed source is in errors list
-        # TODO: Assert error.error_type == "connection"
         pass
 
     @pytest.mark.skip(reason="TODO M2: Implement error handling")
     def test_timeout_captured_as_error(self):
         """Source that times out is captured as error, not exception."""
-        # TODO: Mock source with timeout
-        # TODO: Assert error.error_type == "connection"
         pass
 
 
@@ -184,20 +257,9 @@ class TestT5EndToEnd:
     @pytest.mark.skip(reason="TODO M2-M3: Implement full pipeline")
     def test_scan_produces_valid_result(self, tmp_path):
         """Complete scan cycle outputs valid JSON to evidence directory."""
-        # TODO: Set up agent with mocked sources and tmp_path as config_dir
-        # TODO: Call agent.run()
-        # TODO: Assert evidence file exists at expected path
-        # TODO: Assert file is valid JSON
-        # TODO: Assert JSON parses as SourceMonitorResult
-        # TODO: Assert at least 1 item with all required fields
         pass
 
     @pytest.mark.skip(reason="TODO M2-M3: Implement full pipeline")
     def test_scan_with_no_new_items_returns_empty(self, tmp_path):
         """Scan when all items are already seen returns empty items list, not error."""
-        # TODO: Set up agent where all items are in dedup history
-        # TODO: Call agent.run()
-        # TODO: Assert result.items is empty
-        # TODO: Assert result.stats.items_after_dedup == 0
-        # TODO: Assert no errors
         pass

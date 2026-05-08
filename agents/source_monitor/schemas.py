@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, HttpUrl
 class SourceCategory(str, Enum):
     """Categories matching projects/<property>/sources.yaml structure."""
     OFICIAL = "oficial"
+    TECH_MEDIA = "tech_media"
     NEWSLETTERS = "newsletters"
     COMMUNITY = "community"
     LATAM = "latam"
