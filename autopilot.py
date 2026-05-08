@@ -26,6 +26,7 @@ def main() -> int:
         print("  scan    Run Source Monitor to discover and rank new items")
         print("  score   Run Signal Scorer on Source Monitor output (requires ANTHROPIC_API_KEY)")
         print("  brief   Generate editorial briefs from scored items (requires ANTHROPIC_API_KEY)")
+        print("  check   Fact-check claims in editorial briefs (requires ANTHROPIC_API_KEY)")
         return 1
 
     command = sys.argv[1]
@@ -39,9 +40,12 @@ def main() -> int:
     elif command == "brief":
         from agents.editorial.cli import main as brief_main
         return brief_main(sys.argv[2:])
+    elif command == "check":
+        from agents.fact_checker.cli import main as check_main
+        return check_main(sys.argv[2:])
     else:
         print(f"Unknown command: {command}")
-        print("Available: scan, score, brief")
+        print("Available: scan, score, brief, check")
         return 1
 
 
