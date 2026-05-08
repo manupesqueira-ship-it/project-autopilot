@@ -20,6 +20,11 @@ dedup:
   history_file: "data/source_monitor/seen_items.json"
   history_max_age_days: 30
 
+# Hard filters applied before scoring
+# Items failing these filters are dropped completely — not scored, not in evidence.
+filters:
+  max_age_days: 7              # Items older than this are dropped (prevents stale RSS items from ranking high)
+
 # Preliminary scoring weights (must sum to ~100 for max possible score)
 scoring:
   weights:
@@ -53,6 +58,18 @@ scoring:
         - "Opus"
         - "Haiku"
         - "multi-agent"
+        # VOICE/AUDIO
+        - "voice"
+        - "TTS"
+        - "speech"
+        - "transcribe"
+        - "realtime"
+        - "voice agent"
+        - "speech-to-text"
+        - "audio model"
+        - "voice synthesis"
+        - "voz"
+        - "audio"
         # COMPANIES
         - "OpenAI"
         - "Anthropic"

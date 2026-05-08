@@ -171,14 +171,17 @@ class SourceMonitorAgent:
         # Step 3 — Deduplicate
         unique_items = self._deduplicate(all_items)
 
+        # Step 3.5 — Hard filters (drop stale items before scoring)
+        filtered_items, filter_dropped = self._filter_by_age(unique_items)
+
         # Step 4 — Score preliminarily (M3 — returns unscored for now)
-        scored_items = self._score(unique_items)
+        scored_items = self._score(filtered_items)
 
         # Step 5 — Sort by score
         scored_items.sort(key=lambda x: x.preliminary_score, reverse=True)
 
         # Step 6 — Build result and save
-        stats = self._compute_stats(all_items, unique_items, sources, errors)
+        stats = self._compute_stats(all_items, unique_items, sources, errors, filter_dropped)
         result = SourceMonitorResult(
             run_id=run_id,
             property=self.property_name,
@@ -251,6 +254,37 @@ class SourceMonitorAgent:
         logger.info(f"Dedup: {len(items)} -> {len(unique)} ({len(items) - len(unique)} removed)")
         return unique
 
+    def _filter_by_age(
+        self, items: list[SourceItem]
+    ) -> tuple[list[SourceItem], int]:
+        """Drop items older than filters.max_age_days.
+
+        Stale RSS items can score high on keyword/source/category bonuses
+        even when they're months old. This hard filter prevents that.
+
+        Returns:
+            (kept_items, dropped_count)
+        """
+        max_age_days = self.agent_config.get("filters", {}).get("max_age_days")
+        if not max_age_days:
+            return items, 0
+
+        cutoff = datetime.now(timezone.utc).timestamp() - (max_age_days * 86400)
+        kept: list[SourceItem] = []
+        for item in items:
+            pub = item.published_at
+            if pub.tzinfo is None:
+                pub = pub.replace(tzinfo=timezone.utc)
+            if pub.timestamp() >= cutoff:
+                kept.append(item)
+
+        dropped = len(items) - len(kept)
+        logger.info(
+            f"Age filter: {len(items)} -> {len(kept)} "
+            f"({dropped} dropped, max_age_days={max_age_days})"
+        )
+        return kept, dropped
+
     def _score(self, items: list[SourceItem]) -> list[SourceItem]:
         """Apply preliminary heuristic scoring to each item.
 
@@ -271,6 +305,7 @@ class SourceMonitorAgent:
         unique_items: list[SourceItem],
         sources: list[SourceConfig],
         errors: list[SourceError],
+        filter_dropped: int = 0,
     ) -> RunStats:
         """Compute aggregate stats for the run."""
         scores = [i.preliminary_score for i in unique_items if i.preliminary_score > 0]
@@ -280,6 +315,7 @@ class SourceMonitorAgent:
             items_found=len(all_items),
             items_after_dedup=len(unique_items),
             dedup_removed=len(all_items) - len(unique_items),
+            items_filtered_by_age=filter_dropped,
             avg_preliminary_score=sum(scores) / len(scores) if scores else 0.0,
         )
 

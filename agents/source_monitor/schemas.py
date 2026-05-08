@@ -87,6 +87,7 @@ class RunStats(BaseModel):
     items_found: int = 0
     items_after_dedup: int = 0
     dedup_removed: int = 0
+    items_filtered_by_age: int = 0
     avg_preliminary_score: float = 0.0
 
 

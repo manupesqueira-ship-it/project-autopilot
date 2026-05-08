@@ -501,7 +501,6 @@ class TestT3PreliminaryScoring:
         )
         scorer.score_item(latam_item)
         scorer.score_item(community_item)
-        print(f"DEBUG: latam breakdown={latam_item.score_breakdown}", flush=True)
         assert latam_item.score_breakdown["category_bonus"] == 10.0
         assert community_item.score_breakdown["category_bonus"] == 0.0
 

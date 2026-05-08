@@ -34,6 +34,11 @@ _DEFAULT_WEIGHTS = {
 }
 _DEFAULT_RECENCY = {"max_score_hours": 6, "zero_score_hours": 72}
 
+# If keyword_match falls below this threshold, optional bonuses
+# (language_fit, length_signal, category_bonus) are zeroed out — prevents
+# topically-irrelevant items from ranking high on bonuses alone.
+_KEYWORD_GATE_THRESHOLD = 1.0
+
 
 class PreliminaryScorer:
     """Scores SourceItems using fast heuristics.
@@ -86,6 +91,11 @@ class PreliminaryScorer:
             "length_signal": self._score_length(item),
             "category_bonus": self._score_category(item),
         }
+        # Keyword gate: if topical relevance is too weak, drop the optional bonuses.
+        if breakdown["keyword_match"] < _KEYWORD_GATE_THRESHOLD:
+            breakdown["language_fit"] = 0.0
+            breakdown["length_signal"] = 0.0
+            breakdown["category_bonus"] = 0.0
         total = max(0.0, min(100.0, sum(breakdown.values())))
         item.preliminary_score = round(total, 2)
         item.score_breakdown = {k: round(v, 2) for k, v in breakdown.items()}
