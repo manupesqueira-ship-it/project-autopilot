@@ -1,0 +1,14 @@
+# Content Composer agent configuration
+
+agent:
+  name: content_composer
+  version: "0.1.0"
+  log_level: INFO
+
+llm:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 2500    # Content generation needs more tokens
+
+output:
+  evidence_dir: "agents/content_composer/evidence"
+  save_individual_files: true   # Save caption.txt, slides.md, newsletter.md, reel.md per brief

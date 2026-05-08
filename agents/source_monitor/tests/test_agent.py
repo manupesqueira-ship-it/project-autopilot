@@ -490,17 +490,18 @@ class TestT3PreliminaryScoring:
         """Items from LATAM category sources get the category bonus."""
         now = datetime.now(tz=timezone.utc)
         latam_item = SourceItem(
-            id="cat_001", title="Test", url="https://example.com/1",
+            id="cat_001", title="OpenAI launches in LATAM", url="https://example.com/1",
             source_name="Contxto", source_category=SourceCategory.LATAM,
-            published_at=now,
+            published_at=now, snippet="AI startup expansion into Latin America.",
         )
         community_item = SourceItem(
-            id="cat_002", title="Test", url="https://example.com/2",
+            id="cat_002", title="OpenAI launches feature", url="https://example.com/2",
             source_name="HN", source_category=SourceCategory.COMMUNITY,
-            published_at=now,
+            published_at=now, snippet="AI startup launches new feature.",
         )
         scorer.score_item(latam_item)
         scorer.score_item(community_item)
+        print(f"DEBUG: latam breakdown={latam_item.score_breakdown}", flush=True)
         assert latam_item.score_breakdown["category_bonus"] == 10.0
         assert community_item.score_breakdown["category_bonus"] == 0.0
 
@@ -508,14 +509,14 @@ class TestT3PreliminaryScoring:
         """Spanish items score higher on language_fit than English."""
         now = datetime.now(tz=timezone.utc)
         es_item = SourceItem(
-            id="lang_001", title="Test", url="https://example.com/1",
+            id="lang_001", title="OpenAI lanza Claude en LATAM", url="https://example.com/1",
             source_name="T", source_category=SourceCategory.OFICIAL,
-            published_at=now, language="es",
+            published_at=now, language="es", snippet="Anthropic anuncia expansión.",
         )
         en_item = SourceItem(
-            id="lang_002", title="Test", url="https://example.com/2",
+            id="lang_002", title="OpenAI launches Claude update", url="https://example.com/2",
             source_name="T", source_category=SourceCategory.OFICIAL,
-            published_at=now, language="en",
+            published_at=now, language="en", snippet="Anthropic announces expansion.",
         )
         scorer.score_item(es_item)
         scorer.score_item(en_item)
