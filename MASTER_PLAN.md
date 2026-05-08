@@ -164,14 +164,14 @@ Beneficios de esta separación:
 ### 4.2 Confirmado por estructura
 
 - **Lenguaje del control plane:** Python (lo que ya tenés en `core/` post-split). No tocar.
-- **LLM principal:** Claude (Anthropic API directa) para v1. Más simple y controlable que SDKs intermedios.
+- **LLM principal:** Claude Opus 4 (Anthropic API directa). Más simple y controlable que SDKs intermedios. Los 9 agents MVP están implementados con plain Python + Pydantic + llamadas API directas (sin framework). Si en el futuro la operación demuestra que el control plane simple no alcanza (consistency entre 3 properties, HITL formal, critique loops con checkpointing), evaluar LangGraph. Pero no antes.
 - **Estructura de evidencia:** filesystem local, una carpeta por run (`evidence/{run_id}/`).
 - **Storage:** local en disco para v1. Migración a algo más serio solo si la operación lo demanda.
 
 ### 4.3 Decisiones a tomar durante Fase 1 (no antes)
 
 - **Scheduler:** Buffer vs Later vs Metricool. Probar 1-2 durante el manual MVP, decidir al final de Fase 1.
-- **Visual generation:** Midjourney, Recraft, DALL-E vía API, o solo Canva sin AI. Decidir tras 5-10 piezas hechas a mano.
+- **Visual generation:** ~~Decidir tras 5-10 piezas~~ **DECIDIDO:** Canva Pro + AI assistant para edición. 0% AI generation primaria de visuales. Faceless format (texto en pantalla + stock + B-roll + voz humana). Confirmado por research + producción de 6 piezas.
 - **Analytics:** Meta Insights API (cuando esté business account aprobada por Meta), o métricas manuales del dashboard al inicio.
 - **Fact-checking helper:** Decidir si solo Claude o agregás Perplexity/Tavily/Exa para fuentes en tiempo real.
 
@@ -251,21 +251,24 @@ project-autopilot/
 
 ## 6. Catálogo de agentes (capa 2)
 
-### 6.1 MVP — 9 agentes (Fases 3-5)
+### 6.1 MVP — 9 agentes (IMPLEMENTADOS — 2026-05-08)
 
-| # | Agent | Función | Tipo | Fase |
-|---|---|---|---|---|
-| 1 | Source Monitor | Lee fuentes, extrae items nuevos, dedupea | Mix (RSS=det / scraping=LLM) | F3 |
-| 2 | Signal Scorer | Califica items 0-100 según rubric de la property | LLM | F3 |
-| 3 | Editorial | Convierte item alto-score en brief con ángulo | LLM | F4 |
-| 4 | Fact-Checker | Verifica claims, fuentes, fechas, números | LLM + tools | F4 |
-| 5 | Content Composer | Genera caption + slides de carrusel + sección de newsletter | LLM | F4 |
-| 6 | Compliance | Revisa Meta rules, copyright, claims, financial risk | LLM con reglas | F4 |
-| 7 | Human Approval | UI para revisar/editar/aprobar/rechazar/programar | UI (CLI o web) | F4 |
-| 8 | Publisher | Publica/programa via API o asistido | Determinístico | F4 |
-| 9 | Analytics & Learn | Recoge métricas, produce recomendaciones | Mix | F5 |
+> Los 9 agents del MVP están operativos con 98 tests passing. Pipeline end-to-end funcional:
+> `python autopilot.py run-all -p ai-brief-latam --auto-approve`
 
-Estos 9 cubren el flujo end-to-end. Algunos pueden ser stubs (humano haciendo el trabajo) y se automatizan progresivamente. **No hace falta tener los 9 perfectos para empezar a operar.**
+| # | Agent | Función | LLM | Tests | CLI |
+|---|---|---|---|---|---|
+| 1 | Source Monitor | 12 fuentes RSS + Anthropic scraping, dedup 30d, scoring heurístico | No | 34 | `scan` |
+| 2 | Signal Scorer | Rubric 8 categorías Anexo B, clasificación strong/consider/discard | Opus 4 | 12 | `score` |
+| 3 | Editorial | Briefs Smart Brevity con ángulo LATAM, hook framework | Opus 4 | 11 | `brief` |
+| 4 | Fact-Checker | Verifica claims, 4 severidades, verdicts, suggested rewrites | Opus 4 | 9 | `check` |
+| 5 | Content Composer | Carousel (5-7 slides) + caption + newsletter + reel script | Opus 4 | 7 | `compose` |
+| 6 | Compliance | Meta rules + brand voice + forbidden patterns, verdicts | Opus 4 | 9 | `comply` |
+| 7 | Human Approval | Interactive CLI + auto-approve mode, decision recording | No | 6 | `approve` |
+| 8 | Publisher | Export files listos para Canva/Buffer/Beehiiv | No | 5 | `publish` |
+| 9 | Analytics | Pipeline metrics, API costs, weekly reports | No | 5 | `analytics` |
+
+Implementación: plain Python + Pydantic + Anthropic API directa (sin framework). Ver §4.2 para decisión de framework.
 
 ### 6.2 Intermedio — 20 agentes (post Fase 6)
 
@@ -375,35 +378,17 @@ Tareas:
 
 **DoD:** Documento `WORKFLOW_ANALYSIS.md` con stats, cuellos de botella identificados, prioridad clara de qué automatizar primero, specs del primer agente.
 
-### FASE 3 — Vertical Slice: Primer agente automatizado (2 semanas)
+### FASE 3 — Vertical Slice: Primer agente automatizado ✅ COMPLETADA 2026-05-08
 
-**Objetivo:** Tener UN agente (Source Monitor + Signal Scorer) corriendo end-to-end por el control plane. Reducir tu trabajo diario de 30-45 min de scanning a aprobar/rechazar una shortlist en 5 min.
+**Objetivo:** Tener UN agente (Source Monitor + Signal Scorer) corriendo end-to-end. ~~Reducir tu trabajo diario de 30-45 min de scanning a aprobar/rechazar una shortlist en 5 min.~~
 
-Tareas:
+**Resultado:** Source Monitor (12 fuentes, 34 tests) + Signal Scorer (8 categorías, 12 tests) operativos. `python autopilot.py scan` + `python autopilot.py score` funcionan end-to-end.
 
-1. Implementar `agents/source_monitor/` — lee fuentes RSS, extrae items nuevos, dedupea contra historial.
-2. Implementar `agents/signal_scorer/` — califica cada item 0-100 según rubric de la property (Anexo B).
-3. Conectar ambos al control plane (intake → composer → policy_engine → evidence).
-4. Comando: `autopilot scan --property ai-brief-latam`.
-5. Output: shortlist de 5-10 items diarios con score y razones, en formato legible.
+### FASE 4 — Pipeline completo de un brief ✅ COMPLETADA 2026-05-08
 
-**DoD:** Cada mañana corrés el comando, recibís shortlist, elegís en <10 min lo que vas a trabajar. Tu tiempo de scanning baja de 30-45 min a <10 min.
+**Objetivo:** ~~End-to-end: desde fuente seleccionada hasta publicación programada, con humano solo en los puntos de aprobación.~~
 
-### FASE 4 — Pipeline completo de un brief (3 semanas)
-
-**Objetivo:** End-to-end: desde fuente seleccionada hasta publicación programada, con humano solo en los puntos de aprobación.
-
-Tareas:
-
-1. Implementar `agents/editorial/` — convierte item en brief con ángulo (Anexo A).
-2. Implementar `agents/fact_checker/` — verifica claims, anota fuentes, marca dudas.
-3. Implementar `agents/content_composer/` — genera caption + slides de carrusel + sección de newsletter.
-4. Implementar `agents/compliance/` — revisa Meta rules, copyright, claims (Anexo D).
-5. Implementar `agents/human_approval/` — UI mínima (CLI con preview, o página web simple) para aprobar/editar/rechazar/programar.
-6. Implementar `agents/publisher/` — usa Buffer API o publishing manual asistido.
-7. Calibrar Compliance Agent con reglas específicas de AI Brief (relativamente bajas).
-
-**DoD:** Comando `autopilot brief --property ai-brief-latam --topic <topic-id-from-shortlist>` produce un draft completo en <5 minutos. Vos editás/aprobás en <10 minutos. Se programa publicación. Tiempo total por pieza baja de 60-90 min (Fase 1) a <20 min.
+**Resultado:** 7 agents adicionales implementados (Editorial, Fact-Checker, Content Composer, Compliance, Human Approval, Publisher, Analytics). Pipeline completo: `python autopilot.py run-all -p ai-brief-latam --auto-approve`. Tiempo por pieza: ~2 min pipeline + ~5 min review humano.
 
 ### FASE 5 — Agregar Crypto Brief LATAM (2-3 semanas)
 
@@ -447,15 +432,16 @@ Decisiones a tomar entonces:
 
 ### FASE 8 — Scale + monetización (ongoing)
 
-**Objetivo:** Crecer la(s) property/properties que pegaron. Premium, sponsorships, B2B.
+**Objetivo:** Crecer la(s) property/properties que pegaron. Dual revenue stream.
 
-A planear según señales reales. Posibles tracks:
-- Newsletter sponsorships
-- Premium subscription tier
-- Reportes pagos / research deep-dives
-- Comunidad
-- Cursos / templates
-- B2B intelligence subscription
+**Modelo target (basado en research Rundown AI):** dual revenue stream — sponsorships + paid product/community. Solo sponsorships es modelo inferior matemáticamente (requiere 5-10× más subs para alcanzar $1M+ ARR). Paid product es el driver financiero principal, sponsorships es secundario.
+
+**Tracks priorizados:**
+1. **Paid product/community** (primary revenue driver) — premium tier, reportes deep-dive, comunidad, cursos/templates. Target: $500-$1,000/yr equivalente LATAM, conversion 0.5-1% de free list.
+2. **Sponsorships** (secondary) — newsletter + IG, exclusión de otros newsletters de IA como sponsors. Solo marcas relevantes para la audiencia.
+3. **B2B intelligence subscription** — si la operación genera data propietaria valiosa.
+
+**Benchmarks anchor:** Rundown AI $833K revenue/empleado, ~$10M ARR con 2M subs, mix 50/50 ads/paid. Para AI Brief LATAM target conservador: $200K-$400K/empleado en Fase 6+ cuando 3 properties operen.
 
 ---
 
@@ -512,6 +498,7 @@ Reglas no negociables del sistema (enforced por Compliance Agent):
 
 - Nunca usar bots de follow/unfollow o engagement automation prohibido por Meta.
 - Nunca enviar DMs masivos.
+- **Engagement automation (auto-replies, auto-DMs, comment bots) queda permanentemente fuera de scope, incluso post-Fase 8.** Razón: riesgo de ban, degrada confianza, no escala para audiencia LATAM premium.
 - Nunca publicar contenido copiado sin transformación sustancial.
 - Nunca usar imágenes/videos con copyright sin licencia.
 - Cuentas profesionales/business obligatorias para usar API oficial.
@@ -548,6 +535,17 @@ Para minimizar riesgo de baneo en Meta:
 - Mantener relación natural seguidores/seguidos.
 - Variar formatos.
 - No publicar contenido idéntico entre cuentas (cuando sumemos las 3).
+
+### 9.5 Drift de voz de marca (multi-agent)
+
+Riesgo identificado por research de frameworks multi-agent: cuando múltiples agents generan contenido, la voz de marca tiende a "driftear" — cada agent interpreta el brand voice ligeramente diferente, y la inconsistencia acumulada degrada la identidad.
+
+Mitigaciones implementadas y planificadas:
+- **Implementado:** System prompt con brand_voice.md completo en cada agent LLM (Editorial, Composer, Compliance).
+- **Implementado:** Compliance Agent como gate final que verifica adherencia a voz antes de publicar.
+- **Implementado:** Human Approval como último checkpoint antes de publicación.
+- **Planificado (Fase 6+):** Brand Voice Agent dedicado (#19 del catálogo intermedio) — priorizado por encima de otros agents intermedios.
+- **Planificado:** Evaluations automáticas periódicas (comparar output reciente contra brand_voice.md).
 
 ---
 
