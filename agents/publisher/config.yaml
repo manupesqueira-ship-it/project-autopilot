@@ -1,0 +1,16 @@
+# Publisher agent configuration
+
+agent:
+  name: publisher
+  version: "0.1.0"
+  log_level: INFO
+
+# No LLM — deterministic file export
+output:
+  export_dir: "agents/publisher/export"
+
+# Future: API publishing config
+# instagram:
+#   method: "buffer"  # buffer | meta_graph_api
+# newsletter:
+#   method: "manual"  # manual | beehiiv_api

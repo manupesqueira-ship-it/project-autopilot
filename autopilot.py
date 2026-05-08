@@ -30,6 +30,7 @@ def main() -> int:
         print("  compose Generate publishable content from briefs (requires ANTHROPIC_API_KEY)")
         print("  comply  Review content for platform and brand compliance (requires ANTHROPIC_API_KEY)")
         print("  approve Interactive content approval (or --auto-approve for batch)")
+        print("  publish Export approved content as ready-to-publish files")
         return 1
 
     command = sys.argv[1]
@@ -55,9 +56,12 @@ def main() -> int:
     elif command == "approve":
         from agents.human_approval.cli import main as approve_main
         return approve_main(sys.argv[2:])
+    elif command == "publish":
+        from agents.publisher.cli import main as publish_main
+        return publish_main(sys.argv[2:])
     else:
         print(f"Unknown command: {command}")
-        print("Available: scan, score, brief, check, compose, comply, approve")
+        print("Available: scan, score, brief, check, compose, comply, approve, publish")
         return 1
 
 

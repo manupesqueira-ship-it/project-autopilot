@@ -12,6 +12,7 @@ Ver MASTER_PLAN.md sección 6 para el catálogo completo.
 - [x] content_composer (F4) — 7 tests, carousel + caption + newsletter + reel script + CLI
 - [x] compliance (F4) — 9 tests, Meta rules + brand voice + forbidden patterns + CLI
 - [x] human_approval (F4) — 6 tests, interactive CLI + auto-approve mode
+- [x] publisher (F4) — 5 tests, file export + evidence chain tracing + CLI
 - [ ] editorial (F4)
 - [ ] fact_checker (F4)
 - [ ] content_composer (F4)
