@@ -6,7 +6,7 @@ See DESIGN.md section 4 for full schema documentation.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -60,7 +60,7 @@ class SourceItem(BaseModel):
     source_name: str
     source_category: SourceCategory
     published_at: datetime
-    discovered_at: datetime = Field(default_factory=datetime.utcnow)
+    discovered_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     snippet: str = Field(default="", max_length=500, description="First ~300 chars of content")
     authors: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
@@ -77,7 +77,7 @@ class SourceError(BaseModel):
     source_name: str
     error_type: ErrorType
     message: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class RunStats(BaseModel):
@@ -97,7 +97,7 @@ class SourceMonitorResult(BaseModel):
     """
     run_id: str
     property: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     items: list[SourceItem] = Field(default_factory=list)
     errors: list[SourceError] = Field(default_factory=list)
     stats: RunStats = Field(default_factory=RunStats)
