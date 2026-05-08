@@ -28,6 +28,7 @@ def main() -> int:
         print("  brief   Generate editorial briefs from scored items (requires ANTHROPIC_API_KEY)")
         print("  check   Fact-check claims in editorial briefs (requires ANTHROPIC_API_KEY)")
         print("  compose Generate publishable content from briefs (requires ANTHROPIC_API_KEY)")
+        print("  comply  Review content for platform and brand compliance (requires ANTHROPIC_API_KEY)")
         return 1
 
     command = sys.argv[1]
@@ -47,9 +48,12 @@ def main() -> int:
     elif command == "compose":
         from agents.content_composer.cli import main as compose_main
         return compose_main(sys.argv[2:])
+    elif command == "comply":
+        from agents.compliance.cli import main as comply_main
+        return comply_main(sys.argv[2:])
     else:
         print(f"Unknown command: {command}")
-        print("Available: scan, score, brief, check, compose")
+        print("Available: scan, score, brief, check, compose, comply")
         return 1
 
 

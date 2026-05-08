@@ -1,0 +1,13 @@
+# Compliance agent configuration
+
+agent:
+  name: compliance
+  version: "0.1.0"
+  log_level: INFO
+
+llm:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 1200
+
+output:
+  evidence_dir: "agents/compliance/evidence"
