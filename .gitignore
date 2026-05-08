@@ -15,6 +15,7 @@ node_modules/
 logs/
 evidence/
 agents/*/evidence/
+agents/publisher/export/
 data/
 
 # Secrets — NUNCA commitear
