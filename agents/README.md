@@ -11,6 +11,7 @@ Ver MASTER_PLAN.md sección 6 para el catálogo completo.
 - [x] fact_checker (F4) — 9 tests, LLM claim verification + verdicts + CLI
 - [x] content_composer (F4) — 7 tests, carousel + caption + newsletter + reel script + CLI
 - [x] compliance (F4) — 9 tests, Meta rules + brand voice + forbidden patterns + CLI
+- [x] human_approval (F4) — 6 tests, interactive CLI + auto-approve mode
 - [ ] editorial (F4)
 - [ ] fact_checker (F4)
 - [ ] content_composer (F4)

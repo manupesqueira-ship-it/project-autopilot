@@ -1,0 +1,10 @@
+# Human Approval agent configuration
+
+agent:
+  name: human_approval
+  version: "0.1.0"
+  log_level: INFO
+
+# No LLM needed — this is a human-in-the-loop step
+output:
+  evidence_dir: "agents/human_approval/evidence"
