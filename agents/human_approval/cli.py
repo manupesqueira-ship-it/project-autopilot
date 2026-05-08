@@ -32,7 +32,7 @@ def _setup_logging(level: str) -> None:
 
 def _run_interactive(agent: HumanApprovalAgent) -> ApprovalOutput:
     """Interactive approval flow — prompts user for each item."""
-    if sys.platform == "win32":
+    if sys.platform == "win32" and hasattr(sys.stdout, "buffer") and sys.stdout.encoding != "utf-8":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
     from rich.console import Console
@@ -186,7 +186,7 @@ def _print_summary(output: ApprovalOutput, console=None) -> None:
 
 
 def _print_auto_result(output: ApprovalOutput) -> None:
-    if sys.platform == "win32":
+    if sys.platform == "win32" and hasattr(sys.stdout, "buffer") and sys.stdout.encoding != "utf-8":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
     from rich.console import Console

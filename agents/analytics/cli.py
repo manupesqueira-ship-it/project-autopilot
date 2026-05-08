@@ -25,7 +25,7 @@ def _setup_logging(level: str) -> None:
 
 
 def _print_result(output: AnalyticsOutput) -> None:
-    if sys.platform == "win32":
+    if sys.platform == "win32" and hasattr(sys.stdout, "buffer") and sys.stdout.encoding != "utf-8":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
     from rich.console import Console

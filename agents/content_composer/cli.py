@@ -29,7 +29,7 @@ def _print_result(output: ComposerOutput) -> None:
     from rich.panel import Panel
 
     # Force UTF-8 output on Windows to handle emojis
-    if sys.platform == "win32":
+    if sys.platform == "win32" and hasattr(sys.stdout, "buffer") and sys.stdout.encoding != "utf-8":
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
     console = Console()
