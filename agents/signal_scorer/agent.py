@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from dotenv import load_dotenv
 
 from agents.signal_scorer.schemas import (
     Classification,
@@ -44,6 +45,8 @@ class SignalScorerAgent:
     def __init__(self, property_name: str, config_dir: Path | None = None):
         self.property_name = property_name
         self.config_dir = config_dir or self._find_project_root()
+        # Load .env from project root
+        load_dotenv(self.config_dir / ".env")
         self.agent_config = self._load_agent_config()
         self.api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not self.api_key:
