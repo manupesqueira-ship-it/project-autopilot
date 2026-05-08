@@ -39,6 +39,13 @@ scoring:
     max_score_hours: 6            # Items < 6h old get full recency score
     zero_score_hours: 72          # Items > 72h old get 0 recency score
 
+  # Keyword-match gate: if keyword_match < threshold, language_fit, length_signal
+  # and category_bonus are zeroed out. Prevents off-topic items (e.g., LATAM puff
+  # pieces with one AI mention) from ranking high on bonuses.
+  # 1.0 = "any keyword hit passes". 5.0 = requires ~1 high-priority title hit
+  # (or several snippet hits) to keep bonuses.
+  keyword_gate_threshold: 5.0
+
   # Priority keywords per property — Manuel's curated set (2026-05-07)
   keywords:
     ai-brief-latam:

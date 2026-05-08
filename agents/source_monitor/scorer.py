@@ -34,10 +34,11 @@ _DEFAULT_WEIGHTS = {
 }
 _DEFAULT_RECENCY = {"max_score_hours": 6, "zero_score_hours": 72}
 
-# If keyword_match falls below this threshold, optional bonuses
+# If keyword_match falls below the configured gate threshold, optional bonuses
 # (language_fit, length_signal, category_bonus) are zeroed out — prevents
 # topically-irrelevant items from ranking high on bonuses alone.
-_KEYWORD_GATE_THRESHOLD = 1.0
+# Read from scoring.keyword_gate_threshold in config.yaml; falls back here.
+_DEFAULT_KEYWORD_GATE_THRESHOLD = 1.0
 
 
 class PreliminaryScorer:
@@ -63,6 +64,9 @@ class PreliminaryScorer:
         self.property_name = property_name
         self.weights = config.get("weights", _DEFAULT_WEIGHTS)
         self.recency_cfg = config.get("recency", _DEFAULT_RECENCY)
+        self.keyword_gate_threshold = float(
+            config.get("keyword_gate_threshold", _DEFAULT_KEYWORD_GATE_THRESHOLD)
+        )
 
         # Keywords
         kw_all = config.get("keywords", {}).get(property_name, {})
@@ -92,7 +96,7 @@ class PreliminaryScorer:
             "category_bonus": self._score_category(item),
         }
         # Keyword gate: if topical relevance is too weak, drop the optional bonuses.
-        if breakdown["keyword_match"] < _KEYWORD_GATE_THRESHOLD:
+        if breakdown["keyword_match"] < self.keyword_gate_threshold:
             breakdown["language_fit"] = 0.0
             breakdown["length_signal"] = 0.0
             breakdown["category_bonus"] = 0.0
