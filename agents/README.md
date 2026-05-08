@@ -7,6 +7,7 @@ Ver MASTER_PLAN.md sección 6 para el catálogo completo.
 ## Estado del MVP (9 agentes)
 - [x] source_monitor (F3) — 34 tests, RSS + scraping + dedup + scoring + CLI
 - [x] signal_scorer (F3) — 12 tests, LLM scoring via Claude API + CLI
+- [x] editorial (F4) — 11 tests, LLM brief generation + markdown export + CLI
 - [ ] editorial (F4)
 - [ ] fact_checker (F4)
 - [ ] content_composer (F4)

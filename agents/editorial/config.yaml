@@ -1,0 +1,21 @@
+# Editorial agent configuration
+
+agent:
+  name: editorial
+  version: "0.1.0"
+  log_level: INFO
+
+# LLM settings
+llm:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 1500    # Briefs are longer than scores
+
+# Generation settings
+generation:
+  max_briefs_per_run: 5          # Max briefs to generate per run
+  min_signal_score: 60.0         # Only brief items scored 60+ by Signal Scorer
+
+# Output
+output:
+  evidence_dir: "agents/editorial/evidence"
+  save_markdown: true            # Save individual .md files per brief
