@@ -155,7 +155,8 @@ class SourceFetcher:
         Returns:
             Normalized SourceItem.
         """
-        title = entry.get("title", "").strip()
+        import html
+        title = html.unescape(entry.get("title", "")).strip()
         link = entry.get("link", "").strip()
 
         if not title or not link:
