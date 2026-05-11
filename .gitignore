@@ -16,7 +16,7 @@ logs/
 evidence/
 agents/*/evidence/
 agents/publisher/export/
-data/
+data/source_monitor/
 
 # Secrets — NUNCA commitear
 .env
