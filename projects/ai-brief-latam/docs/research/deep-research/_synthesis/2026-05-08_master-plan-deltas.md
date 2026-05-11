@@ -9,6 +9,19 @@
 
 ---
 
+> ## Índice de docs vivos
+>
+> Este archivo es histórico (deltas propuestos al MASTER_PLAN viejo, 2026-05-08). Para el estado actual del proyecto, consultar:
+> - `docs/SYSTEM_DESIGN.md` — arquitectura de 11 agents
+> - `docs/STACK.md` — herramientas y costos
+> - `docs/AGENTS_SPEC.md` — specs técnicos por agent
+> - `docs/ROADMAP.md` — 4 fases con DoD
+> - `docs/CONTENT_STRATEGY.md` — estrategia editorial
+> - `docs/SESSIONS_LOG.md` — bitácora día por día (NUEVO)
+> - `docs/DECISIONS.md` — ADRs (NUEVO)
+>
+> ---
+>
 > **STATUS UPDATE — 2026-05-11**
 >
 > **MASTER_PLAN.md fue decompuesto el 2026-05-10** en una serie de docs especializados:
