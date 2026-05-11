@@ -7,6 +7,41 @@
 > Este documento NO modifica MASTER_PLAN.md. Solo propone deltas con su evidencia,
 > fuerza, y acción recomendada. La edición final la hace Manuel después de revisar.
 
+---
+
+> **STATUS UPDATE — 2026-05-11**
+>
+> **MASTER_PLAN.md fue decompuesto el 2026-05-10** en una serie de docs especializados:
+> - `docs/STACK.md` — herramientas confirmadas + costos
+> - `docs/SYSTEM_DESIGN.md` — arquitectura del sistema multi-agente
+> - `docs/AUTOMATION_ARCHITECTURE.md` — diseño del flow automatizado
+> - `docs/AGENTS_SPEC.md` — 11 agents (no 9) descriptos como n8n nodes/sub-workflows
+> - `docs/ROADMAP.md` — fases con DoD
+>
+> **La migración a n8n cloud + 11 agents como nodes/sub-workflows ya está implementada en esos docs.**
+> El research n8n templates (2026-05-11) confirmó la viabilidad de la dirección.
+>
+> Por consecuencia, **los deltas siguientes quedan SUPERSEDED**:
+> - **Delta #17** (round 2): "single-agent + tools Fase 1-3 → LangGraph Fase 4" — SUPERSEDED. La dirección elegida es n8n cloud directo desde Fase 1, sin la pasada por single-agent puro.
+> - **Delta #22** (round 2): "validar 2 semanas con single-agent + tools antes de construir set de 9 agentes" — SUPERSEDED. n8n cloud reemplaza el path "framework vs no-framework"; la validación va a ser sobre templates importados, no sobre código puro.
+> - **Contradicción #10** (round 2, en addendum de `2026-05-08_synthesis.md`): "Stack del control plane: Python directo vs framework" — SUPERSEDED. Resuelto: n8n cloud + Anthropic node nativo + HTTP Request para casos avanzados (prompt caching, Batch API).
+>
+> **Deltas que quedan PARCIALMENTE aplicables** (revisar caso por caso):
+> - **Delta #18** (round 2): "Fly.io/Railway/Render NO Vercel para agent engine" — aplica solo si se elige self-hosted n8n. Si n8n cloud, n/a. Si self-hosted en Hostinger VPS (mencionado en STACK.md como alternativa), Hostinger reemplaza el default Fly.io/Railway.
+>
+> **Deltas que SIGUEN VIGENTES** (la decisión n8n no los afecta):
+> - Deltas #1-#16 (round 1, todos sobre brand voice / editorial / monetización / posicionamiento LATAM)
+> - Delta #19 (round 2, dual revenue stream) — orquestador no afecta modelo de negocio
+> - Delta #20 (round 2, priorización Fase 8) — idem
+> - Delta #21 (round 2, canales primary IG vs LinkedIn) — pendiente de discutir
+> - Delta #23 (round 2, Brand Voice Agent priority) — aún más relevante en arquitectura n8n
+> - Delta #24 (round 2, Rundown rate card como input) — idem
+> - Delta #25 (round 2, drift de voz como riesgo §9) — aplica igual a sistema n8n
+> - Delta #26 (round 2, revenue/employee como métrica) — idem
+> - Delta #27 (round 2, Claude como default fact-check) — confirmado por research n8n templates
+>
+> **Documentos a editar para reflejar SUPERSEDED**: este archivo + `2026-05-08_synthesis.md` (la contradicción #10).
+
 ## Tabla de deltas propuestos
 
 | # | Sección del MASTER_PLAN | Estado actual | Cambio propuesto | Source del cambio | Fuerza de la evidencia | Acción recomendada |
@@ -60,12 +95,12 @@
 
 | # | Sección del MASTER_PLAN | Estado actual | Cambio propuesto | Source del cambio | Fuerza de la evidencia | Acción recomendada |
 |---|---|---|---|---|---|---|
-| 17 | §4.2 stack tecnológico — orquestación de agentes | "LLM principal: Claude (Anthropic API directa) para v1. Más simple y controlable que SDKs intermedios." | Agregar nota: **"Para Fase 1-3: single-agent + tools (Camino C). Para Fase 4 cuando se construyan los 9 agentes: evaluar LangGraph (Camino A) si la operación demuestra que el control plane simple no alcanza."** | `multi-agent-frameworks` (camino C → A explícito) + MASTER_PLAN principio "no construir N+1 hasta demostrar necesidad" | **Alta** | **Editar ya.** Convierte una decisión implícita en explícita |
+| ~~17~~ | ~~§4.2 stack tecnológico — orquestación de agentes~~ | ~~"LLM principal: Claude (Anthropic API directa) para v1. Más simple y controlable que SDKs intermedios."~~ | ~~Agregar nota: **"Para Fase 1-3: single-agent + tools (Camino C). Para Fase 4 cuando se construyan los 9 agentes: evaluar LangGraph (Camino A) si la operación demuestra que el control plane simple no alcanza."**~~ | ~~`multi-agent-frameworks` (camino C → A explícito) + MASTER_PLAN principio "no construir N+1 hasta demostrar necesidad"~~ | ~~**Alta**~~ | **SUPERSEDED 2026-05-11** — dirección elegida: n8n cloud + Anthropic node nativo desde Fase 1. Ver banner top del archivo. |
 | 18 | §4.4 diferido — Cloud/VPS para Autopilot | "no hasta tener razón clara (mantener local)" | Cuando se migre, agregar default: **"Fly.io / Railway / Render para agent engine; NO Vercel para los runs largos."** | `multi-agent-frameworks` recomendación deployment | Media-alta | **Editar ya** (es nota informativa, no compromiso) |
 | 19 | §3.1 ai-brief-latam — monetización (mencionada solo en §11 abierto y Fase 8) | "Decisiones abiertas: tier free vs premium" en §7.7. Fase 8 lista tracks sin priorización | **Lockear modelo target: dual revenue stream (sponsorships + paid tier ~$500-$1,000/yr equivalente LATAM, conversion target 0.5-1% de free list)** como arquitectura desde el diseño, no decisión abierta. Sponsorships sole es modelo inferior matemáticamente. | `rundown-ai-business-model` (50/50 mix, LTV 2-4× vs solo-ads) | **Alta** | **Editar ya.** Cambio más sustantivo del round 2 |
 | 20 | §Fase 8 scale + monetización | "Posibles tracks: newsletter sponsorships, premium subscription tier, etc." (sin orden) | Reordenar tracks priorizando **paid product/community** como driver financiero principal, sponsorships como secundario. Anchor benchmarks: $999/yr Rundown University, ~$833K revenue/empleado, 25-50% margen. | `rundown-ai-business-model` | Alta | Editar Fase 8 con prioridades claras |
 | 21 | §3.1 ai-brief-latam — cadencia inicial / canales | "3-5 piezas/semana en Instagram, 1 newsletter weekly" — implica IG + newsletter en paralelo desde día 1 | **Discutir:** ¿agregar LinkedIn español como canal primary de audience-building paralelo a IG en Fase 1, basado en insight Rundown ("newsletter es monetization layer encima de audience-building en otra plataforma")? Alternativas: (a) mantener IG-first como ya está; (b) IG + LinkedIn paralelo; (c) LinkedIn-first + IG secundario | `rundown-ai-business-model` | Media-alta | **Discutir con Manuel** (decisión meta-arquitectónica) |
-| 22 | §6.1 catálogo 9 agentes MVP — orden de construcción | Lista de 9 agentes para Fase 3-5 sin pre-validación de necesidad de framework | Agregar línea: **"Antes de construir el set de 9 agentes, validar 2 semanas con single-agent + tools (sin framework). Solo migrar a LangGraph cuando: (a) consistency entre 3 properties falla, (b) HITL formal es necesario, (c) critique loop demanda checkpointing/iteraciones explícitas."** | `multi-agent-frameworks` Camino C → A criterios | **Alta** | Editar §6.1 con esa nota como guard |
+| ~~22~~ | ~~§6.1 catálogo 9 agentes MVP — orden de construcción~~ | ~~Lista de 9 agentes para Fase 3-5 sin pre-validación de necesidad de framework~~ | ~~Agregar línea: **"Antes de construir el set de 9 agentes, validar 2 semanas con single-agent + tools (sin framework). Solo migrar a LangGraph cuando: (a) consistency entre 3 properties falla, (b) HITL formal es necesario, (c) critique loop demanda checkpointing/iteraciones explícitas."**~~ | ~~`multi-agent-frameworks` Camino C → A criterios~~ | ~~**Alta**~~ | **SUPERSEDED 2026-05-11** — 11 agents (no 9) ya descriptos como n8n nodes/sub-workflows en `docs/AGENTS_SPEC.md`. La validación va a ser sobre templates importados, no sobre código Python puro. Ver banner top del archivo. |
 | 23 | §6.2 catálogo intermedio — Brand Voice Agent (#19) | Listado en intermedio, sin priorización dentro del set | Subir prioridad de Brand Voice Agent dentro del intermedio. Razón nueva: el research multi-agent identifica **drift de voz de marca** como riesgo principal de multi-agent. Si llegamos a multi-agent en Fase 4+, drift es el riesgo material #1. | `multi-agent-frameworks` (drift identificado) + delta #7 anterior | Media-alta | Reordenar §6.2 cuando se llegue a Fase 4 |
 | 24 | §3.1 ai-brief-latam — fuentes / inputs operativos | Lista de fuentes target | Agregar **Rundown rate card** (rundown.ai/advertise-with-us) como **input de patrón táctico** (regla "no other AI newsletters as sponsors", demographics breakdown, CPM benchmarks). No fuente de contenido editorial; fuente de tactics. | `rundown-ai-business-model` (regla exclusión sponsors) | Baja | Cargar a `sources.yaml` con tag `business-pattern` |
 | 25 | §9 riesgos — agregar drift/quality | §9.1 cubre Meta rules, copyright, financial. No cubre drift de voz de marca | Agregar §9.5 "Drift de voz / quality": "Drift de voz de marca por uso de multi-agent es riesgo identificado. Mitigation: prompt caching + Brand Voice Agent + style guide en system prompt + revisión humana periódica + evaluations automáticas (LangSmith o equivalente)." | `multi-agent-frameworks` (drift como riesgo central) | Media-alta | **Editar ya** §9 con nueva subsección |

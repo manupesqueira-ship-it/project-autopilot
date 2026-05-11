@@ -12,7 +12,7 @@
 | **Canva Pro** | Templates de diseño, assets visuales complementarios | $14.99/mo | Fase 2 (opcional) |
 | **Beehiiv** | Plataforma de newsletter (brief extendido por email) | Free tier → $49/mo (Scale) | Fase 3 |
 | **Lovable.dev** | Landing page / sitio web del proyecto | Pricing TBD | Fase 3+ (opcional) |
-| **Buffer** | Auto-publish a Instagram + TikTok en horarios programados | $6/mo (Essentials) | Por configurar |
+| **Blotato (a evaluar) \| Upload-Post (a evaluar) \| Buffer (fallback)** | Auto-publish a Instagram + TikTok en horarios programados | Pendiente — depende de research comparativo (Blotato ~$15-30/mo, Upload-Post ~$10-25/mo, Buffer $6/mo) | Por evaluar |
 | **Telegram Bot API** | Human-in-the-loop: aprobación de contenido en Fase 1 | Gratis | Por configurar |
 | **Spotify for Podcasters** | Distribución de episodios de podcast | Gratis | Fase 4 |
 | **GitHub** | Repositorio de código, prompts, documentación | Gratis | Activo |
@@ -27,10 +27,10 @@
 | n8n Cloud | $24 |
 | Claude Opus 4 API (~63 calls/week scoring + editorial + compliance) | $30-90 |
 | gpt-image-2 (~84 imágenes/mo, 4 slides x 21 posts) | $15-50 |
-| Buffer | $6 |
+| Publisher (Blotato \| Upload-Post \| Buffer — TBD post-research) | $6-30 |
 | Telegram Bot | $0 |
 | GitHub | $0 |
-| **Total Fase 1** | **~$75-170/mo** |
+| **Total Fase 1** | **~$75-195/mo** |
 
 ### Fase 2 (+reels): +$35-40/mo adicional
 - ElevenLabs Creator: $22/mo

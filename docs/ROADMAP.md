@@ -21,6 +21,13 @@
 - A11 (Analytics) — métricas manuales en Fase 1
 
 ### Tareas
+0. **(Preliminar) Importar 5 templates base a n8n cloud y inspeccionar nodes JSON** antes de construir desde cero. Referencias del research `2026-05-11_n8n-templates-research.md`:
+   - **#12533** (Maksudur Rahman) — Curate AI newsletter from RSS + LLM scoring + Slack HITL: el esqueleto más completo
+   - **#6389** (Daniel Shashko) — Smart RSS + Baserow dedup persistente: único patrón de dedup serio
+   - **#4399** (Davide Boizza) — Anthropic AI Agent Claude Sonnet 4/Opus 4 con web_search Tool: crítico para A4 fact-check
+   - **#4028** (Juan Carlos Cavero) — Carousel TikTok+IG con gpt-image-1 (swap a gpt-image-2): patrón "1 img + N edits estilísticamente consistentes"
+   - **#9472** (Yasser Sami) — LinkedIn posts con Telegram approval + feedback loop, **o #5773** (Femi Ad) — Social media posts con Telegram approval + Upload-Post multi-plataforma
+   - Acceptance: cada template importado en una instance de prueba, JSON inspeccionado, lista de nodes y decisiones que sirven anotada en `docs/research/deep-research/n8n-templates-notes.md` (a crear).
 1. Configurar n8n Cloud (o self-hosted en Hostinger)
 2. Implementar A1: RSS feeds + deduplicación + keyword filter
 3. Implementar A2: Claude Sonnet scoring con rúbrica de 8 categorías
