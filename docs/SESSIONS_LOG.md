@@ -103,14 +103,14 @@
 - 11 agents redefinidos (no 9) como n8n nodes/sub-workflows: A1 source_monitor → A2 signal_scorer → A3 editorial → A4 fact_checker → A5 visual_director → A6 audio_director → A7 copy_composer → A8(a/b/c/d) content generators → A9 compliance → A10 publisher → A11 analytics.
 - Decisiones operativas: 1 post/día (no 3), gpt-image-2 como primario, voice clone 100% ElevenLabs.
 
-**Decisiones tomadas:** ver `docs/DECISIONS.md` (ADR-001 a ADR-006).
+**Decisiones tomadas:** ver `docs/DECISIONS.md` (ADR-008 a ADR-013 — set AI Brief LATAM).
 
 **Pivots / cambios de rumbo:**
-- **Python custom → n8n cloud + Anthropic node nativo** (ADR-001).
+- **Python custom → n8n cloud + Anthropic node nativo** (ADR-009).
 - **9 agents → 11 agents** — n8n permite separar A8 en A8a/b/c/d sin overhead arquitectural.
-- **3 posts/día → 1 post/día** Fase 1 — validar antes de escalar (ADR-003).
-- **Pillow image generation → gpt-image-2** — output mediocre forzó el upgrade (ADR-006).
-- **Voz humana primaria + ElevenLabs backup → voice clone 100% ElevenLabs** — automatización total Fase 2+ (ADR-005, contradice brand_voice.md de 2026-05-07).
+- **3 posts/día → 1 post/día** Fase 1 — validar antes de escalar (ADR-011).
+- **Pillow image generation → gpt-image-2** — output mediocre forzó el upgrade (ADR-013).
+- **Voz humana primaria + ElevenLabs backup → voice clone 100% ElevenLabs** — automatización total Fase 2+ (ADR-008, contradice brand_voice.md de 2026-05-07).
 
 **Learnings:**
 - **Construir sistema antes de definir editorial = output genérico.** Los 9 agents Python eran técnicamente correctos pero producían content sin alma porque el ángulo editorial no estaba lo suficientemente afilado.
@@ -132,7 +132,7 @@
 **Decisiones tomadas:**
 - Combinación recomendada de templates: #12533 + #6389 + #4399 + #4028 + (#9472 o #5773) ≈ 70-75% del pipeline.
 - Anthropic SÍ tiene node oficial nativo en n8n (no era solo HTTP Request) — desmiente la asunción del plan original.
-- Buffer es fallback, no primario, hasta que se evalúen Blotato y Upload-Post (ADR-004).
+- Buffer es fallback, no primario, hasta que se evalúen Blotato y Upload-Post (ADR-012).
 
 **Pivots:** ninguno — refinamiento operacional.
 
