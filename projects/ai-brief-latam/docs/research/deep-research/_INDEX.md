@@ -8,6 +8,7 @@
 | 2026-05-08_creators-ia-espanol-landscape.md | Panorama competitivo de creadores de IA en español | 2026-05-08 | ✅ |
 | 2026-05-08_multi-agent-frameworks.md | Frameworks multi-agent (LangGraph, CrewAI, Claude Agent SDK, etc.) | 2026-05-08 | ✅ |
 | 2026-05-08_rundown-ai-business-model.md | The Rundown AI — modelo de negocio dominante en newsletters de IA | 2026-05-08 | ✅ |
+| 2026-05-11_n8n-templates-research.md | n8n templates públicos adaptables al pipeline Fase 1 de AI Brief LATAM | 2026-05-11 | ✅ (tactical) |
 
 ## Análisis crítico individual
 
