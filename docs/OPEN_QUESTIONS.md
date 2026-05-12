@@ -18,8 +18,8 @@
 | E | Audio/video timing | ✅ Respondida — audio solo en reels, voice clone ElevenLabs |
 | F | Sources | 🟡 Propuesta en `sources.yaml` (sección PROPUESTA 2026-05-12) — Manuel debe confirmar qué fuentes activar |
 | G | Standard de calidad / visual | ⏳ Pendiente (mi propuesta viene en POST_STANDARD.md) |
-| H | Cursor | ⏳ Pendiente |
-| I | Perplexity | ⏳ Pendiente |
+| H | Cursor | ✅ Respondida — diferido, no hoy |
+| I | Perplexity | ✅ Respondida — diferido, no hoy |
 
 ---
 
@@ -68,6 +68,24 @@
 - **Fase 2:** se activa la rama reel cuando Seedance + ElevenLabs estén listos.
 - **Override manual:** se permite subir imágenes/videos propios via n8n node "Read Binary File" cuando se quiere bypass de generación (ej: foto del founder de una startup mencionada).
 - **Estilo visual:** consistente cross-piece, definido en `VISUAL_STANDARD.md` (a crear como sección de POST_STANDARD.md).
+
+### H — Cursor: **diferido (no activar hoy)**
+
+- **Decisión:** no agregar Cursor al stack ahora.
+- **Razón:** Cursor es un editor con Claude inline. Útil **solo si Manuel edita prompts/configs manualmente**. Hoy todo el editing lo hace Claude desde este chat con acceso al repo, así que Cursor no agrega valor incremental.
+- **Costo evitado:** $20 USD/mes ($240/año).
+- **Reabrir cuándo:** si Manuel empieza a iterar prompts solo (sin pasar por chat) o quiere hacer ajustes finos en JSON exportado de n8n, ahí vale la suscripción.
+- **Manuel pidió explícito:** "por el momento no hay que activarlos... si hoy no es una parte fundamental del proceso, no hay que usarlo".
+
+### I — Perplexity: **diferido (no activar hoy)**
+
+- **Decisión:** no agregar Perplexity al stack ahora.
+- **Razón:** Perplexity Pro es útil para (a) lectura matinal con citas, (b) Deep Research on-demand, (c) fact-check manual de backup. Pero **no reemplaza** al A4 Fact-Checker del pipeline (Claude web_search nativo via template #4399, ya integrado a n8n). El A4 corre automático en el workflow; Perplexity sería para Manuel personalmente, no para el pipeline.
+- **Costo evitado:** $20 USD/mes ($240/año).
+- **Reabrir cuándo:** si Manuel arranca Crypto Brief o Startup Radar y necesita Deep Research frecuente para investigaciones nuevas. También si ChatGPT Plus / Claude Pro actuales no le alcanzan.
+- **Manuel pidió explícito:** "por el momento no hay que activarlos... si hoy no es una parte fundamental del proceso, no hay que usarlo".
+
+---
 
 ### E — Audio: **solo en reels, voice clone ElevenLabs 100% (tu voz)**
 
