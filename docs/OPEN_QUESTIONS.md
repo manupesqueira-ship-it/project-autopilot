@@ -7,6 +7,43 @@
 
 ---
 
+## Tracking de respuestas (actualizado 2026-05-12)
+
+| # | Decisión | Status |
+|---|---|---|
+| A | "1 pieza" definida | ✅ Respondida — ver abajo |
+| B | Quality controls | ✅ Respondida — ver abajo |
+| C | Storage | ⏳ Pendiente clarificación (Manuel pidió más detalle de opciones) |
+| D | Image gen | ⏳ Pendiente |
+| E | Audio/video timing | ⏳ Pendiente |
+| F | Sources | ⏳ Pendiente |
+| G | Standard de calidad / visual | ⏳ Pendiente (parcialmente cubierto por B) |
+| H | Cursor | ⏳ Pendiente |
+| I | Perplexity | ⏳ Pendiente |
+
+---
+
+## Respuestas registradas (2026-05-12)
+
+### A — "1 pieza" en Fase 1: **Carousel IG + TikTok paralelos + Newsletter daily**
+
+- **1 pieza diaria** = 1 carousel IG + 1 caption/post TikTok (mismo contenido, paralelo) + 1 sección de newsletter.
+- **Cadencia newsletter:** daily al inicio (1 al día, misma hora del post matutino). Decisión revisable: si la fricción operativa es alta o el open rate baja a <25%, switchear a weekly.
+- **Implicación operativa:** trigger temprano AM (sugerido ~6 AM CDMX) → pipeline corre (~30-60 min) → preview a Telegram ~7 AM → Manuel aprueba 7-8 AM → publish IG+TikTok+Newsletter ~8 AM CDMX.
+- **Reels:** quedan en Fase 2 según ROADMAP (semana 3-4). No bloquea Fase 1.
+
+### B — Quality controls: **1 gate humano antes de publicar + consistencia editorial enforced por el sistema**
+
+- **1 punto de aprobación humana**: chequeo rápido del post (carousel + caption + newsletter) en Telegram antes de publicar. Si lo rechaza → Manuel marca razón (diseño / información / tono) y el sistema descarta o regenera según el flag.
+- **Sin aprobación intermedia**: no hay gate después del brief editorial ni después del fact-check; el sistema sigue automático hasta el preview final.
+- **Consistencia editorial es responsabilidad del sistema, no del humano:**
+  - **Voz/tono/copy:** enforced por brand_voice.md + prompts (a2-signal-scorer, a3-editorial, a7-copy-composer, a9-compliance)
+  - **Visual:** enforced por VISUAL_STANDARD.md (a crear) + A5 Visual Director + prompts para gpt-image-2
+  - **Hook + psicología:** enforced por framework Rufusocial (3 condiciones) + format pillars del research social-media-niches-2026
+- **Material de investigación** que el sistema debe respetar: existe disperso en `research/`, `docs/research/deep-research/`, `brand_voice.md`. **A consolidar en `docs/POST_STANDARD.md`** como referencia única.
+
+---
+
 ## Lo que YA está decidido (de docs + ADRs vigentes a 2026-05-12)
 
 Antes de las preguntas, lo que ya no se discute (a menos que vos lo abras):
