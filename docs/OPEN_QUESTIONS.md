@@ -16,7 +16,7 @@
 | C | Storage | ✅ Respondida — Supabase (locked, account creation deferred) |
 | D | Image gen | ✅ Respondida — híbrido carousel/reel decidido por brief |
 | E | Audio/video timing | ✅ Respondida — audio solo en reels, voice clone ElevenLabs |
-| F | Sources | ⏳ Pendiente (mi propuesta de expandir LATAM viene en commit aparte) |
+| F | Sources | 🟡 Propuesta en `sources.yaml` (sección PROPUESTA 2026-05-12) — Manuel debe confirmar qué fuentes activar |
 | G | Standard de calidad / visual | ⏳ Pendiente (mi propuesta viene en POST_STANDARD.md) |
 | H | Cursor | ⏳ Pendiente |
 | I | Perplexity | ⏳ Pendiente |

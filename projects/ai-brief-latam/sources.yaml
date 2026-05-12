@@ -1,6 +1,25 @@
 # AI Brief LATAM — Source feeds
 # Only RSS for M1. Scrape/Inoreader deferred.
 # Sources with url: TBD are disabled until URLs are found.
+#
+# ─────────────────────────────────────────────────────────────────────
+# REVISIÓN 2026-05-12 — expansión LATAM
+# ─────────────────────────────────────────────────────────────────────
+# La lista original (12 fuentes) tenía 10 anglo / 2 LATAM nativas → flojo
+# para una marca llamada "AI Brief LATAM". Esta revisión propone:
+#   • Mantener todas las anglo (siguen siendo señal primaria del mundo IA)
+#   • Agregar 10+ fuentes LATAM/español como peer-set
+#   • Marcar PROPUESTA = pendiente confirmación Manuel + verificación URL
+#   • Comentar fuentes regulatorias (relevantes para Crypto Brief, no IA)
+#   • Diferir lista de founders X/Twitter a Fase 1.5
+#
+# Convención de weight:
+#   2.0 → primaria oficial (OpenAI/Anthropic/Google/Meta + LATAM nativas)
+#   1.8 → media tech alto-tier (TechCrunch, Bloomberg Línea, Forbes LATAM)
+#   1.5 → media tech tier 2 (Wired, Fortune, Xataka, Hipertextual)
+#   1.3 → media generalista con cobertura IA (Ars Technica, La Nación)
+#   1.0 → comunidad / curaduría (Hacker News)
+# ─────────────────────────────────────────────────────────────────────
 
 sources:
   oficial:
@@ -19,10 +38,68 @@ sources:
 
   newsletters:
     - { name: "Latent Space", url: "https://www.latent.space/feed", type: rss, weight: 1.5 }
+    # ── PROPUESTA 2026-05-12 ────────────────────────────────────────────
+    # Newsletters IA en español (referencia de voz/format LATAM).
+    # URLs por verificar — la mayoría corren en Beehiiv/Substack/Mailerlite.
+    # - { name: "Digital Brain", url: "TBD", type: rss, weight: 1.5, _proposed: "newsletter IA España+LATAM 60K subs, 42% open" }
+    # - { name: "IA al Día", url: "TBD", type: rss, weight: 1.5, _proposed: "newsletter IA LATAM 20K+ subs" }
+    # - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.5, _proposed: "newsletter startups LATAM 50K+ subs" }
+    # ─────────────────────────────────────────────────────────────────
 
   community:
     - { name: "Hacker News", url: "https://hnrss.org/frontpage", type: rss, weight: 1.0 }
 
   latam:
+    # Fuentes ya activas
     - { name: "Contxto", url: "https://contxto.com/en/feed/", type: rss, weight: 2.0 }
     - { name: "LatamList", url: "https://latamlist.com/feed/", type: rss, weight: 2.0 }
+
+    # ── PROPUESTA 2026-05-12 — expansión LATAM nativa ──────────────────
+    # OBJETIVO: balancear los 10 anglo del feed con peso real LATAM.
+    # Manuel debe confirmar (1) qué fuentes incluir, (2) yo verifico URLs.
+    #
+    # Tier 1 — LATAM nativo cubriendo tech + IA + negocios:
+    # - { name: "Bloomberg Línea Tech", url: "TBD", type: rss, weight: 1.8, _proposed: "cobertura LATAM en ES/PT, fuerte en negocios y M&A" }
+    # - { name: "Forbes Centroamérica", url: "https://forbescentroamerica.com/feed/", type: rss, weight: 1.5, _proposed: "verificar feed tech filtrable" }
+    # - { name: "Pulso Social", url: "TBD", type: rss, weight: 1.5, _proposed: "Colombia, ecosistema startup; verificar si feed vive" }
+    # - { name: "La Nación Tecnología", url: "TBD", type: rss, weight: 1.3, _proposed: "AR, cobertura tech generalista de calidad" }
+    # - { name: "Infobae Tecno", url: "TBD", type: rss, weight: 1.3, _proposed: "AR/MX broad, volumen alto, filtrar ruido" }
+    #
+    # Tier 2 — España (mismo idioma, voz peninsular — penalizar en scoring):
+    # NOTA: las españolas se incluyen como input pero el prompt a3-editorial
+    # debe descartar peninsular ("vosotros, vale, tío") y reescribir al neutro.
+    # Si Manuel prefiere 0 fuentes españolas, comentar las 3.
+    # - { name: "Xataka IA", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.5, _proposed: "ES, mejor cobertura IA en español" }
+    # - { name: "Hipertextual", url: "https://hipertextual.com/feed", type: rss, weight: 1.3, _proposed: "ES, tech generalista" }
+    # - { name: "Genbeta IA", url: "https://www.genbeta.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.3, _proposed: "ES, IA aplicada (herramientas, tutoriales)" }
+    # ─────────────────────────────────────────────────────────────────
+
+  # ── PROPUESTA 2026-05-12 — categorías nuevas ─────────────────────────
+  # founders_latam_x:
+  #   _proposed: |
+  #     Lista de cuentas X/Twitter de founders y voces LATAM para polleo.
+  #     DEFERRED a Fase 1.5: rate limits de X API son restrictivos en
+  #     plan gratuito (50 lecturas / 15min), y la calidad de la señal varía.
+  #     Recomendación: implementar primero con RSS, agregar X cuando haya
+  #     evidencia de gap de cobertura.
+  #   _candidates:
+  #     - "@pierpabarbieri (Ualá, AR)"
+  #     - "@danielvogel (Bitso, MX)"
+  #     - "@marceloclaure (LATAM tech VC)"
+  #     - "@oligonzalez (Kavak, MX)"
+  #     - "@enzocavalie (Startupeable, PE)"
+  #     - "@CristianTala (Ecosistema Startup, CL)"
+  #     # Manuel: agregar/quitar nombres según preferencia
+  #
+  # regulatorias_latam:
+  #   _proposed: |
+  #     Reguladores LATAM relevantes cuando AI Brief LATAM toque regulación.
+  #     DEFERRED: relevante para Crypto Brief (property #2 del ROADMAP) y
+  #     news regulatorias específicas. Para AI Brief generalista, agrega
+  #     ruido > señal. Activar selectivamente si una pieza requiere fuente
+  #     oficial.
+  #   _candidates:
+  #     - { name: "CNV Argentina", url: "TBD", type: scrape, weight: 1.5 }
+  #     - { name: "CNBV México", url: "TBD", type: scrape, weight: 1.5 }
+  #     - { name: "BCB Brasil", url: "TBD", type: scrape, weight: 1.5 }
+  # ─────────────────────────────────────────────────────────────────────
