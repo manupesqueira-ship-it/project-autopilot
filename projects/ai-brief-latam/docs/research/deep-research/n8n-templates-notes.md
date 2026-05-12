@@ -38,17 +38,38 @@
 - **Autor:** Maksudur Rahman
 - **Last updated:** ~3 months ago (txt en página, ≈ febrero 2026)
 - **Versión n8n requerida:** 1.0+ (usa LangChain nodes)
-- **Total de nodos:** ~30+ (la página lista los principales y dice "+22 más")
+- **Total de nodos:** **155 reales** (no 30+ como decía la página pública — la página lista una muestra). Confirmado por inspección del JSON descargado vía API el 2026-05-12.
 - **Licencia:** Free template ("Use for free" en n8n.io)
+- **JSON archivado:** `legacy/n8n-templates/12533-original.json` (envelope completo, 192 KB) + `legacy/n8n-templates/12533-importable.json` (sin envelope, listo para paste, 186 KB)
 
-### Nodos principales identificados
+### Nodos principales identificados (post-inspección JSON real)
 
-- **Triggers:** Cron-based polling (RSS feeds, Reddit, company blogs) — disparo programado, no manual
-- **Fetch:** múltiples RSS Feed Read nodes, HTTP Request (para Reddit / blogs no-RSS)
-- **LLM:** OpenAI Chat Model (GPT-4o como primary), Anthropic Chat Model (integrado, modelo no especificado en la página)
-- **Lógica:** If (conditional), Set (normalización de items), LangChain agents
-- **Storage:** Google Sheets (probablemente para dedup / historial)
-- **Output / HITL:** Slack (drafts a canal para "approve immediately or reply with feedback" → AI revisions)
+Breakdown de los 155 nodes, en orden de frecuencia:
+
+| Cantidad | Tipo de node | Para qué |
+|---:|---|---|
+| 19 | `n8n-nodes-base.set` | Normalización de items |
+| 16 | `n8n-nodes-base.stickyNote` | Comentarios del autor (no afectan execution) |
+| 15 | `n8n-nodes-base.splitOut` | Split de arrays |
+| 13 | `n8n-nodes-base.scheduleTrigger` | Cron triggers (uno por source/path) |
+| 12 | `n8n-nodes-base.httpRequest` | Scraping blogs no-RSS + posible Anthropic API |
+| 12 | `n8n-nodes-base.code` | Custom logic |
+| 11 | `n8n-nodes-base.slack` | HITL multi-paso |
+| 9 | `@n8n/n8n-nodes-langchain.chainLlm` | LLM calls |
+| 6 | `@n8n/n8n-nodes-langchain.outputParserStructured` | JSON enforcement |
+| 6 | `n8n-nodes-base.rssFeedReadTrigger` | 6 fuentes RSS directas |
+| 6 | `n8n-nodes-base.filter` | Filtering items |
+| 5 | `@n8n/n8n-nodes-langchain.outputParserAutofixing` | Error correction de parsers |
+| 4 | `n8n-nodes-base.aggregate` | Aggregation |
+| 3 | `n8n-nodes-base.reddit` | Reddit posts |
+| 3 | `n8n-nodes-base.if` | Branching condicional |
+| **2** | `@n8n/n8n-nodes-langchain.lmChatOpenAi` | **OpenAI ChatModel — único LLM nativo en el template** |
+| 2 | `n8n-nodes-base.googleSheets` | Storage / dedup |
+| 2 | `@n8n/n8n-nodes-langchain.informationExtractor` | Extracción estructurada |
+| 2 | `n8n-nodes-base.executeWorkflow` | Sub-workflows |
+| 2 | `n8n-nodes-base.convertToFile` | File output |
+
+**Hallazgo importante (corrige WebFetch summary anterior):** el template NO usa el node Anthropic nativo. Tiene solo `lmChatOpenAi` × 2 como LLM nativo. Si la página decía "Anthropic integrado" probablemente sea vía uno de los 12 HTTP Request nodes (Claude API directa). Esto significa que **swap a Anthropic implica reemplazar nodes OpenAI Chat Model con nodes Anthropic Chat Model nativos** — pero también revisar los HTTP Request para ver si ya hay llamadas a Anthropic que se pueden consolidar.
 
 ### Funcionalidad declarada
 
