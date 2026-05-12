@@ -1,0 +1,228 @@
+# Open Questions — AI Brief LATAM
+
+**Fecha de apertura:** 2026-05-12
+**Status:** preguntas abiertas que bloquean el diseño definitivo del workflow.
+
+> Manuel responde acá (editando el archivo) o en el chat. Cada respuesta cierra una decisión y deja de ser bloqueante. Mientras no estén respondidas, el skeleton de n8n queda como borrador.
+
+---
+
+## Lo que YA está decidido (de docs + ADRs vigentes a 2026-05-12)
+
+Antes de las preguntas, lo que ya no se discute (a menos que vos lo abras):
+
+| Decisión | Source | Status |
+|---|---|---|
+| Orquestador: n8n cloud | ADR-009 | Firme |
+| LLM editorial: Claude Opus 4 (calidad) | ADR-009 + AGENTS_SPEC | Firme |
+| LLM scoring: Claude Sonnet 4.5 (barato) | AGENTS_SPEC + skeleton | Firme |
+| Image gen: gpt-image-2 (no Canva primary, no Pillow) | ADR-013 | Firme |
+| Voice clone: ElevenLabs 100% | ADR-008 | Firme pero pendiente grabación |
+| Volumen: 1 pieza/día Fase 1 | ADR-011 | Firme |
+| Ángulo editorial: generalista LATAM | ADR-010 | Firme con refinamiento mes 2 |
+| Publisher: TBD Blotato vs Upload-Post | ADR-004 | Pendiente decisión |
+| Voz: Smart Brevity + Morning Brew + español neutro CDMX | brand_voice.md | Firme |
+| Hooks: framework Rufusocial (atención + tensión + promesa) | brand_voice.md | Firme |
+| 11 agents conceptuales | AGENTS_SPEC.md | Firme conceptualmente, falta implementación |
+
+---
+
+## Lo que YO asumí y no debería (mea culpa)
+
+Cosas que metí en el skeleton sin confirmar con vos:
+
+1. Que "1 pieza/día" = 1 carousel IG + variación TikTok (asumí que es una sola unidad multi-canal, no varias piezas independientes)
+2. Que Supabase es la DB target para dedup history y archivo (no está confirmado — podría ser Google Drive, Airtable, n8n internal)
+3. Que el formato default es carousel y los reels llegan en Fase 2 (vos podés querer reels desde día 1)
+4. Que hay 1 solo punto de aprobación humana (final, antes de publicar) — vos podés querer 2-3 puntos
+5. Que las 12 fuentes de `sources.yaml` son definitivas
+6. Que el fact-check automático LLM es suficiente sin verificación humana
+7. Que las imágenes generadas se almacenan en n8n binary storage temporal (no en disco permanente con archivo)
+8. Que Cursor y Perplexity NO entran en el stack (no estaban en STACK.md)
+9. Que el podcast (Fase 4) está suficientemente lejos para no influir en arquitectura ahora
+
+Si alguna de esas asunciones está mal, decímelo en las preguntas abajo.
+
+---
+
+## Preguntas críticas (bloquean el diseño)
+
+### A) Qué es exactamente "una pieza"
+
+A1. **¿Qué cuenta como 1 unidad de contenido en Fase 1?**
+- Opción 1: 1 carousel IG = 1 pieza. TikTok es un crosspost separado. Newsletter llega en Fase 3.
+- Opción 2: 1 pieza = carousel IG + caption TikTok + sección de newsletter (todo en paralelo desde día 1).
+- Opción 3: 1 carousel IG O 1 reel (alternancia por día). Newsletter llega en Fase 3.
+- Opción 4: Otro.
+
+A2. **Cuando dijiste "1 post/día" en ADR-011, ¿era 1 post total o 1 pieza compuesta?**
+- (Si Opción 1 de A1 → 1 carousel/día. Si Opción 2 → 1 carousel + 1 TikTok + 1 sección newsletter/día.)
+
+A3. **¿Cuándo entran los reels?** En el ROADMAP están en Fase 2 (semana 3-4). ¿Sigue siendo así o querés reels desde Fase 1?
+- Opción 1: Reels estrictamente Fase 2. Carousel-only en Fase 1.
+- Opción 2: Reels desde Fase 1, paralelos a carousel.
+- Opción 3: Reels en Fase 1 pero solo para piezas con score muy alto (>80) — premium pieces.
+
+### B) Quality controls — cuándo y cuántos
+
+B1. **¿Cuántos puntos de aprobación humana querés?** Mis 3 opciones:
+- Opción 1 (1 gate, mínima fricción): aprobación SOLO al final, con el post completo (caption + imágenes + hashtags) listo para publicar. Si está mal, rechazás todo y se descarta.
+- Opción 2 (2 gates, balanceado): aprobación 1 después de A4 fact-check (apruebas el brief editorial); aprobación 2 al final con el post completo. Si gate 1 te gusta pero gate 2 no, se itera solo en imágenes/copy sin regenerar brief.
+- Opción 3 (3 gates, máxima control): aprobación 1 = elegir tema entre top 3 scored; aprobación 2 = brief editorial; aprobación 3 = post completo.
+
+B2. **¿Confiás en el fact-check 100% LLM (Claude + web_search)** o querés un human review obligatorio cuando hay flags?
+- Opción 1: Confiás en LLM, FLAG no bloquea (queda anotado).
+- Opción 2: FLAG bloquea y va a Telegram con highlights.
+- Opción 3: Todos los items pasan por human review brevemente, no importa el verdict.
+
+B3. **¿Querés que rejects/edits queden registrados** (para mejorar prompts después, tipo "human-feedback learning")?
+- Opción 1: Sí, cada edit/rechazo se guarda con contexto.
+- Opción 2: No por ahora, agregamos en Fase 1.5 o más adelante.
+
+### C) Storage y archivo
+
+C1. **¿Dónde se guardan los items procesados (dedup history, briefs aprobados, posts publicados)?**
+- Opción 1: Supabase (Postgres) — vos lo creás, te paso schema. Mejor para queries analíticas.
+- Opción 2: Google Sheets — más simple, podés ver en navegador, peor para queries complejas.
+- Opción 3: n8n static workflow data — gratis pero acoplado a n8n, difícil de exportar.
+- Opción 4: Airtable — visual + queries OK + integración n8n directa.
+
+C2. **¿Dónde se guardan las imágenes generadas + assets binarios?**
+- Opción 1: Supabase Storage (si elegís Supabase para C1).
+- Opción 2: Google Drive (carpeta del proyecto, accesible visualmente).
+- Opción 3: Cloudinary (mejor performance + CDN, paid después de free tier).
+- Opción 4: n8n binary storage (efímero, se borra; OK para Fase 0 pero no producción).
+
+C3. **¿Querés que cada pieza generada se archive como markdown en GitHub** (igual que el MVP Python guardaba en `projects/ai-brief-latam/manual-mvp/pieces/{date}_{slug}.md`)?
+- Opción 1: Sí, archivo en GitHub commiteado por el workflow (audit trail permanente + searchable + diff-able).
+- Opción 2: No, suficiente con DB/Drive.
+
+### D) Image generation (gpt-image-2)
+
+D1. **¿Para qué exactamente generamos imágenes con gpt-image-2?**
+- Opción 1: 1 carousel de 5-7 slides (cada slide es 1 imagen 1080x1080).
+- Opción 2: Solo 1 imagen cover hero (para reel thumbnail / newsletter header).
+- Opción 3: Carousel + cover newsletter (varias generaciones por pieza).
+- Opción 4: Mix dinámico según `formato_recomendado` del brief (carrusel vs reel vs post estático).
+
+D2. **¿Querés un estilo visual consistente o variable?**
+- Opción 1: 1 estilo locked. Cada slide del carousel usa la misma paleta + tipografía + framing.
+- Opción 2: Estilo definido por sub-categoría (ej: piezas sobre regulación = serio, piezas sobre productos = colorido).
+- Opción 3: A5 (Visual Director) decide caso por caso desde Fase 1.
+
+D3. **¿Watermark "AI Brief LATAM" en las imágenes?**
+- Opción 1: Sí, esquina inferior derecha, sutil.
+- Opción 2: Sí, pero solo en última slide (call-to-action).
+- Opción 3: No, mejor logo orgánico via diseño en lugar de overlay.
+
+### E) Audio y video
+
+E1. **¿Audio en posts no-reel (carouseles, posts estáticos)?**
+- Insight del research: Reels con audio original ganan distribución, pero carousel no requiere audio para performar bien.
+- Opción 1: No, audio solo en reels.
+- Opción 2: Sí, agregamos audio ambient a carousels también (música stock).
+- Opción 3: Sí, voz narrada en carousels también (ElevenLabs leyendo el caption como audio overlay).
+
+E2. **¿Seedance 2.0 entra cuándo exactamente?**
+- ROADMAP dice Fase 2 (semana 3-4). 
+- Opción 1: Estrictamente Fase 2, después de validar carousel.
+- Opción 2: Fase 1 si Manuel quiere reels desde día 1 (depende de A3).
+- Opción 3: Postergar Seedance, usar reels más simples (slideshow de imágenes + voz) en Fase 2.
+
+E3. **ElevenLabs voice clone**: ADR-008 dice voice clone 100%. La grabación de 20 min está pendiente.
+- E3a. ¿Cuándo podés hacer la grabación? Eso bloquea Fase 2 entera.
+- E3b. ¿La voz clonada se usa para TODO (reels, podcast, audio en carousels) o solo para algunos?
+- E3c. ¿Querés un "estilo de lectura" definido (energético, calmo, formal, casual) o varía por pieza?
+
+E4. **¿Vale la pena audio en TODO el contenido?** Manuel preguntó esto explícitamente.
+- Mi take: **No automáticamente sí**. El research dice voz humana > AI, pero la voz humana clonada (ElevenLabs con tu voz real) está bien. Lo que mata engagement es voz robótica genérica. Si la voz suena a vos, sí vale. Si suena artificial, no.
+- Tu llamada: ¿vamos con audio en reels desde Fase 2 (con tu voz clonada), o esperamos a tener resultado de la grabación para decidir?
+
+### F) Sources de información
+
+F1. **¿Las 12 fuentes de `sources.yaml` son las definitivas para Fase 1?**
+
+Las que están listadas hoy:
+- **Oficial:** OpenAI Blog (RSS), Anthropic Blog (scrape), Google AI Blog (RSS) → 3 fuentes
+- **Tech media:** TechCrunch AI, The Verge AI, Ars Technica, Wired AI, Fortune AI → 5 fuentes
+- **Newsletters:** Latent Space → 1 fuente
+- **Community:** Hacker News → 1 fuente
+- **LATAM:** Contxto, LatamList → 2 fuentes
+
+Notable: 10 de 12 son anglo. **Solo 2 son LATAM nativas** (Contxto + LatamList). Eso es flojo para "AI Brief LATAM".
+
+- Opción 1: Aceptar la lista actual (mayoría anglo, traducís el ángulo LATAM tú vía editorial prompt).
+- Opción 2: Expandir LATAM agregando Bloomberg Línea Tech, Forbes Latam Tech, Pulso Social Colombia, La Nación Tecnología, Genbeta, Infobae Tech, etc.
+- Opción 3: Agregar fuentes regulatorias LATAM (CNV Argentina, CNBV México, BCB Brasil) que ya están en el plan para Crypto Brief — útiles para AI Brief si tocamos regulación.
+- Opción 4: Otra combinación.
+
+F2. **¿Querés monitorear founders/voces LATAM en X/Twitter?** (Ej: Pierpaolo Barbieri Ualá, Marcelo Claure, Daniel Vogel Bitso, etc.)
+- Opción 1: Sí, hacemos lista curada de ~20 cuentas LATAM y polleamos sus posts.
+- Opción 2: No, X tiene rate limits restrictivos y la calidad varía.
+- Opción 3: Sí pero como Fase 1.5 o más adelante, no urgente.
+
+F3. **¿Inoreader o feedly como hub intermedio?** El production-stack-research del 2026-05-07 lockeaba Inoreader Free para discovery manual. Si todo va por n8n, ¿Inoreader sale del stack?
+- Opción 1: Inoreader fuera, n8n hace todo el RSS directo.
+- Opción 2: Inoreader sigue (mejor curación pre-n8n), n8n consume el Inoreader OPML feed.
+
+### G) Standard de calidad — bar para publicar
+
+G1. **¿Qué cuentas son tu referencia visual para "esto es lo que quiero que parezca"?**
+- Opción 1: The Rundown AI (USA, minimalista tech)
+- Opción 2: Ecosistema Startup (LATAM, casual sobrio)
+- Opción 3: Startupeable (LATAM, premium analítico)
+- Opción 4: DotCSV (España, tech denso)
+- Opción 5: Mafia IA (España, marketing-aspiracional)
+- Opción 6: Otra cuenta concreta.
+
+G2. **¿Bar mínimo para publicar?** (Cuándo se descarta una pieza)
+- Opción A: Si fact-check verdict = REJECT, descarta automático.
+- Opción B: Si compliance verdict = REJECT, descarta automático.
+- Opción C: Si signal_score < umbral (cuál?), descarta automático.
+- Opción D: Si la pieza tiene >2 risk_flags, descarta automático.
+- (Vos elegís cuáles aplican, podés combinar.)
+
+G3. **¿Modo de voz visual?**
+- Opción 1: Dark mode (negro/grafito + acentos), tech-minimal.
+- Opción 2: Light mode (blanco/cream + acentos), editorial-magazine.
+- Opción 3: Híbrido (carousel decide según contenido).
+
+---
+
+## Preguntas no críticas pero útiles
+
+### H) Cursor — ¿lo usamos?
+
+Mi take honesto: **Cursor es IDE para código**, no para correr workflows. n8n es 100% browser-based. Casos donde Cursor podría servirnos:
+1. Editar el JSON v2 manualmente antes de import (alternativa al patch programático en Python que propongo).
+2. Editar los prompts en `projects/ai-brief-latam/prompts/*.md` con sugerencias inline.
+3. Iterar el JSON post-export (n8n permite export JSON, lo editás en Cursor, reimportás).
+
+Si te resulta más cómodo editar JSON visualmente con autocompletado y errores en línea, Cursor es bueno para eso. Si preferís que yo haga los patches con Python sobre el archivo del repo (que es lo que vengo haciendo), Cursor no agrega valor.
+
+H1. **¿Usamos Cursor para alguna parte del flujo?**
+- Opción 1: No, dejame los patches a mí con Python sobre el repo.
+- Opción 2: Sí, te paso los diffs y vos los aplicás en Cursor (más control fino).
+- Opción 3: Híbrido (yo hago patches grandes, vos hacés ajustes finos en Cursor).
+
+### I) Perplexity — ¿lo agregamos al stack?
+
+Mi take: Perplexity sirve para **research profunda** (lo que hacen los Deep Research que procesamos hace 4 días). Pero para el pipeline diario:
+- Como fact-checker → existe alternativa nativa de Claude (web_search Tool del template #4399). Anthropic web_search es más barato y mejor integrado a n8n.
+- Como source monitor → posible (Perplexity puede sintetizar "qué pasó hoy en AI"), pero no reemplaza fuentes RSS confiables.
+- Como reasearch on-demand → útil si Manuel necesita profundizar un tema concreto manualmente, no necesariamente parte del workflow.
+
+I1. **¿Agregamos Perplexity Pro ($20/mes) al stack?**
+- Opción 1: No, Claude web_search nativo cubre el fact-check.
+- Opción 2: Sí, para deep research on-demand del operador (Manuel) y como backup del fact-check.
+- Opción 3: Sí, lo metemos como fact-checker primario (Claude editorial → Perplexity verification).
+
+---
+
+## El siguiente paso depende de tus respuestas
+
+Una vez que respondas las preguntas críticas (A, B, C, D, E), reescribo el `N8N_WORKFLOW_SKELETON.md` con un diseño que refleje TU producto, no mis asunciones. Después de eso, recién tiene sentido tocar el JSON.
+
+Si querés, podés responder en este chat (1 mensaje con respuestas a las preguntas que te interesen) o editar este archivo directamente.
+
+**No hace falta responder todo de una vez.** Las preguntas críticas (A, B, C, D, E) son las que bloquean. F, G, H, I se pueden ir resolviendo después.
