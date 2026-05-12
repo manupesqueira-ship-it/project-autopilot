@@ -39,11 +39,12 @@ sources:
   newsletters:
     - { name: "Latent Space", url: "https://www.latent.space/feed", type: rss, weight: 1.5 }
     # ── PROPUESTA 2026-05-12 ────────────────────────────────────────────
-    # Newsletters IA en español (referencia de voz/format LATAM).
-    # URLs por verificar — la mayoría corren en Beehiiv/Substack/Mailerlite.
-    # - { name: "Digital Brain", url: "TBD", type: rss, weight: 1.5, _proposed: "newsletter IA España+LATAM 60K subs, 42% open" }
-    # - { name: "IA al Día", url: "TBD", type: rss, weight: 1.5, _proposed: "newsletter IA LATAM 20K+ subs" }
-    # - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.5, _proposed: "newsletter startups LATAM 50K+ subs" }
+    # Newsletters IA en español (referencia de voz/format LATAM):
+    # - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.5, _verified: "2026-05-12 ✅ ES, podcast/startups LATAM, 50K+ subs newsletter" }
+    #
+    # Newsletters SIN RSS público confirmado (subscribirse manualmente o defer):
+    # - { name: "Digital Brain", url: "TBD", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 newsletter existe (60K subs, 42% open ES+LATAM) pero plataforma no confirmada (Beehiiv/Substack). Suscribir a la lista para revisar voice." }
+    # - { name: "IA al Día", url: "TBD", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 newsletter LATAM 20K+ subs, RSS público no encontrado. Suscribir manualmente." }
     # ─────────────────────────────────────────────────────────────────
 
   community:
@@ -58,20 +59,22 @@ sources:
     # OBJETIVO: balancear los 10 anglo del feed con peso real LATAM.
     # Manuel debe confirmar (1) qué fuentes incluir, (2) yo verifico URLs.
     #
-    # Tier 1 — LATAM nativo cubriendo tech + IA + negocios:
-    # - { name: "Bloomberg Línea Tech", url: "TBD", type: rss, weight: 1.8, _proposed: "cobertura LATAM en ES/PT, fuerte en negocios y M&A" }
-    # - { name: "Forbes Centroamérica", url: "https://forbescentroamerica.com/feed/", type: rss, weight: 1.5, _proposed: "verificar feed tech filtrable" }
-    # - { name: "Pulso Social", url: "TBD", type: rss, weight: 1.5, _proposed: "Colombia, ecosistema startup; verificar si feed vive" }
-    # - { name: "La Nación Tecnología", url: "TBD", type: rss, weight: 1.3, _proposed: "AR, cobertura tech generalista de calidad" }
-    # - { name: "Infobae Tecno", url: "TBD", type: rss, weight: 1.3, _proposed: "AR/MX broad, volumen alto, filtrar ruido" }
+    # Tier 1 — LATAM nativo (cobertura verificada 2026-05-12):
+    # - { name: "La Nación Tecnología", url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ feed válido RSS 2.0, español AR" }
     #
-    # Tier 2 — España (mismo idioma, voz peninsular — penalizar en scoring):
+    # Tier 1 — LATAM nativo SIN RSS público (requieren Inoreader/scrape):
+    # - { name: "Bloomberg Línea Tech", url: "TBD", type: scrape, weight: 1.8, _status: "❌ 2026-05-12 sin RSS público en /tecnologia/ ni /feeds/. Defer a Inoreader o scrape custom" }
+    # - { name: "Infobae Tecno", url: "TBD", type: scrape, weight: 1.3, _status: "❌ 2026-05-12 página RSS hub devuelve sin resultados, /feeds/rss/ 404. Defer." }
+    # - { name: "Pulso Social", url: "TBD", type: scrape, weight: 1.5, _status: "❌ 2026-05-12 /feed/ devuelve 404. Sitio activo pero sin RSS expuesto." }
+    # - { name: "Forbes Centroamérica", url: "https://forbescentroamerica.com/feed/", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 Claude Code no pudo fetch (probable Cloudflare). Probar desde n8n cloud que puede tener mejor acceso." }
+    #
+    # Tier 2 — España (verificados, voz peninsular — penalizar en scoring):
     # NOTA: las españolas se incluyen como input pero el prompt a3-editorial
     # debe descartar peninsular ("vosotros, vale, tío") y reescribir al neutro.
     # Si Manuel prefiere 0 fuentes españolas, comentar las 3.
-    # - { name: "Xataka IA", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.5, _proposed: "ES, mejor cobertura IA en español" }
-    # - { name: "Hipertextual", url: "https://hipertextual.com/feed", type: rss, weight: 1.3, _proposed: "ES, tech generalista" }
-    # - { name: "Genbeta IA", url: "https://www.genbeta.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.3, _proposed: "ES, IA aplicada (herramientas, tutoriales)" }
+    # - { name: "Xataka IA", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.5, _verified: "2026-05-12 ✅ ES, feed AI puro" }
+    # - { name: "Genbeta IA", url: "https://www.genbeta.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ ES, IA aplicada (tutoriales, herramientas)" }
+    # - { name: "Hipertextual", url: "https://hipertextual.com/feed", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ ES generalista — el feed AI-específico (/tag/inteligencia-artificial/feed) devolvió 410 Gone, usar feed main y filtrar en a1.5 binary filter" }
     # ─────────────────────────────────────────────────────────────────
 
   # ── PROPUESTA 2026-05-12 — categorías nuevas ─────────────────────────
