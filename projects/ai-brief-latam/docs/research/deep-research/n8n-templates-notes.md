@@ -6,7 +6,7 @@
 
 | ID n8n | Nombre | URL | Función esperada | Status |
 |---|---|---|---|---|
-| #12533 | Curate AI newsletter from RSS | https://n8n.io/workflows/12533 | A1+A2+A3 esqueleto + HITL Slack→Telegram | 🔍 inspeccionado (pre-import) |
+| #12533 | Curate AI newsletter from RSS | https://n8n.io/workflows/12533 | A1+A2+A3 esqueleto + HITL Slack→Telegram | ✅ importado 2026-05-12 (cuenta aibrieflatam.media@gmail.com) |
 | #6389 | Smart RSS + Baserow (dedup) | https://n8n.io/workflows/6389 | Dedup persistente, patrón portable | ⏳ pending |
 | #4399 | Anthropic AI Agent Sonnet 4 + web_search | https://n8n.io/workflows/4399 | A4 fact-checker con Claude nativo + web | ⏳ pending |
 | #4028 | Carousel gpt-image-2 | https://n8n.io/workflows/4028 | A8a visual generator (swap gpt-image-1 → gpt-image-2) | ⏳ pending |
@@ -140,11 +140,11 @@ Breakdown de los 155 nodes, en orden de frecuencia:
 
 ### Bloques de info pendientes (a llenar post-import)
 
-- **Fecha importación real:** _(pendiente)_
+- **Fecha importación real:** **2026-05-12** (cuenta nueva de n8n cloud con aibrieflatam.media@gmail.com — la cuenta de manupesqueira tenía el trial vencido)
 - **Tiempo total de adaptación:** _(pendiente)_
-- **Issues encontrados al ejecutar:** _(pendiente)_
+- **Issues encontrados al ejecutar:** _(pendiente — primero validación de conteo de nodes + sticky notes + errores no-credenciales)_
 - **Decisión final:** mantener / descartar / fusionar — _(pendiente, esperá a probarlo)_
-- **JSON original archivado en `legacy/n8n-templates/`:** _(sí/no, link al commit)_
+- **JSON original archivado en `legacy/n8n-templates/`:** ✅ commit `6eb35fa` (2026-05-12) — tanto el `-original.json` con envelope como el `-importable.json` desenvelopado
 
 ---
 
