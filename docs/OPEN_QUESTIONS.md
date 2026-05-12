@@ -20,6 +20,12 @@
 | G | Standard de calidad / visual | ⏳ Pendiente (mi propuesta viene en POST_STANDARD.md) |
 | H | Cursor | ✅ Respondida — diferido, no hoy |
 | I | Perplexity | ✅ Respondida — diferido, no hoy |
+| J | Audiencia nítida (buyer persona) | ⏳ Pendiente |
+| K | Cadencia de lanzamiento (deadlines) | ⏳ Pendiente |
+| L | Handle IG + logo | ⏳ Pendiente |
+| M | Newsletter footer (dirección física CAN-SPAM) | ⏳ Pendiente |
+| N | ADR-004 publisher | ⏳ Pendiente (Blotato vs Buffer vs Upload-Post) |
+| O | Plan n8n cloud | ⏳ Pendiente (Pro vs self-hosted vs reduce polling) |
 
 ---
 
@@ -117,6 +123,63 @@ Antes de las preguntas, lo que ya no se discute (a menos que vos lo abras):
 | Voz: Smart Brevity + Morning Brew + español neutro CDMX | brand_voice.md | Firme |
 | Hooks: framework Rufusocial (atención + tensión + promesa) | brand_voice.md | Firme |
 | 11 agents conceptuales | AGENTS_SPEC.md | Firme conceptualmente, falta implementación |
+
+---
+
+## Decisiones operacionales adicionales (abiertas 2026-05-12)
+
+Items que descubrí en el diseño y necesitan tu definición. NO son críticos para Fase 0 (smoke test) pero sí destraban Fase 1.
+
+### J — Audiencia objetivo nítida (buyer persona)
+
+**Por qué pregunto:** `brand_voice.md` dice "tech-savvy LATAM". Eso cubre desde founders hasta ejecutivos de banco, devs, marketers, estudiantes. **Cada uno necesita briefs distintos.** El campo `relevancia_latam` del scorer A2 funciona mucho mejor con un buyer persona concreto.
+
+**Ejemplo de lo que pido:** "Carlos, 32 años, manager en banco MX, usa ChatGPT a diario pero no le pidas que entienda papers. Le importa cómo usar IA para automatizar trabajo, no la architecture detrás. Lee Bloomberg, no arXiv."
+
+**Opciones rápidas:**
+- Opción 1: Founder/operador startup LATAM (early stage)
+- Opción 2: Manager/director en corporativo LATAM tradicional (banco, retail, telco)
+- Opción 3: Profesional knowledge-worker individual (consultor, abogado, médico)
+- Opción 4: Inversionista/VC LATAM (busca señales de mercado)
+- Opción 5: Mix (mañana 80/20 de cuál)
+
+### K — Cadencia de lanzamiento
+
+**Por qué pregunto:** sin deadline, el diseño puede iterar infinito. Con deadline, prioritizamos Fase 0 ejecutable sobre refinamientos.
+
+- K1. ¿Hay fecha objetivo de **primer post público**?
+- K2. ¿Hay fecha objetivo de **Fase 1 corriendo estable**?
+- K3. ¿Hay algún evento (conference, launch público) que ancore una fecha?
+
+### L — Handle de Instagram + logo
+
+**Por qué pregunto:** sin handle reservado + sin logo, no hay publishing real. Aunque sea logo placeholder.
+
+- L1. ¿Tenés handle reservado en IG? (ej: @aibrieflatam, @aibrief.latam) Si no, ¿cuál preferís?
+- L2. ¿Hay logo o lo diseñamos? Si vas a diseñar uno, ¿quién (vos, freelance, AI)?
+- L3. ¿Misma estrategia para TikTok handle?
+
+### M — Newsletter footer (CAN-SPAM compliance)
+
+**Por qué pregunto:** cuando arme Beehiiv, el footer obligatoriamente debe tener dirección física de la entidad emisora. Es ley en USA y buena práctica globalmente.
+
+- M1. ¿Qué dirección física usar? Opciones:
+  - Casa de Manuel (más simple, exposes private address)
+  - Apartado postal (compra ~$50/año, más privacy)
+  - Coworking / dirección comercial alquilada
+  - Dirección de empresa LLC si AI Brief LATAM se incorpora formalmente
+
+### N — Decisión ADR-004: publisher
+
+**Pendiente desde sesión 2.** Necesario para spec del node A10 de Fase 1.
+
+- N1. ¿Buffer ($15/mo, maduro) | Blotato ($14/mo, carousel-first) | Upload-Post (self-hosted, control total) | Meta Graph API directo (gratis, complejo)?
+
+### O — Decisión plan n8n cloud
+
+**Pendiente.** Starter (€24/mo) NO alcanza para Fase 1 (4,500 ejec/mes estimado).
+
+- O1. ¿n8n Pro €60/mo (cómodo) | self-hosted Hostinger VPS €5-7/mo (más mantenimiento) | mantener Starter reduciendo polling a 1×/día?
 
 ---
 

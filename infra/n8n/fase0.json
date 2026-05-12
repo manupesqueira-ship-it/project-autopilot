@@ -1,0 +1,301 @@
+{
+  "name": "AI Brief LATAM — Fase 0 Smoke Test",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    {
+      "name": "ai-brief-latam"
+    },
+    {
+      "name": "fase-0"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1200, 0],
+      "parameters": {}
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "RSS — OpenAI Blog",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [-960, 0],
+      "parameters": {
+        "url": "https://openai.com/blog/rss.xml",
+        "options": {
+          "ignoreSSL": false
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "name": "Limit 3 items",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [-720, 0],
+      "parameters": {
+        "maxItems": 3
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "name": "Normalize Item",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-480, 0],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"title\": \"{{ $json.title }}\",\n  \"url\": \"{{ $json.link }}\",\n  \"snippet\": \"{{ $json.contentSnippet || $json.content || '' }}\",\n  \"source_name\": \"OpenAI Blog\",\n  \"published_at\": \"{{ $json.pubDate }}\",\n  \"tags\": []\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "name": "A2 Signal Scorer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [-240, 0],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=Título: {{ $json.title }}\nFuente: {{ $json.source_name }}\nURL: {{ $json.url }}\nFecha publicación: {{ $json.published_at }}\nSnippet: {{ $json.snippet || 'N/A' }}\nTags: {{ $json.tags ? $json.tags.join(', ') : '' }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sos un editor jefe de AI Brief LATAM, una media property que cubre inteligencia artificial para founders, operadores y profesionales de Latinoamérica.\n\nTu tarea es evaluar un artículo/noticia y asignar un score 0-100 según esta rubrica:\n\n| Categoría | Rango | Criterio |\n|---|---|---|\n| relevancia_latam | 0-20 | ¿Aplica a la audiencia LATAM? ¿Tiene ángulo regional? |\n| novedad | 0-15 | ¿Es noticia nueva o ya circuló ampliamente? |\n| urgencia | 0-10 | ¿Tiene ventana de tiempo? ¿Hay que publicar rápido? |\n| credibilidad_fuente | 0-15 | ¿La fuente es confiable y verificable? |\n| potencial_educativo | 0-10 | ¿Enseña algo útil a la audiencia? |\n| potencial_viral | 0-10 | ¿Tiene hook fuerte para Instagram/newsletter? |\n| fit_marca | 0-10 | ¿Coincide con la voz anti-hype, sobria, práctica de AI Brief? |\n| riesgo | -10 a 0 | Penalty si hay riesgo legal, reputacional o de desinformación |\n\nVoz de la marca: práctica, sobria, anti-humo, técnicamente precisa. NO entusiasta ingenuo. SÍ \"esto sirve para X, así se usa\". Datos > opiniones. Siempre \"por qué importa\".\n\nRespondé SIEMPRE en JSON exacto con esta estructura (sin markdown, sin ```):\n{\n  \"relevancia_latam\": <float 0-20>,\n  \"novedad\": <float 0-15>,\n  \"urgencia\": <float 0-10>,\n  \"credibilidad_fuente\": <float 0-15>,\n  \"potencial_educativo\": <float 0-10>,\n  \"potencial_viral\": <float 0-10>,\n  \"fit_marca\": <float 0-10>,\n  \"riesgo\": <float -10 to 0>,\n  \"justification\": \"<2-3 oraciones en español explicando el score>\",\n  \"suggested_angle\": \"<1 oración: ángulo editorial sugerido para AI Brief LATAM>\",\n  \"risk_flags\": [\"<flag1>\", \"<flag2>\"]\n}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "name": "Anthropic Sonnet 4.5 — A2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [-240, 200],
+      "parameters": {
+        "model": "claude-sonnet-4-5",
+        "options": {
+          "temperature": 0.2,
+          "maxTokensToSample": 500
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME_ANTHROPIC_CRED_ID",
+          "name": "Anthropic API — REEMPLAZAR AL IMPORTAR"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000007",
+      "name": "Parser A2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [-100, 200],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"relevancia_latam\", \"novedad\", \"urgencia\", \"credibilidad_fuente\", \"potencial_educativo\", \"potencial_viral\", \"fit_marca\", \"riesgo\", \"justification\", \"suggested_angle\", \"risk_flags\"],\n  \"properties\": {\n    \"relevancia_latam\": {\"type\": \"number\"},\n    \"novedad\": {\"type\": \"number\"},\n    \"urgencia\": {\"type\": \"number\"},\n    \"credibilidad_fuente\": {\"type\": \"number\"},\n    \"potencial_educativo\": {\"type\": \"number\"},\n    \"potencial_viral\": {\"type\": \"number\"},\n    \"fit_marca\": {\"type\": \"number\"},\n    \"riesgo\": {\"type\": \"number\"},\n    \"justification\": {\"type\": \"string\"},\n    \"suggested_angle\": {\"type\": \"string\"},\n    \"risk_flags\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}\n  }\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000008",
+      "name": "Compute total_score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const data = $input.item.json.output || $input.item.json;\nconst original = $('Normalize Item').item.json;\n\nconst score =\n  (data.relevancia_latam || 0) +\n  (data.novedad || 0) +\n  (data.urgencia || 0) +\n  (data.credibilidad_fuente || 0) +\n  (data.potencial_educativo || 0) +\n  (data.potencial_viral || 0) +\n  (data.fit_marca || 0) +\n  (data.riesgo || 0);\n\nlet classification = 'discard';\nif (score >= 70) classification = 'strong';\nelse if (score >= 50) classification = 'consider';\n\nreturn {\n  ...original,\n  ...data,\n  total_score: Math.round(score * 100) / 100,\n  classification,\n  signal_score: Math.round(score * 100) / 100\n};\n"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000009",
+      "name": "Score >= 50?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [240, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-0000-0000-00000000ifA1",
+              "leftValue": "={{ $json.total_score }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000010",
+      "name": "A3 Editorial",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [480, -100],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=Generá un brief editorial completo para este item:\n\nTítulo: {{ $json.title }}\nFuente: {{ $json.source_name }}\nURL: {{ $json.url }}\nFecha: {{ $json.published_at || 'N/A' }}\nSnippet: {{ $json.snippet || 'N/A' }}\nSignal Score: {{ $json.signal_score || 'N/A' }}\nJustificación del scorer: {{ $json.justification || 'N/A' }}\nÁngulo sugerido: {{ $json.suggested_angle || 'N/A' }}\nRisk flags: {{ JSON.stringify($json.risk_flags || []) }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sos el editor jefe de AI Brief LATAM. Tu tarea es convertir una noticia/item en un brief editorial interno completo. Este brief NO se publica directamente — es el documento de planificación que el equipo usa para producir contenido.\n\n## Voz de marca (SIEMPRE seguir)\n- Smart Brevity: frases cortas, \"por qué importa\" obligatorio, datos > opiniones\n- Español neutro LATAM (NO peninsular, NO extremo mexicano/argentino)\n- Anti-hype: nada de \"revolutionary\" o \"game-changing\" sin razón\n- Cifras siempre con contexto y fuente\n- Vocabulario técnico en inglés cuando es estándar (AI, LLM, agent, etc.)\n\n## Hook framework (los 3 requisitos)\n1. ATENCIÓN — número inesperado, frase contraintuitiva, claim sorprendente\n2. TENSIÓN — vacío de información, problema sin resolver\n3. PROMESA — anticipa recompensa concreta\n\n## Formato de respuesta\nRespondé SIEMPRE en JSON exacto con esta estructura (sin markdown, sin ```):\n{\n  \"title\": \"<título working del brief>\",\n  \"que_paso\": \"<3-5 frases con hechos puros>\",\n  \"por_que_importa\": \"<2-4 frases — POR QUÉ importa, no qué pasó>\",\n  \"que_cambia\": \"<antes vs después, 2-4 frases>\",\n  \"quien_gana_pierde\": {\"gana\": [\"...\"], \"pierde\": [\"...\"], \"neutro\": [\"...\"]},\n  \"datos_clave\": [\"dato 1 con cifra\", \"dato 2\", \"dato 3\"],\n  \"angulo_latam\": \"<cómo conecta con LATAM específicamente>\",\n  \"angulos_posibles\": [\"ángulo educativo\", \"ángulo de oportunidad\", \"ángulo de riesgo\"],\n  \"angulo_elegido\": \"<cuál se elige y por qué>\",\n  \"formato_recomendado\": \"<reel | carrusel | post estático | solo newsletter>\",\n  \"hook_tentativo\": \"<frase corta para slide 1 / primer 3 segundos>\",\n  \"cta_tentativo\": \"<save | share | comment | newsletter signup>\",\n  \"riesgos\": [\"riesgo 1\", \"riesgo 2\"],\n  \"fact_check_items\": [{\"claim\": \"...\", \"status\": \"pending\"}]\n}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000011",
+      "name": "Anthropic Opus 4 — A3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [480, 100],
+      "parameters": {
+        "model": "claude-opus-4-20250514",
+        "options": {
+          "temperature": 0.4,
+          "maxTokensToSample": 1500
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME_ANTHROPIC_CRED_ID",
+          "name": "Anthropic API — REEMPLAZAR AL IMPORTAR"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000012",
+      "name": "Parser A3",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [620, 100],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"title\", \"que_paso\", \"por_que_importa\", \"angulo_latam\", \"hook_tentativo\", \"datos_clave\", \"formato_recomendado\", \"cta_tentativo\"],\n  \"properties\": {\n    \"title\": {\"type\": \"string\"},\n    \"que_paso\": {\"type\": \"string\"},\n    \"por_que_importa\": {\"type\": \"string\"},\n    \"que_cambia\": {\"type\": \"string\"},\n    \"quien_gana_pierde\": {\"type\": \"object\"},\n    \"datos_clave\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"angulo_latam\": {\"type\": \"string\"},\n    \"angulos_posibles\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"angulo_elegido\": {\"type\": \"string\"},\n    \"formato_recomendado\": {\"type\": \"string\"},\n    \"hook_tentativo\": {\"type\": \"string\"},\n    \"cta_tentativo\": {\"type\": \"string\"},\n    \"riesgos\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"fact_check_items\": {\"type\": \"array\"}\n  }\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000013",
+      "name": "Format Telegram MD",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [720, -100],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"telegram_text\": \"*\\ud83d\\udfe2 AI Brief LATAM — preview*\\n\\n*{{ $json.output.title }}*\\nScore: {{ $('Compute total_score').item.json.total_score }}/100\\n\\n*¿Qué pasó?*\\n{{ $json.output.que_paso }}\\n\\n*¿Por qué importa?*\\n{{ $json.output.por_que_importa }}\\n\\n*Ángulo LATAM:*\\n{{ $json.output.angulo_latam }}\\n\\n*Hook tentativo:*\\n_{{ $json.output.hook_tentativo }}_\\n\\n*Formato recomendado:* {{ $json.output.formato_recomendado }}\\n*CTA:* {{ $json.output.cta_tentativo }}\\n\\n*Fuente:* {{ $('Normalize Item').item.json.url }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000014",
+      "name": "Telegram — Send Preview",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, -100],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "REPLACE_ME_CHAT_ID",
+        "text": "={{ $json.telegram_text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_ME_TELEGRAM_CRED_ID",
+          "name": "Telegram Bot — REEMPLAZAR AL IMPORTAR"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000015",
+      "name": "Log Discarded (debug)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 200],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"discarded\": true,\n  \"reason\": \"total_score < 50\",\n  \"item_url\": \"{{ $json.url }}\",\n  \"item_score\": \"{{ $json.total_score }}\"\n}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "RSS — OpenAI Blog", "type": "main", "index": 0 }]]
+    },
+    "RSS — OpenAI Blog": {
+      "main": [[{ "node": "Limit 3 items", "type": "main", "index": 0 }]]
+    },
+    "Limit 3 items": {
+      "main": [[{ "node": "Normalize Item", "type": "main", "index": 0 }]]
+    },
+    "Normalize Item": {
+      "main": [[{ "node": "A2 Signal Scorer", "type": "main", "index": 0 }]]
+    },
+    "Anthropic Sonnet 4.5 — A2": {
+      "ai_languageModel": [[{ "node": "A2 Signal Scorer", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Parser A2": {
+      "ai_outputParser": [[{ "node": "A2 Signal Scorer", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "A2 Signal Scorer": {
+      "main": [[{ "node": "Compute total_score", "type": "main", "index": 0 }]]
+    },
+    "Compute total_score": {
+      "main": [[{ "node": "Score >= 50?", "type": "main", "index": 0 }]]
+    },
+    "Score >= 50?": {
+      "main": [
+        [{ "node": "A3 Editorial", "type": "main", "index": 0 }],
+        [{ "node": "Log Discarded (debug)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Anthropic Opus 4 — A3": {
+      "ai_languageModel": [[{ "node": "A3 Editorial", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Parser A3": {
+      "ai_outputParser": [[{ "node": "A3 Editorial", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "A3 Editorial": {
+      "main": [[{ "node": "Format Telegram MD", "type": "main", "index": 0 }]]
+    },
+    "Format Telegram MD": {
+      "main": [[{ "node": "Telegram — Send Preview", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ai-brief-latam-fase-0"
+  }
+}

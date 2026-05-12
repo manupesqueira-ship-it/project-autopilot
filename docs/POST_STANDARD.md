@@ -317,6 +317,180 @@ Accent:         #006B4F (verde más oscuro para contraste)
 - **NO marca de agua TikTok/CapCut.** Penalización 30-40% reach LATAM (research confirmado).
 - **Logo:** TBD (Manuel — ¿tenés ya el logo o lo diseñamos? Si no hay, usamos solo wordmark "AI Brief LATAM" en Inter Bold).
 
+### Mock-up ASCII del carousel ✋ PROPUESTA
+
+Visualización de las 5 slides de un carousel típico aplicando el estándar. Sirve como referencia visual antes de gastar tokens con gpt-image-2.
+
+#### Slide 1 — HOOK (1080×1080)
+
+```
+┌──────────────────────────────────────────────────┐
+│ #0F0F10 (dark charcoal)                          │
+│                                                  │
+│                                                  │
+│   80%                          ← #00D9A0 mint,   │
+│   ┌─────┐                        Inter Bold,     │
+│   │     │                        ~280pt          │
+│                                                  │
+│   de profesionales                               │
+│   LATAM ya usa IA                ← #FAFAFA       │
+│   en el trabajo.                   Inter Bold,   │
+│                                    ~64pt         │
+│                                                  │
+│                                                  │
+│                                                  │
+│                                                  │
+│                                                  │
+│                          AI BRIEF LATAM          │
+│                          ───────────             │
+│                          JetBrains Mono 14pt     │
+│                          #8A8A8E opacity 60%     │
+└──────────────────────────────────────────────────┘
+
+Composición: 60% canvas vacío, texto en upper-left.
+Cifra masiva como punto focal. Sin íconos, sin imágenes.
+```
+
+#### Slide 2 — DATA POINT
+
+```
+┌──────────────────────────────────────────────────┐
+│ #0F0F10                                          │
+│                                                  │
+│   LO QUE PASÓ            ← #8A8A8E gris,         │
+│                            JetBrains Mono 18pt   │
+│                                                  │
+│   Encuesta IDC LATAM     ← #FAFAFA Inter Bold    │
+│   en 7 países muestra      ~48pt                 │
+│   adopción explosiva                             │
+│   en 2026.                                       │
+│                                                  │
+│   ─────────────────────                          │
+│                                                  │
+│   • +42% YoY MX           ← #FAFAFA Inter        │
+│   • +38% YoY BR             Medium ~32pt         │
+│   • +29% YoY AR                                  │
+│                                                  │
+│                          AI BRIEF LATAM          │
+└──────────────────────────────────────────────────┘
+
+Composición: estructura lead + bullets, datos puros, sin
+emojis. Línea divisora ────── separa contexto de cifras.
+```
+
+#### Slide 3 — COMPARISON (antes / después)
+
+```
+┌──────────────────────────────────────────────────┐
+│ #0F0F10                                          │
+│                                                  │
+│   2024              2026                         │
+│                                                  │
+│   18%               80%        ← cifras grandes  │
+│                                  Inter Bold      │
+│   ┌─────┐         ┌─────┐        ~180pt          │
+│   │     │         │ #00D9A0      número derecho  │
+│   │  ▓  │         │  ▓▓▓ │       en mint accent  │
+│   │     │         │ ▓▓▓▓▓│                       │
+│   └─────┘         └─────┘        ← barras simples│
+│                                    Unicode block │
+│                                                  │
+│   Uso ocasional   Uso diario   ← #8A8A8E Inter   │
+│                                  Medium ~28pt    │
+│                                                  │
+│                          AI BRIEF LATAM          │
+└──────────────────────────────────────────────────┘
+
+Composición: split vertical, two-column. Visualización
+mínima con caracteres Unicode (▓ █ ▒ ░) si gpt-image-2
+no genera gráficos consistentes. Alternativa: barras
+post-procesadas en Pillow/Sharp.
+```
+
+#### Slide 4 — LATAM ANGLE (penúltima)
+
+```
+┌──────────────────────────────────────────────────┐
+│ #0F0F10                                          │
+│                                                  │
+│   QUÉ SIGNIFICA PARA TI  ← #8A8A8E gris,         │
+│                            JetBrains Mono 18pt   │
+│                                                  │
+│   Si trabajás en            ← #FAFAFA Inter      │
+│   banca/retail LATAM,         Bold ~48pt         │
+│   tu competencia                                 │
+│   ya está usando IA.                             │
+│                                                  │
+│   ─────────────────────                          │
+│                                                  │
+│   Acciones esta semana:                          │
+│                                                  │
+│   1. Identificá 1 task      ← #FAFAFA Inter      │
+│      que repetís diario       Medium ~28pt       │
+│   2. Pedí a ChatGPT que                          │
+│      te asista 5 días                            │
+│   3. Mediá el ahorro                             │
+│                                                  │
+│                          AI BRIEF LATAM          │
+└──────────────────────────────────────────────────┘
+
+Composición: ángulo LATAM con acciones concretas.
+Numbered list es POR ALGO — el orden señala prioridad
+y se save-ea mejor que bullets (research social media).
+```
+
+#### Slide 5 — CTA + branding (última)
+
+```
+┌──────────────────────────────────────────────────┐
+│ #0F0F10                                          │
+│                                                  │
+│                                                  │
+│                                                  │
+│         AI BRIEF                ← wordmark       │
+│         LATAM                     Inter Bold     │
+│                                   ~96pt          │
+│                                   #FAFAFA        │
+│         ────────────                             │
+│         JetBrains Mono            ← tagline      │
+│         #8A8A8E 20pt              gris bajo      │
+│                                                  │
+│         Noticias de IA                           │
+│         para LATAM, en 3 min.   ← Inter Medium   │
+│                                   #FAFAFA 32pt   │
+│                                                  │
+│         → Guardá este post                       │
+│         → Compartí con tu                        │
+│           equipo                  ← CTA, Inter   │
+│         → Suscribite (link bio)   Medium #00D9A0 │
+│                                   accent en →    │
+│                                                  │
+└──────────────────────────────────────────────────┘
+
+Composición: centered, todo el mensaje en upper-center.
+Tres acciones concretas. Mint accent en arrows guía la
+mirada. NO emojis, NO "swipe to see more".
+```
+
+#### Notas de aplicación
+
+| Decisión visual | Por qué |
+|---|---|
+| **Misma slide template para los 5** | Consistencia inmediata, no decision-fatigue para A5 |
+| **#00D9A0 mint accent SOLO en data + arrows** | Si todo es accent, nada es accent — restringido a 1 elemento por slide |
+| **Watermark idéntico en TODAS** | Anclaje cognitivo — visible pero discreto |
+| **NO emojis dentro de la imagen** | Emojis viven en el caption, no en el visual (regla del POST_STANDARD §3.5) |
+| **Cifras > texto en hierarchy** | Hook visual = la cifra. El texto la contextualiza. |
+| **Negative space ≥ 40%** | Editorial premium ≠ feed cargado |
+| **Tipografía fija (Inter + JBM)** | Brand recognition cross-feed |
+
+#### Limitaciones conocidas de gpt-image-2
+
+1. **Tipografía:** gpt-image-2 renderiza Inter de forma inconsistente. Si la calidad cae, considerar **post-procesado en Pillow/Sharp** (generar fondo limpio + agregar texto programáticamente con FreeType).
+2. **Barras / gráficos:** poco confiables. Fallback: Unicode block characters (▓▒░█) o post-procesado con matplotlib headless.
+3. **Watermark:** el wordmark "AI BRIEF LATAM" en bottom-right tiende a deformarse. **Mejor agregarlo en post-procesado** como overlay PNG.
+4. **Resolución:** gpt-image-2 max nativo 1024×1024. Up-rezear a 1080×1080 con Lanczos resampling para IG carousel native.
+
 ---
 
 ## 8. LATAM-specific rules
