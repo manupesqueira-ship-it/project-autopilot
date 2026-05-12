@@ -1,156 +1,249 @@
-# Roadmap — AI Brief LATAM (v2, 2026-05-10)
+# Roadmap — AI Brief LATAM (v3, 2026-05-12)
 
-## Fase 1 — Pipeline texto + carousels (Semana 1-2)
-
-**Objetivo:** Pipeline funcional que produce y publica 3 carousels de IG por día, aprobados por humano via Telegram.
-
-### Alcance
-- Agentes activos: A1 (Source Monitor), A2 (Signal Scorer), A3 (Editorial), A4 (Fact-Checker), A7 (Copy Composer), A8a (Visual Generator/gpt-image-2), A9 (Compliance), A10 (Publisher/Buffer)
-- Output: 3 carousels Instagram/día (1080x1080, 4-8 slides cada uno)
-- Crosspost automático a TikTok via Buffer
-- Sin video, sin audio, sin podcast, sin newsletter
-- Aprobación humana obligatoria via Telegram Bot antes de cada publicación
-- Horarios de publicación: 8 AM, 1 PM, 7 PM CDMX
-
-### Agentes inactivos en Fase 1
-- A5 (Visual Director) — dirección visual simplificada dentro de A8a
-- A6 (Audio Director) — no hay audio en Fase 1
-- A8b (Video Generator) — no hay reels en Fase 1
-- A8c (Audio Generator) — no hay voiceover en Fase 1
-- A8d (Newsletter Generator) — no hay newsletter en Fase 1
-- A11 (Analytics) — métricas manuales en Fase 1
-
-### Tareas
-0. **(Preliminar) Importar 5 templates base a n8n cloud y inspeccionar nodes JSON** antes de construir desde cero. Referencias del research `2026-05-11_n8n-templates-research.md`:
-   - **#12533** (Maksudur Rahman) — Curate AI newsletter from RSS + LLM scoring + Slack HITL: el esqueleto más completo
-   - **#6389** (Daniel Shashko) — Smart RSS + Baserow dedup persistente: único patrón de dedup serio
-   - **#4399** (Davide Boizza) — Anthropic AI Agent Claude Sonnet 4/Opus 4 con web_search Tool: crítico para A4 fact-check
-   - **#4028** (Juan Carlos Cavero) — Carousel TikTok+IG con gpt-image-1 (swap a gpt-image-2): patrón "1 img + N edits estilísticamente consistentes"
-   - **#9472** (Yasser Sami) — LinkedIn posts con Telegram approval + feedback loop, **o #5773** (Femi Ad) — Social media posts con Telegram approval + Upload-Post multi-plataforma
-   - Acceptance: cada template importado en una instance de prueba, JSON inspeccionado, lista de nodes y decisiones que sirven anotada en `docs/research/deep-research/n8n-templates-notes.md` (a crear).
-1. Configurar n8n Cloud (o self-hosted en Hostinger)
-2. Implementar A1: RSS feeds + deduplicación + keyword filter
-3. Implementar A2: Claude Sonnet scoring con rúbrica de 8 categorías
-4. Implementar A3: Claude Opus 4 editorial brief (Smart Brevity + LATAM angle)
-5. Implementar A4: Claude Opus 4 fact-checking contra fuentes
-6. Implementar A7: Claude Opus 4 caption + hashtags
-7. Implementar A8a: gpt-image-2 carousel generation (1080x1080)
-8. Implementar A9: Claude Opus 4 compliance check (Meta rules + brand voice)
-9. Configurar Telegram Bot para aprobación human-in-the-loop
-10. Configurar Buffer para auto-publish IG + TikTok
-11. Test end-to-end: primer carousel publicado
-12. Correr 7 días completos (21 carousels)
-
-### Definition of Done
-- [ ] 21 carousels publicados en una semana completa (3/día x 7 días)
-- [ ] 0 errores de fact-check detectados post-publicación
-- [ ] Workflow n8n estable sin intervención manual (excepto aprobación Telegram)
-- [ ] Costos de API dentro del rango estimado ($75-170/mo)
+> **Cambios v3 vs v2:**
+> - Agregada **Fase 0 — Smoke test** (~1 semana) antes de Fase 1
+> - Fase 1 incluye **VPS setup** (ADR-015) y **Upload-Post** (ADR-014)
+> - Agentes A5 + A11 movidos de Fase 2 → Fase 1 (visual standard + edit-loop HITL)
+> - Newsletter (A8d) movida de Fase 3 → **Fase 1.5 paralelo** — el pipeline genera carousel + newsletter en el mismo run
+> - Timeline ajustado: Fase 1 robusta = semana 3-4 (no 1-2), gracias a Fase 0 que valida el corazón antes
 
 ---
 
-## Fase 2 — Reels con voice clone (Semana 3-4)
+## Fase 0 — Smoke test (Semana 1)
 
-**Objetivo:** Agregar reels con voz clonada al mix de contenido. Pasar de 100% carousels a mix carousel/reel.
+**Objetivo:** Validar que la cadena LLM (scoring + editorial) llega a Telegram con un brief decente. NO publica, NO genera imágenes. Solo prueba el corazón del pipeline antes de invertir en Fase 1.
 
 ### Alcance
-- Grabar samples de voz de Manuel para ElevenLabs voice clone
-- Activar A5 (Visual Director) y A6 (Audio Director)
-- Activar A8b (Video Generator/Seedance 2.0) y A8c (Audio Generator/ElevenLabs)
-- Output: mix de 2 carousels + 1 reel por día (o 1 carousel + 2 reels según performance)
-- Transición gradual a auto-publish para contenido high-score (si Fase 1 completada sin errores por 14 días)
+
+- 1 fuente RSS (OpenAI Blog)
+- A2 Signal Scorer (Sonnet 4.5) + A3 Editorial (Opus 4)
+- Output: brief en formato Smart Brevity llegando a Telegram en <2 min
+- Sin Fact-Check, sin Carousel, sin Compliance, sin Publishing
+- Trigger manual (no cron)
 
 ### Tareas
-1. Grabar 30+ minutos de voz de Manuel para voice clone
-2. Configurar ElevenLabs voice clone
-3. Implementar A5: Visual Director (dirección visual detallada)
-4. Implementar A6: Audio Director (guion de voiceover + dirección de reel)
-5. Implementar A8b: Seedance 2.0 video generation
-6. Implementar A8c: ElevenLabs TTS con voz clonada
-7. Integrar video + audio en workflow n8n
-8. Test end-to-end: primer reel publicado
-9. Calibrar mix carousel/reel según engagement
-10. Evaluar transición a auto-publish
 
-### Definition of Done
-- [ ] 14 reels publicados en dos semanas
-- [ ] 0 errores de fact-check o compliance
-- [ ] Mix carousel/reel funcionando (decisión automática por pieza)
-- [ ] Voice clone con calidad aceptable (>80% naturalidad percibida)
+1. **Manuel: crear Telegram bot vía @BotFather** (~5 min)
+2. **Manuel: sacar Anthropic API key** + cargar $10-20 USD billing (~5 min)
+3. **Manuel: importar `infra/n8n/fase0.json` a n8n cloud trial** (~5 min)
+4. **Manuel: pegar credenciales en el workflow** (~5 min)
+5. **Manuel: Execute Workflow → recibir brief en Telegram** (~2 min)
+6. **Manuel + Claude (chat): evaluar calidad del brief** — ¿voz, hook, ángulo LATAM cumplen estándar?
+7. Iterar prompts A2/A3 si la calidad baja del estándar (1-3 iteraciones esperadas)
+8. **Definition of Done Fase 0:** ≥3 briefs decentes en Telegram en una semana
+
+### Bloqueante para Fase 1
+
+Si Fase 0 no entrega briefs publicables, NO avanzar a Fase 1. El problema está en prompts o señal de fuentes, no en automatización.
 
 ---
 
-## Fase 3 — Newsletter + landing (Semana 5-6)
+## Fase 1 — Pipeline texto + carousels + newsletter (Semanas 2-4)
 
-**Objetivo:** Agregar canal de newsletter para capturar audiencia propia y reducir dependencia de algoritmos de redes sociales.
+**Objetivo:** Pipeline completo automatizado que produce y publica 1 pieza/día (carousel IG + TikTok caption + sección newsletter), aprobada por humano via Telegram.
 
 ### Alcance
-- Activar A8d (Newsletter Generator/Beehiiv)
-- Crear landing page para captura de emails
-- Brief extendido diario por email (curación de las 3 noticias del día)
-- CTA en posts de IG/TikTok hacia newsletter
+
+- **Agentes activos:** A1 (Source Monitor), A1.5 (Binary Filter), A2 (Scorer), A3 (Editorial), A4 (Fact-Checker), A5 (Visual Director), A7 (Copy Composer), A8a (Visual Generator gpt-image-2), A8d (Newsletter Composer), A9 (Compliance), A10 (Publisher Upload-Post), A11 (Editor LLM HITL)
+- **Output diario:** 1 carousel IG (5-7 slides) + 1 caption TikTok paralelo + 1 sección newsletter Beehiiv
+- Sin video, sin audio (Fase 2)
+- **HITL bidireccional Telegram** — Manuel aprueba/edita/rechaza
+- Horario único: ~8 AM CDMX (post + newsletter envío simultáneo)
+
+### Fuentes (12 confirmadas + 3 propuestas para activar)
+
+Activas confirmadas RSS:
+- OpenAI Blog, Anthropic, Google AI (oficial)
+- TechCrunch AI, The Verge AI, Ars Technica, Wired, Fortune (anglo)
+- Latent Space (newsletter), Hacker News (community)
+- Contxto, LatamList (LATAM)
+
+Propuestas verificadas pendientes activar (OPEN_QUESTIONS F):
+- Xataka IA, Genbeta IA, Hipertextual (ES — peninsular, filtrar con A1.5)
+- La Nación Tecnología (AR — único LATAM nativo con RSS funcional)
+- Startupeable (newsletter LATAM)
 
 ### Tareas
-1. Configurar Beehiiv (free tier inicial)
-2. Implementar A8d: generación de newsletter desde briefs del día
-3. Diseñar template de email (brand consistent)
-4. Crear landing page (Lovable.dev o alternativa)
-5. Agregar CTA de newsletter en captions de IG/TikTok
-6. Implementar A11 (Analytics) para tracking cross-canal
-7. Configurar welcome sequence para nuevos suscriptores
-8. Test end-to-end: primera newsletter enviada
 
-### Definition of Done
-- [ ] 30 newsletters enviadas (una por día durante 30 días)
-- [ ] 100 suscriptores orgánicos
-- [ ] Landing page funcional con formulario de captura
-- [ ] Open rate >40% en newsletters
+#### Semana 2 — Infrastructure
+
+1. **Manuel: aplicar runbook `hostinger-vps-n8n-setup.md`** (~60-90 min) — paso 1-7
+2. **Manuel: crear cuenta Supabase + aplicar migration `infra/supabase/migrations/001_initial.sql`** (~30 min)
+3. **Manuel: crear cuenta Upload-Post + conectar IG + TikTok via OAuth** (~30 min)
+4. **Claude (chat): migrar fase0.json al VPS + extender a Fase 1 workflow** (~2-4 sesiones)
+5. **Claude: instalar `n8n-nodes-upload-post` community node en el VPS** (1 click n8n UI)
+6. **Manuel: registrar dominio + configurar SSL via Let's Encrypt** (~15 min, opcional)
+
+#### Semana 3 — Pipeline completo
+
+7. **Implementar A1**: Schedule trigger 1× día + Split In Batches × 12 fuentes RSS + dedup Supabase upsert
+8. **Implementar A1.5**: Binary filter pre-scoring (Sonnet 4.5 cheap)
+9. **Implementar A2**: scoring rúbrica 8 categorías + sort + split top vs shortlist
+10. **Implementar A3**: editorial brief Smart Brevity con few-shot examples (usar briefs de Fase 0 como seeds)
+11. **Implementar A4**: AI Agent con web_search Tool (Anthropic native)
+12. **Implementar A5 + A8a**: visual direction → gpt-image-2 API loop
+13. **Implementar A7**: copy composer (carousel + caption + tiktok + reel script placeholder)
+14. **Implementar A8d**: newsletter composer (subject + intro + top + quick hits)
+15. **Implementar A9**: compliance check 15 reglas con retry loop
+
+#### Semana 4 — HITL + Publishing
+
+16. **Implementar Telegram HITL bidireccional**: Send Message + inline keyboard + Telegram Trigger + parse callback
+17. **Implementar A11 Editor LLM**: aplicar feedback parcial sin regenerar
+18. **Implementar A10 Publisher**: Upload-Post node con carousel IG + TikTok crosspost
+19. **Configurar Beehiiv API**: crear publicación, configurar from address, footer CAN-SPAM
+20. **Test end-to-end**: primera pieza completa publicada (carousel + TikTok + newsletter)
+21. **Correr 7 días**: 7 piezas publicadas con HITL aprobando cada una
+
+### Definition of Done Fase 1
+
+- [ ] 7 piezas publicadas en 7 días (1/día consistente)
+- [ ] 0 errores de fact-check post-publicación
+- [ ] 0 violaciones de compliance detectadas por audiencia
+- [ ] Workflow estable >95% (max 1 failure por semana)
+- [ ] Costo Anthropic + OpenAI + Upload-Post dentro de $30-50/mo
+- [ ] Newsletter Beehiiv enviada cada día con open rate >25%
 
 ---
 
-## Fase 4 — Podcast / audio (Mes 2+)
+## Fase 2 — Reels con voice clone (Semanas 5-7)
+
+**Objetivo:** Sumar reels al mix de contenido (carousel + reel + newsletter).
+
+### Pre-requisitos Fase 2
+
+- [ ] **Manuel graba 20-30 min de voz** siguiendo `docs/voice-clone/recording-script.md`
+- [ ] **Cuenta ElevenLabs Creator** ($22/mo activada)
+- [ ] **Voice clone training completado** (~10 min después de upload)
+- [ ] **Fase 1 estable 14 días** sin intervención manual extra
+
+### Alcance
+
+- **Agentes activos nuevos:** A6 (Audio Director), A8b (Video Generator Seedance), A8c (Audio Generator ElevenLabs)
+- **Output:** 1 carousel + 1 reel por día (alternancia o decisión por pieza según `formato_recomendado` del brief)
+- Voice clone 100% (NO TTS genérico)
+- Seedance anima keyframes generados por gpt-image-2
+
+### Tareas
+
+1. Configurar ElevenLabs voice clone (post-grabación)
+2. Implementar A6 Audio Director (SSML + pacing instructions)
+3. Implementar A8c ElevenLabs API (TTS con voice clone)
+4. Implementar A8b Seedance 2.0 (imagen→video con voice como audio track)
+5. Integrar A8a (keyframes) + A8b (video) + A8c (audio) en el workflow
+6. Test: primer reel publicado vía Upload-Post (también soporta video)
+7. Calibrar voice_settings (stability + similarity_boost + style) en primeras 5 piezas
+8. Decidir mix carousel/reel según engagement de primeras 2 semanas
+
+### Definition of Done Fase 2
+
+- [ ] 14 reels publicados en 2 semanas
+- [ ] Voice clone con calidad aceptable (>80% naturalidad percibida en blind test)
+- [ ] Engagement reel ≥ carousel (medible por save_rate + watch_through_rate)
+
+---
+
+## Fase 3 — Newsletter scale + landing (Semanas 8-10)
+
+**Objetivo:** Pasar la newsletter de "anexa al pipeline" a "activo principal de audiencia propia". Crear landing para captura orgánica.
+
+> **Nota:** A8d Newsletter Composer ya corre desde Fase 1. Fase 3 NO la activa por primera vez — la **escala** con landing + captura propia + Beehiiv Scale plan.
+
+### Alcance
+
+- Landing page con captura email (Lovable.dev o alternativa)
+- CTA newsletter en captions IG + TikTok cada pieza
+- Welcome sequence Beehiiv (3 emails) para nuevos suscriptores
+- Migrar Beehiiv Free → Scale ($49/mo) cuando llegue a 2,500 subs
+- Implementar A11.5 Analytics (cross-canal: IG, TikTok, newsletter open/click)
+
+### Tareas
+
+1. Diseñar landing con value prop específico (3 min/día, LATAM, sin hype)
+2. Crear landing en Lovable.dev (~1 día)
+3. Conectar landing → Beehiiv API para suscripción automática
+4. Welcome sequence: email 1 (intro) + email 2 (top 5 piezas históricas) + email 3 (encuesta tema favorito)
+5. Agregar CTA newsletter en A7 Copy Composer (caption IG + TikTok)
+6. Implementar A11.5 Analytics — cron diario fetch métricas de Upload-Post + Beehiiv → Supabase
+7. Dashboard simple en Supabase view o Metabase (opcional)
+
+### Definition of Done Fase 3
+
+- [ ] 800 suscriptores newsletter en 30 días post-launch
+- [ ] Landing con conversion rate ≥3% (sesiones → suscripción)
+- [ ] Welcome sequence con open rate ≥50%
+- [ ] Newsletter daily open rate sostenido >30%
+
+---
+
+## Fase 4 — Podcast (Meses 3+)
 
 **Objetivo:** Agregar formato podcast para audiencias que prefieren audio. Distribución via Spotify for Podcasters.
 
 ### Alcance
-- A8c genera episodios completos (5-10 min) con voz clonada
-- Resumen semanal de las noticias top en formato podcast
-- Distribución via Spotify for Podcasters
+
+- Episodio semanal de 5-10 min (Smart Brevity audio = el top story de la semana)
+- Voz clonada de Manuel (ya activa desde Fase 2)
+- Distribución Spotify + Apple Podcasts (free)
 - Cross-promotion en IG/TikTok/Newsletter
 
 ### Tareas
-1. Definir formato de episodio (duración, estructura, música)
-2. Extender A8c para generar episodios largos (no solo voiceover de reels)
-3. Configurar Spotify for Podcasters
-4. Crear artwork de podcast (gpt-image-2 o Canva)
-5. Implementar workflow de publicación semanal
-6. Agregar cross-promotion en otros canales
-7. Test end-to-end: primer episodio publicado
 
-### Definition of Done
-- [ ] 10 episodios publicados
-- [ ] Primeros 50 plays acumulados
+1. Definir formato episodio (duración, estructura, música de intro/outro)
+2. Extender A8c para generar episodios largos (no solo voiceover de 30s reels)
+3. Configurar Spotify for Podcasters
+4. Crear artwork con gpt-image-2 (consistent con visual standard)
+5. Implementar workflow publicación semanal (cron lunes 6 AM)
+6. Cross-promotion en otros canales
+
+### Definition of Done Fase 4
+
+- [ ] 10 episodios publicados consecutivos
+- [ ] 50+ plays acumulados (early stage acceptable)
 - [ ] Distribución automática via n8n workflow
-- [ ] Cross-promotion implementada en IG/TikTok/Newsletter
+
+---
+
+## Fases futuras (no committed)
+
+### Fase 5 — Multi-property (Mes 4+)
+
+Reutilizar el pipeline para Crypto Brief LATAM y Startup Radar (properties #2 y #3 del plan original). Comparten infraestructura (mismo VPS, mismas credenciales Anthropic/OpenAI), distinto sources.yaml + prompts adaptados.
+
+### Fase 6 — Monetización
+
+- Sponsored sections en newsletter
+- Affiliate links en piezas relevantes
+- Pro tier ($X/mo) con contenido extra
+
+### Fase 7 — Consumer product
+
+Si la audiencia llega a 10K+ newsletter / 5K+ IG, evaluar producto: app móvil, Chrome extension, o herramienta SaaS para audiencia.
 
 ---
 
 ## Timeline visual
 
 ```
-Semana  1  2  3  4  5  6  7  8
-Fase 1  ████████
-Fase 2           ████████
-Fase 3                    ████████
-Fase 4                             ████████████...
+Semana   1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+Fase 0   ▓▓
+Fase 1      ▓▓▓▓▓▓▓▓▓
+Fase 2                  ▓▓▓▓▓▓▓
+Fase 3                          ▓▓▓▓▓▓▓
+Fase 4                                  ▓▓▓▓▓▓▓▓▓ ...
 ```
 
 ## Métricas de éxito acumuladas
 
-| Métrica | 30 días | 60 días | 90 días |
-|---------|---------|---------|---------|
-| Followers IG | 500 | 1,500 | 5,000 |
-| Newsletter subs | - | 300 | 800 |
-| Engagement >4% | 5+ piezas | 15+ piezas | Consistente |
-| Fact-check errors | 0 | 0 | 0 |
-| Revenue test | - | - | Primer test |
+| Métrica | 30 días | 60 días | 90 días | 180 días |
+|---------|---------|---------|---------|---------|
+| Followers IG | 300 | 1,200 | 3,500 | 8,000 |
+| Newsletter subs | 100 | 400 | 1,200 | 3,500 |
+| Engagement IG >3% | Goal | 5+ piezas/mes | 10+ piezas/mes | Consistente |
+| Newsletter open rate | >35% | >35% | >32% | >30% |
+| Fact-check errors públicos | 0 | 0 | 0 | 0 |
+| Compliance violations | 0 | 0 | 0 | 0 |
+| Costo total mensual | $7-10 (Fase 0+) | $50-70 (Fase 1) | $85-115 (Fase 2) | $100-180 (Fase 3) |
+| Revenue test | - | - | Primer test | Sponsored section |
+
+> **Nota:** estos targets son conservadores. Si la voz/ángulo resuena bien, los benchmarks LATAM real-world (Ecosistema Startup 12K, Startupeable 27K en 12-18 meses) sugieren que 8K en 6 meses es alcanzable. Si no resuena, ajustar buyer persona (OPEN_QUESTIONS J).
