@@ -13,11 +13,11 @@
 |---|---|---|
 | A | "1 pieza" definida | ✅ Respondida — ver abajo |
 | B | Quality controls | ✅ Respondida — ver abajo |
-| C | Storage | ⏳ Pendiente clarificación (Manuel pidió más detalle de opciones) |
-| D | Image gen | ⏳ Pendiente |
-| E | Audio/video timing | ⏳ Pendiente |
-| F | Sources | ⏳ Pendiente |
-| G | Standard de calidad / visual | ⏳ Pendiente (parcialmente cubierto por B) |
+| C | Storage | ✅ Respondida — Supabase (locked, account creation deferred) |
+| D | Image gen | ✅ Respondida — híbrido carousel/reel decidido por brief |
+| E | Audio/video timing | ✅ Respondida — audio solo en reels, voice clone ElevenLabs |
+| F | Sources | ⏳ Pendiente (mi propuesta de expandir LATAM viene en commit aparte) |
+| G | Standard de calidad / visual | ⏳ Pendiente (mi propuesta viene en POST_STANDARD.md) |
 | H | Cursor | ⏳ Pendiente |
 | I | Perplexity | ⏳ Pendiente |
 
@@ -41,6 +41,44 @@
   - **Visual:** enforced por VISUAL_STANDARD.md (a crear) + A5 Visual Director + prompts para gpt-image-2
   - **Hook + psicología:** enforced por framework Rufusocial (3 condiciones) + format pillars del research social-media-niches-2026
 - **Material de investigación** que el sistema debe respetar: existe disperso en `research/`, `docs/research/deep-research/`, `brand_voice.md`. **A consolidar en `docs/POST_STANDARD.md`** como referencia única.
+
+### C — Storage: **Supabase (DB + Storage + assets, single platform)**
+
+- **Decisión locked, setup deferred.** Manuel pidió no crear cuenta todavía, continuar con diseño.
+- **Por qué Supabase y no las otras opciones:** criterio "todo en un lugar" pesa más que "menos setup". Sheets+Drive+GitHub partido en 3 plataformas crea fricción. Supabase tiene Postgres (queries analíticas) + Storage (imágenes) + Auth (cuando llegue Fase 7 consumer product) en la misma cuenta.
+- **Lo que guardamos en Supabase:**
+  - Tabla `dedup_history` — items procesados (hash de URL + título) para no duplicar en 30d
+  - Tabla `briefs` — todos los briefs generados (aprobados y rechazados), audit trail
+  - Tabla `posts_published` — qué publicamos, cuándo, con métricas asociadas
+  - Tabla `costs` — tokens consumidos por agent (Anthropic + OpenAI) para monitoreo financiero
+  - Storage bucket `assets` — imágenes de gpt-image-2, videos de Seedance, audio de ElevenLabs
+- **Backup adicional:** cada brief aprobado también se commitea como markdown a `projects/ai-brief-latam/manual-mvp/pieces/{date}_{slug}.md` en GitHub (audit trail diff-eable, narrativo).
+- **Trade-off aceptado:** 30 min de setup inicial vs simplicidad operativa para los siguientes meses.
+
+### D — Image gen: **gpt-image-2 + Seedance híbrido, decidido por brief**
+
+- **Roles distintos:**
+  - `gpt-image-2` → imágenes estáticas (slides carousel, cover hero, post estático)
+  - `Seedance 2.0` → animar imágenes generadas a video (reels)
+- **Decisión de formato por pieza:** el campo `formato_recomendado` del brief (ya existe en prompt a3-editorial) decide:
+  - `carrusel` → gpt-image-2 × 5-7 slides
+  - `reel` → gpt-image-2 (1-3 keyframes) + Seedance 2.0 anima
+  - `post estático` → gpt-image-2 × 1 imagen
+- **Fase 1:** carousel-only para validar pipeline simple. El campo `formato_recomendado` se registra pero no se actúa.
+- **Fase 2:** se activa la rama reel cuando Seedance + ElevenLabs estén listos.
+- **Override manual:** se permite subir imágenes/videos propios via n8n node "Read Binary File" cuando se quiere bypass de generación (ej: foto del founder de una startup mencionada).
+- **Estilo visual:** consistente cross-piece, definido en `VISUAL_STANDARD.md` (a crear como sección de POST_STANDARD.md).
+
+### E — Audio: **solo en reels, voice clone ElevenLabs 100% (tu voz)**
+
+- **Carouseles silenciosos** — research confirma no requieren audio para performar.
+- **Reels con audio:** ElevenLabs con voice clone de Manuel (ADR-008).
+- **No requiere investigación adicional** — el research existente confirma el path:
+  - Voz humana > IA en trust/loyalty (production-stack-research)
+  - Voz clonada con TU voz cuenta como humana
+  - Reels con audio original ganan distribución
+  - "Made with AI" label penaliza -15 a -80% (production-stack-research)
+- **Open item:** grabación de 20 min de voz de Manuel para ElevenLabs (script ya existe en `docs/voice-clone/recording-script.md`). Sin fecha comprometida. **No bloquea Fase 1.**
 
 ---
 
