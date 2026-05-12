@@ -491,6 +491,118 @@ mirada. NO emojis, NO "swipe to see more".
 3. **Watermark:** el wordmark "AI BRIEF LATAM" en bottom-right tiende a deformarse. **Mejor agregarlo en post-procesado** como overlay PNG.
 4. **Resolución:** gpt-image-2 max nativo 1024×1024. Up-rezear a 1080×1080 con Lanczos resampling para IG carousel native.
 
+### Mock-up ASCII del newsletter (Beehiiv daily) ✋ PROPUESTA
+
+Equivalente al mock-up del carousel pero para el formato newsletter. Email se ve básicamente como texto + 1-2 imágenes opcionales. Estructura adoptada del template #12533 traducida al español neutro LATAM.
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│  [Subject line en inbox]                                          │
+│  ────────────────────────────────────────                         │
+│  ▌80% LATAM ya usa IA. Acá los datos que faltaban.   ← 30-60 ch  │
+│                                                                   │
+│  [Pre-header text, gris claro en preview]                         │
+│  Encuesta IDC + qué hace tu competencia esta semana   ← 40-90 ch │
+└───────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║          AI BRIEF LATAM                                           ║
+║          ──────────────                                           ║
+║          Martes 12 de mayo, 2026                                  ║
+║                                                                   ║
+║  ───────────────────────────────────────────────────────────      ║
+║                                                                   ║
+║  La mayoría de las encuestas LATAM sobre adopción IA medía 2024.  ║
+║  El número del 18% se quedó pegado en headlines un año entero.    ║
+║  El último corte de IDC, publicado ayer, muestra otro mundo.      ║
+║                                                                   ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │ El 80% de profesionales LATAM ya usa IA en el trabajo    │    ║
+║  │ ──────────────────────────────────────────────────────── │    ║
+║  │                                                          │    ║
+║  │ IDC encuestó 12,000 knowledge workers en 7 países entre  │    ║
+║  │ enero y marzo de 2026. La adopción saltó de 18% a 80%    │    ║
+║  │ year-over-year. → Reporte completo (link)                │    ║
+║  │                                                          │    ║
+║  │ Los números por país: MX +42%, BR +38%, AR +29%, CO      │    ║
+║  │ +35%, CL +31%. Ningún país bajo +25%. La velocidad de    │    ║
+║  │ adopción supera la curva US 2024 (60% en mismo período). │    ║
+║  │                                                          │    ║
+║  │ El uso no es uniforme: 67% lo usa para tareas internas   │    ║
+║  │ (resumen de docs, drafting), solo 23% para customer-     │    ║
+║  │ facing. El gap señala dónde está la oportunidad real:    │    ║
+║  │ automatizar customer service en LATAM antes que la       │    ║
+║  │ competencia.                                             │    ║
+║  │                                                          │    ║
+║  │ Si trabajás en retail, fintech o telco LATAM, tu equipo  │    ║
+║  │ ya está usando IA — la pregunta es si lo estás midiendo. │    ║
+║  │ Empezá midiendo qué tareas y cuántas horas.              │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+║                                                                   ║
+║  ───────────────────────────────────────────────────────────      ║
+║                                                                   ║
+║  Quick Hits                                                       ║
+║                                                                   ║
+║  → Anthropic abrió oficina en CDMX. Primer hire es head de        ║
+║    enterprise sales LATAM. (link)                                 ║
+║                                                                   ║
+║  → Mercado Libre integra Claude en su CRM interno. 40K            ║
+║    empleados con acceso desde abril. (link)                       ║
+║                                                                   ║
+║  → CNBV México publicó guía de uso IA en banca. No prohíbe        ║
+║    nada, exige logging y human-in-the-loop. (link)                ║
+║                                                                   ║
+║  → Kavak cortó 30% del equipo de QA después de implementar        ║
+║    agentes Claude para revisión de listings. (link)               ║
+║                                                                   ║
+║  → Bitso lanzó "Bitso AI" — un asistente conversacional para      ║
+║    onboarding crypto. Disponible solo MX por ahora. (link)        ║
+║                                                                   ║
+║  ───────────────────────────────────────────────────────────      ║
+║                                                                   ║
+║  ¿Algo de esto te cambió la semana?                               ║
+║                                                                   ║
+║  Respondé este mail con tu take. Lo leo todo — los mejores         ║
+║  responses los incluyo en el newsletter del jueves (con           ║
+║  crédito + link a tu perfil si querés).                            ║
+║                                                                   ║
+║  Hasta mañana,                                                    ║
+║  Manuel                                                           ║
+║                                                                   ║
+║  ───────────────────────────────────────────────────────────      ║
+║                                                                   ║
+║  AI BRIEF LATAM · Noticias de IA para LATAM en 3 minutos          ║
+║                                                                   ║
+║  [Suscribite] [Compartí]   ← Beehiiv buttons                      ║
+║                                                                   ║
+║  ───────────────────────────────────────────────────────────      ║
+║                                                                   ║
+║  [Footer CAN-SPAM]                                                ║
+║  AI Brief LATAM · <dirección física pendiente OPEN_QUESTIONS M>   ║
+║  Te enviamos esto porque te suscribiste en aibrieflatam.media     ║
+║  [Unsubscribe] [Update preferences]                               ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+```
+
+#### Notas de aplicación
+
+| Decisión | Por qué |
+|---|---|
+| **Sin saludo en el intro** | Adoptado de The Rundown / Morning Brew — el reader abrió porque le interesa el contenido, no porque te quiera saludar |
+| **Bloque visual para Top Story** | Diferencia visual que separa deep-dive de quick hits sin usar meta-labels |
+| **Quick Hits con `→` arrow** | Indicador visual de "rapid scan" — el reader sabe que esto es para escanear rápido |
+| **CTA reply real** | "Respondé este mail" funciona como engagement signal (Beehiiv mide replies) y como source de feedback para mejorar |
+| **Firma "Manuel"** | Personalidad — Newsletter sin firma humana se siente generada |
+| **Footer Beehiiv standard** | Compliance CAN-SPAM cubierto por Beehiiv si cargás dirección física en settings |
+
+#### Limitaciones conocidas Beehiiv
+
+1. **Subject A/B testing:** Beehiiv lo soporta nativo. Los 5 alternates de A8d se cargan automático.
+2. **Imágenes en el email:** soportadas pero penalizan deliverability si el ratio image/text es alto. Mantener email **text-heavy** (1 imagen máx por edición).
+3. **Links:** Beehiiv reescribe links para tracking. UTMs custom no necesarios.
+
 ---
 
 ## 8. LATAM-specific rules
