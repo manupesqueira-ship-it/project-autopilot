@@ -1,0 +1,985 @@
+{
+  "name": "Viral Ad Videos with NanoBanana & Veo 3",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "cb9939c6-1c5c-448b-ab3a-a66d90767cf2",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1616,
+        1152
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "5GBaPClALhBlVGuT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "2c244851-7835-4f4a-8fe9-10a26acf6365",
+      "name": "Think",
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "position": [
+        1760,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"title\": \"string\",\n  \"final_prompt\": \"string\"\n}\n"
+      },
+      "id": "0695e935-93ac-48da-a893-1615ce22a6e7",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1904,
+        1152
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc2e0500-57b1-4615-82cb-1c950e5f2ec4",
+              "name": "json_master",
+              "type": "string",
+              "value": "={\n  \"description\": \"Brief narrative description of the scene, focusing on key visual storytelling and product transformation.\",\n  \"style\": \"cinematic | photorealistic | stylized | gritty | elegant\",\n  \"camera\": {\n    \"type\": \"fixed | dolly | Steadicam | crane combo\",\n    \"movement\": \"describe any camera moves like slow push-in, pan, orbit\",\n    \"lens\": \"optional lens type or focal length for cinematic effect\"\n  },\n  \"lighting\": {\n    \"type\": \"natural | dramatic | high-contrast\",\n    \"sources\": \"key lighting sources (sunset, halogen, ambient glow...)\",\n    \"FX\": \"optional VFX elements like fog, reflections, flares\"\n  },\n  \"environment\": {\n    \"location\": \"describe location or room (kitchen, desert, basketball court...)\",\n    \"set_pieces\": [\n      \"list of key background or prop elements\",\n      \"e.g. hardwood floors, chain-link fence, velvet surface\"\n    ],\n    \"mood\": \"describe the ambient atmosphere (moody, clean, epic...)\"\n  },\n  \"elements\": [\n    \"main physical items involved (product box, accessories, vehicles...)\",\n    \"include brand visibility (logos, packaging, texture...)\"\n  ],\n  \"subject\": {\n    \"character\": {\n      \"description\": \"optional – physical description, outfit\",\n      \"pose\": \"optional – position or gesture\",\n      \"lip_sync_line\": \"optional – spoken line if there’s a voiceover\"\n    },\n    \"product\": {\n      \"brand\": \"Brand name\",\n      \"model\": \"Product model or name\",\n      \"action\": \"description of product transformation or assembly\"\n    }\n  },\n  \"motion\": {\n    \"type\": \"e.g. transformation, explosion, vortex\",\n    \"details\": \"step-by-step visual flow of how elements move or evolve\"\n  },\n  \"VFX\": {\n    \"transformation\": \"optional – describe style (neon trails, motion blur...)\",\n    \"impact\": \"optional – e.g. shockwave, glow, distortion\",\n    \"particles\": \"optional – embers, sparks, thread strands...\",\n    \"environment\": \"optional – VFX affecting the scene (ripples, wind...)\"\n  },\n  \"audio\": {\n    \"music\": \"optional – cinematic score, trap beat, ambient tone\",\n    \"sfx\": [\n      \"list of sound effects (zip, pop, woosh...)\"\n    ],\n    \"ambience\": \"optional – background soundscape (traffic, wind...)\",\n    \"voiceover\": {\n      \"delivery\": \"tone and style (confident, whisper, deep...)\",\n      \"line\": \"text spoken if applicable\"\n    }\n  },\n  \"ending\": \"Final shot description – what is seen or felt at the end (freeze frame, logo pulse, glow...)\",\n  \"text\": \"none | overlay | tagline | logo pulse at end only\",\n  \"format\": \"16:9 | 4k | vertical\",\n  \"keywords\": [\n    \"brand\",\n    \"scene style\",\n    \"motion type\",\n    \"camera style\",\n    \"sound mood\",\n    \"target theme\"\n  ]\n}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45e0b8ee-b830-48bc-8a9a-a426a7afcd43",
+      "name": "Set Master Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1328,
+        976
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const structuredPrompt = $input.first().json.output.final_prompt;\nreturn {\n  json: {\n    prompt: JSON.stringify(structuredPrompt), // this escapes it correctly!\n    model: \"veo3_fast\",\n    aspectRatio: \"16:9\"\n  }\n};\n"
+      },
+      "id": "30c415e0-58e0-48b9-b7e9-11dc5d979ac8",
+      "name": "Format Prompt",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2176,
+        976
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "# Generate Video Prompt",
+        "height": 460,
+        "width": 1260
+      },
+      "id": "61ce4a03-4104-4beb-bb16-0b2d2dde142d",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1088,
+        848
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# Create Video Ad with Veo 3",
+        "height": 464,
+        "width": 1324,
+        "color": 5
+      },
+      "id": "9f91c353-3ad6-498c-ba14-907bb91e208c",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2368,
+        848
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# Inputs\n",
+        "height": 592,
+        "width": 1264,
+        "color": 5
+      },
+      "id": "3051b833-571a-4f0c-993a-ca8ffd03e476",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1088,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# Create Image with NanoBanana\n",
+        "height": 592,
+        "width": 1328
+      },
+      "id": "785aa7c8-8921-4b6b-8db3-8d55e2a42564",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Your task is to create an image prompt following the system guidelines.  \nEnsure that the reference image is represented as **accurately as possible**, including all text elements.  \n\nUse the following inputs:  \n\n- **User’s description:**  \n{{ $('Save Information').item.json.Caption }}\n\n- **Reference image description:**  \n{{ $json['Image Description'] }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=** Role & Purpose **\nYou are a UGC Image Prompt Builder.  \nYour purpose is to generate one concise, natural, and realistic image prompt (≤120 words) from a given product or reference image, simulating authentic UGC-style photography.  \n\n** Capabilities **\n- Output **only one JSON object** with the key `image_prompt`.  \n- Write the prompt in a casual, unstaged, lifelike tone.  \n- Always include 2–3 camera cues (e.g., phone snapshot, handheld framing, off-center composition, natural indoor light, soft shadows, slight motion blur, auto exposure, mild grain).  \n- Embrace realism and imperfections (wrinkles, stray hairs, skin texture, clutter, smudges).  \n- Preserve packaging/text exactly as visible. Never invent claims, numbers, or badges.  \n- Default people to diverse appearances (gender/ethnicity), ages 21–38.  \n- Default setting: everyday spaces (home, street, store, gym, office).  \n- Ensure JSON only, no commentary, metadata, or extra keys.  \n\n** Interaction Style **\n- Casual and natural, like describing a real snapshot.  \n- Lifelike, unpolished, unstaged.  \n- No dialogue or script writing. Only describe the visual scene.  \n\n** Example Output **\n```json\n{ \"image_prompt\": \"a young adult casually holding a skincare tube near a bathroom mirror; action: dabs small amount on the back of the hand; mood: easy morning; setting: small apartment bathroom with towel on rack and toothbrush cup; style/camera: phone snapshot, handheld framing, off-center composition, natural window light, slight motion blur, mild grain; colors: soft whites and mint label; text accuracy: keep every word on the tube exactly as visible, no added claims\" }\n"
+        }
+      },
+      "id": "f6599d80-4301-4dd1-bc38-1c39e57e21cb",
+      "name": "Generate Image Prompt",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2960,
+        448
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/nano-banana/edit",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\t\"prompt\": \"{{ $json.output.image_prompt.replace(/\\\"/g, '\\\\\\\"').replace(/\\n/g, '\\\\n') }}\",\n\"image_urls\": [\"{{ $('Upload Image').item.json.webContentLink }}\"]\n\n}\n\n",
+        "options": {}
+      },
+      "id": "80274aa5-bdf0-49bf-9980-0624d99d68ef",
+      "name": "NanoBanana: Create Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3376,
+        288
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aZP8k1pW8ZuvpOUl",
+          "name": "Fal AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "2c7ffce1-8ace-418d-9738-c659f4554980",
+      "name": "Download Edited Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3376,
+        672
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aZP8k1pW8ZuvpOUl",
+          "name": "Fal AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Video Idea').item.json.message.photo[2].file_unique_id }}",
+        "driveId": {
+          "__rl": true,
+          "value": "=My Drive",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "15ZdvbEZ2ffhBr2yiFBkKNCF-xLlaLvMh",
+          "mode": "list",
+          "cachedResultName": "nanobanana",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/15ZdvbEZ2ffhBr2yiFBkKNCF-xLlaLvMh"
+        },
+        "options": {}
+      },
+      "id": "7a362123-c86c-45f9-b80c-a5660f92da46",
+      "name": "Upload Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        1568,
+        448
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "5WSNiBHxCuUD8y4q",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "11f4ee14-912b-4a77-8696-7d36f7fc8a21",
+      "name": "Video Idea",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        1184,
+        448
+      ],
+      "webhookId": "26dbe6f5-5197-4b2b-9e32-8060f2119686",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[2].file_id }}",
+        "additionalFields": {}
+      },
+      "id": "fa25f6bf-d05b-4b8d-8a8a-b8684c601510",
+      "name": "Get Image File",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1376,
+        448
+      ],
+      "webhookId": "06ceb31d-dcd9-4a9a-bbbe-a7bf7ae0ad4a",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM",
+          "mode": "list",
+          "cachedResultName": "Nanobanana",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Image Name": "={{ $('Video Idea').item.json.message.photo[2].file_unique_id }}",
+            "Image URL": "={{ $json.webContentLink }}",
+            "Caption": "={{ $('Video Idea').item.json.message.caption }}",
+            "Status": "not done"
+          },
+          "matchingColumns": [
+            "Image Name"
+          ],
+          "schema": [
+            {
+              "id": "Image Name",
+              "displayName": "Image Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a9614733-44e3-4580-95f8-a955d9136be4",
+      "name": "Save Information",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1760,
+        448
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VjB52JghQlX5ZmcR",
+          "name": "Google Sheets n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $json.Bot_Token }}/getFile?file_id={{ $('Video Idea').item.json.message.photo[3].file_id }}",
+        "options": {}
+      },
+      "id": "ae9da8d7-f2c4-4ada-897c-651176cbfdb6",
+      "name": "Telegram - Get File URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2144,
+        448
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "af62651a-3fc8-419d-908b-6514f6f4bcb3",
+              "name": "Bot_Token",
+              "type": "string",
+              "value": "7637989378:AAHLFrbbMlR4X-ADYX5HcGY-hdR--fQdab0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a8e85901-2451-4037-ba0c-aa2b229c9d0f",
+      "name": "Bot Token",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1952,
+        448
+      ],
+      "typeVersion": 3.4,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM",
+          "mode": "list",
+          "cachedResultName": "Nanobanana",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YRVwCOmPG0HpXJ9j4DK8Mfo0yHrqEis1vklpPmI_hnM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Image Name": "={{ $('Save Information').item.json['Image Name'] }}",
+            "Image Description": "={{ $json.content }}"
+          },
+          "matchingColumns": [
+            "Image Name"
+          ],
+          "schema": [
+            {
+              "id": "Image Name",
+              "displayName": "Image Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image Description",
+              "displayName": "Image Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6d78c44a-9073-4a2c-9a17-102c870b2162",
+      "name": "Update Image Description",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2736,
+        448
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VjB52JghQlX5ZmcR",
+          "name": "Google Sheets n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"image_prompt\": \"string\"\n}"
+      },
+      "id": "efd41bb8-ecef-49ea-9051-ead169d6766b",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        3136,
+        640
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=You are an image analysis assistant.\n\nYour task is to analyze the given image and output results **only in YAML format**. Do not add explanations, comments, or extra text outside YAML.\n\nRules:\n\n- If the image depicts a **product**, return:\n    \n    ```yaml\n    brand_name: (brand if visible or inferable)\n    color_scheme:\n      - hex: (hex code of each prominent color)\n        name: (descriptive name of the color)\n    font_style: (serif/sans-serif, bold/thin, etc.)\n    visual_description: (1–2 sentences summarizing what is seen, ignoring the background)\n    \n    ```\n    \n- If the image depicts a **character**, return:\n    \n    ```yaml\n    character_name: (name if visible or inferable, else \"unknown\")\n    color_scheme:\n      - hex: (hex code of each prominent color on the character)\n        name: (descriptive name of the color)\n    outfit_style: (clothing style, accessories, or notable features)\n    visual_description: (1–2 sentences summarizing what the character looks like, ignoring the background)\n    \n    ```\n    \n- If the image depicts **both**, return **both sections** in YAML.\n\nOnly output valid YAML. No explanations.",
+        "imageUrls": "=https://api.telegram.org/file/bot{{ $('Bot Token').item.json.Bot_Token }}/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "id": "6527e03e-6417-45a5-95a8-2ef84b872df0",
+      "name": "Analyze Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        2512,
+        448
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "5GBaPClALhBlVGuT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "96a49fe4-d013-42c8-9ae8-11eb713e132f",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        2944,
+        640
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "5GBaPClALhBlVGuT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Video Idea').item.json.message.chat.id }}",
+        "text": "={{ $json.video.url }}",
+        "additionalFields": {
+          "appendAttribution": "={{ true }}"
+        }
+      },
+      "id": "ff995af1-503e-4356-8e67-6392b4629496",
+      "name": "Send Video URL",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        3376,
+        976
+      ],
+      "webhookId": "ea6e5974-1930-4b67-a51b-16249a9ed8bd",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a UGC-style video prompt using both the reference image and the user description.  \n\n**Inputs**  \n- User description (optional):  \n  `{{ $('Video Idea').item.json.message.caption }}`  \n- Reference image analysis (stay strictly faithful to what’s visible):  \n  `{{ $('Update Image Description').item.json['Image Description'] }}`  \n\n**Rules**  \n- Keep the style casual, authentic, and realistic. Avoid studio-like or cinematic language.  \n- Default model: `veo3_fast` (unless otherwise specified).  \n- Output only **one JSON object** with the key: `video_prompt`.  \n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=** Role & Purpose **\nYou are a **Structured Video Ad Prompt Generator**.  \nYour purpose is to generate a structured video ad prompt for cinematic generation, strictly based on the master schema provided in: `{{ $json.json_master }}`.  \n\n** Capabilities **\n- Always output a **valid JSON object** with exactly two top-level keys: `title` and `final_prompt`.  \n- Generate **one output only** (`output_count: 1`).  \n- `title`: short, descriptive, unique (max 15 words).  \n- `final_prompt`: a **single-line JSON string** that follows the exact structure of `{{ $json.json_master }}` with all fields preserved.  \n- Escape all inner quotes in `final_prompt` so it is valid as a stringified JSON inside another JSON. \n- Do not include any explanations, markdown, or extra text — only the JSON object.  \n- Keep all fields (camera, lighting, motion, etc.) aligned consistently.  \n- Maintain full schema even if optional fields are unused (fill with `\"none\"`, `\"\"`, or `[]`).  \n\n** Interaction Style **\n- Professional and precise.  \n- Strictly JSON-only responses.  \n- No commentary or formatting outside the JSON object.  \n\n** Example Output **\n```json\n{\n  \"title\": \"Sunset Drive Ad\",\n  \"final_prompt\": \"{\\\"subject\\\":\\\"car driving along coastal road\\\",\\\"camera\\\":\\\"wide aerial shot\\\",\\\"lighting\\\":\\\"golden hour sunlight\\\",\\\"motion\\\":\\\"smooth tracking\\\",\\\"environment\\\":\\\"ocean cliffs\\\",\\\"style\\\":\\\"cinematic commercial\\\",\\\"colors\\\":\\\"warm oranges and blues\\\",\\\"extras\\\":[]}\"\n}\n"
+        }
+      },
+      "id": "a27e8e28-cb43-4b3f-a96e-e986a25209fb",
+      "name": "Generate Video Script",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1696,
+        976
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "67889216-2c0f-4ed8-ae54-8e7e7fdbac90",
+      "name": "Download Video from Veo 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        3168,
+        976
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aZP8k1pW8ZuvpOUl",
+          "name": "Fal AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/veo3/fast/image-to-video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "generate_audio",
+              "value": "true"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "16:9"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $('Download Edited Image').item.json.images[0].url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "16902ea9-197e-4cac-936e-83c1fc226854",
+      "name": "Generate Video with Veo 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2752,
+        976
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "aZP8k1pW8ZuvpOUl",
+          "name": "Fal AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "id": "a7fffb23-dba4-4d1e-a42e-191a1414ec60",
+      "name": "Wait 1 minute",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2960,
+        976
+      ],
+      "webhookId": "f6d814f3-4eb8-4629-a920-134cfa4ea03b",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "id": "e132487d-da8c-4850-9d3f-9e057e9bde64",
+      "name": "Wait 20 seconds",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        3376,
+        480
+      ],
+      "webhookId": "df52d997-45c4-431f-bdf6-89dd25027b5b",
+      "typeVersion": 1.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Video with Veo 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Master Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Edited Image": {
+      "main": [
+        [
+          {
+            "node": "Set Master Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image Prompt": {
+      "main": [
+        [
+          {
+            "node": "NanoBanana: Create Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NanoBanana: Create Image": {
+      "main": [
+        [
+          {
+            "node": "Wait 20 seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Video Script",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image": {
+      "main": [
+        [
+          {
+            "node": "Save Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Idea": {
+      "main": [
+        [
+          {
+            "node": "Get Image File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image File": {
+      "main": [
+        [
+          {
+            "node": "Upload Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Information": {
+      "main": [
+        [
+          {
+            "node": "Bot Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Get File URL": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bot Token": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Get File URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Image Description": {
+      "main": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Update Image Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Video URL": {
+      "main": [
+        []
+      ]
+    },
+    "Generate Video Script": {
+      "main": [
+        [
+          {
+            "node": "Format Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video from Veo 3": {
+      "main": [
+        [
+          {
+            "node": "Send Video URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video with Veo 3": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 minute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 minute": {
+      "main": [
+        [
+          {
+            "node": "Download Video from Veo 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 20 seconds": {
+      "main": [
+        [
+          {
+            "node": "Download Edited Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "d1400986-0b3d-4a47-9ed0-2d84ba4f65ef",
+  "meta": {
+    "templateId": "8270",
+    "instanceId": "8ec8bfddbd59fdde442d5ed0bec9c8e336f78ad4e7b2c1393fe111ac5a29897c"
+  },
+  "id": "yJw1EXh6n5Xvbzc7",
+  "tags": []
+}

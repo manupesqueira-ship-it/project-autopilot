@@ -1,0 +1,362 @@
+{
+  "name": "Daily News AI Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "baaf1759-dd14-4e16-ac87-d4fa3928025b",
+      "name": "Merge GNews & NewsAPI",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        448,
+        16
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "id": "f5a912d2-ae12-4ab8-9016-a4455505fc3e",
+      "name": "GPT-4.1 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        544,
+        176
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "5GBaPClALhBlVGuT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "5991557141",
+        "text": "=n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "95cd6747-b98d-4bbc-9d64-e62f80e39d71",
+      "name": "Send summary to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        864,
+        16
+      ],
+      "webhookId": "21eb8e1c-87de-45af-888d-699fbd443bc8",
+      "typeVersion": 1.2,
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "articles",
+              "type": "string",
+              "value": "={{ $json.articles }}",
+              "id": "f030ab1f-df47-49fd-9a2e-020622f8a8f6"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a0298069-ea98-4454-8575-08cbdc280492",
+      "name": "Map to articles",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        224,
+        -64
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "articles",
+              "type": "string",
+              "value": "={{ $json.articles }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3d41fbdb-3ed8-448b-807f-896cab199e5b",
+      "name": "Map to articles1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        224,
+        112
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=** Select Top Articles **\nFrom {{$json.articles}}, choose the 15 most relevant articles related to finances advancements, tools, research, and applications.\n\n** Summarize Clearly **\nWrite in clear, professional, and readable language, summarizing the main point of each article in 1-2 short sentences.\n\n** Include Links **\nAfter each summary, add the article's URL for readers to explore more.\n\n** Add the Date **\nBegin the summary with today’s date:\n{{ $now.format('yyyy/MM/dd') }}\n",
+        "options": {
+          "systemMessage": "** Output Format **\nOnly return the summary in plain text – no explanations or additional formatting. Keep the response up to 2000 characters"
+        }
+      },
+      "id": "42292263-d262-4de1-be1f-c2001885aa59",
+      "name": "AI News Summarizer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        592,
+        16
+      ],
+      "typeVersion": 1.8,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "url": "https://gnews.io/api/v4/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Finances"
+            },
+            {
+              "name": "lang",
+              "value": "en"
+            },
+            {
+              "name": "apikey",
+              "value": "20c2e7f5b956323b34ac7dd6e5f962b9"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bf32757c-e027-44fb-a604-26c9d070e128",
+      "name": "Get GNews articles",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        48,
+        -64
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "Finances"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "sortBy",
+              "value": "publishedAt"
+            },
+            {
+              "name": "pageSize",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "8dfb0004004243e59dbb92e083438e67"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a18d6908-2260-41f3-80b3-1fba33496b7e",
+      "name": "Get NewsAPI articles",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        48,
+        112
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "id": "55c95c0d-84dd-4f91-930d-a0de5c78bf98",
+      "name": "Trigger Every Day at 10am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -224,
+        32
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "## Get the Most Recent Articles",
+        "height": 540,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -176
+      ],
+      "id": "8bdd2eb6-4b18-49a8-ad36-20d30ddf2fb2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Create Summarizon & Send via Telegram",
+        "height": 540,
+        "width": 624,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -176
+      ],
+      "id": "98e666db-a40f-4065-a302-809af82dcca5",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GPT-4.1 Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI News Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge GNews & NewsAPI": {
+      "main": [
+        [
+          {
+            "node": "AI News Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map to articles": {
+      "main": [
+        [
+          {
+            "node": "Merge GNews & NewsAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map to articles1": {
+      "main": [
+        [
+          {
+            "node": "Merge GNews & NewsAPI",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI News Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Send summary to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get GNews articles": {
+      "main": [
+        [
+          {
+            "node": "Map to articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get NewsAPI articles": {
+      "main": [
+        [
+          {
+            "node": "Map to articles1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Every Day at 10am": {
+      "main": [
+        [
+          {
+            "node": "Get GNews articles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get NewsAPI articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e34f4d5a-9cd6-4bbf-be9f-bfb4189636bb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8ec8bfddbd59fdde442d5ed0bec9c8e336f78ad4e7b2c1393fe111ac5a29897c"
+  },
+  "id": "UvXYMkdiV9bmrK1V",
+  "tags": []
+}

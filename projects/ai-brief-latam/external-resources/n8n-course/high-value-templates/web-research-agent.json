@@ -1,0 +1,335 @@
+{
+  "name": "Web Reseaech Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "019385a6-b64c-4cf9-8cae-69e3cf68857e",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.manualChatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1520,
+        3600
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "080fe6f1-b808-4c45-b1a4-5557a56cb840",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -1380,
+        3780
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LSihAOI8NTU3m5ce",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "4d508be2-5a5d-4fcf-a55c-cd5bffed310c",
+      "name": "SERP Search Engine",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        4180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "⚠️ ALWAYS SAVE THE WORKFLOW BEFORE RUNNING UPDATES\n",
+        "height": 80,
+        "width": 364,
+        "color": 4
+      },
+      "id": "f8f9d437-f4b4-4caa-91e5-f5c55aba013a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        4080
+      ]
+    },
+    {
+      "parameters": {
+        "name": "serp_search",
+        "description": "This is a Google search tool based on user questions on searching.",
+        "workflowId": {
+          "__rl": true,
+          "value": "sITO4n14lggcpEjr",
+          "mode": "id"
+        }
+      },
+      "id": "92ec6cad-d0fd-4a5f-8be5-c88d48365d62",
+      "name": "Google Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        3740
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is a web crawler, you can input URL for scrapping the website content.",
+        "url": "https://scrape.serper.dev",
+        "sendQuery": true,
+        "parametersQuery": {
+          "values": [
+            {
+              "name": "url"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "X-API-KEY",
+              "valueProvider": "fieldValue"
+            }
+          ]
+        }
+      },
+      "id": "79c91cbe-5bf3-4bcd-b2a5-34db83da2caa",
+      "name": "Web Crawler",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -1100,
+        3880
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey"
+      },
+      "id": "5079a746-e23d-48a1-b3ec-75d1fb962a09",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        -1240,
+        3860
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Search URL Preparation').item.json.message.content }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -920,
+        4180
+      ],
+      "id": "bb6978a9-959f-4eae-afd8-05016e8b3e10",
+      "name": "HTTP Request To Serper"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are a Research Agent. Your task is to gather and synthesize information from the internet. Follow these rules strictly:\n\n\n\nUse the data provided by the tool to extract key insights, trends, and patterns.\n\nALWAYS include the original source URL in every result you return.\n\nIf the search result includes an image, attach it with the result.\n\nOrganize your response clearly using sections, headings, and transitions.\n\nIf sources conflict, point out the differences and explain possible reasons.\n\nYou may use Google Search tools to explore results from Google.\n\nAfter locating a source, you can use Web Scraper to extract its detailed content.\n\n(Current time: {{ $now }})",
+          "maxIterations": 10,
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "c11fa54c-b103-49e7-9fa0-f6334f0e376f",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1340,
+        3600
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a SERP Search Agent. Use the following APIs based on the user’s request:\n\n🔧 Available Search APIs:\nGeneral Search → https://google.serper.dev/search\n\nImage Search → https://google.serper.dev/images\n\nVideo Search → https://google.serper.dev/videos\n\nMap Search → https://google.serper.dev/maps\n\nNews Search → https://google.serper.dev/news\n\nReview Search → https://google.serper.dev/reviews\n\nShopping Search → https://google.serper.dev/shopping\n\nVisual Search (Lens) → https://google.serper.dev/lens\n\nScholar Search → https://google.serper.dev/scholar\n\nPatent Search → https://google.serper.dev/patents\n\nSearch Suggestions → https://google.serper.dev/autocomplete\n\nPlaces Search → https://google.serper.dev/places (⚠️ Do not use this one)\n\nSample Query Format:\n\n{\n  \"q\": \"apple inc\",\n  \"location\": \"United States\",\n  \"num\": 20,\n  \"tbs\": \"qdr:w\"\n}\n\n\n📏 Search Rules:\nSelect the appropriate tool based on the user's query.\n\nCraft the query using relevant keywords wherever possible.\n\nUse Google search operators (e.g. site:, intitle:) if the user includes specific constraints.\n\nConstruct the full API request URL based on the query.\n\nReturn only the URL for the API call — no text, no code blocks, no line breaks.\n\n\n\nUser Question:\n{{ $json.query }}\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3081fc3d-b241-49c2-88a6-e524975a214b",
+      "name": "Search URL Preparation",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.6,
+      "position": [
+        -1420,
+        4180
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LSihAOI8NTU3m5ce",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return { data: $input.all()[0].json.message.content\n  .replace(\"```\", \"\")\n  .replace(\"\\n\", \"\")}"
+      },
+      "id": "c2ec4f29-98c9-4823-b0f8-249c8895e2a2",
+      "name": "Clean URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        4180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return { response: $input.all() };"
+      },
+      "id": "8faad955-2d11-4ded-a853-dab5a6479c1f",
+      "name": "Parse Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        4180
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SERP Search Engine": {
+      "main": [
+        [
+          {
+            "node": "Search URL Preparation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Crawler": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request To Serper": {
+      "main": [
+        [
+          {
+            "node": "Parse Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search URL Preparation": {
+      "main": [
+        [
+          {
+            "node": "Clean URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean URL": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request To Serper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "178bb9ca-f1fb-42dd-9971-8cf828a41144",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ae59e6b831344dba624c99cbe778a4bc47150f8e64de86a8011d15bac8e58c21"
+  },
+  "id": "sITO4n14lggcpEjr",
+  "tags": []
+}

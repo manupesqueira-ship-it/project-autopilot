@@ -1,0 +1,196 @@
+{
+  "name": "My workflow 18",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        -192
+      ],
+      "id": "f9503627-dd97-4c21-bbf6-6580cd12b2c1",
+      "name": "When chat message received",
+      "webhookId": "a2cf91e4-ed33-44e6-a375-97a9790a38e0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=** Role **\nYou are a Research AI Agent.  \nYour goal is to find accurate information from reliable sources and summarize it clearly.  \n\n** Tools Available **  \n1. **perplexity** – Use this to look up real-time or external information.  \n\n** Instructions **\n1. Always search before answering.  \n2. Summarize findings in clear, short sentences.  \n3. If information is missing, state that it is not available.  \n4. Never add personal opinions.  \n5. Return only relevant results.  \n\n** Examples **\n### Input:  \n\"What is the capital of Japan?\"  \n\n** Expected Output ** \n\"The capital of Japan is Tokyo.\"  \n\n** Final Notes **\n- Keep answers concise and factual.  \n- Time now: {{$now}}  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6537af17-4ca2-4db1-8c29-15a8f80c777a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        192
+      ],
+      "id": "afb14e4a-babc-4b6b-bfe0-c839cad41e85",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "WtJ26cE2cO50Qa9P",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "sonar",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        368,
+        192
+      ],
+      "id": "1ce319d0-fe1c-475f-992a-516b1ea0a7c2",
+      "name": "Message a model in Perplexity",
+      "credentials": {
+        "perplexityApi": {
+          "id": "9OYMdGgwdEAxy7Am",
+          "name": "Perplexity account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "e299a1d5-a7ac-4786-ad73-6c81391b32ed",
+      "name": "Telegram Trigger",
+      "webhookId": "b6b59985-dd26-46ef-b189-3463150f0b46",
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "b1636189-6f43-4fcb-a9ef-20a439f79cd9",
+      "name": "Send a text message",
+      "webhookId": "5d2dd585-f3eb-4920-a0c7-1bf6bb5f5cf2",
+      "credentials": {
+        "telegramApi": {
+          "id": "jEAOmG1laighjqY6",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c99754f2-552f-4198-b31e-9989d08b6845",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8ec8bfddbd59fdde442d5ed0bec9c8e336f78ad4e7b2c1393fe111ac5a29897c"
+  },
+  "id": "1mGmAfSkzpkV075B",
+  "tags": []
+}

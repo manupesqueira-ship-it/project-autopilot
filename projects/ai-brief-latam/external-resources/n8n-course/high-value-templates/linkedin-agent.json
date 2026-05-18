@@ -1,0 +1,371 @@
+{
+  "name": "Linkedin Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        460
+      ],
+      "id": "6d3a00da-bd61-4fb1-a334-366b6044f51d",
+      "name": "When chat message received",
+      "webhookId": "a184142a-236a-4e00-a23a-eb4968008d6d"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        120,
+        740
+      ],
+      "id": "4e229940-cbee-4170-885a-f6c7e4d07d31",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GsKxETmhSwjWfMdU",
+          "name": "OpenAi account 5"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "00be9b29-cbc9-4b5c-bbf1-1ba626b9cb23",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Gets the Linkedin URL of a person. Requires a query of a person's name. Only run once.\n\n\n\n\n\n\n",
+        "method": "POST",
+        "url": "HERE ADD YOUR APIFY ACTOR URL ",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"forceExactMatch\": false,\n    \"includeIcons\": false,\n    \"includeUnfilteredResults\": false,\n    \"maxPagesPerQuery\": 1,\n    \"mobileResults\": false,\n    \"queries\": \"site:linkedin.com/in {query}\",\n    \"resultsPerPage\": 3,\n    \"saveHtml\": false,\n    \"saveHtmlToKeyValueStore\": true\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "query",
+              "description": "The name of the person and a relevant keyword."
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        880
+      ],
+      "id": "bfaace39-b293-4464-9548-3acce4bfe025",
+      "name": "Get Prospect URL"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Retrieves a company's LinkedIn profile details using its LinkedIn URL.\n\n\n\n\n\n\n\n",
+        "method": "POST",
+        "url": "HERE ADD YOUR APIFY ACTOR URL ",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"url\": [\n\"{linkedinpersonurl}\"\n    ]\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "linkedinpersonurl",
+              "description": "The Linkedin URL of the company to scrape."
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        880
+      ],
+      "id": "0822d38c-b659-4a55-ae1a-a98aa00d4e5a",
+      "name": "Linkedin Company"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Find a company's LinkedIn URL using its name as a search query.\n\n\n\n\n\n\n\n",
+        "method": "POST",
+        "url": "HERE ADD YOUR APIFY ACTOR URL ",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"forceExactMatch\": true,\n    \"includeIcons\": true,\n    \"includeUnfilteredResults\": false,\n    \"maxPagesPerQuery\": 2,\n    \"mobileResults\": true,\n    \"resultsPerPage\": 5,\n    \"saveHtml\": false,\n    \"saveHtmlToKeyValueStore\": false,\n    \"queries\": \"site:linkedin.com/in {query}\"\n\n}\n",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "query",
+              "description": "The company's name along with a related keyword."
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        860
+      ],
+      "id": "77061b81-72f3-4e71-8221-ba62e2ec70aa",
+      "name": "Get Company URL"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Retrieves a person's email address using their LinkedIn profile URL.\n\n\n\n\n\n\n\n",
+        "method": "POST",
+        "url": "https://app.findymail.com/api/search/linkedin",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Authorization",
+              "valueProvider": "fieldValue",
+              "value": "Bearer HERE ADD YOUR TOKEN API"
+            },
+            {
+              "name": "Content-Type",
+              "valueProvider": "fieldValue",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"linkedin_url\": \"{linkedinpersonurl}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "linkedinpersonurl",
+              "description": "The URL of the person's linkedin to find their email."
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        940
+      ],
+      "id": "d529becf-5f06-4ae1-b9f0-9ed0f7e26f68",
+      "name": "Prospects Email"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Extracts data from a person's LinkedIn profile. Needs a LinkedIn URL first. Executes only once per request.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "method": "POST",
+        "url": "HERE ADD YOUR APIFY ACTOR URL ",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"url\": [\n\"{linkedinpersonurl}\"\n    ]\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "linkedinpersonurl",
+              "description": "The Linkedin URL of the person to scrape their profile."
+            }
+          ]
+        },
+        "optimizeResponse": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        880
+      ],
+      "id": "a44047ab-1607-4ea4-a9f1-849d14c1ee15",
+      "name": "Prospects  Linkedin"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=Overview\nYou are an AI agent specialized in researching individuals and companies. Your task is to gather and deliver relevant information efficiently using the tools available.\n\n\n\nGuidelines\nUtilize the provided tools to retrieve accurate and useful data based on the user’s request.\nIf a request is unclear or outside your scope make the best possible effort to provide relevant insights.\nKeep responses concise and to the point"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        640,
+        460
+      ],
+      "id": "dfc929fe-8f09-4811-9118-cb94283a90e6",
+      "name": "Linkedin Agent"
+    },
+    {
+      "parameters": {
+        "content": "ADD YOUR APIFY ACTOR URL FROM:\n \nhttps://console.apify.com/actors/AjfNXEI9qTA2IdaAX/input"
+      },
+      "id": "811c7f06-fe39-443b-8fac-30872b204d7c",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "content": "ADD YOUR APIFY ACTOR URL FROM:\n\nhttps://console.apify.com/actors/nFJndFXA5zjCTuudP/input\n\nTO:\nGet Prospect URL\nGet Company URL\n",
+        "color": 3
+      },
+      "id": "8c07a956-a970-4113-ad99-bfe97d5db604",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        780,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "content": "ADD YOUR APIFY ACTOR URL FROM:\n\nhttps://console.apify.com/actors/4hIIxSVhFaoZn8fHg/input\n\n",
+        "color": 4
+      },
+      "id": "231ff765-6f17-498b-9090-7544dbf75a12",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        1060
+      ]
+    },
+    {
+      "parameters": {
+        "content": "ADD YOUR API Token from:\n\nhttps://www.findymail.com/\n\n",
+        "color": 6
+      },
+      "id": "c09143a9-ec18-4a72-b988-8813fef2ff58",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        1100
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prospect URL": {
+      "ai_tool": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prospects  Linkedin": {
+      "ai_tool": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin Company": {
+      "ai_tool": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Company URL": {
+      "ai_tool": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prospects Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "Linkedin Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "22f7dd91-e033-4ab4-8b79-a2397dc72e2d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d1853d6d92799d2de46a947c80ac9a5af91665397cc93a1b568769b332366e37"
+  },
+  "id": "pZ6KVSNrD4u3wicb",
+  "tags": []
+}

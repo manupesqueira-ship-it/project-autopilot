@@ -1,0 +1,390 @@
+{
+  "name": "Professional Logos Creator",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-image-1\",\n  \"prompt\": \"{{ $json.escapedString }}\",\n  \"n\": 1,\n  \"size\": \"1024x1024\",\n  \"quality\": \"high\"\n}",
+        "options": {}
+      },
+      "id": "12b2c613-6f61-4ffc-984a-90852e091bca",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1880,
+        320
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "QivR7SxB24l8KozV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "id": "f7c6d5e4-5ed5-4e14-91d8-0c4809762c62",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        2080,
+        320
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.content }}",
+        "options": {
+          "systemMessage": "=You are a creative prompt generation assistant specialized in professional logo design enhancement.\n\nYour job is to analyze an existing logo concept and generate a new, upgraded version that preserves the original layout, symbol placement, and message, while enhancing the visual style, branding quality, and professionalism.\n\n- Keep all key elements intact: icon, text, and composition — do not remove or reposition major components.\n\n- Suggest typography that aligns with the brand identity (e.g., modern sans-serif, elegant serif, geometric, tech-inspired), and refine alignment, spacing, and balance.\n\n- Do not add textures, illustrative elements, or emotional effects — the logo must remain clean, minimal, and scalable.\n\n- Ensure the logo appears clearly on a transparent background, with crisp contrast, vector-like sharpness, and a flat, brand-ready style.\n\n- Use precise and descriptive natural language to write a single, compact prompt suitable for tools like Midjourney or DALL·E.\n\n\n\n** Rule **\n\nOutput only the final design prompt as a single plain-text sentence, no markdown, no line breaks. Return it as a prompt format for model to generate an image.\n\nFormat the output as one clean line, with escaped double quotes (\") where needed for use inside a JSON string.\n\nThe prompt must include key elements: logo type, icon style, font category, layout, transparent background, and high-quality branding language. No formatting artifacts.\n\n"
+        }
+      },
+      "id": "d3cc418c-a306-4fb1-8091-b00b5c00b842",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1240,
+        320
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "GPT-4O"
+        },
+        "imageUrls": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {}
+      },
+      "id": "4821e71f-5b04-4e8d-a754-a2850cb740b9",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        1060,
+        320
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "QivR7SxB24l8KozV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "cc97ac2f-f04f-44ec-a214-f19581c1a199",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1160,
+        540
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "QivR7SxB24l8KozV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9baafa93-f4f0-4fa2-9c5d-8aa221fc012f",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        440,
+        340
+      ],
+      "webhookId": "2d4ac4af-8b40-4ead-a546-783e7385a513",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cb4e9a22-d429-4d11-b536-5d8760dd5042",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{ $json.chatInput }}",
+              "rightValue": "https://"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "74df6cf4-a1c9-456b-b433-d80e943ee835",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        800,
+        340
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawContent = $json.output;\n\n// 1. Replace all line breaks with spaces\nlet cleaned = rawContent.replace(/\\n/g, ' ');\n\n// 2. Trim any extra spaces at the beginning and end\ncleaned = cleaned.trim();\n\n// 3. Escape backslashes and double quotes for JSON safety\nlet escaped = cleaned.replace(/\\\\/g, '\\\\\\\\').replace(/\"/g, '\\\\\"');\n\n// 4. Remove leading or trailing escaped quotes if accidentally included\nescaped = escaped.replace(/^\\\\\\\"/, '').replace(/\\\\\\\"$/, '');\n\n// 5. Return the cleaned and fully escaped string\nreturn [\n  {\n    json: {\n      escapedString: escaped\n    }\n  }\n];\n"
+      },
+      "id": "60cadef1-f1dc-4b6e-9d5e-e41d4cd76a8e",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1620,
+        320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## Provide an image URL",
+        "height": 320,
+        "width": 400,
+        "color": 4
+      },
+      "id": "4914ffb9-4a0c-4ca1-9a05-dc0796b15b53",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        300,
+        220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Analyze image and generate a new prompt",
+        "height": 580,
+        "width": 540,
+        "color": 6
+      },
+      "id": "017af79f-5dba-489d-917a-eaa29884e2b2",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1020,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Create a new Logo",
+        "height": 320,
+        "width": 460,
+        "color": 3
+      },
+      "id": "17d29650-f74d-4744-abb2-9a70897aa607",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1800,
+        220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "name": "test",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1L0LXIYtmiHOj-Y0BB2cRmWppT9FAQvUy",
+          "mode": "list",
+          "cachedResultName": "T-Shirt Designs",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1L0LXIYtmiHOj-Y0BB2cRmWppT9FAQvUy"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2460,
+        320
+      ],
+      "id": "396758b3-ae18-4707-b7ee-f639c54605c5",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lWWlmCXTllWWEiUS",
+          "name": "Google Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Check if the message is a URL",
+        "height": 320,
+        "width": 280,
+        "color": 5
+      },
+      "id": "def80143-71d5-4840-a107-0cc59fe25dbb",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        220
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Save Your Design",
+        "height": 320,
+        "width": 460
+      },
+      "id": "166e83b5-7fea-4f91-ace4-110b5a38019b",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2280,
+        220
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "406c2e87-f9d5-441c-b9dc-7b77b33ff494",
+  "meta": {
+    "templateId": "3959",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f96a7e8659163312cbaf16ad76688747ea79fa6bf8e4ec720c14444abdf2c12c"
+  },
+  "id": "zI8KuCGXKuPLYQnM",
+  "tags": []
+}
