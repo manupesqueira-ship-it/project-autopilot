@@ -210,7 +210,7 @@ Manuel pasa a Fase 0 (smoke test n8n) cuando:
 
 Manuel pasa a Fase 1 (pipeline completo) cuando:
 1. Fase 0 entregó ≥3 briefs decentes en Telegram (≥1 al día por 3 días).
-2. Decisión ADR-004 (publisher) tomada.
+2. Decisión publisher confirmada (ADR-012 → ADR-014: Upload-Post).
 3. Cuenta Supabase creada con el schema de `infra/supabase/migrations/001_initial.sql` aplicado.
 4. Decisión sobre plan n8n (Starter / Pro / self-hosted) tomada.
 

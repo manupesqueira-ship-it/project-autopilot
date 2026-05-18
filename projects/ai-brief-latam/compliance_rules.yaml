@@ -1,10 +1,67 @@
 ---
-platform: instagram
-compliance:
-  - no_copyright_violation
-  - cite_sources
-  - distinguish_announced_vs_launched
-  - no_unverifiable_claims
-  - business_account_required
+# AI Brief LATAM — Compliance rules
+# Última actualización: 2026-05-18 (sincronizado con a9-compliance.md)
+#
+# NOTA: Este archivo era un stub del MVP Python pre-pivot a n8n.
+# Las reglas COMPLETAS y operativas viven en:
+#   projects/ai-brief-latam/prompts/a9-compliance.md
+#
+# Este archivo se mantiene como (a) vista resumen rápida para
+# operadores humanos y (b) flags configurables que el workflow n8n
+# puede leer si necesita ajustar comportamiento dinámicamente.
+
+platform_targets:
+  - instagram
+  - tiktok
+  - newsletter_beehiiv
+
+# Switch para activar disclaimers financieros — se activa cuando
+# arranque Crypto Brief LATAM (property #2). Para AI Brief LATAM = false.
 financial_disclaimer_required: false
+
+# Fuente de verdad de las reglas detalladas (15 reglas total)
+detailed_rules_source: projects/ai-brief-latam/prompts/a9-compliance.md
+
+# Resumen de reglas (subset, info-only — el prompt tiene el detalle)
+summary_rules:
+  meta_instagram:
+    - no_copyright_violation
+    - cite_sources
+    - distinguish_announced_vs_launched
+    - no_unverifiable_claims
+    - business_account_required
+    - no_financial_claims_without_disclaimer
+    - max_30_hashtags
+  brand_voice:
+    - no_hype_without_reason
+    - no_irresponsible_predictions
+    - no_listicles_without_substance
+    - max_1_emoji_per_phrase
+    - spanish_neutral_latam
+    - cifras_with_context
+    - por_que_importa_in_newsletter
+
+# Patterns prohibidos (idénticos a risk_profile.yaml para evitar drift)
+forbidden_patterns:
+  - "esto va a cambiar el mundo"
+  - "el fin de [industria]"
+  - "reemplaza completamente a"
+  - "revolutionary"
+  - "game-changing sin razón"
+
+# Severidades del compliance check (alineado con a9-compliance.md)
+severity_levels:
+  block: DEBE corregirse antes de publicar
+  warning: DEBERÍA corregirse, no bloquea
+  info: observación, sin acción requerida
+
+# Verdict global posible
+verdicts:
+  - approved
+  - approved_with_warnings
+  - blocked
+
+# Cuántos retries antes de descartar una pieza con verdict=blocked
+max_compliance_retries: 2
+
 ---

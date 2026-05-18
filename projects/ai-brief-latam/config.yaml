@@ -1,19 +1,64 @@
 ---
+# AI Brief LATAM — Project config
+# Última actualización: 2026-05-18 (sincronizado con ADRs vigentes y decisiones A-E de OPEN_QUESTIONS)
+
 property: ai-brief-latam
 status: active
-phase: 1-manual-mvp
+phase: 0-smoke-test                # 2026-05-18: diseño cerrado, ejecución Fase 0 pendiente
 priority: 1
 description: IA para founders, operadores y profesionales de LATAM
 language: es-neutral
+
+# Referencias a archivos de configuración granular
 brand_voice_file: brand_voice.md
 sources_file: sources.yaml
 risk_profile_file: risk_profile.yaml
 compliance_rules_file: compliance_rules.yaml
+post_standard_file: ../../docs/POST_STANDARD.md
+prompts_dir: ./prompts
+
+# Cadencia operacional (OPEN_QUESTIONS A + ADR-011)
 cadence:
-  instagram: 3-5 per week
-  newsletter: 1 weekly
+  instagram_carousel: daily          # 1 carousel/día, ADR-011
+  tiktok_caption: daily              # paralelo al carousel IG (OPEN_QUESTIONS A)
+  newsletter: daily                  # daily al inicio, switcheable a weekly si fricción alta
+  reel: weekly_phase_2               # 3-4 reels/semana en Fase 2 (post ElevenLabs)
+
+# Stack de publishing (ADR-014 + STACK v3)
 publishing:
-  platform: instagram
-  newsletter: beehiiv
-  scheduler: tbd-decided-in-phase-1
+  primary_platforms:
+    - instagram
+    - tiktok
+    - beehiiv
+  scheduler: upload-post             # ADR-014: community node n8n
+  scheduler_backup: blotato          # Plan B si Upload-Post falla
+  manual_fallback: buffer            # Plan C: degraded mode manual
+
+# Stack de infraestructura (ADR-015 + STACK v3)
+infrastructure:
+  orchestrator: n8n-community        # ADR-009
+  deployment: hostinger-vps-kvm2     # ADR-015
+  database: supabase-postgres        # OPEN_QUESTIONS C
+  storage: supabase-storage          # bucket "assets"
+  hitl: telegram-bidireccional       # OPEN_QUESTIONS B
+
+# Stack de generación (ADRs 008, 013)
+generation:
+  llm_editorial: claude-opus-4       # A3, A4, A7, A8d, A9, A11
+  llm_scoring: claude-sonnet-4-5     # A1.5, A2 (cheap batch)
+  image: openai-gpt-image-2          # A8a, ADR-013
+  video: seedance-2                  # A8b, Fase 2
+  audio: elevenlabs-voice-clone      # A8c, ADR-008, requiere grabación 20 min
+
+# Pre-requisitos pendientes (open items)
+pending:
+  - manuel_create_telegram_bot
+  - manuel_create_anthropic_api_key
+  - manuel_apply_hostinger_runbook    # docs/runbooks/hostinger-vps-n8n-setup.md
+  - manuel_create_supabase_project
+  - manuel_create_upload_post_account
+  - manuel_record_voice_for_elevenlabs # Fase 2 blocker
+  - manuel_register_domain             # OPEN_QUESTIONS L
+  - manuel_define_buyer_persona        # OPEN_QUESTIONS J
+
 ---

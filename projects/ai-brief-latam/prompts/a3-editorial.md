@@ -64,7 +64,7 @@ Risk flags: {{ JSON.stringify($json.risk_flags || []) }}
 
 ## Output esperado
 
-JSON con todos los fields del brief estructurado. Anclado en el Anexo A del MASTER_PLAN viejo (que ahora vive en este prompt directo).
+JSON con todos los fields del brief estructurado. El schema vive completo en este prompt — no depende de archivos externos. (Originalmente Anexo A del MASTER_PLAN, decompuesto el 2026-05-10).
 
 Campos críticos para downstream:
 - `hook_tentativo` → va al slide 1 del carousel + primeros 3s del reel

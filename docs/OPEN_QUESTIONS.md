@@ -24,7 +24,7 @@
 | K | Cadencia de lanzamiento (deadlines) | ⏳ Pendiente |
 | L | Handle IG + logo | ⏳ Pendiente |
 | M | Newsletter footer (dirección física CAN-SPAM) | ⏳ Pendiente |
-| N | ADR-004 publisher | ⏳ Pendiente (Blotato vs Buffer vs Upload-Post) |
+| N | Publisher (ADR-012 → ADR-014) | 🟡 Propuesto Upload-Post — Manuel confirma |
 | O | Plan n8n cloud | ⏳ Pendiente (Pro vs self-hosted vs reduce polling) |
 
 ---
@@ -119,7 +119,7 @@ Antes de las preguntas, lo que ya no se discute (a menos que vos lo abras):
 | Voice clone: ElevenLabs 100% | ADR-008 | Firme pero pendiente grabación |
 | Volumen: 1 pieza/día Fase 1 | ADR-011 | Firme |
 | Ángulo editorial: generalista LATAM | ADR-010 | Firme con refinamiento mes 2 |
-| Publisher: TBD Blotato vs Upload-Post | ADR-004 | Pendiente decisión |
+| Publisher: Upload-Post (resuelve ADR-012) | ADR-014 | Propuesto — Manuel confirma |
 | Voz: Smart Brevity + Morning Brew + español neutro CDMX | brand_voice.md | Firme |
 | Hooks: framework Rufusocial (atención + tensión + promesa) | brand_voice.md | Firme |
 | 11 agents conceptuales | AGENTS_SPEC.md | Firme conceptualmente, falta implementación |
@@ -169,7 +169,7 @@ Items que descubrí en el diseño y necesitan tu definición. NO son críticos p
   - Coworking / dirección comercial alquilada
   - Dirección de empresa LLC si AI Brief LATAM se incorpora formalmente
 
-### N — Decisión ADR-004: publisher
+### N — Decisión publisher (ADR-012 → ADR-014)
 
 **Pendiente desde sesión 2.** Necesario para spec del node A10 de Fase 1.
 

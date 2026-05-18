@@ -24,7 +24,7 @@
 | Fase | Nodes | Goal | Bloqueante para siguiente |
 |---|---:|---|---|
 | **Fase 0 — smoke test** | ~12 | Validar que la cadena Claude (scoring + editorial) llega a Telegram con un brief decente | Aprobación de Manuel del brief en Telegram |
-| **Fase 1 — pipeline completo** | ~75-90 | 11 agents end-to-end con publish automático | Decisión publisher (ADR-004) + Supabase schema + Telegram callback HITL |
+| **Fase 1 — pipeline completo** | ~75-90 | 11 agents end-to-end con publish automático | Decisión publisher (ADR-014 Upload-Post) + Supabase schema + Telegram callback HITL |
 
 **Por qué dos fases:** ir directo a Fase 1 con un JSON de 90 nodes nuevos es alto riesgo. Fase 0 valida que el corazón del pipeline (LLM scoring + LLM editorial + delivery a Telegram) funciona en condiciones reales antes de invertir en image gen, compliance, publishing.
 
@@ -325,7 +325,7 @@ El deep review descubrió un costo escondido: 12 fuentes × polling múltiple + 
 
 ### Open items para Fase 1 (no bloqueantes para Fase 0)
 
-1. **ADR-004 — publisher:** Blotato vs Upload-Post vs Buffer. Decidir antes de A10.
+1. **ADR-014 — publisher:** Upload-Post (resuelve ADR-012). Pendiente confirmación Manuel.
 2. **Schema Supabase:** tablas `dedup_history`, `briefs`, `posts_published`, `costs`, `compliance_log` + bucket `assets`. A diseñar.
 3. **Telegram HITL bidireccional:** patrón completo (Trigger + inline keyboard + callback parse) — inspirado en #9472 y #5773. Decidir si lo importamos como base o lo construimos custom.
 4. **Threshold de scoring:** Fase 0 usa 50. Subir a 65-70 una vez que haya data real.
