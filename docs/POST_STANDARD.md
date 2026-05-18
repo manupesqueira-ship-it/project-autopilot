@@ -645,7 +645,7 @@ Equivalente al mock-up del carousel pero para el formato newsletter. Email se ve
 6. **Más de 1 emoji por frase**
 7. **Cifras sin fuente** ("$1B" sin "reportado por X")
 8. **Copy textual de otra fuente** sin transformación sustancial
-9. **Claims financieros sin disclaimer** (cuando aplique en Crypto Brief)
+9. **Claims financieros sin disclaimer** (raro en how-to IA, pero aplica si la pieza toca dinero/inversión)
 10. **Forbidden patterns:** "esto va a cambiar el mundo", "el fin de [industria]", "reemplaza completamente a"
 
 ### Hard YES's — siempre

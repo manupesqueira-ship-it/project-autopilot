@@ -1,12 +1,17 @@
 ---
 # AI Brief LATAM — Project config
-# Última actualización: 2026-05-18 (sincronizado con ADRs vigentes y decisiones A-E de OPEN_QUESTIONS)
+# Última actualización: 2026-05-18 (ADR-016 pivot estratégico)
+# NOTA: nombre del proyecto pending rename — la carpeta `ai-brief-latam` se mantiene
+# hasta que Manuel confirme el nombre nuevo. Ver brand_voice.md "Notas sobre el rename".
 
-property: ai-brief-latam
+property: ai-brief-latam                  # legacy name, pending rename
+new_name_tentative: ai-how-to-latam       # provisional, NO confirmed
 status: active
-phase: 0-smoke-test                # 2026-05-18: diseño cerrado, ejecución Fase 0 pendiente
+phase: -1-manual-validation              # ADR-016: validación manual ANTES de smoke test técnico
 priority: 1
-description: IA para founders, operadores y profesionales de LATAM
+
+description_v1: "IA para founders, operadores y profesionales de LATAM (news brief)"
+description_v2: "Cómo usar IA práctico para profesionales LATAM (how-to accionable)"  # ADR-016
 language: es-neutral
 
 # Referencias a archivos de configuración granular
@@ -17,48 +22,75 @@ compliance_rules_file: compliance_rules.yaml
 post_standard_file: ../../docs/POST_STANDARD.md
 prompts_dir: ./prompts
 
-# Cadencia operacional (OPEN_QUESTIONS A + ADR-011)
-cadence:
-  instagram_carousel: daily          # 1 carousel/día, ADR-011
-  tiktok_caption: daily              # paralelo al carousel IG (OPEN_QUESTIONS A)
-  newsletter: daily                  # daily al inicio, switcheable a weekly si fricción alta
-  reel: weekly_phase_2               # 3-4 reels/semana en Fase 2 (post ElevenLabs)
+# Cadencia operacional (post-ADR-016 — sigue Fase 1 spec, no Fase -1)
+# Fase -1 (validación manual): 5-10 piezas en 7-14 días, sin cadencia fija
+# Fase 0+ (técnica): cadencia abajo aplica
+cadence_phase_1_plus:
+  instagram_carousel: daily              # 1 carousel/día, ADR-011
+  tiktok_caption: daily                  # paralelo al carousel IG (OPEN_QUESTIONS A)
+  newsletter: daily                      # daily al inicio, switcheable a weekly si fricción alta
+  reel: weekly_phase_2                   # 3-4 reels/semana en Fase 2 (post ElevenLabs)
 
-# Stack de publishing (ADR-014 + STACK v3)
+# Stack de publishing (ADR-014 + STACK v3, condicional en Build vs Buy post-Fase -1)
 publishing:
   primary_platforms:
     - instagram
     - tiktok
     - beehiiv
-  scheduler: upload-post             # ADR-014: community node n8n
-  scheduler_backup: blotato          # Plan B si Upload-Post falla
-  manual_fallback: buffer            # Plan C: degraded mode manual
+  scheduler: upload-post                 # ADR-014: community node n8n
+  scheduler_backup: blotato              # Plan B si Upload-Post falla
+  manual_fallback: buffer                # Plan C: degraded mode manual
+  build_vs_buy_status: pending           # Decisión post-Fase -1 + Deep Research output
 
-# Stack de infraestructura (ADR-015 + STACK v3)
+# Stack de infraestructura (ADR-015 + STACK v3, condicional en Build vs Buy)
 infrastructure:
-  orchestrator: n8n-community        # ADR-009
-  deployment: hostinger-vps-kvm2     # ADR-015
-  database: supabase-postgres        # OPEN_QUESTIONS C
-  storage: supabase-storage          # bucket "assets"
-  hitl: telegram-bidireccional       # OPEN_QUESTIONS B
+  orchestrator: n8n-community            # ADR-009
+  deployment: hostinger-vps-kvm2         # ADR-015
+  database: supabase-postgres            # OPEN_QUESTIONS C
+  storage: supabase-storage              # bucket "assets"
+  hitl: telegram-bidireccional           # OPEN_QUESTIONS B
 
 # Stack de generación (ADRs 008, 013)
 generation:
-  llm_editorial: claude-opus-4       # A3, A4, A7, A8d, A9, A11
-  llm_scoring: claude-sonnet-4-5     # A1.5, A2 (cheap batch)
-  image: openai-gpt-image-2          # A8a, ADR-013
-  video: seedance-2                  # A8b, Fase 2
-  audio: elevenlabs-voice-clone      # A8c, ADR-008, requiere grabación 20 min
+  llm_editorial: claude-opus-4           # A3, A4, A7, A8d, A9, A11
+  llm_scoring: claude-sonnet-4-5         # A1.5, A2 (cheap batch)
+  image: openai-gpt-image-2              # A8a, ADR-013
+  video: seedance-2                      # A8b, Fase 2
+  audio: elevenlabs-voice-clone          # A8c, ADR-008, requiere grabación 20 min
+
+# Voz y posicionamiento (post-ADR-016)
+voice_calibration:
+  strategy: viral-hype-calibrado          # hook emocional + body sobrio
+  reference_top: NeoCom + Filo News       # 1M+ LATAM en 2-3 años
+  reference_anti: Bloomberg-frío puro    # premium puede saturar en 30K
+  hook_style: emocional/contrarian       # primeros 3s
+  body_style: smart-brevity-sobrio       # post-hook
+
+# Niche
+niche_calibration:
+  primary: ai-how-to-practico            # cómo USAR herramientas IA
+  secondary: ai-news-light               # menciones de news cuando son how-to-relevant
+  anti: ai-philosophy / ai-theory        # no cubrimos lo abstracto
+  audience: profesional-latam-25-45      # knowledge worker, manager, founder
+  pain_points:                            # qué resolvemos
+    - "no sé qué prompt usar para X"
+    - "cuánto tiempo ahorro con IA"
+    - "qué herramienta IA es mejor para Y"
+    - "cómo justifico IA en mi trabajo"
 
 # Pre-requisitos pendientes (open items)
 pending:
-  - manuel_create_telegram_bot
-  - manuel_create_anthropic_api_key
-  - manuel_apply_hostinger_runbook    # docs/runbooks/hostinger-vps-n8n-setup.md
-  - manuel_create_supabase_project
-  - manuel_create_upload_post_account
-  - manuel_record_voice_for_elevenlabs # Fase 2 blocker
-  - manuel_register_domain             # OPEN_QUESTIONS L
-  - manuel_define_buyer_persona        # OPEN_QUESTIONS J
+  - manuel_execute_fase_minus_1            # Validación Manual 5-10 piezas (ADR-016)
+  - manuel_run_5_deep_research_prompts     # docs/DEEP_RESEARCH_PROMPTS.md
+  - manuel_decision_build_vs_buy           # Blotato evaluation
+  - manuel_confirm_new_name                # rename físico carpeta
+  - manuel_create_telegram_bot             # solo si Build decision = custom
+  - manuel_create_anthropic_api_key        # solo si Build decision = custom
+  - manuel_apply_hostinger_runbook         # solo si Build decision = custom
+  - manuel_create_supabase_project         # solo si Build decision = custom
+  - manuel_create_upload_post_account      # solo si Build decision = custom
+  - manuel_record_voice_for_elevenlabs     # Fase 2 blocker
+  - manuel_register_domain                  # OPEN_QUESTIONS L
+  - manuel_define_buyer_persona             # OPEN_QUESTIONS J — más concreto post-Fase -1
 
 ---

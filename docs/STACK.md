@@ -32,7 +32,7 @@
 | Tool | Por qué diferido | Reabrir cuándo |
 |---|---|---|
 | **Cursor** | Manuel no edita prompts manualmente; Claude lo hace desde chat | Si Manuel empieza a iterar prompts solo |
-| **Perplexity Pro** | Claude web_search nativo cubre el fact-check del pipeline; Perplexity sería para Manuel personal | Si Manuel arranca Crypto Brief/Startup Radar con Deep Research frecuente |
+| **Perplexity Pro** | Claude web_search nativo cubre el fact-check del pipeline; Perplexity sería para Manuel personal | Si AI How-To LATAM valida y necesita Deep Research frecuente, o si los 5 prompts del 2026-05-18 requieren tool más robusta |
 | **Inoreader** | n8n directo a RSS es suficiente para las fuentes confirmadas | Si querés sumar fuentes sin RSS (Bloomberg Línea, Infobae, Pulso Social) |
 | **Lovable.dev** | No hay landing en Fase 1-2 | Fase 3+ si la newsletter necesita captura propia |
 | **Meta Graph API directo** | Upload-Post intermedia | Si Upload-Post + Blotato ambos fallan |

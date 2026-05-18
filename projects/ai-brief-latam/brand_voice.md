@@ -1,112 +1,238 @@
-# Brand Voice — AI Brief LATAM
-**Last updated:** 2026-05-07
+# Brand Voice — AI How-To LATAM
+**Last updated:** 2026-05-18 (revisado por ADR-016 pivot estratégico)
 **Sources:**
 - projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md
 - projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md
+- projects/ai-brief-latam/docs/research/deep-research/2026-05-08_social-media-niches-2026.md
+- docs/CRITICAL_REVIEW.md (2026-05-18) + ADR-016
 
-> Reglas data-backed para producción de contenido. Actualizar cuando research nueva justifique cambios.
+> **Cambio crítico 2026-05-18 (ADR-016):**
+> - Pivot de nicho: AI News brief → AI How-To práctico (cómo USAR herramientas IA)
+> - Pivot de voz: anti-hype sobrio → viral hype calibrado (hook emocional + body sobrio)
+> - Convicción full en UNA idea hasta validar
+>
+> El nombre "AI Brief LATAM" se mantiene en archivos hasta confirmación de nuevo nombre. El cambio físico (`projects/ai-brief-latam/` → nuevo path) está deferred.
 
-## Voz editorial: Smart Brevity + Morning Brew casual
+---
 
-**Inspiración:** Axios (Smart Brevity framework), Morning Brew (tono casual sobrio)
-**No copiar:** estética, branding, contenido específico
+## Nicho y posicionamiento
 
-### Reglas
+**Antes (v1):** AI Brief LATAM = news brief diario de IA. Modelo Rundown AI.
+**Ahora (v2 post-ADR-016):** AI How-To LATAM = contenido práctico **cómo USAR herramientas IA** para tareas concretas. Modelo: tutorial actionable de Mafia IA + voz emocional Filo News.
 
-1. **Bold phrases ("axiomas") + 1 frase o bullets.** No párrafos largos.
-2. **"Por qué importa" siempre presente.** Nunca se omite. Es el ingrediente sagrado.
-3. **Subject-verb-object simple.** Escribir como humano, no como corporativo.
-4. **Datos > opiniones.** Cifras concretas pegan más que adjetivos.
-5. **Bottom line al final.** Cierre con la conclusión accionable.
+**Pregunta que cada pieza debe responder:** "¿Cómo le hago para…?" en un dolor concreto del profesional LATAM.
+
+Ejemplos del tipo de pieza:
+- "Cómo usar Claude para responder 50 emails de tu jefe en 10 minutos"
+- "El prompt secreto que un manager LATAM debería tener en el celular"
+- "Probé 5 herramientas IA para presentaciones. Esta es la única que funciona en español"
+- "Lo que NADIE te dice sobre usar ChatGPT en tu trabajo (y por qué te van a despedir si lo haces mal)"
+
+**Diferenciador defensible:** específico LATAM + español neutro + práctico-accionable. No news, no theory, no philosophy.
+
+---
+
+## Voz editorial — modelo híbrido (calibrado por ADR-016)
+
+**Filosofía:** Hook viral emocional + body sobrio práctico. **Engancha como Filo, entrega como Smart Brevity.**
+
+### Hook (primeros 3 segundos del reel / primer 125 chars del caption)
+- **EMOCIONAL, contrarian, o de revelación.** No técnico, no anti-hype puro.
+- Permitido: "ESTO va a cambiar cómo trabajás", "El secreto que…", "Nadie te dice esto", "Probé X y…"
+- Pasa los 3 requisitos del framework Rufusocial: ATENCIÓN + TENSIÓN + PROMESA
+
+### Body (todo después del hook)
+- **SOBRIO, práctico, paso-a-paso.** Smart Brevity puro.
+- Cifras concretas con contexto
+- "Por qué importa" obligatorio
+- Datos > opiniones
+- Anti-hype EN EL BODY (la regla aplica al cuerpo, no al hook)
+
+### Por qué esta calibración
+
+Critical Review identificó que las cuentas que llegan a >1M LATAM (NeoCom 1.4M, Filo 1.8M) usan hooks emocionales. Las "sobrias" (Startupeable 27K, Ecosistema 12K) tienen techo más bajo.
+
+**Compromiso:** captamos atención como las virales, **pero entregamos valor real como las premium**. Audiencia llega por el hook, se queda por el contenido. Esta tensión es resoluble — no contradictoria.
+
+---
+
+## Reglas de voz (post-ADR-016)
+
+### Hard YES
+- Datos verificables con fuente (en body, no en hook)
+- "Por qué importa" explícito en cada pieza
+- Acción concreta y accionable (cada pieza enseña algo que el lector PUEDE hacer hoy)
+- Reconocer incertidumbre cuando existe ("Probé X. Funciona PARA mí. Tu caso puede variar")
+- Hook que pasa el framework Rufusocial (atención + tensión + promesa)
+
+### Hard NO
+- Hook técnico aburrido ("OpenAI lanza nuevo modelo")
+- Body con hype injustificado (el body es sobrio aunque el hook sea emocional)
+- Predicciones irresponsables sin caveat
+- Listicles vacíos ("10 prompts para…")
+- Memes baratos sin contexto
+- Marca de agua de TikTok/CapCut (penalización LATAM 30-40% reach)
+- Más de 1 emoji por frase
+
+### Permitido bajo calibración (cambio post-ADR-016)
+- Cifras grandes en hook con shock value, siempre que el body las contextualice
+- Contrarian claims ("La verdad sobre X que…") siempre que el body presente evidencia
+- Tono emocional en hook + CTA, sobrio en body
+- "Esto cambia" / "Esto rompe" en hook, "según el research" / "en mi prueba" en body
+
+---
 
 ## Idioma
+
 - **Español neutro LATAM.** Sin peninsular, sin extremos regionales.
 - **NO usar (peninsular):** vosotros, vuestro, vale, tío/tía, hostia, mola
 - **NO usar (extremo MX):** chido, padre, no manches, qué onda
 - **NO usar (extremo AR):** vos sos, che, viste, boludo, posta
 - **SÍ usar:** ustedes, nuestro, está bien, ¿no?, listo, claro, dale
-- Vocabulario técnico en inglés cuando es estándar (AI, AGI, LLM, agent, deployment, enterprise, brief).
-- Cifras siempre con contexto (no "$1.5B" suelto, sino "$1.5B reportado por WSJ").
+- Vocabulario técnico en inglés cuando es estándar (AI, AGI, LLM, agent, prompt, deployment, enterprise, workflow).
+- Cifras siempre con contexto en body (no "$1.5B" suelto, sino "$1.5B reportado por WSJ").
 
-## Reels (formato principal por ser video-first)
-- **Largo:** 25-35 segundos. Sweet spot validated for educational/news.
-- **Hook:** primeros 3 segundos = pattern interrupt brutal. Cifra grande, frase contraria, o claim sorprendente.
-- **Pacing:** jump cuts cada 3-4 seg. Texto en pantalla siempre (muchos ven sin sonido).
-- **Cierre:** CTA específico ("Guardá esto", "Compartí con tu equipo"). NO "Seguinos" genérico — saves > follows en algoritmo 2026.
-- **Audio:** original. NO marca de agua TikTok/CapCut (penalización LATAM 30-40% reach).
+---
 
-## Captions
-- **Largo:** bajo 150 chars total. Hook en primeros 125 chars (lo visible antes de "more").
-- **Estructura:** hook con cifra + 1 frase de contexto + CTA.
-- **Emojis:** 1-2 estratégicos máximo. No spam. Permitidos: ⚡ 🏦 💼 📊 → (flecha).
+## Formato — How-To específico
+
+### Reels (formato principal)
+- **Largo:** 25-35 segundos (sweet spot validated)
+- **Hook (0-3s):** emocional/contrarian + on-screen text grande
+- **Body (3-22s):** los pasos concretos del how-to, jump cuts 3-4s, texto en pantalla siempre
+- **Cierre (22-30s):** resultado mostrado + CTA específico ("Probalo en tu próxima reunión", "Guardá esto")
+- **Audio:** voice clone Manuel (ADR-008) — voz humana clonada cuenta como humana para algoritmo
+- **NO marca de agua TikTok/CapCut** (penalización LATAM 30-40%)
+
+### Carousels Instagram (formato secundario Fase 1)
+- **Slide 1 (HOOK):** cifra grande o claim emocional + visual standard §7
+- **Slides 2-N (PASOS):** cada slide = 1 paso accionable, con screenshot/visual si aplica
+- **Slide penúltima:** resultado/before-after o contexto LATAM
+- **Slide final:** CTA + branding wordmark
+- **Visual:** dark mode #0F0F10 + Inter + JetBrains Mono (POST_STANDARD §7)
+
+### Captions IG
+- **Largo:** bajo 150 chars total. Hook en primeros 125 chars (visible antes de "more").
+- **Estructura:** hook emocional + 1 frase de promesa + CTA
+- **Emojis:** 1-2 estratégicos máximo. Permitidos: ⚡ 🏦 💼 📊 → 🔥 ⚠️
 - **Hashtags:** 5-10 niche. Mix volumen alto + nicho específico. NO 30 broad.
 
-## Newsletter sections
-- **Largo:** 250-400 palabras por sección.
-- **Estructura Smart Brevity:** Headline punchy → "Por qué importa" → "Lo que pasó" (con flechas →) → contexto → "Bottom line".
-- **Línea LATAM siempre:** cierre con "Qué significa para LATAM" + 2-3 acciones específicas por audience.
+### TikTok captions
+- 100-300 chars (más largo que IG)
+- 3-5 hashtags trending
+- Tono más casual que IG (mismo contenido, calibración distinta)
 
-## Visual
-- Estética profesional pero NO Bloomberg-frío.
-- Más cercano a Morning Brew (casual + sobrio + smart) que a Bloomberg puro.
-- Caras reales del equipo cuando aplique (autenticidad > postureo en LATAM 2026).
+### Newsletter sections (Beehiiv)
+- **Largo:** 250-400 palabras por sección
+- **Estructura adoptada del template #12533:**
+  - Subject line emocional + 5 alternates
+  - Pre-header complementario
+  - Intro sin saludo, hook directo
+  - Top Story deep-dive Smart Brevity (sin meta-labels)
+  - Quick Hits 3-5 stories breves
+  - CTA close conversacional
 
-## Hook framework (Rufusocial 2026)
-Todo hook (Reel o caption) debe pasar las 3 condiciones:
-1. **ATENCIÓN** — número inesperado, frase contraintuitiva, pregunta directa, claim sorprendente
-2. **TENSIÓN** — vacío de información, problema sin resolver, conflicto que el espectador quiere ver cerrado
-3. **PROMESA** — anticipa recompensa concreta (vas a aprender X, evitar error Y, descubrir Z)
+---
+
+## Hook framework Rufusocial — calibrado para how-to
+
+Todo hook (Reel, caption, subject line) debe pasar las 3 condiciones:
+
+1. **ATENCIÓN** — patrón emocional: cifra inesperada / claim contrarian / pregunta directa / revelación
+2. **TENSIÓN** — el lector tiene UN problema concreto que la pieza promete resolver
+3. **PROMESA** — beneficio específico y testeable ("vas a aprender X en 3 minutos", "vas a evitar este error")
 
 **Crítico:** hook debe funcionar SIN sonido. Subtítulos = parte del hook visual. Primeros frames deben comunicar por sí solos.
 
-## Comunidad como pilar
-- "Comunidad" pega más que "audiencia" o "lectores" en LATAM.
-- Mencionar comunidad explícitamente en bio, taglines, CTAs cuando aplique.
-- "Únete a la comunidad" > "Síguenos"
-- "Lectores" sirve como sinónimo neutral.
+### Ejemplos calibrados para AI How-To LATAM
 
-## Tagline formula LATAM (probada)
-**Estructura:** VALOR + TIEMPO + IDIOMA/REGIÓN + PRECIO
-Ejemplos comprobados:
-- "Noticias del ecosistema startup en 2 minutos. Gratis, cada día hábil." (Ecosistema Startup, 12K IG)
-- "Newsletter más grande de IA de España y latinoamérica" (Digital Brain, 60K subs 42% open rate)
-- "El podcast sobre startups más escuchado en español" (Startupeable, 50K newsletter)
+| Hook | ATENCIÓN | TENSIÓN | PROMESA |
+|---|---|---|---|
+| "Despedí a mi analista. Esto hace Claude por la mitad del costo." | Contrarian fuerte | "¿Funcionará para mí?" | Reducción de costo concreta |
+| "El prompt que usé para escribir 50 emails en 20 min" | Cifra específica | "Yo tardo más" | Acceso al prompt |
+| "Probé 5 IAs para tu industria. Solo UNA sirve." | Pregunta latente | "¿Cuál?" | Comparativa práctica |
+| "Esto va a destruir tu reputación si lo haces mal con IA" | Riesgo emocional | "¿Lo estoy haciendo mal?" | Cómo evitarlo |
+
+---
+
+## Comunidad como pilar
+
+- "Comunidad" pega más que "audiencia" o "lectores" en LATAM
+- Mencionar comunidad explícitamente en bio, taglines, CTAs cuando aplique
+- "Únete a la comunidad" > "Síguenos"
+- "Lectores" sirve como sinónimo neutral
+
+---
+
+## Tagline formula LATAM (calibrada para how-to)
+
+**Estructura:** VALOR PRÁCTICO + TIEMPO + IDIOMA/REGIÓN + PRECIO
+
+Ejemplos a testear para nuestro caso:
+- "IA práctica para profesionales LATAM. 3 min al día. Gratis."
+- "Cómo usar IA en tu trabajo, en español, sin enrolarte en cursos caros."
+- "El how-to de IA que tu equipo necesita. LATAM, gratis, diario."
+
+(El tagline definitivo se elige después de Fase -1 con data de qué resuena con audiencia real.)
+
+---
 
 ## Multi-channel strategy
-- **NO all-in en Instagram.** El activo central es la newsletter (Beehiiv).
-- IG es UNO de varios canales de adquisición.
-- Considerar también: LinkedIn (Startupeable: 49K), podcast eventualmente, WhatsApp Channels.
-- Pattern probado: cross-pollination podcast → newsletter → IG → LinkedIn.
 
-## Benchmarks realistas LATAM (anclaje mental)
-- 1K followers = base creíble
-- 5K = niche success
-- 12-30K = top tier (Ecosistema Startup, Startupeable están acá)
-- 100K+ = excepcional (DotCSV, Nicolas Abril, son creators individuales con años)
-- 400K+ = no existe equivalente LATAM. The Rundown AI no tiene par regional.
-**Target realista para AI Brief LATAM:** 12-30K en 12-18 meses sería un home run.
+- **Activo central:** newsletter Beehiiv (propiedad propia, no depende de algoritmos IG/TikTok)
+- **IG + TikTok:** canales de adquisición que dirigen a newsletter
+- **LinkedIn (Fase 1.5):** evaluar — Startupeable demostró que LinkedIn funciona LATAM B2B
+- **WhatsApp Channels:** evaluar Fase 2+ — canal creciente LATAM
+- **Pattern probado:** cross-pollination podcast → newsletter → IG → LinkedIn
 
-## Hard NO's
-- Hype injustificado ("revolutionary", "game-changing" sin razón)
-- Predicciones irresponsables ("este modelo va a destruir X industria")
-- Listicles sin sustancia ("10 prompts para ganar dinero con IA")
-- Memes baratos
+---
+
+## Benchmarks realistas (recalibrados para how-to + viral path)
+
+**Antes (v1 sobrio):** 12-30K en 12-18 meses = home run.
+
+**Ahora (v2 calibrado):**
+- 5K = base creíble (Fase -1 validation)
+- 15K = niche success
+- 50K = top tier (objetivo 12 meses, viable con voz emocional + how-to)
+- 100K = excepcional (objetivo 18-24 meses)
+- 500K+ = NeoCom/Filo level (24-36 meses si el viral path engancha)
+
+**Target north star Manuel:** audiencia masiva (>100K en 12-18 meses). El path "viral hype calibrado + how-to práctico + LATAM" es la apuesta más coherente con esto.
+
+---
+
+## Hard NO's (post-ADR-016)
+
+- Body con hype injustificado (el hook puede ser emocional, el body NO)
+- Predicciones irresponsables sin caveat ("este modelo va a destruir X industria" sin matiz)
+- Listicles sin sustancia ("10 prompts para ganar dinero con IA" — vacuo)
+- Memes baratos sin valor educativo
 - Marca de agua de otras plataformas
 - Más de 1 emoji por frase
+- Pasar Smart Brevity por encima de claridad ("axiomas" no deben ser indescifrables)
 
-## Hard YES's
-- Datos verificables con fuente
+---
+
+## Hard YES's (post-ADR-016)
+
+- Datos verificables con fuente (en body)
 - "Por qué importa" explícito
-- Ángulo LATAM concreto
-- Voz neutral y respetuosa
-- Reconocer incertidumbre cuando existe ("WSJ reportó X, fuente no confirmada")
+- Acción concreta y accionable en cada pieza
+- Voz neutral y respetuosa en body
+- Reconocer incertidumbre cuando existe
+- Hook emocional que pasa Rufusocial framework
+- Mostrar Manuel como persona (face/voice ocasional) — autenticidad LATAM 2026
 
-## Voz narrada (audio en Reels)
+---
 
-**Voz primaria:** Manuel (locutor humano, español neutro mexicano CDMX).
-**Voz backup:** ElevenLabs (solo multi-idioma o overflow, NO default).
+## Voz narrada — clarification (post-ADR-008 + ADR-016)
 
-**Reglas de pronunciación neutralizada:**
+**Voz primaria:** ElevenLabs voice clone de Manuel (ADR-008 — voice clone 100%).
+**Pre-requisito:** grabación de 20-30 min pendiente (script en `docs/voice-clone/recording-script.md`).
+**Mientras tanto:** Manuel narra manualmente con iPhone Voice Memos (fallback documentado).
+
+**Reglas de pronunciación neutralizada (cuando narre manual o el clone hable):**
 - SÍ: ustedes, carro, computadora, celular, manejar, platicar
 - SÍ: pronunciar "z" y "c" como "s" (no ceceo)
 - NO peninsular: vosotros, vale, tío, ordenador, móvil, coche, ceceo
@@ -114,16 +240,28 @@ Ejemplos comprobados:
 - NO AR extremo: vos sos, che, sheísmo (calle="cashe"), playa="plasha"
 - NO caribe extremo: pa'lante, elisiones fuertes de "s"
 
-**Estilo de lectura:**
+**Estilo de lectura para how-to:**
 - Pausas marcadas en hook (3 segundos cuentan triple)
 - Bajada de tono en datos clave (autoridad)
-- Aceleración en lista de hechos (mantiene atención)
-- Cierre con ritmo ascendente en CTA
+- **Aceleración con energía emocional al pivote del problema** (calibración viral)
+- Cierre con ritmo ascendente en CTA + tono de "te puede pasar"
 
-**Setup técnico mínimo:**
-- iPhone + Voice Memos o Just Press Record
-- Habitación con ropa/cortinas/alfombra
-- 5-10 min de grabación por pieza
-- Edición/limpieza en Canva o Audacity
+**Justificación data:** voz humana clonada de Manuel cuenta como humana para algoritmo (research production-stack confirmado). Cero riesgo "Made with AI" label penalty si la voz suena humana.
 
-**Justificación data:** Mexican Spanish es-MX es el estándar industrial de doblaje en LatAm desde 1950s (Netflix, Disney+, HBO Max LATAM lo usan). Comprensible de Argentina a California. Voz humana gana sobre IA en trust/loyalty/retención según estudio TikTok 2026 (ScienceDirect). Cero riesgo de "Made with AI" label penalty.
+---
+
+## Notas sobre el rename del proyecto
+
+El nombre **"AI Brief LATAM"** está pegado en:
+- Carpeta `projects/ai-brief-latam/`
+- Múltiples archivos .md con título
+- Email business `aibrieflatam.media@gmail.com`
+
+**Decisión pendiente:** Manuel confirma nombre nuevo en sesión futura. Opciones tentativas:
+- "AI How-To LATAM"
+- "IA Práctica LATAM"
+- "Manual IA" (corto, brandable)
+- "Práctica IA" (LATAM-friendly)
+- "Cómo IA" (super corto, viral-friendly)
+
+El rename físico (`git mv` + updates) se hace de una vez cuando el nombre esté locked.

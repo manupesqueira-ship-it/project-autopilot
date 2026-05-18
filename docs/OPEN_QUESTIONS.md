@@ -7,7 +7,7 @@
 
 ---
 
-## Tracking de respuestas (actualizado 2026-05-12)
+## Tracking de respuestas (actualizado 2026-05-18 por ADR-016)
 
 | # | Decisión | Status |
 |---|---|---|
@@ -16,16 +16,24 @@
 | C | Storage | ✅ Respondida — Supabase (locked, account creation deferred) |
 | D | Image gen | ✅ Respondida — híbrido carousel/reel decidido por brief |
 | E | Audio/video timing | ✅ Respondida — audio solo en reels, voice clone ElevenLabs |
-| F | Sources | 🟡 Propuesta en `sources.yaml` (sección PROPUESTA 2026-05-12) — Manuel debe confirmar qué fuentes activar |
-| G | Standard de calidad / visual | ⏳ Pendiente (mi propuesta viene en POST_STANDARD.md) |
+| F | Sources | 🟡 Propuesta en `sources.yaml` — Manuel confirma post-Fase -1 |
+| G | Standard de calidad / visual | ⏳ Pendiente — Manuel confirma post-Fase -1 |
 | H | Cursor | ✅ Respondida — diferido, no hoy |
 | I | Perplexity | ✅ Respondida — diferido, no hoy |
-| J | Audiencia nítida (buyer persona) | ⏳ Pendiente |
+| J | Audiencia nítida (buyer persona) | ⏳ Pendiente — se afina con data de Fase -1 |
 | K | Cadencia de lanzamiento (deadlines) | ⏳ Pendiente |
-| L | Handle IG + logo | ⏳ Pendiente |
+| L | Handle IG + logo | ⏳ Pendiente — además nombre nuevo del proyecto post-ADR-016 |
 | M | Newsletter footer (dirección física CAN-SPAM) | ⏳ Pendiente |
-| N | Publisher (ADR-012 → ADR-014) | 🟡 Propuesto Upload-Post — Manuel confirma |
-| O | Plan n8n cloud | ⏳ Pendiente (Pro vs self-hosted vs reduce polling) |
+| N | Publisher (ADR-012 → ADR-014) | 🟡 Propuesto Upload-Post — confirmar post Deep Research |
+| O | Plan n8n cloud | 🟡 Propuesto Hostinger VPS (ADR-015) — confirmar post Deep Research |
+| **P** | **Calibración voz (premium / viral / híbrido)** | ✅ Cerrada por ADR-016 — **viral hype calibrado** (hook emocional + body sobrio) |
+| **Q** | **Manuel-cara vs cuenta-de-marca pura** | ⏳ Pendiente — afecta growth curve 5× |
+| **R** | **Success criteria explícito para abortar/pivot** | ⏳ Pendiente |
+| **S** | **Sustainability del operador (vacaciones, pausas)** | ⏳ Pendiente |
+| **T** | **Plan B si Meta/TikTok rompen automation** | ⏳ Pendiente |
+| **U** | **Validación voz antes de invertir más (Fase -1)** | ✅ Cerrada por ADR-016 — Fase -1 implementada en ROADMAP v4 |
+| **V** | **Nicho específico de how-to (post-Deep Research)** | ⏳ Pendiente outputs Prompt 4 |
+| **W** | **Build vs Buy decision (Blotato evaluación)** | ⏳ Pendiente outputs Prompt 1 + Fase -1 |
 
 ---
 
@@ -88,7 +96,7 @@
 - **Decisión:** no agregar Perplexity al stack ahora.
 - **Razón:** Perplexity Pro es útil para (a) lectura matinal con citas, (b) Deep Research on-demand, (c) fact-check manual de backup. Pero **no reemplaza** al A4 Fact-Checker del pipeline (Claude web_search nativo via template #4399, ya integrado a n8n). El A4 corre automático en el workflow; Perplexity sería para Manuel personalmente, no para el pipeline.
 - **Costo evitado:** $20 USD/mes ($240/año).
-- **Reabrir cuándo:** si Manuel arranca Crypto Brief o Startup Radar y necesita Deep Research frecuente para investigaciones nuevas. También si ChatGPT Plus / Claude Pro actuales no le alcanzan.
+- **Reabrir cuándo:** si AI How-To LATAM valida y necesita Deep Research frecuente, o si los 5 prompts del 2026-05-18 (`DEEP_RESEARCH_PROMPTS.md`) requieren tool más robusta que ChatGPT Plus.
 - **Manuel pidió explícito:** "por el momento no hay que activarlos... si hoy no es una parte fundamental del proceso, no hay que usarlo".
 
 ---
@@ -168,6 +176,76 @@ Items que descubrí en el diseño y necesitan tu definición. NO son críticos p
   - Apartado postal (compra ~$50/año, más privacy)
   - Coworking / dirección comercial alquilada
   - Dirección de empresa LLC si AI Brief LATAM se incorpora formalmente
+
+### P — Calibración voz: ✅ Viral hype calibrado (cerrada por ADR-016, 2026-05-18)
+
+- **Decisión:** hook emocional/contrarian (primeros 3s reel / 125 chars caption) + body sobrio Smart Brevity.
+- **Por qué:** Critical Review identificó que cuentas LATAM que llegan a >1M usaron hooks emocionales (NeoCom 1.4M, Filo 1.8M); las "sobrias" tienen techo ~30K. Para north star "audiencia masiva", necesitamos viral hype.
+- **Compromiso:** captamos atención como virales, entregamos valor como premium. No es contradictorio.
+- **Aplicar:** `brand_voice.md` ya actualizado (2026-05-18). Prompts A2/A3/A7 pendientes update post-Fase -1.
+
+### U — Validación voz antes de invertir más: ✅ Fase -1 (cerrada por ADR-016, 2026-05-18)
+
+- **Decisión:** Fase -1 "Validación Manual" agregada al ROADMAP v4 — Manuel publica 5-10 piezas con prompts directos en Claude.ai antes de comprometer pipeline.
+- **Criterio de éxito:** >2% engagement promedio. Si menos, NO construir Fase 0/1.
+- **Tracker:** simple .md en `projects/ai-brief-latam/manual-mvp/validation-fase-minus-1.md` (a crear cuando arranque).
+
+### Q — Manuel-cara vs cuenta-de-marca pura
+
+**Por qué pregunto:** las cuentas de personalidad crecen 5-10× más rápido que las de marca pura. Pero "experimento de automatización" implica que el creator NO se ponga la cara (la IA es el creator). Hay tensión.
+
+**Opciones:**
+- Opción 1: Manuel pone la cara (reels con su voz/cara, IG bio con foto). **Crece más rápido** pero "experimento automatización" se diluye.
+- Opción 2: Cuenta de marca pura (sin cara, narrador clonado, mascot eventual). **Más fiel al experimento** pero growth 5-10× más lento.
+- Opción 3: Híbrido — Manuel aparece ocasionalmente (1×/semana) como "creator behind the scenes", pero 80% del contenido es marca.
+
+### R — Success criteria explícito para abortar/pivot
+
+**Por qué pregunto:** sin criterio claro de "esto no funcionó", racionalizamos cualquier resultado. Necesitamos compromiso ex-ante.
+
+**Opciones de criterio:**
+- Fase -1: <1% engagement promedio en 10 piezas → abortar nicho actual, pivot.
+- Fase 1 (Mes 1): <100 followers IG nuevos + <50 newsletter subs → pivot.
+- Fase 1 (Mes 3): <500 followers IG total + <200 newsletter subs → pivot.
+- Fase 1 (Mes 6): <1K followers IG + <500 newsletter subs → considerar otro nicho.
+
+### S — Sustainability del operador (vacaciones, pausas, burnout)
+
+**Por qué pregunto:** plan asume 1 pieza/día por 365 días. Sin plan de pausas, hay riesgo burnout en mes 3-6.
+
+**Opciones:**
+- Opción 1: Buffer de 7-14 piezas pre-aprobadas siempre listas. Permite 1-2 semanas off sin gap visible.
+- Opción 2: Cadencia oficial 5×/semana (lunes-viernes), fin de semana off por default.
+- Opción 3: Sprints — 30 días daily + 14 días off cada trimestre.
+
+### T — Plan B si Meta/TikTok rompen automation
+
+**Por qué pregunto:** Meta ha restringido automation tools 3 veces (2018, 2021, 2024). TikTok endureció labels AI 2025-2026. Si rompen Upload-Post API, el pipeline falla.
+
+**Opciones de mitigación:**
+- Opción 1: Newsletter como propiedad primaria (no dependiente de algoritmos). IG/TikTok como adquisición secundaria.
+- Opción 2: Posteo manual de respaldo cuando automation falla (~10 min/pieza).
+- Opción 3: Diversificación a más plataformas independientes (Threads, Bluesky, WhatsApp Channels).
+
+### V — Nicho específico de how-to (post Deep Research)
+
+**Por qué pregunto:** "AI How-To LATAM" es la dirección general. Falta nicho específico: ¿AI práctico genérico? ¿Herramientas específicas (Claude, ChatGPT, Notion AI)? ¿Por industria (marketing, ventas, RRHH)?
+
+**Esto se contesta con outputs del Deep Research Prompt 4** (nichos alternativos con más techo).
+
+### W — Build vs Buy decision (Blotato AI)
+
+**Por qué pregunto:** Blotato AI cubre ~70% del pipeline custom a $29-97/mo. Critical Review sugiere evaluar antes de construir.
+
+**Plan de validación:**
+- Manuel comprá Blotato free trial / paid 1 mes en paralelo a Fase -1.
+- Generá 5 piezas con su AI Agent Carousel Maker.
+- Comparar contra 5 piezas manuales de Fase -1.
+- Decidir: full Blotato / full custom / híbrido.
+
+**Esto se afina con output del Deep Research Prompt 1** (tools que ya hacen esto).
+
+---
 
 ### N — Decisión publisher (ADR-012 → ADR-014)
 
@@ -309,7 +387,7 @@ Notable: 10 de 12 son anglo. **Solo 2 son LATAM nativas** (Contxto + LatamList).
 
 - Opción 1: Aceptar la lista actual (mayoría anglo, traducís el ángulo LATAM tú vía editorial prompt).
 - Opción 2: Expandir LATAM agregando Bloomberg Línea Tech, Forbes Latam Tech, Pulso Social Colombia, La Nación Tecnología, Genbeta, Infobae Tech, etc.
-- Opción 3: Agregar fuentes regulatorias LATAM (CNV Argentina, CNBV México, BCB Brasil) que ya están en el plan para Crypto Brief — útiles para AI Brief si tocamos regulación.
+- Opción 3: Agregar fuentes regulatorias LATAM (CNV Argentina, CNBV México, BCB Brasil) si una pieza específica de how-to toca regulación. Default: NO (multi-property diferido por ADR-016).
 - Opción 4: Otra combinación.
 
 F2. **¿Querés monitorear founders/voces LATAM en X/Twitter?** (Ej: Pierpaolo Barbieri Ualá, Marcelo Claure, Daniel Vogel Bitso, etc.)

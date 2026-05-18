@@ -214,6 +214,125 @@
 
 ---
 
+## ADR-016 — Pivot estratégico post-Critical-Review (4 cambios mayores)
+
+**Fecha:** 2026-05-18
+**Status:** Propuesta — confirmar parcialmente con outputs de Deep Research (carril 2 lanzado 2026-05-18)
+**Scope:** AI Brief LATAM / proyecto en general
+**Trigger:** Critical Review interno (`docs/CRITICAL_REVIEW.md`) + carril 3 respondido por Manuel:
+- North star: audiencia masiva, revenue diferido
+- Strategy: convicción full en UNA idea hasta validar
+- Experimento: cuánto se puede automatizar una red social con IA
+
+**Contexto:** El Critical Review identificó 5 problemas estructurales del plan. Manuel respondió cada uno y aceptó 4 pivots. Este ADR los codifica para que todo el repo opere bajo la misma página.
+
+### Pivot 1 — Nicho: AI News → AI How-To
+
+**Antes:** "AI Brief LATAM" = news brief diario de IA (modelo Rundown AI). Saturado en español (Digital Brain 60K, IA al Día 20K+).
+**Después:** "AI How-To LATAM" (nombre tentativo, rename pending) = contenido práctico tutorial sobre cómo USAR herramientas IA. Menos saturado, más shareable (saves > likes en algoritmo 2026), más defensible para 1 operador.
+
+**Implicaciones:**
+- Fuentes (`sources.yaml`) cambian peso: feeds de productividad/herramientas pesan más que noticias de modelos
+- Scoring (`a2`) cambia: peso a `potencial_educativo` y `aplicabilidad_inmediata` sube, peso a `novedad` baja
+- Editorial (`a3`) cambia: estructura output → tutorial step-by-step vs news brief
+- Visual standard puede mantenerse — el dark mode editorial funciona para how-to
+- **Acción inmediata:** marcar como dirección, NO renombrar carpeta `projects/ai-brief-latam/` aún (Manuel: "el nombre es lo de menos, luego lo cambiamos")
+- **Acción tras Deep Research:** confirmar específicamente cuál tópico how-to (AI práctico genérico vs herramientas específicas vs por industria) según Prompt 4 output
+
+### Pivot 2 — Voz: Anti-hype sobrio → Viral hype calibrado
+
+**Antes:** Smart Brevity + Morning Brew + "anti-hype" como regla dura. Techo ~30K (research benchmarks LATAM).
+**Después:** Viral hype calibrado — hooks emocionales/contrarian + body sobrio Smart Brevity. Modelo NeoCom/Filo (>1M en 2-3 años) pero con contenido educativo en lugar de pop culture.
+
+**Implicaciones:**
+- `brand_voice.md` cambia: "Hard NO hype" → "Hype con framework (atención + tensión + promesa pero EMOCIONAL no técnico)"
+- `a2-signal-scorer.md` cambia: `potencial_viral` peso sube significativamente
+- `a3-editorial.md` cambia: `hook_tentativo` se permite emocional/contrarian si está respaldado
+- `a9-compliance.md` cambia: regla 8 ("NO hype injustificado") matizada — el hype es OK si pasa el framework de 3 condiciones
+- Riesgo: contradicción con "AI ethics no irresponsable" — mitigar con regla "hook viral pero cuerpo defendible con datos"
+- **Acción inmediata:** update `brand_voice.md` con calibración explícita
+- **Acción tras Deep Research:** confirmar con outputs del Prompt 3 (playbook 10K-100K) qué tipo de hook usaron
+
+### Pivot 3 — Scope: Multi-property scaffold → Single-property convicción
+
+**Antes:** Repo asume 3 properties paralelas (AI Brief + Crypto Brief + Startup Radar). ROADMAP Fase 5 multi-property. Multiple docs anticipan expansión.
+**Después:** Single-property exclusivo hasta validar AI How-To LATAM (>5K subs/followers). Multi-property scaffold se elimina/comenta.
+
+**Implicaciones:**
+- `ROADMAP.md` Fase 5 → "TBD post-validation, no comprometido"
+- `COSTS_6MO.md` → eliminar sensitivity multi-property
+- `a9-compliance.md` → eliminar tabla "Reglas a expandir cuando arranque cada feature" (la fila Newsletter se mantiene como platform-level)
+- `sources.yaml` → eliminar comentarios "para Crypto Brief"
+- **Acción inmediata:** limpieza en los 4 archivos arriba
+
+### Pivot 4 — Order: Design-first → Validate-first
+
+**Antes:** 35+ commits de diseño, 0 piezas publicadas, smoke test pospuesto al día 11.
+**Después:** **Validación manual ANTES de cualquier ejecución técnica**. Manuel publica 5-10 piezas con prompts directos en Claude.ai en cuenta personal/test. Si funciona → smoke test técnico. Si no → iterar voz, NO construir pipeline.
+
+**Implicaciones:**
+- `ROADMAP.md` reordenado: agregar **Fase -1 "Validación Manual"** antes de Fase 0.
+- `MANUAL_OPERATIONS.md` se promueve a operación primaria, no fallback.
+- Decisiones futuras: priorizar "test rápido en mundo real" sobre "documentación completa".
+- **Acción inmediata:** update ROADMAP. Manuel ejecuta Validación Manual cuando tenga 1-2 horas de calma.
+
+### Implicaciones cross-pivot — orden de operaciones revisado
+
+Antes del Critical Review:
+```
+Diseño completo → Fase 0 smoke test → Fase 1 build → Fase 2 reels → Fase 3 newsletter scale → Fase 4 podcast
+```
+
+Después de ADR-016:
+```
+Validación Manual (5-10 piezas, 7-14 días) → Decision Point
+    ├─ Si voz funciona (>2% engagement) → Build vs Buy decision (Blotato vs custom)
+    │   ├─ Build → Fase 0 smoke test → Fase 1 pipeline
+    │   └─ Buy → Blotato 30 días → iteración → reconsiderar
+    └─ Si voz NO funciona → iterar voz manual → re-evaluar nicho
+```
+
+### Status de los 15 ADRs previos tras este pivot
+
+| ADR | Status | Razón |
+|---|---|---|
+| ADR-001 a ADR-007 | Sin cambio | Sobre Project Autopilot, no AI Brief |
+| ADR-008 (voice clone ElevenLabs) | Sigue vigente | Pero **rebaja prioridad** — solo cuando reels arranquen post-validación |
+| ADR-009 (n8n stack) | Sigue vigente | Pero contingent en build-decision post Validación Manual |
+| ADR-010 (ángulo generalista LATAM) | **MODIFICADO** | Ya no generalista IA news, ahora how-to específico |
+| ADR-011 (1 post/día Fase 1) | Sigue vigente | Pero aplica a Fase 1 post-validación, no Fase -1 |
+| ADR-012 (publisher) | Sigue vigente | Pero contingent en build-decision |
+| ADR-013 (gpt-image-2) | Sigue vigente | Visual generation se mantiene |
+| ADR-014 (Upload-Post) | Sigue vigente | Mismo caveat |
+| ADR-015 (Hostinger VPS) | Sigue vigente | Mismo caveat |
+
+### Riesgos de este pivot
+
+1. **Re-trabajo:** algunos prompts (a2, a3, a7) van a requerir ajustes — ~2-4 horas total.
+2. **Identidad del proyecto:** "AI Brief LATAM" como nombre puede confundir hasta que se rename.
+3. **Sobreajuste:** si los Deep Research dicen "AI news SÍ es buen nicho", reversamos parcialmente.
+4. **Pérdida de momentum:** parar para validar manual puede sentirse como "regresión", pero es necesario.
+
+### Acciones de este ADR (concretas)
+
+- [x] Documentar este ADR-016
+- [ ] Update `ROADMAP.md` con Fase -1 + remover Fase 5 multi-property
+- [ ] Update `brand_voice.md` con calibración hype + how-to focus
+- [ ] Update `config.yaml` con description + name pending rename + phase
+- [ ] Update `a9-compliance.md` removiendo tabla multi-property
+- [ ] Update `COSTS_6MO.md` removiendo sensitivity multi-property
+- [ ] Update `sources.yaml` removiendo refs a Crypto Brief
+- [ ] Update `OPEN_QUESTIONS.md` cerrando P (voz) + agregando Q, R, S, T, U
+
+### Acciones deferred (esperando Deep Research)
+
+- [ ] Confirmar nicho específico how-to (output Prompt 4)
+- [ ] Decisión build vs buy (output Prompt 1)
+- [ ] Update prompts A2/A3/A7 con calibración final (después de Validación Manual)
+- [ ] Rename físico de carpeta `projects/ai-brief-latam/` → confirmed name
+
+---
+
 ## ADR-015 — n8n deployment: Hostinger VPS self-hosted (no n8n cloud Pro)
 
 **Fecha:** 2026-05-12
@@ -234,7 +353,7 @@
 
 **Razones (en orden de peso):**
 
-1. **Costo 10× menor que cloud Pro.** $6.49 vs $60 = $54/mo de ahorro × 12 meses = **$648/año ahorrado**. A escala de 1 property es significativo; a 3 properties (AI Brief + Crypto Brief + Startup Radar compartiendo el VPS) el ahorro es 30× contra alternativas paid.
+1. **Costo 10× menor que cloud Pro.** $6.49 vs $60 = $54/mo de ahorro × 12 meses = **$648/año ahorrado** para AI How-To LATAM (single property post-ADR-016).
 
 2. **Ejecuciones ilimitadas.** Cloud Pro tope = 10,000 ejec/mes. Self-hosted = sin límite — soporta crecimiento de 12 fuentes a 30+ sin upgrade de plan.
 

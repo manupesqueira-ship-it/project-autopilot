@@ -1,15 +1,77 @@
-# Roadmap — AI Brief LATAM (v3, 2026-05-12)
+# Roadmap — AI How-To LATAM (v4, 2026-05-18)
 
-> **Cambios v3 vs v2:**
-> - Agregada **Fase 0 — Smoke test** (~1 semana) antes de Fase 1
-> - Fase 1 incluye **VPS setup** (ADR-015) y **Upload-Post** (ADR-014)
-> - Agentes A5 + A11 movidos de Fase 2 → Fase 1 (visual standard + edit-loop HITL)
-> - Newsletter (A8d) movida de Fase 3 → **Fase 1.5 paralelo** — el pipeline genera carousel + newsletter en el mismo run
-> - Timeline ajustado: Fase 1 robusta = semana 3-4 (no 1-2), gracias a Fase 0 que valida el corazón antes
+> **Cambios v4 vs v3** (ADR-016 pivot estratégico):
+> - **NUEVO: Fase -1 "Validación Manual"** antes de cualquier ejecución técnica. Manuel publica 5-10 piezas manualmente con prompts directos en Claude.ai para validar voz/nicho antes de comprometer recursos.
+> - **Pivot de nicho:** AI News brief → AI How-To práctico (Critical Review identifica saturación en news brief español).
+> - **Pivot de voz:** Anti-hype sobrio → Viral hype calibrado (hooks emocionales + body sobrio Smart Brevity).
+> - **Eliminada Fase 5 multi-property:** convicción full en UNA idea hasta validar. Crypto Brief / Startup Radar diferidos sin compromiso.
+> - **Decision point post-Fase -1:** Build vs Buy (Blotato AI cubre 70% del pipeline a $29-97/mo).
+>
+> **Nombre del proyecto:** sigue como "AI Brief LATAM" en archivos hasta confirmación de nuevo nombre. Cambio físico de carpeta deferred.
 
 ---
 
-## Fase 0 — Smoke test (Semana 1)
+## Fase -1 — Validación Manual (Semana 1, NUEVA)
+
+**Objetivo:** Validar la voz/nicho/ángulo con audiencia real antes de invertir en pipeline técnico. **Si esto no funciona, NADA del plan posterior tiene sentido.**
+
+### Por qué existe esta fase
+
+El Critical Review (`docs/CRITICAL_REVIEW.md`) identificó que estábamos sobre-diseñando antes de validar. Esta fase corrige el orden: producto-mercado FIRST, producto-fábrica DESPUÉS.
+
+### Alcance
+
+- 5-10 piezas publicadas manualmente (no automatizado)
+- Cuenta personal de Manuel o cuenta de prueba (no AI Brief LATAM brand todavía)
+- Mix de tópicos how-to IA + medir engagement por pieza
+- **Sin pipeline n8n.** Manuel usa Claude.ai directo + DALL-E playground o Canva.
+
+### Tareas
+
+1. **Manuel:** definir 5-10 tópicos how-to que quiere probar (ej: "Cómo usar Claude para reducir tu tiempo en X tarea", "5 prompts que cualquier manager LATAM debería tener")
+2. **Manuel + Claude (chat):** generar cada brief con prompt directo (siguiendo `docs/MANUAL_OPERATIONS.md`)
+3. **Manuel:** generar visuales en DALL-E playground siguiendo `docs/POST_STANDARD.md` §7
+4. **Manuel:** publicar en cuenta personal o test cada 1-2 días durante 1-2 semanas
+5. **Track engagement** en un .md simple: views, saves, comments, shares por pieza
+6. **Decision criteria:**
+   - **Funciona:** >2% engagement promedio (saves+comments)/views, ≥1 comentario sustantivo por pieza → seguir a Build vs Buy decision
+   - **No funciona:** <1% engagement promedio, comentarios genéricos → iterar voz, considerar pivot de nicho, **NO construir pipeline**
+
+### Definition of Done Fase -1
+
+- [ ] 5-10 piezas publicadas
+- [ ] Engagement medible (mejor o peor que 2%)
+- [ ] Manuel tiene **convicción informada** sobre seguir con AI How-To LATAM o pivot
+- [ ] Decisión "Build vs Buy" tomada (Blotato evaluation paralelo)
+
+### Bloquea Fase 0
+
+**Sí.** No avanzar a smoke test técnico si Fase -1 no valida la voz.
+
+---
+
+## Decision Point post-Fase -1
+
+Después de Fase -1, Manuel + Claude evalúan:
+
+```
+                    ┌─ Pivot nicho (otra propuesta)
+                    │
+   Voz NO funciona ─┼─ Iterar voz + retest 1 ronda más
+                    │
+                    └─ Pausar proyecto, evaluar otra cosa
+   ───────────────────────────────────────────────────
+                    ┌─ Buy → Blotato AI 30 días
+                    │  → si funciona: full Blotato
+                    │  → si no: vuelve a Build
+   Voz SÍ funciona ─┤
+                    └─ Build → Fase 0 smoke test
+                       → Fase 1 pipeline completo
+```
+
+---
+
+## Fase 0 — Smoke test (Semana 2-3, condicional)
 
 **Objetivo:** Validar que la cadena LLM (scoring + editorial) llega a Telegram con un brief decente. NO publica, NO genera imágenes. Solo prueba el corazón del pipeline antes de invertir en Fase 1.
 
@@ -204,34 +266,41 @@ Propuestas verificadas pendientes activar (OPEN_QUESTIONS F):
 
 ---
 
-## Fases futuras (no committed)
+## Fases futuras (no committed — solo después de validar Fase 1+2+3)
 
-### Fase 5 — Multi-property (Mes 4+)
+### Fase 5 — Monetización (Mes 4+)
 
-Reutilizar el pipeline para Crypto Brief LATAM y Startup Radar (properties #2 y #3 del plan original). Comparten infraestructura (mismo VPS, mismas credenciales Anthropic/OpenAI), distinto sources.yaml + prompts adaptados.
-
-### Fase 6 — Monetización
+Solo se evalúa después de >5K subs/followers reales en AI How-To LATAM.
 
 - Sponsored sections en newsletter
-- Affiliate links en piezas relevantes
+- Affiliate links en piezas relevantes (herramientas IA que recomendamos)
 - Pro tier ($X/mo) con contenido extra
+- Cursos / workshops específicos
 
-### Fase 7 — Consumer product
+### Fase 6 — Consumer product (post-revenue validation)
 
-Si la audiencia llega a 10K+ newsletter / 5K+ IG, evaluar producto: app móvil, Chrome extension, o herramienta SaaS para audiencia.
+Si la audiencia llega a 10K+ newsletter / 5K+ IG y hay revenue probado, evaluar producto: app móvil, Chrome extension, o herramienta SaaS para audiencia.
+
+### Multi-property (DIFERIDO sin compromiso por ADR-016)
+
+**No considerar hasta que AI How-To LATAM tenga >5K subs/followers reales.** Multi-property prematuro contradice north star "convicción full en una idea". Cuando se considere eventualmente, las opciones serán: Crypto LATAM, Startup Radar LATAM, o nicho que se valide en Deep Research.
 
 ---
 
 ## Timeline visual
 
 ```
-Semana   1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
-Fase 0   ▓▓
-Fase 1      ▓▓▓▓▓▓▓▓▓
-Fase 2                  ▓▓▓▓▓▓▓
-Fase 3                          ▓▓▓▓▓▓▓
-Fase 4                                  ▓▓▓▓▓▓▓▓▓ ...
+Semana    1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+Fase -1   ▓▓                                          ← Validación Manual
+Fase 0       ▓▓                                       ← solo si voz funciona
+Fase 1          ▓▓▓▓▓▓▓▓                              ← solo si Fase 0 entrega
+Fase 2                   ▓▓▓▓▓▓                       ← solo si Fase 1 valida
+Fase 3                          ▓▓▓▓▓▓▓               ← scale newsletter
+Fase 4                                  ▓▓▓▓▓▓ ...    ← podcast
+Fase 5+                                              (revenue + product)
 ```
+
+Las fases siguientes son **condicionales** sobre el éxito de la anterior. No comprometemos Fase 1 hasta que Fase 0 entregue briefs decentes. No comprometemos Fase 2 hasta que Fase 1 entregue 7 días estables. Etc.
 
 ## Métricas de éxito acumuladas
 

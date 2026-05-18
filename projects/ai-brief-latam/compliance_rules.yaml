@@ -15,8 +15,9 @@ platform_targets:
   - tiktok
   - newsletter_beehiiv
 
-# Switch para activar disclaimers financieros — se activa cuando
-# arranque Crypto Brief LATAM (property #2). Para AI Brief LATAM = false.
+# Switch para activar disclaimers financieros — actualmente false para
+# AI How-To LATAM. Sólo se activaría si la pieza específica toca claims
+# financieros directos. Multi-property (Crypto Brief etc.) diferido por ADR-016.
 financial_disclaimer_required: false
 
 # Fuente de verdad de las reglas detalladas (15 reglas total)

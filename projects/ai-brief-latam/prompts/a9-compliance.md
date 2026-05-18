@@ -98,14 +98,15 @@ El compliance se invoca una vez por **content_type** distinto (porque las reglas
 
 **Costo por pieza:** ~3-4 invocaciones × ~$0.02 cada = ~$0.06-0.08 por pieza. A 1 pieza/día → ~$2/mes. Trivial.
 
-## Reglas a expandir cuando arranque cada feature
+## Reglas a expandir por plataforma (post-ADR-016: solo platform-level, no multi-property)
 
 | Feature | Reglas adicionales a agregar al prompt |
 |---|---|
-| Crypto Brief (property #2) | financial disclaimer obligatorio, "no es asesoría financiera" en cada pieza, no recomendar tokens, no prometer rendimientos |
-| Startup Radar (property #3) | distinguir "confirmado" vs "reportado" vs "rumor" para valuaciones, M&A, exits |
 | TikTok | community guidelines diferentes a Meta — no contenido political-sensitive en TikTok (más restrictivo) |
 | Newsletter (Beehiiv) | CAN-SPAM compliance, footer obligatorio con unsubscribe + dirección física |
+
+> **Multi-property expansion (Crypto Brief, Startup Radar):** DIFERIDO sin compromiso por ADR-016.
+> No se considera hasta que AI How-To LATAM tenga >5K subs/followers validados.
 
 ## Notas para n8n
 

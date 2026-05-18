@@ -249,4 +249,4 @@ Comparado con Fase 1 automatizado (~$85-100/mes Anthropic + OpenAI + n8n Pro), e
 | Publishing | Buffer/IG nativo manual | A10 via Blotato/Upload-Post |
 | Logging | Manuel commitea markdown | Auto a Supabase + GitHub backup |
 
-El delta principal NO es velocidad (manual también puede hacer 1/día). Es **consistencia editorial** + **audit trail** + **escala** cuando arranquen Crypto Brief y Startup Radar.
+El delta principal NO es velocidad (manual también puede hacer 1/día). Es **consistencia editorial** + **audit trail** + **escala** una vez que AI How-To LATAM esté validada y pueda crecer en volumen.

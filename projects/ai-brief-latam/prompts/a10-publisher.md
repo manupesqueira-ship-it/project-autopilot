@@ -62,7 +62,7 @@ credentials:
 
 ### Notas de la config
 
-- **`user`:** Upload-Post tiene concepto de "user" para multi-tenant. Cada media property tiene su user (AI Brief LATAM, Crypto Brief eventualmente, etc.).
+- **`user`:** Upload-Post tiene concepto de "user" para multi-tenant. Usamos un solo user "manuel-aibrieflatam" para AI How-To LATAM (multi-property diferido por ADR-016).
 - **`platforms`:** lista de plataformas target. IG + TikTok en Fase 1. LinkedIn agregable después.
 - **`platform_overrides`:** TikTok permite captions más largos (2200 chars vs 2200 IG pero TikTok ignora hashtags después de #30). Override hace que TikTok use sus propios captions y hashtags optimizados (output de A7 ya genera ambos en `carousel.caption` y `tiktok.caption`).
 - **`schedule_time: null`:** post inmediato. En Fase 1 Manuel aprueba en Telegram → publish inmediato. En Fase 1.5 podemos schedule a la hora óptima del día (8 AM CDMX según research).

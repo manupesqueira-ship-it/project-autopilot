@@ -10,7 +10,7 @@
 #   • Mantener todas las anglo (siguen siendo señal primaria del mundo IA)
 #   • Agregar 10+ fuentes LATAM/español como peer-set
 #   • Marcar PROPUESTA = pendiente confirmación Manuel + verificación URL
-#   • Comentar fuentes regulatorias (relevantes para Crypto Brief, no IA)
+#   • Comentar fuentes regulatorias (relevantes solo cuando pieza específica toque regulación)
 #   • Diferir lista de founders X/Twitter a Fase 1.5
 #
 # Convención de weight:
@@ -97,7 +97,7 @@ sources:
   # regulatorias_latam:
   #   _proposed: |
   #     Reguladores LATAM relevantes cuando AI Brief LATAM toque regulación.
-  #     DEFERRED: relevante para Crypto Brief (property #2 del ROADMAP) y
+  #     DEFERRED: relevante solo si una pieza específica de how-to toca regulación.
   #     news regulatorias específicas. Para AI Brief generalista, agrega
   #     ruido > señal. Activar selectivamente si una pieza requiere fuente
   #     oficial.
