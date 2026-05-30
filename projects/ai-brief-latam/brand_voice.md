@@ -1,252 +1,338 @@
-# Brand Voice — AI How-To LATAM
-**Last updated:** 2026-05-18 (revisado por ADR-016 pivot estratégico)
+# Brand Voice — AI × Finanzas LATAM
+**Last updated:** 2026-05-29 (v3 — revisado por ADR-017 post-Deep-Research)
 **Sources:**
-- projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md
-- projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md
-- projects/ai-brief-latam/docs/research/deep-research/2026-05-08_social-media-niches-2026.md
-- docs/CRITICAL_REVIEW.md (2026-05-18) + ADR-016
+- projects/ai-brief-latam/research/deep-research-2026-05/ (5 outputs)
+- docs/DEEP_RESEARCH_SYNTHESIS.md (2026-05-20)
+- docs/DECISIONS.md ADR-017 (2026-05-29)
 
-> **Cambio crítico 2026-05-18 (ADR-016):**
-> - Pivot de nicho: AI News brief → AI How-To práctico (cómo USAR herramientas IA)
-> - Pivot de voz: anti-hype sobrio → viral hype calibrado (hook emocional + body sobrio)
-> - Convicción full en UNA idea hasta validar
+> **Cambio crítico v3 vs v2 (ADR-017):**
+> - Pivot de nicho: AI How-To genérico → **AI × Finanzas Personales LATAM** (vertical único)
+> - Reset realista benchmarks: 100K en 12-18m → **10K en 12m / 30-50K en 24m**
+> - Nuevo eje: **compliance financiero** (modelo educativo C.1 — disclaimer "no es asesoría")
+> - Voz se mantiene viral hype calibrado pero **calibrada para audiencia finanzas LATAM**
+> - Voice clone DEFERRED — decisión inicio Fase 2
 >
-> El nombre "AI Brief LATAM" se mantiene en archivos hasta confirmación de nuevo nombre. El cambio físico (`projects/ai-brief-latam/` → nuevo path) está deferred.
+> El nombre "AI Brief LATAM" se mantiene en archivos hasta confirmación de handle/dominio. El proyecto editorial se llama internamente **AI × Finanzas LATAM** (working name).
 
 ---
 
 ## Nicho y posicionamiento
 
-**Antes (v1):** AI Brief LATAM = news brief diario de IA. Modelo Rundown AI.
-**Ahora (v2 post-ADR-016):** AI How-To LATAM = contenido práctico **cómo USAR herramientas IA** para tareas concretas. Modelo: tutorial actionable de Mafia IA + voz emocional Filo News.
+**Antes (v2 post-ADR-016):** AI How-To LATAM — contenido práctico cómo usar IA para profesionales 25-45.
+**Ahora (v3 post-ADR-017):** **AI × Finanzas Personales LATAM** — cómo USAR herramientas de IA para tomar mejores decisiones financieras personales en el contexto LATAM. Vertical único.
 
-**Pregunta que cada pieza debe responder:** "¿Cómo le hago para…?" en un dolor concreto del profesional LATAM.
+**Pregunta que cada pieza debe responder:** "¿Cómo uso IA para [decisión/análisis financiero concreto LATAM]?"
+
+**Modelo de referencia:** Mis Propias Finanzas (1M IG, Colombia) y Pequeño Cerdo Capitalista (Sofía Macías, 660K libros) en tono confesional + educativo. **PERO** con dos diferenciadores:
+1. **La IA es el cómo**, no el qué — somos el manual de IA para tu plata, no otro coach financiero
+2. **LATAM-first**: instrumentos locales (CEDEARs, CDTs, plazos fijos UVA, fondos comunes, FCI, ETFs accesibles desde brokers LATAM) en moneda local con contexto inflación regional
 
 Ejemplos del tipo de pieza:
-- "Cómo usar Claude para responder 50 emails de tu jefe en 10 minutos"
-- "El prompt secreto que un manager LATAM debería tener en el celular"
-- "Probé 5 herramientas IA para presentaciones. Esta es la única que funciona en español"
-- "Lo que NADIE te dice sobre usar ChatGPT en tu trabajo (y por qué te van a despedir si lo haces mal)"
 
-**Diferenciador defensible:** específico LATAM + español neutro + práctico-accionable. No news, no theory, no philosophy.
+- **Inversiones:** "El prompt que usé para analizar 5 CEDEARs en 10 min con datos LATAM" / "Probé Claude para armar mi portfolio. Lo que encontró fue contraintuitivo"
+- **Presupuesto:** "Subí mi extracto de Mercado Pago a Claude. Encontró 4 suscripciones fantasma" / "El prompt que detecta tus gastos invisibles"
+- **Ahorro/Inflación:** "Cómo armé mi escudo anti-inflación AR con IA en 30 min" / "Pregúntale a tu IA esto antes de elegir entre dólar MEP o blue"
+- **Impuestos:** "El prompt para saber si conviene monotributo o responsable inscripto (con tu data real)" / "Cómo ChatGPT calculó mi devolución de Ganancias antes que mi contador"
+- **Comparativas brokers/bancos:** "Probé IOL, Cocos y Bull Market con la misma pregunta a Claude. Esto pasó"
+- **Jubilación/Largo plazo:** "El plan de retiro que armé con IA siendo freelance LATAM"
+
+**Diferenciador defensible:** específico LATAM (no traducción gringa) + español neutro + finanzas reales + IA como herramienta + tono educativo NO asesor. No "vas a hacerte rico con esto", sí "vas a entender mejor tus números con esto".
 
 ---
 
-## Voz editorial — modelo híbrido (calibrado por ADR-016)
+## Compliance financiero (NUEVO eje v3 — ADR-017 sub-decisión C.1)
 
-**Filosofía:** Hook viral emocional + body sobrio práctico. **Engancha como Filo, entrega como Smart Brevity.**
+**Modelo:** educativo, no asesoría. Estilo Sofía Macías + Mis Propias Finanzas. Permite mencionar productos específicos (Cocos, IOL, GBM, Bitso, Buenbit) **con contexto y disclaimer**.
+
+### Hard NO (financiero)
+
+- "Invertí en X" (recomendación directa)
+- "Vas a ganar Y%" (predicción de rendimientos)
+- "Esto te hará rico" / "garantizado" / "sin riesgo"
+- Mencionar instrumentos sin contexto del riesgo asociado
+- Cifras sin fuente verificable
+- Predicciones de mercado tipo "el bitcoin va a $X en Y meses"
+- Consejos personalizados sin avisar que NO son personalizados
+
+### Hard YES (financiero)
+
+- Disclaimer en cada pieza: "Esto no es asesoría financiera. Consultá a un profesional antes de invertir."
+- Mostrar el proceso (cómo usar IA para evaluar) > recomendar el resultado
+- Cifras con fuente: "Según el balance Q3 de [empresa], publicado en [link]"
+- Mencionar riesgo cuando se habla de instrumentos: "El plazo fijo UVA ajusta por inflación pero tiene 90/180 días mínimo"
+- Aclarar moneda y contexto regulatorio del país
+- Ser explícito sobre los límites de la IA: "Claude no tiene datos en tiempo real; verificá las cifras antes de decidir"
+
+### Reglas que mencionar productos requieren
+
+| Tipo | Regla |
+|---|---|
+| Broker / banco / fintech | Mencionar como ejemplo o comparativa, no como recomendación. "Yo uso X" es OK con disclaimer. "Usá X" no es OK. |
+| Activo específico (acción, ETF, crypto) | Solo en contexto educativo. "Cómo evaluar X con IA" sí; "Comprá X" no. |
+| Estrategia financiera | Presentar como una opción entre varias, no como solución universal. |
+| Comisiones / tasas | Citar fuente y fecha. Sujetas a cambio. |
+
+---
+
+## Voz editorial — modelo viral hype calibrado (sin cambio v2→v3, recalibrado para finanzas)
+
+**Filosofía:** Hook viral emocional + body sobrio práctico + disclaimer claro. **Engancha como Filo, entrega como Smart Brevity, protege como Sofía Macías.**
 
 ### Hook (primeros 3 segundos del reel / primer 125 chars del caption)
-- **EMOCIONAL, contrarian, o de revelación.** No técnico, no anti-hype puro.
-- Permitido: "ESTO va a cambiar cómo trabajás", "El secreto que…", "Nadie te dice esto", "Probé X y…"
+
+- **EMOCIONAL, contrarian, o de revelación.** Calibrado para audiencia finanzas LATAM.
+- Permitido: "Esto va a cambiar cómo manejás tu plata", "El secreto que tu banco no te dice", "Probé X y…", "Lo que mi contador no vio"
 - Pasa los 3 requisitos del framework Rufusocial: ATENCIÓN + TENSIÓN + PROMESA
+- **Calibración finanzas:** evitar promesas de rendimiento. "Esto te va a hacer rico" → NO. "Esto te va a ahorrar 2 horas haciendo tu presupuesto" → SÍ.
 
 ### Body (todo después del hook)
+
 - **SOBRIO, práctico, paso-a-paso.** Smart Brevity puro.
-- Cifras concretas con contexto
+- Cifras concretas con contexto + fuente
 - "Por qué importa" obligatorio
 - Datos > opiniones
+- **Disclaimer financiero presente** (puede ser corto: "Esto no es asesoría — verificá con tu contador")
 - Anti-hype EN EL BODY (la regla aplica al cuerpo, no al hook)
 
-### Por qué esta calibración
+### Por qué esta calibración (re-revisada con Deep Research)
 
-Critical Review identificó que las cuentas que llegan a >1M LATAM (NeoCom 1.4M, Filo 1.8M) usan hooks emocionales. Las "sobrias" (Startupeable 27K, Ecosistema 12K) tienen techo más bajo.
+Reports 02+03 confirmaron: las cuentas LATAM que crecen sostenidamente combinan hook emocional + body sobrio. En finanzas específicamente, el dataset de Mis Propias Finanzas / Sofía Macías muestra que **el tono confesional + datos reales + admisión de errores** pega más que el "guru financiero" o el "anti-hype seco".
 
-**Compromiso:** captamos atención como las virales, **pero entregamos valor real como las premium**. Audiencia llega por el hook, se queda por el contenido. Esta tensión es resoluble — no contradictoria.
+**Compromiso:** captamos atención como las virales LATAM, **pero entregamos valor educativo y protección legal como las premium**. Audiencia llega por el hook, se queda por el contenido, vuelve por la confianza.
 
 ---
 
-## Reglas de voz (post-ADR-016)
+## Reglas de voz (v3 — finanzas)
 
 ### Hard YES
+
 - Datos verificables con fuente (en body, no en hook)
 - "Por qué importa" explícito en cada pieza
-- Acción concreta y accionable (cada pieza enseña algo que el lector PUEDE hacer hoy)
-- Reconocer incertidumbre cuando existe ("Probé X. Funciona PARA mí. Tu caso puede variar")
-- Hook que pasa el framework Rufusocial (atención + tensión + promesa)
+- Acción concreta que el lector puede hacer hoy (probar un prompt, hacer una consulta a IA con sus datos)
+- Reconocer incertidumbre cuando existe ("Probé X. Funcionó para mí. Tu situación puede ser distinta")
+- Hook que pasa Rufusocial framework
+- **Disclaimer financiero en cada pieza** (corto, no invasivo)
+- Mostrar Manuel/persona como aprendiz, no como gurú
+- Admitir errores y aprendizajes
 
 ### Hard NO
-- Hook técnico aburrido ("OpenAI lanza nuevo modelo")
-- Body con hype injustificado (el body es sobrio aunque el hook sea emocional)
-- Predicciones irresponsables sin caveat
-- Listicles vacíos ("10 prompts para…")
-- Memes baratos sin contexto
+
+- Hook técnico aburrido ("Nuevo modelo de Claude lanzado")
+- Body con hype injustificado o predicciones de mercado
+- Recomendaciones financieras específicas sin contexto
+- Promesas de rendimiento
+- Listicles vacíos ("10 acciones para hacerte rico")
+- Memes baratos sin contexto educativo
 - Marca de agua de TikTok/CapCut (penalización LATAM 30-40% reach)
 - Más de 1 emoji por frase
+- Datos sin fuente
+- Tono de "guru" o "yo sé y tú no"
 
-### Permitido bajo calibración (cambio post-ADR-016)
-- Cifras grandes en hook con shock value, siempre que el body las contextualice
-- Contrarian claims ("La verdad sobre X que…") siempre que el body presente evidencia
+### Permitido bajo calibración
+
+- Cifras grandes en hook con shock value, siempre que el body las contextualice con fuente
+- Contrarian claims ("La verdad sobre X que tu broker no te dice") siempre que el body presente evidencia
 - Tono emocional en hook + CTA, sobrio en body
-- "Esto cambia" / "Esto rompe" en hook, "según el research" / "en mi prueba" en body
+- Mencionar productos específicos (Cocos, IOL, GBM, Bitso) **con disclaimer y como ejemplo, no recomendación**
+- "Esto puede cambiar tu plata" / "Esto me ahorró" en hook, "según el balance" / "en mi prueba" en body
 
 ---
 
 ## Idioma
+
+(Sin cambio v2 — sigue español neutro LATAM)
 
 - **Español neutro LATAM.** Sin peninsular, sin extremos regionales.
 - **NO usar (peninsular):** vosotros, vuestro, vale, tío/tía, hostia, mola
 - **NO usar (extremo MX):** chido, padre, no manches, qué onda
 - **NO usar (extremo AR):** vos sos, che, viste, boludo, posta
 - **SÍ usar:** ustedes, nuestro, está bien, ¿no?, listo, claro, dale
-- Vocabulario técnico en inglés cuando es estándar (AI, AGI, LLM, agent, prompt, deployment, enterprise, workflow).
-- Cifras siempre con contexto en body (no "$1.5B" suelto, sino "$1.5B reportado por WSJ").
+- **Vocabulario técnico finanzas en español + caveat regional:**
+  - "Plazo fijo" (universal LATAM) > "depósito a plazo" (peninsular)
+  - "Acción" / "ETF" / "CEDEAR" (AR específico — explicar primera vez)
+  - "Renta variable / fija" (universal técnico)
+  - "Tasa nominal / efectiva" (universal LATAM)
+  - "Inversión" / "ahorro" / "presupuesto" / "ganancia" (universal)
+- **Vocabulario técnico IA en inglés cuando es estándar:** AI, AGI, LLM, prompt, agent, deployment, workflow.
+- **Cifras siempre con contexto:** no "$1,000 ganaron" sino "$1,000 ganaron en 12 meses según [fuente]"
+- **Moneda explícita:** "USD 1,000" / "ARS 1.000.000" / "MXN 20,000" / "COP 4.000.000" — nunca "$1,000" suelto.
 
 ---
 
-## Formato — How-To específico
+## Formato — AI × Finanzas específico
 
-### Reels (formato principal)
+### Reels (formato principal post-Fase 2)
+
 - **Largo:** 25-35 segundos (sweet spot validated)
 - **Hook (0-3s):** emocional/contrarian + on-screen text grande
-- **Body (3-22s):** los pasos concretos del how-to, jump cuts 3-4s, texto en pantalla siempre
-- **Cierre (22-30s):** resultado mostrado + CTA específico ("Probalo en tu próxima reunión", "Guardá esto")
-- **Audio:** voice clone Manuel (ADR-008) — voz humana clonada cuenta como humana para algoritmo
-- **NO marca de agua TikTok/CapCut** (penalización LATAM 30-40%)
+- **Body (3-22s):** los pasos concretos del análisis con IA, jump cuts 3-4s, screenshots de IA + balance/extracto si aplica
+- **Cierre (22-30s):** resultado + disclaimer rápido ("Esto no es asesoría — probalo con tus datos") + CTA
+- **Audio:** decisión voice clone vs manual deferida a Fase 2 (ADR-008 DEFERRED)
+- **NO marca de agua TikTok/CapCut**
 
-### Carousels Instagram (formato secundario Fase 1)
+### Carousels Instagram (formato principal Fase 1)
+
 - **Slide 1 (HOOK):** cifra grande o claim emocional + visual standard §7
-- **Slides 2-N (PASOS):** cada slide = 1 paso accionable, con screenshot/visual si aplica
-- **Slide penúltima:** resultado/before-after o contexto LATAM
-- **Slide final:** CTA + branding wordmark
+- **Slide 2 (CONTEXTO):** "Por qué importa" + qué problema resuelve
+- **Slides 3-N (PASOS):** cada slide = 1 paso del análisis con IA, con screenshot de prompt/respuesta si aplica
+- **Slide penúltima:** resultado/aprendizaje + caveat ("Esto fue mi caso. Tu situación puede ser distinta")
+- **Slide final:** **DISCLAIMER OBLIGATORIO** + CTA + branding
+  - Texto base: "Esto no es asesoría financiera. Consultá a un profesional antes de tomar decisiones con tu plata."
 - **Visual:** dark mode #0F0F10 + Inter + JetBrains Mono (POST_STANDARD §7)
+- **Slide compliance audit:** A9 verifica que slides 1 y final cumplan reglas financieras
 
 ### Captions IG
+
 - **Largo:** bajo 150 chars total. Hook en primeros 125 chars (visible antes de "more").
-- **Estructura:** hook emocional + 1 frase de promesa + CTA
-- **Emojis:** 1-2 estratégicos máximo. Permitidos: ⚡ 🏦 💼 📊 → 🔥 ⚠️
-- **Hashtags:** 5-10 niche. Mix volumen alto + nicho específico. NO 30 broad.
+- **Estructura:** hook emocional + 1 frase promesa + CTA
+- **Disclaimer:** si la pieza menciona productos específicos, agregar al final "⚠️ Educativo, no asesoría"
+- **Emojis:** 1-2 estratégicos máximo. Permitidos: ⚡ 💰 📊 → 🔥 ⚠️ 💼
+- **Hashtags:** 5-10 niche. Mix finanzas LATAM + IA. Ej: #FinanzasPersonales #InversionesLATAM #IAparaTodos #CEDEARs #PresupuestoFamiliar
 
 ### TikTok captions
+
 - 100-300 chars (más largo que IG)
-- 3-5 hashtags trending
-- Tono más casual que IG (mismo contenido, calibración distinta)
+- 3-5 hashtags trending finanzas LATAM
+- Tono más casual que IG
+- Disclaimer puede ser visual en el reel mismo, no obligatorio en caption
 
 ### Newsletter sections (Beehiiv)
-- **Largo:** 250-400 palabras por sección
-- **Estructura adoptada del template #12533:**
+
+- **Largo:** 250-400 palabras por sección principal
+- **Estructura:**
   - Subject line emocional + 5 alternates
   - Pre-header complementario
   - Intro sin saludo, hook directo
-  - Top Story deep-dive Smart Brevity (sin meta-labels)
-  - Quick Hits 3-5 stories breves
+  - Top Story: el análisis del día con IA (Smart Brevity)
+  - Quick Hits: 3-5 movimientos relevantes finanzas+IA LATAM
+  - "Prompt de la semana": el prompt textual que el suscriptor puede copiar
+  - **Disclaimer footer:** disclaimer financiero estandarizado + unsubscribe
   - CTA close conversacional
 
 ---
 
-## Hook framework Rufusocial — calibrado para how-to
+## Hook framework Rufusocial — calibrado para finanzas
 
-Todo hook (Reel, caption, subject line) debe pasar las 3 condiciones:
+Todo hook debe pasar las 3 condiciones:
 
 1. **ATENCIÓN** — patrón emocional: cifra inesperada / claim contrarian / pregunta directa / revelación
-2. **TENSIÓN** — el lector tiene UN problema concreto que la pieza promete resolver
-3. **PROMESA** — beneficio específico y testeable ("vas a aprender X en 3 minutos", "vas a evitar este error")
+2. **TENSIÓN** — el lector tiene UN problema financiero concreto que la pieza promete entender
+3. **PROMESA** — beneficio específico y testeable, **NUNCA rendimiento prometido**
 
 **Crítico:** hook debe funcionar SIN sonido. Subtítulos = parte del hook visual. Primeros frames deben comunicar por sí solos.
 
-### Ejemplos calibrados para AI How-To LATAM
+### Ejemplos calibrados AI × Finanzas LATAM
 
 | Hook | ATENCIÓN | TENSIÓN | PROMESA |
 |---|---|---|---|
-| "Despedí a mi analista. Esto hace Claude por la mitad del costo." | Contrarian fuerte | "¿Funcionará para mí?" | Reducción de costo concreta |
-| "El prompt que usé para escribir 50 emails en 20 min" | Cifra específica | "Yo tardo más" | Acceso al prompt |
-| "Probé 5 IAs para tu industria. Solo UNA sirve." | Pregunta latente | "¿Cuál?" | Comparativa práctica |
-| "Esto va a destruir tu reputación si lo haces mal con IA" | Riesgo emocional | "¿Lo estoy haciendo mal?" | Cómo evitarlo |
+| "Probé Claude con mi extracto. Encontró $40K que no veía." | Cifra específica + contrarian | "¿Yo también tendré dinero invisible?" | Detectar tus propios gastos invisibles |
+| "El prompt que mi contador no querría que tengas" | Revelación con tensión | "¿Estoy pagando de más?" | Acceso al prompt |
+| "Tu plazo fijo está perdiendo plata. La IA te dice cuánto." | Claim contrarian + cifra latente | "¿Cuánto exactamente?" | Saber tu pérdida real |
+| "Pregunté a 3 IAs sobre CEDEARs. Una me hizo cambiar de opinión." | Pregunta latente | "¿Cuál?" | Comparativa práctica |
 
 ---
 
 ## Comunidad como pilar
 
+(Sin cambio v2)
+
 - "Comunidad" pega más que "audiencia" o "lectores" en LATAM
-- Mencionar comunidad explícitamente en bio, taglines, CTAs cuando aplique
 - "Únete a la comunidad" > "Síguenos"
-- "Lectores" sirve como sinónimo neutral
+- Para finanzas: comunidad como espacio de aprendizaje, NO de tips de inversión
 
 ---
 
-## Tagline formula LATAM (calibrada para how-to)
+## Tagline formula — finanzas LATAM
 
-**Estructura:** VALOR PRÁCTICO + TIEMPO + IDIOMA/REGIÓN + PRECIO
+**Estructura:** VALOR PRÁCTICO + TIEMPO + IDIOMA/REGIÓN + DISCLAIMER
 
-Ejemplos a testear para nuestro caso:
-- "IA práctica para profesionales LATAM. 3 min al día. Gratis."
-- "Cómo usar IA en tu trabajo, en español, sin enrolarte en cursos caros."
-- "El how-to de IA que tu equipo necesita. LATAM, gratis, diario."
+Ejemplos a testear post Fase -1:
 
-(El tagline definitivo se elige después de Fase -1 con data de qué resuena con audiencia real.)
+- "Cómo usar IA para tu plata. LATAM. 5 min al día. Educativo, no asesoría."
+- "Tu manual de IA para finanzas personales. En español. Sin BS, sin gurús."
+- "IA práctica para tu plata, en LATAM, sin asesoría. El daily que tu billetera necesita."
+
+(El tagline definitivo se elige post Fase -1 con data.)
 
 ---
 
 ## Multi-channel strategy
 
-- **Activo central:** newsletter Beehiiv (propiedad propia, no depende de algoritmos IG/TikTok)
+(Recalibrado v3)
+
+- **Activo central:** **newsletter Beehiiv DESDE DÍA 1** (Fase 1, no Fase 3) — Reports 02+05: el canal más durable + el menos volátil.
 - **IG + TikTok:** canales de adquisición que dirigen a newsletter
-- **LinkedIn (Fase 1.5):** evaluar — Startupeable demostró que LinkedIn funciona LATAM B2B
-- **WhatsApp Channels:** evaluar Fase 2+ — canal creciente LATAM
+- **LinkedIn (Fase 1.5):** evaluar — finanzas LATAM tiene tracción B2B (gerentes, founders)
+- **WhatsApp Channels:** evaluar Fase 2+ — canal creciente LATAM para finanzas
 - **Pattern probado:** cross-pollination podcast → newsletter → IG → LinkedIn
 
 ---
 
-## Benchmarks realistas (recalibrados para how-to + viral path)
+## Benchmarks realistas (RESET v3 — ADR-017)
 
-**Antes (v1 sobrio):** 12-30K en 12-18 meses = home run.
+**Antes (v2):** 5K base, 15K niche, 50K target 12m, 100K excepcional, 500K+ NeoCom level
+**Ahora (v3 — calibrado al dataset Report 03):**
 
-**Ahora (v2 calibrado):**
-- 5K = base creíble (Fase -1 validation)
-- 15K = niche success
-- 50K = top tier (objetivo 12 meses, viable con voz emocional + how-to)
-- 100K = excepcional (objetivo 18-24 meses)
-- 500K+ = NeoCom/Filo level (24-36 meses si el viral path engancha)
+| Hito | Plazo realista | Caveat |
+|---|---|---|
+| **5K subs newsletter** | 6-9 meses | Base creíble con cadencia + inflection lever |
+| **10K subs newsletter** | 12 meses | Target base case (45-65% prob según Report 03) |
+| **30-50K subs newsletter** | 24 meses | Top decile con automatización + lever activo |
+| **100K subs newsletter** | 36+ meses | Requiere equipo o expansión sub-nicho |
+| **15K-25K IG followers** | 12 meses | Si el viral path funciona en finanzas |
+| **8K-15K LinkedIn (Fase 1.5)** | 12 meses | Si B2B finanzas resuena |
 
-**Target north star Manuel:** audiencia masiva (>100K en 12-18 meses). El path "viral hype calibrado + how-to práctico + LATAM" es la apuesta más coherente con esto.
+**North star Manuel:** audiencia masiva como **horizonte de largo plazo (24-36m+)**, no target de 12-18m. **10K subs newsletter en 12m es realmente un buen resultado.** El path "viral hype calibrado + AI×Finanzas + LATAM + Inflection Lever Track" es la apuesta más coherente con esto.
+
+**Calibración crítica:** si en mes 6 estamos en <2K subs, NO panic — replantear hook + sub-nicho específico (¿inversiones vs presupuesto vs impuestos?). Si en mes 12 estamos en <5K, replantear nicho serio.
 
 ---
 
-## Hard NO's (post-ADR-016)
+## Hard NO's (post-ADR-017, recalibrado finanzas)
 
 - Body con hype injustificado (el hook puede ser emocional, el body NO)
-- Predicciones irresponsables sin caveat ("este modelo va a destruir X industria" sin matiz)
-- Listicles sin sustancia ("10 prompts para ganar dinero con IA" — vacuo)
+- **Recomendaciones específicas de inversión** ("comprá X")
+- **Predicciones de rendimiento o mercado**
+- Predicciones irresponsables sin caveat
+- Listicles sin sustancia ("10 acciones para hacerte rico con IA")
 - Memes baratos sin valor educativo
 - Marca de agua de otras plataformas
 - Más de 1 emoji por frase
-- Pasar Smart Brevity por encima de claridad ("axiomas" no deben ser indescifrables)
+- Datos sin fuente
+- **Cifras de moneda sin contexto inflación / país**
+- Tono de "guru" o "yo sé y tú no"
 
 ---
 
-## Hard YES's (post-ADR-016)
+## Hard YES's (post-ADR-017)
 
 - Datos verificables con fuente (en body)
 - "Por qué importa" explícito
-- Acción concreta y accionable en cada pieza
-- Voz neutral y respetuosa en body
-- Reconocer incertidumbre cuando existe
+- **Disclaimer financiero en cada pieza con productos específicos**
+- Acción concreta accionable (el lector puede usar el prompt hoy)
+- Voz neutral, educativa, respetuosa
+- Reconocer incertidumbre y errores propios
 - Hook emocional que pasa Rufusocial framework
-- Mostrar Manuel como persona (face/voice ocasional) — autenticidad LATAM 2026
+- Mostrar Manuel como aprendiz/explorador, no gurú
+- Mencionar moneda + país + fecha cuando se citan cifras
 
 ---
 
-## Voz narrada — clarification (post-ADR-008 + ADR-016)
+## Voz narrada — DEFERRED (ADR-008 + ADR-017)
 
-**Voz primaria:** ElevenLabs voice clone de Manuel (ADR-008 — voice clone 100%).
-**Pre-requisito:** grabación de 20-30 min pendiente (script en `docs/voice-clone/recording-script.md`).
-**Mientras tanto:** Manuel narra manualmente con iPhone Voice Memos (fallback documentado).
+**Status:** decisión final voice clone vs manual narration **deferida a inicio Fase 2** (cuando Fase 1 estable + Manuel a 30 días de Fase 2).
 
-**Reglas de pronunciación neutralizada (cuando narre manual o el clone hable):**
-- SÍ: ustedes, carro, computadora, celular, manejar, platicar
-- SÍ: pronunciar "z" y "c" como "s" (no ceceo)
-- NO peninsular: vosotros, vale, tío, ordenador, móvil, coche, ceceo
-- NO MX extremo en narración: chido, padre, no manches, órale
-- NO AR extremo: vos sos, che, sheísmo (calle="cashe"), playa="plasha"
-- NO caribe extremo: pa'lante, elisiones fuertes de "s"
+**Razones del deferral:**
+- Report 05: TikTok ya auto-etiqueta voice clone realista — disclosure obligatorio
+- Pivot a finanzas refuerza autoridad personal (Manuel como persona puede sumar más credibilidad que voz AI)
+- Hasta Fase 2 no se necesita decidir
 
-**Estilo de lectura para how-to:**
-- Pausas marcadas en hook (3 segundos cuentan triple)
-- Bajada de tono en datos clave (autoridad)
-- **Aceleración con energía emocional al pivote del problema** (calibración viral)
-- Cierre con ritmo ascendente en CTA + tono de "te puede pasar"
+**Mientras tanto (Fase 0-1):** carouseles + captions, sin audio. Si llegamos a Fase 2: 3 opciones según data:
+- **A) Voice clone 100% ElevenLabs** ($11 primer mes deal → $22/mo) — escala alto, label obligatorio
+- **B) Narración manual Manuel** ($0) — autoridad alta, escala limitada
+- **C) Híbrido:** clone para informativo, manual para opiniones — balance
 
-**Justificación data:** voz humana clonada de Manuel cuenta como humana para algoritmo (research production-stack confirmado). Cero riesgo "Made with AI" label penalty si la voz suena humana.
+(Si elegimos A o C, las reglas de pronunciación neutralizada que estaban en v2 se reactivan.)
 
 ---
 
@@ -257,11 +343,13 @@ El nombre **"AI Brief LATAM"** está pegado en:
 - Múltiples archivos .md con título
 - Email business `aibrieflatam.media@gmail.com`
 
-**Decisión pendiente:** Manuel confirma nombre nuevo en sesión futura. Opciones tentativas:
-- "AI How-To LATAM"
-- "IA Práctica LATAM"
-- "Manual IA" (corto, brandable)
-- "Práctica IA" (LATAM-friendly)
-- "Cómo IA" (super corto, viral-friendly)
+**Decisión pendiente:** Manuel confirma nombre nuevo post Fase -1. Opciones tentativas (finanzas-focused):
 
-El rename físico (`git mv` + updates) se hace de una vez cuando el nombre esté locked.
+- "AI Finanzas LATAM"
+- "IA para tu Plata"
+- "Plata con IA"
+- "Manual de Plata IA"
+- "Finanzas con Bot" / "Bot Finanzas"
+- "TuBot Financiero LATAM"
+
+El rename físico se hace de una vez cuando el nombre + handle + dominio estén locked.

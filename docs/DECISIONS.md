@@ -387,3 +387,166 @@ Validación Manual (5-10 piezas, 7-14 días) → Decision Point
 - **Backup pattern obligatorio:** cron diario que `git commit -am` el workflow export en un repo privado. Si el VPS muere, el workflow vive en GitHub.
 
 **Plan B si Hostinger no funciona:** Railway.app ($5/mo) o DigitalOcean Droplet ($6/mo). Mismo concepto self-hosted, otro proveedor.
+
+---
+
+## ADR-017 — Pivot post-Deep-Research: nicho AI×Finanzas, stack SaaS-first, target realista, inflection lever
+
+**Fecha:** 2026-05-29
+**Status:** Aceptada (Manuel respondió 5 decisiones + 3 sub-decisiones)
+**Scope:** AI Brief LATAM (carpeta sigue como está hasta que haya handle/dominio decidido)
+**Supersedes parcial:** ADR-010 (ángulo), ADR-014 (publisher), ADR-015 (deployment), ADR-016 (pivot #1, 4 cambios)
+**Defers:** ADR-008 (voice clone)
+**Trigger:** 5 Deep Research outputs procesados 2026-05-20 (`docs/DEEP_RESEARCH_SYNTHESIS.md`)
+
+### Contexto
+
+ADR-016 ejecutó 4 pivots el 2026-05-18 basado en el Critical Review interno. Los 5 Deep Research outputs (carril 2) confirmaron 3 de los 4 pivots y agregaron 3 capas nuevas que no estaban en el plan:
+
+- **Layer 5:** target audiencia >100K en 12-18m no soportado por dataset de 11 creators reales.
+- **Layer 6:** existe shortcut SaaS a $48/mo que cubre 75-80% del pipeline.
+- **Layer 7:** 9 de 11 creators escalaron por canal EXTERNO (partnership, press, podcast guest), no viralidad orgánica.
+
+Manuel respondió las 5 decisiones (1a, 2e, 3b, 4b, 5c) y las 3 sub-decisiones operativas (carpeta default, vertical único finanzas, compliance educativo).
+
+### Cambio 1 — Reset realista del target de audiencia (decisión 1a)
+
+**Antes (ADR-016 implícito + brand_voice v2):** north star = "audiencia masiva >100K" en 12-18 meses, modelo NeoCom/Filo.
+
+**Ahora:**
+- **Base case 10K en 12 meses** (Report 03: 45-65% prob con 4 factores ejecutados; sin lever externo baja a 25-30%).
+- **30-50K en 24 meses** con stack maduro + lever ejecutado.
+- **100K reservado para 36+ meses con equipo** (NO founder solo).
+- North star de Manuel ("audiencia masiva") se mantiene como **horizonte de largo plazo**, NO como target de 12-18m.
+
+**Justificación:** dataset Report 03 (Pictoline, MPF, Filo, Cenital, DotCSV, Mafia IA, Startupeable, etc.). 0 de 11 creators alcanzó 100K solo en 12-18m. Ajustar metas a base rates evita declarar fracaso a los 12 meses cuando 10K-30K es realmente un buen resultado.
+
+### Cambio 2 — Pivot nicho: AI How-To genérico → AI × Finanzas Personales LATAM (decisión 2e)
+
+**Antes (ADR-016 pivot 1):** AI How-To LATAM generalista para profesionales 25-45.
+
+**Ahora:** **AI × Finanzas Personales LATAM** como vertical único. Sub-decisión B = B.1 (vertical único, NO wedge + expansión).
+
+**Por qué:**
+- Report 04 score: 23+ (AI puro 21; Real Estate 17; AI noticias 15).
+- Combina dos verticales con mayor demanda actual: IA (+387% YoY views TikTok español) + finanzas personales LATAM (boom post-pandemia + educación financiera obligatoria 2025 en MX/AR/CO/CL).
+- Sale del lane "gurú financiero" (saturadísimo) y "AI brief generalista" (saturado) entrando como "el que te enseña la herramienta".
+- Monetización doble: SaaS AI affiliate + cursos finanzas/inversión.
+- Defensible: requiere conocer ambos verticales, barrera para imitadores.
+
+**Pregunta tipo que cada pieza responde:** "¿Cómo uso IA para [decisión financiera concreta LATAM]?"
+
+Ejemplos del tipo de pieza:
+- "El prompt que usé para analizar 5 ETFs en 10 min (con datos LATAM)"
+- "Probé Claude para mi presupuesto mensual. Esto encontró que mi planilla no veía."
+- "Cómo armar tu plan de retiro con IA, en español, en 20 min"
+- "El error que cometen los argentinos con CEDEARs (y cómo IA lo detecta antes)"
+
+**Riesgo aceptado:** compliance financiero LATAM (CNV ARG, CNBV MX, SFC COL endurecieron 2024-2025). Mitigado por sub-decisión C = C.1 (educativo, no asesoría — modelo Sofía Macías / Mis Propias Finanzas).
+
+### Cambio 3 — Stack: SaaS-first, n8n minimalista (decisión 3b)
+
+**Antes (ADR-014 + ADR-015):** Hostinger VPS self-hosted ($6.49/mo) + n8n + Upload-Post community node como núcleo del pipeline.
+
+**Ahora — stack híbrido buy-first:**
+
+| Capa | Antes | Ahora | Por qué |
+|---|---|---|---|
+| Publishing IG/TikTok/LinkedIn | Upload-Post community node | **ContentStudio Standard** ($19/mo) | Hub social maduro, RSS discovery + approvals + scheduling nativos. Report 01: G2 4.6/372 reviews. |
+| Carousel generation + AI visuals | gpt-image-2 directo + custom | **Blotato Starter** ($29/mo) | AI Agent Carousel Maker + 58 idiomas + community nodes oficiales n8n/Make. Report 01: cubre el caso. Es el "plan B" que ya teníamos. |
+| Newsletter | Beehiiv (Fase 3) | **Beehiiv Launch** ($0 hasta 2,500 subs) → **Scale** ($43/mo) | Sin cambio en herramienta, pero adelantado a Fase 1 (no Fase 3) porque es el activo más durable según Reports 02+05. |
+| Orquestación + moat editorial | n8n self-hosted en Hostinger VPS | **n8n cloud trial** (gratis) primero; **migrar a Hostinger VPS solo si el trial se acaba**. n8n queda SOLO para el moat: scorer LATAM + fact-check + Telegram approval. | Reduce setup time + supply chain risk (Report 05: n8n CVEs reales 2025-2026). |
+
+**Costo nuevo:** ~$48/mo Fase 1 (ContentStudio $19 + Blotato $29 + Beehiiv $0 + n8n cloud $0 + dominio $1 + Anthropic ~$25-42 + OpenAI ~$6-8). Total realista **~$80-100/mo Fase 1**, vs ~$80-100/mo del stack anterior. **Mismo precio, menos overhead, menos supply chain risk.**
+
+**ADR-014 (Upload-Post) → SUPERSEDED.** Upload-Post no aparece en el análisis competitivo Report 01; Blotato cubre el caso con community node oficial maduro. Si Blotato falla, plan B = ContentStudio nativo o Upload-Post como tercera opción.
+
+**ADR-015 (Hostinger VPS) → MODIFICADO.** No se ejecuta el setup desde día 1. Arrancamos en n8n cloud trial gratis. VPS se reabre si: (a) trial se acaba (b) necesitamos community nodes que cloud bloquea (c) volumen supera trial limits. Runbook `hostinger-vps-n8n-setup.md` se mantiene en repo como referencia, pero no es Fase 0/1 obligatorio.
+
+### Cambio 4 — Inflection Lever Track en paralelo con Fase -1 (decisión 4b)
+
+**Antes:** plan asumía growth por viralidad orgánica + Telegram HITL. Sin work stream explícito de partnerships/PR/cross-promo.
+
+**Ahora:** **Inflection Lever Track** como work stream paralelo a Fase -1 (NO antes, NO después — en paralelo).
+
+**Justificación (Report 03):** 9 de 11 creators del dataset escalaron por canal externo (ChatGPT moment para DotCSV, reseña aerolínea para Sofía Macías, inversor con red para MPF, fichaje Ramsey para Andrés Gutiérrez, partners con red para EES, Top Voice LinkedIn para Startupeable, pandemia para MPF). Sin lever externo, prob de 10K en 12m baja a 25-30%; con lever, sube a 45-65%.
+
+**Estructura del track:**
+- Lista inicial de 20 prospects (creators finanzas LATAM, podcasts finanzas, newsletters Cenital/Mis Propias Finanzas/Startupeable, medios LATAM tech, brokers Cocos/IOL/GBM con programa partner, fintechs Ualá/Nubank/Mercado Pago).
+- 5 outreaches/semana desde Mes 1 de Fase -1 (no esperar a Fase 1).
+- Primer hit cerrado objetivo Mes 2.
+- Bandwidth asignado: 2-3 hs/semana Manuel.
+
+### Cambio 5 — Voice clone diferido (decisión 5c)
+
+**Antes (ADR-008):** voice clone 100% ElevenLabs ($22/mo), grabación 20 min pendiente, activación Fase 2.
+
+**Ahora:** decisión final voice clone **diferida hasta que Fase 2 esté inmediata** (Manuel a 30 días de arrancar reels).
+
+**Por qué:**
+- Report 05: TikTok ya auto-etiqueta AIGC con voice clone realista. Voice clone obligará disclosure por plataforma.
+- Pivot nicho a finanzas refuerza la importancia de "autoridad personal" — Manuel narrando directo puede sumar credibilidad vs voz AI.
+- ElevenLabs deal 50% off primer mes ($11) sigue disponible cuando se active.
+
+**ADR-008 → DEFERRED.** No se invalida, se pausa. Decisión final cuando estemos a 30 días de Fase 2 con data de qué necesita el pipeline.
+
+### Cambios cross-cutting derivados
+
+| Documento | Cambio | Razón |
+|---|---|---|
+| `docs/ROADMAP.md` | v5 — Inflection Lever Track + métricas reset 10K/30-50K/100K + stack SaaS | Cambios 1+3+4 |
+| `docs/STACK.md` | v4 — reemplazar Upload-Post por ContentStudio+Blotato, deferir Hostinger VPS | Cambio 3 |
+| `docs/COSTS_6MO.md` | recalcular Fase 1 con SaaS stack | Cambio 3 |
+| `projects/ai-brief-latam/brand_voice.md` | v3 — nicho finanzas + voz adaptada + benchmarks reset | Cambios 1+2 |
+| `projects/ai-brief-latam/sources.yaml` | sumar fuentes finanzas LATAM | Cambio 2 |
+| `projects/ai-brief-latam/risk_profile.yaml` | agregar compliance financiero LATAM | Cambio 2 |
+| `projects/ai-brief-latam/prompts/a9-compliance.md` | reglas asesor financiero (15 → 18 reglas) | Cambio 2 |
+
+### Sub-decisiones de Manuel (2026-05-29)
+
+| # | Sub-decisión | Respuesta | Implicación |
+|---|---|---|---|
+| A | Renombrar carpeta proyecto | Default: dejar `projects/ai-brief-latam/` | Cambia contenido nomás; rename físico cuando haya handle/dominio decidido |
+| B | Alcance pivot finanzas | B.1 — vertical único | Foco fuerte; expansión (marketing/ops) se reabre si llegás a 10K |
+| C | Posicionamiento compliance | C.1 — educativo, no asesoría | Disclaimer claro; permite mencionar Cocos/IOL/GBM con contexto. Modelo Sofía Macías. |
+
+### Status de ADRs previos tras ADR-017
+
+| ADR | Status post-ADR-017 |
+|---|---|
+| ADR-001 a ADR-007 | Sin cambio (Project Autopilot) |
+| ADR-008 (voice clone) | **DEFERRED** — decisión final cuando Fase 2 esté a 30 días |
+| ADR-009 (n8n stack) | **MODIFICADO** — n8n rol reducido a solo moat editorial (scorer + fact-check + Telegram) |
+| ADR-010 (ángulo generalista) | **SUPERSEDED** por ADR-016 + ADR-017 (ahora AI × Finanzas) |
+| ADR-011 (1 post/día Fase 1) | Sigue vigente |
+| ADR-012 (publisher) | **SUPERSEDED** por ADR-017 (publisher = ContentStudio + Blotato) |
+| ADR-013 (gpt-image-2) | Sigue vigente — Blotato usa gpt-image-2 internamente, mismo modelo |
+| ADR-014 (Upload-Post) | **SUPERSEDED** por ADR-017 |
+| ADR-015 (Hostinger VPS) | **DEFERRED** — runbook se mantiene, no se ejecuta hasta que aplique |
+| ADR-016 (pivot estratégico) | **EXTENDIDO** por ADR-017 (3 layers nuevas: target, stack, lever) |
+
+### Riesgos de ADR-017
+
+1. **Re-trabajo conceptual:** brand_voice + sources + risk_profile + a9 requieren reescritura significativa. Estimado: 1-2 sesiones de Claude + revisión de Manuel.
+2. **Pérdida de momentum:** segundo pivot grande en 11 días. Riesgo de "parálisis por análisis". Mitigado por la claridad de Fase -1 con métricas Go/No-Go.
+3. **Compliance financiero LATAM:** nuevo eje de riesgo. Mitigado por C.1 (educativo) + disclaimer en cada pieza + no recomendar valores específicos.
+4. **Stack SaaS bloquea customization:** ContentStudio + Blotato son cajas más cerradas que n8n custom. Si el moat editorial necesita feature que el SaaS no expone, bloqueante. Mitigado por mantener n8n para el moat.
+5. **Carpeta `ai-brief-latam/` confunde:** el nicho ya no es "AI Brief" ni "AI How-To" sino "AI × Finanzas". Mitigado por nota explícita en docs + decisión de rename cuando haya nombre nuevo.
+
+### Acciones de este ADR (concretas)
+
+- [x] Documentar ADR-017
+- [x] Update `docs/ROADMAP.md` → v5 con Inflection Lever Track + métricas reset + stack SaaS
+- [x] Update `docs/STACK.md` → v4 con nuevo stack SaaS
+- [x] Update `docs/COSTS_6MO.md` con nuevo stack
+- [x] Update `projects/ai-brief-latam/brand_voice.md` → v3 nicho finanzas
+- [x] Update `projects/ai-brief-latam/sources.yaml` con fuentes finanzas LATAM
+- [x] Update `projects/ai-brief-latam/risk_profile.yaml` con compliance financiero
+- [x] Update `projects/ai-brief-latam/prompts/a9-compliance.md` con reglas asesor financiero
+
+### Acciones deferred
+
+- [ ] Decidir nombre/handle/dominio del proyecto (Manuel cuando tenga claridad)
+- [ ] Rename físico de carpeta `projects/ai-brief-latam/` cuando se decida nombre
+- [ ] Lista concreta de 20 prospects para Inflection Lever Track (Manuel + Claude próxima sesión)
+- [ ] Decisión final voice clone (Fase 2 - 30 días)

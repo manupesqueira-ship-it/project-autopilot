@@ -1,13 +1,145 @@
 ---
-risk_level: low
-require_human_approval: always
+# Risk profile — AI x Finanzas LATAM (v2 post-ADR-017, 2026-05-29)
+# Source of truth para A9 Compliance. Ver projects/ai-brief-latam/prompts/a9-compliance.md
+# para reglas completas y casos de uso.
+
+risk_level: medium  # subido de "low" v1 — el nicho finanzas LATAM agrega compliance regulatorio
+require_human_approval: always  # HITL Telegram obligatorio antes de publicar
+
+# ─────────────────────────────────────────────────────────────────────
+# Sensitive topics — temas que requieren atencion extra en A9
+# ─────────────────────────────────────────────────────────────────────
 sensitive_topics:
-  - claims sin verificar sobre capacidades de modelos
+  # Topicos tecnicos IA (v1 — mantenidos)
+  - claims sin verificar sobre capacidades de modelos IA
   - confundir rumor con anuncio oficial
   - exagerar disponibilidad de herramientas
+
+  # Topicos financieros LATAM (v2 — nuevos por ADR-017)
+  - recomendaciones de inversion directas
+  - predicciones de rendimiento o precio de activos
+  - cifras de retornos sin caveat de riesgo
+  - mencion de instrumentos sin disclaimer
+  - consejos personalizados sin advertencia explicita
+  - cifras en moneda sin contexto pais inflacion fecha
+  - tasas o comisiones citadas sin fuente y fecha
+  - comparativas broker/banco sin balance del lado negativo
+  - predicciones de mercado (acciones, crypto, FX)
+  - claims de eficiencia o ahorro sin sustento numerico verificable
+
+# ─────────────────────────────────────────────────────────────────────
+# Forbidden patterns — frases prohibidas que A9 debe bloquear
+# ─────────────────────────────────────────────────────────────────────
 forbidden_patterns:
+  # IA hype (v1 — mantenidos)
   - "esto va a cambiar el mundo"
   - "el fin de [industria]"
   - "reemplaza completamente a"
-required_disclaimers: []
+
+  # Promesas de rendimiento (v2 — nuevos)
+  - "vas a ganar"
+  - "rendimiento garantizado"
+  - "sin riesgo"
+  - "te haces rico"
+  - "ganancia segura"
+  - "no podes perder"
+  - "ganancia asegurada"
+  - "duplica tu plata"
+  - "x10 tu inversion"
+
+  # Recomendaciones directas (v2 — nuevos)
+  - "tenes que comprar"
+  - "te recomiendo invertir en"
+  - "deberias poner tu plata en"
+  - "compra X ahora"
+  - "es el momento de invertir en"
+
+  # Predicciones especificas (v2 — nuevos)
+  - "el bitcoin va a llegar a"
+  - "esta accion va a subir"
+  - "el dolar va a bajar a"
+  - "el peso va a"
+
+  # Gurismos (v2 — nuevos)
+  - "el secreto de los ricos"
+  - "lo que los ricos saben"
+  - "tip exclusivo"
+  - "informacion privilegiada"
+
+# ─────────────────────────────────────────────────────────────────────
+# Required disclaimers — texto obligatorio en piezas que apliquen
+# ─────────────────────────────────────────────────────────────────────
+required_disclaimers:
+  # General financiero — en TODA pieza que mencione productos o numeros financieros concretos
+  - id: educativo_no_asesoria
+    text: "Esto es contenido educativo, no asesoria financiera. Antes de tomar decisiones con tu plata, consulta con un profesional matriculado."
+    applies_to: ["carousel", "newsletter", "tiktok_caption"]
+    placement:
+      carousel: "slide final, parte inferior con texto pequeno"
+      newsletter: "footer fijo de cada edicion"
+      tiktok_caption: "ultima linea del caption"
+
+  # Producto especifico (broker, fintech, banco, ETF, accion, crypto)
+  - id: mencion_producto
+    text: "Mencionado como ejemplo o experiencia personal. No es recomendacion. Cada producto financiero tiene riesgos especificos — verifica con la entidad y/o tu asesor."
+    applies_to: ["carousel", "newsletter", "ig_caption"]
+    placement: "junto a la primera mencion del producto, o slide donde se ve"
+
+  # Datos de mercado citados
+  - id: datos_mercado
+    text: "Cifras al [fecha de la pieza]. Sujetas a cambio. Verifica antes de tomar decisiones."
+    applies_to: ["carousel", "newsletter"]
+    placement: "junto a las cifras o al pie de la slide/seccion"
+
+  # IA como herramienta (limites)
+  - id: ia_limites
+    text: "Claude/ChatGPT no tienen datos en tiempo real ni informacion personalizada de tu situacion. Sus respuestas son punto de partida, no respuesta final."
+    applies_to: ["carousel", "newsletter"]
+    placement: "cuando la pieza presenta un analisis IA como conclusion"
+    optional: true  # solo si la pieza no es obvio que IA tiene limites
+
+# ─────────────────────────────────────────────────────────────────────
+# Regulatory context — referencia rapida para A9 y Manuel
+# ─────────────────────────────────────────────────────────────────────
+# Estos NO son disclaimers automaticos — son contexto que A9 usa para
+# evaluar si una pieza necesita disclosure extra segun pais.
+
+regulatory_context:
+  argentina:
+    regulator: CNV (Comision Nacional de Valores)
+    rule_relevante: "Quien recomienda inversiones publicamente puede requerir matricula de Agente Productor o Asesor Global de Inversiones."
+    posicionamiento_seguro: "Educativo + experiencia personal + disclaimer. No 'asesoria de inversion'."
+    endurecimiento_2024_2025: si
+  mexico:
+    regulator: CNBV (Comision Nacional Bancaria y de Valores)
+    rule_relevante: "Asesores en inversion requieren registro. Educacion financiera sin recomendaciones especificas no requiere registro."
+    posicionamiento_seguro: "Igual que AR — educativo + disclaimer."
+    endurecimiento_2024_2025: si
+  colombia:
+    regulator: SFC (Superintendencia Financiera de Colombia)
+    rule_relevante: "Decreto 661 de 2018 + reformas — endurece publicidad de inversiones."
+    posicionamiento_seguro: "Educativo + disclaimer. Evitar tono asesorial."
+    endurecimiento_2024_2025: si
+  chile:
+    regulator: CMF (Comision para el Mercado Financiero)
+    rule_relevante: "Marco analogo. Riesgo similar AR/MX/CO."
+    posicionamiento_seguro: "Educativo + disclaimer."
+    endurecimiento_2024_2025: parcial
+  peru:
+    regulator: SBS (Superintendencia de Banca, Seguros y AFP) + SMV
+    rule_relevante: "Educacion sin recomendaciones especificas no requiere registro."
+    posicionamiento_seguro: "Educativo + disclaimer."
+    endurecimiento_2024_2025: parcial
+
+# ─────────────────────────────────────────────────────────────────────
+# Audit trail — Manuel + Claude logean decisiones de compliance
+# ─────────────────────────────────────────────────────────────────────
+audit_log_required:
+  - rejecciones de A9 (con razon)
+  - ediciones por compliance pre-publicacion
+  - menciones de productos especificos (con disclaimer aplicado)
+  - cifras financieras citadas (con fuente)
+
+audit_log_path: "projects/ai-brief-latam/manual-mvp/compliance-log/"
+
 ---

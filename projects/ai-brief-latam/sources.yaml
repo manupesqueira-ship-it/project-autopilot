@@ -1,108 +1,111 @@
-# AI Brief LATAM — Source feeds
-# Only RSS for M1. Scrape/Inoreader deferred.
-# Sources with url: TBD are disabled until URLs are found.
+# AI x Finanzas LATAM — Source feeds (v3 post-ADR-017, 2026-05-29)
 #
-# ─────────────────────────────────────────────────────────────────────
-# REVISIÓN 2026-05-12 — expansión LATAM
-# ─────────────────────────────────────────────────────────────────────
-# La lista original (12 fuentes) tenía 10 anglo / 2 LATAM nativas → flojo
-# para una marca llamada "AI Brief LATAM". Esta revisión propone:
-#   • Mantener todas las anglo (siguen siendo señal primaria del mundo IA)
-#   • Agregar 10+ fuentes LATAM/español como peer-set
-#   • Marcar PROPUESTA = pendiente confirmación Manuel + verificación URL
-#   • Comentar fuentes regulatorias (relevantes solo cuando pieza específica toque regulación)
-#   • Diferir lista de founders X/Twitter a Fase 1.5
+# Pivot de nicho a AI x Finanzas Personales LATAM. Fuentes:
+#   - Anglo IA: mantener las primarias para senal del mundo IA (peso 1.5-2.0)
+#   - LATAM tech: bajado de peso (era core para AI Brief, ahora soft input)
+#   - LATAM finanzas: NUEVO bloque core (peso 1.8-2.0) — brokers, fintechs, newsletters financieras
+#   - Reguladores: comentados — solo activar cuando pieza especifica toque regulacion
+#   - Espana: comentadas en v2, mantener comentadas (peninsular castigado en a3)
 #
-# Convención de weight:
-#   2.0 → primaria oficial (OpenAI/Anthropic/Google/Meta + LATAM nativas)
-#   1.8 → media tech alto-tier (TechCrunch, Bloomberg Línea, Forbes LATAM)
-#   1.5 → media tech tier 2 (Wired, Fortune, Xataka, Hipertextual)
-#   1.3 → media generalista con cobertura IA (Ars Technica, La Nación)
-#   1.0 → comunidad / curaduría (Hacker News)
-# ─────────────────────────────────────────────────────────────────────
+# Convencion weight v3:
+#   2.0 -> primaria oficial (fuentes IA + fuentes finanzas LATAM core)
+#   1.8 -> tier 1 media tech (TechCrunch, Bloomberg Linea, Forbes LATAM)
+#   1.5 -> tier 2 media (Wired, Fortune, Xataka — peninsular descontado)
+#   1.3 -> tier 3 media generalista con cobertura ocasional
+#   1.0 -> comunidad / curaduria (Hacker News)
+# -----------------------------------------------------------
 
 sources:
-  oficial:
+  # -----------------------------------------------------------
+  # Bloque IA — fuentes oficiales y media tech (input para "que hay nuevo en IA que usar")
+  # -----------------------------------------------------------
+  oficial_ia:
     - { name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml", type: rss, weight: 2.0 }
     - { name: "Anthropic Blog", url: "https://www.anthropic.com/news", type: scrape, weight: 2.0 }
     - { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", type: rss, weight: 1.8 }
-    # Meta AI — JS-rendered SPA, no RSS. Deferred to Inoreader.
-    # - { name: "Meta AI", url: "TBD", type: rss, weight: 1.5 }
 
-  tech_media:
+  tech_media_ia:
     - { name: "TechCrunch AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/", type: rss, weight: 1.8 }
     - { name: "The Verge AI", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", type: rss, weight: 1.5 }
-    - { name: "Ars Technica AI", url: "https://feeds.arstechnica.com/arstechnica/technology-lab", type: rss, weight: 1.3 }
-    - { name: "Wired AI", url: "https://www.wired.com/feed/tag/ai/latest/rss", type: rss, weight: 1.3 }
-    - { name: "Fortune AI", url: "https://fortune.com/feed/", type: rss, weight: 1.5 }
+    - { name: "Wired AI", url: "https://www.wired.com/feed/tag/ai/latest/rss", type: rss, weight: 1.5 }
 
-  newsletters:
+  newsletters_ia:
     - { name: "Latent Space", url: "https://www.latent.space/feed", type: rss, weight: 1.5 }
-    # ── PROPUESTA 2026-05-12 ────────────────────────────────────────────
-    # Newsletters IA en español (referencia de voz/format LATAM):
-    # - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.5, _verified: "2026-05-12 ✅ ES, podcast/startups LATAM, 50K+ subs newsletter" }
-    #
-    # Newsletters SIN RSS público confirmado (subscribirse manualmente o defer):
-    # - { name: "Digital Brain", url: "TBD", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 newsletter existe (60K subs, 42% open ES+LATAM) pero plataforma no confirmada (Beehiiv/Substack). Suscribir a la lista para revisar voice." }
-    # - { name: "IA al Día", url: "TBD", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 newsletter LATAM 20K+ subs, RSS público no encontrado. Suscribir manualmente." }
-    # ─────────────────────────────────────────────────────────────────
+    # Newsletters IA en espanol (referencia voz/competencia post Deep Research):
+    # - { name: "Mafia IA", url: "https://aimafia.substack.com/feed", type: rss, weight: 1.5, _verified: "2026-05-20 Report 02 — 16K+ subs, weekly bisemanal" }
+    # - { name: "Digital Brain", url: "TBD", type: scrape, weight: 1.3, _status: "2026-05-20 Report 02 — 83-90K subs, Beehiiv probable; suscribir manual para inspeccion" }
+    # - { name: "IA al Dia", url: "TBD", type: scrape, weight: 1.3, _status: "2026-05-20 Report 02 — 40K subs, ES, dependencia fundador" }
+    # - { name: "GptZone", url: "https://news.gptzone.net/feed", type: rss, weight: 1.3, _status: "2026-05-20 Report 02 — 40K daily, utility news" }
 
   community:
     - { name: "Hacker News", url: "https://hnrss.org/frontpage", type: rss, weight: 1.0 }
 
-  latam:
-    # Fuentes ya activas
-    - { name: "Contxto", url: "https://contxto.com/en/feed/", type: rss, weight: 2.0 }
-    - { name: "LatamList", url: "https://latamlist.com/feed/", type: rss, weight: 2.0 }
+  # -----------------------------------------------------------
+  # NUEVO Bloque finanzas LATAM — core post-ADR-017
+  # -----------------------------------------------------------
+  finanzas_latam_brokers:
+    # Brokers AR (alto peso — instrumentos populares CEDEARs, FCI, plazos UVA)
+    - { name: "Cocos Capital Blog", url: "https://blog.cocos.capital/feed/", type: rss, weight: 2.0, _verified: "TBD 2026-05-29 — verificar URL real al activar" }
+    - { name: "IOL Invertir Online", url: "https://www.invertironline.com/Educacion", type: scrape, weight: 1.8, _status: "Sin RSS publico — scrape o feed Substack/blog asociado" }
+    - { name: "Bull Market Brokers Blog", url: "TBD", type: scrape, weight: 1.5, _status: "Verificar disponibilidad RSS" }
 
-    # ── PROPUESTA 2026-05-12 — expansión LATAM nativa ──────────────────
-    # OBJETIVO: balancear los 10 anglo del feed con peso real LATAM.
-    # Manuel debe confirmar (1) qué fuentes incluir, (2) yo verifico URLs.
-    #
-    # Tier 1 — LATAM nativo (cobertura verificada 2026-05-12):
-    # - { name: "La Nación Tecnología", url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ feed válido RSS 2.0, español AR" }
-    #
-    # Tier 1 — LATAM nativo SIN RSS público (requieren Inoreader/scrape):
-    # - { name: "Bloomberg Línea Tech", url: "TBD", type: scrape, weight: 1.8, _status: "❌ 2026-05-12 sin RSS público en /tecnologia/ ni /feeds/. Defer a Inoreader o scrape custom" }
-    # - { name: "Infobae Tecno", url: "TBD", type: scrape, weight: 1.3, _status: "❌ 2026-05-12 página RSS hub devuelve sin resultados, /feeds/rss/ 404. Defer." }
-    # - { name: "Pulso Social", url: "TBD", type: scrape, weight: 1.5, _status: "❌ 2026-05-12 /feed/ devuelve 404. Sitio activo pero sin RSS expuesto." }
-    # - { name: "Forbes Centroamérica", url: "https://forbescentroamerica.com/feed/", type: rss, weight: 1.5, _status: "⚠️ 2026-05-12 Claude Code no pudo fetch (probable Cloudflare). Probar desde n8n cloud que puede tener mejor acceso." }
-    #
-    # Tier 2 — España (verificados, voz peninsular — penalizar en scoring):
-    # NOTA: las españolas se incluyen como input pero el prompt a3-editorial
-    # debe descartar peninsular ("vosotros, vale, tío") y reescribir al neutro.
-    # Si Manuel prefiere 0 fuentes españolas, comentar las 3.
-    # - { name: "Xataka IA", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.5, _verified: "2026-05-12 ✅ ES, feed AI puro" }
-    # - { name: "Genbeta IA", url: "https://www.genbeta.com/tag/inteligencia-artificial/rss2.xml", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ ES, IA aplicada (tutoriales, herramientas)" }
-    # - { name: "Hipertextual", url: "https://hipertextual.com/feed", type: rss, weight: 1.3, _verified: "2026-05-12 ✅ ES generalista — el feed AI-específico (/tag/inteligencia-artificial/feed) devolvió 410 Gone, usar feed main y filtrar en a1.5 binary filter" }
-    # ─────────────────────────────────────────────────────────────────
+    # Brokers MX (peso alto — GBM, Bursanet, Kuspit)
+    - { name: "GBM Blog", url: "TBD", type: scrape, weight: 1.8, _status: "Verificar — GBM tiene blog de educacion financiera" }
+    - { name: "Kueski Blog", url: "TBD", type: scrape, weight: 1.5, _status: "Verificar RSS" }
 
-  # ── PROPUESTA 2026-05-12 — categorías nuevas ─────────────────────────
-  # founders_latam_x:
-  #   _proposed: |
-  #     Lista de cuentas X/Twitter de founders y voces LATAM para polleo.
-  #     DEFERRED a Fase 1.5: rate limits de X API son restrictivos en
-  #     plan gratuito (50 lecturas / 15min), y la calidad de la señal varía.
-  #     Recomendación: implementar primero con RSS, agregar X cuando haya
-  #     evidencia de gap de cobertura.
-  #   _candidates:
-  #     - "@pierpabarbieri (Ualá, AR)"
-  #     - "@danielvogel (Bitso, MX)"
-  #     - "@marceloclaure (LATAM tech VC)"
-  #     - "@oligonzalez (Kavak, MX)"
-  #     - "@enzocavalie (Startupeable, PE)"
-  #     - "@CristianTala (Ecosistema Startup, CL)"
-  #     # Manuel: agregar/quitar nombres según preferencia
-  #
+    # Crypto/fintech LATAM (Bitso, Buenbit, Lemon — relevantes para piezas IA+crypto)
+    - { name: "Bitso Blog", url: "https://blog.bitso.com/feed/", type: rss, weight: 1.8, _verified: "TBD 2026-05-29 — verificar URL al activar" }
+    - { name: "Buenbit Blog", url: "TBD", type: scrape, weight: 1.5, _status: "Verificar RSS" }
+
+  finanzas_latam_newsletters:
+    # Newsletters financieros LATAM (cross-promo prospects + referencia)
+    - { name: "Cenital", url: "TBD", type: scrape, weight: 1.8, _status: "2026-05-29 — 60K subs daily Argentina, modelo membership. Inspeccionar para voz + posible cross-promo" }
+    - { name: "Mis Propias Finanzas", url: "TBD", type: scrape, weight: 2.0, _status: "1M IG Colombia — newsletter via Kajabi probable. Modelo de referencia + cross-promo prospect" }
+    - { name: "Pequeño Cerdo Capitalista", url: "https://www.pequenocerdocapitalista.com/feed/", type: rss, weight: 2.0, _verified: "TBD 2026-05-29" }
+    - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.5, _verified: "2026-05-12 — Enzo Cavalié 50K, mas startup que finanzas pero relevante" }
+
+  finanzas_latam_media:
+    # Media LATAM tech + finanzas
+    - { name: "Bloomberg Linea LATAM", url: "TBD", type: scrape, weight: 2.0, _status: "Sin RSS publico confirmado — via Inoreader o scrape custom" }
+    - { name: "Forbes Mexico Finanzas", url: "TBD", type: scrape, weight: 1.8 }
+    - { name: "Forbes Argentina", url: "TBD", type: scrape, weight: 1.5 }
+    - { name: "Contxto", url: "https://contxto.com/en/feed/", type: rss, weight: 1.5, _verified: "2026-05-12 — LATAM startup, baja relevancia para finanzas personales pero util para contexto fintech" }
+    - { name: "La Nacion Tecnologia", url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", type: rss, weight: 1.3, _verified: "2026-05-12 — AR, mix tech+economia ocasional" }
+
+  # -----------------------------------------------------------
+  # Reguladores LATAM (comentados — activar selectivamente)
+  # -----------------------------------------------------------
   # regulatorias_latam:
   #   _proposed: |
-  #     Reguladores LATAM relevantes cuando AI Brief LATAM toque regulación.
-  #     DEFERRED: relevante solo si una pieza específica de how-to toca regulación.
-  #     news regulatorias específicas. Para AI Brief generalista, agrega
-  #     ruido > señal. Activar selectivamente si una pieza requiere fuente
-  #     oficial.
+  #     Reguladores LATAM relevantes cuando una pieza toca regulacion.
+  #     DEFERRED: activar solo cuando una pieza especifica requiera fuente oficial.
+  #     Para feed regular, agrega ruido > senal.
   #   _candidates:
-  #     - { name: "CNV Argentina", url: "TBD", type: scrape, weight: 1.5 }
-  #     - { name: "CNBV México", url: "TBD", type: scrape, weight: 1.5 }
-  #     - { name: "BCB Brasil", url: "TBD", type: scrape, weight: 1.5 }
-  # ─────────────────────────────────────────────────────────────────────
+  #     - { name: "CNV Argentina", url: "https://www.argentina.gob.ar/cnv/normativa", type: scrape, weight: 1.5 }
+  #     - { name: "CNBV Mexico", url: "https://www.gob.mx/cnbv", type: scrape, weight: 1.5 }
+  #     - { name: "SFC Colombia", url: "https://www.superfinanciera.gov.co", type: scrape, weight: 1.5 }
+  #     - { name: "CMF Chile", url: "https://www.cmfchile.cl", type: scrape, weight: 1.5 }
+  #     - { name: "SBS Peru", url: "https://www.sbs.gob.pe", type: scrape, weight: 1.5 }
+
+  # -----------------------------------------------------------
+  # Founders/voces X — DIFERIDO Fase 1.5
+  # -----------------------------------------------------------
+  # founders_finanzas_latam_x:
+  #   _proposed: |
+  #     Voces LATAM finanzas en X para polleo. DIFERIDO Fase 1.5 — rate limits X API.
+  #   _candidates:
+  #     - "@pierpabarbieri (Uala, AR)"
+  #     - "@danielvogel (Bitso, MX)"
+  #     - "@patriciofuks (Cocos Capital, AR)"
+  #     - "@andresgutierrezdaveramsey (Ramsey Hispano)"
+  #     - "@misprfinanzas (Carolina+Juan Pablo, CO)"
+  #     - "@sofiamacias (PCC, MX)"
+  #     - "@nicolasabrilfin (CO)"
+  #     - "@enzocavalie (Startupeable, PE)"
+
+# Notas operativas v3:
+#   - Las URLs marcadas TBD requieren verificacion manual o automatica antes de activar
+#   - El scoring A2 v2 incluye nueva categoria 'relevancia_finanzas_latam'
+#     que prioriza piezas con angulo concreto LATAM-finanzas sobre generico IA
+#   - Si una fuente devuelve >50% items irrelevantes (no finanzas + no IA aplicable),
+#     bajar peso o comentar
