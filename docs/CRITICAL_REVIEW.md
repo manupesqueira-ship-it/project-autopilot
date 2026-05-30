@@ -211,7 +211,7 @@ Mi recomendación tentativa: **Opción C híbrido**. Pero la decisión es tuya, 
 ### Síntoma
 
 El repo tiene estructura para 3 properties:
-- `projects/ai-brief-latam/` (activa)
+- `projects/dinero-ia/` (activa)
 - Crypto Brief mencionado en ADR-007, ROADMAP Fase 5, COSTS sensitivities, a9-compliance feature expansion
 - Startup Radar mencionado igual
 

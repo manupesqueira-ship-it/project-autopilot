@@ -104,7 +104,7 @@ Breakdown de los 155 nodes, en orden de frecuencia:
 
 1. **Swap Slack → Telegram Bot** en los nodes de HITL (canales, mensaje, callbacks)
 2. **Swap OpenAI Chat Model → Anthropic Chat Model** (Claude Opus 4 para scoring/editorial, Claude Sonnet 4 para tareas cheap) — el research n8n confirmó que el node Anthropic nativo soporta esto
-3. **Reemplazar las 15+ fuentes anglo** por tus 12 sources LATAM-mix de `projects/ai-brief-latam/sources.yaml`
+3. **Reemplazar las 15+ fuentes anglo** por tus 12 sources LATAM-mix de `projects/dinero-ia/sources.yaml`
 4. **Reescribir scoring prompt** con la rubric de 8 categorías Anexo B (LATAM-aware)
 5. **Reescribir editorial prompt** con Smart Brevity + ángulo LATAM (referenciar `brand_voice.md`)
 6. **Ajustar top-N de 4 a 1** (ADR-011)
@@ -129,7 +129,7 @@ Breakdown de los 155 nodes, en orden de frecuencia:
 1. **Abrir** https://n8n.io/workflows/12533-curate-and-generate-an-ai-newsletter-from-rss-feeds-with-openai-and-slack/
 2. Click **"Use for free"** (botón principal de la página)
 3. **Pegar el JSON** en tu n8n cloud (botón "+" → "Import from clipboard" o "Import from file")
-4. **Renombrar** el workflow a algo como `ai-brief-latam-pipeline-v1` para no confundir con el template original
+4. **Renombrar** el workflow a algo como `dinero-ia-pipeline-v1` para no confundir con el template original
 5. **Antes de modificar nada**, exportar el JSON original a `legacy/n8n-templates/12533-original.json` (gitignored si pesa mucho, sino commit) para referencia
 6. **Completar abajo** los campos "Fecha importación", "Tiempo invertido", "Issues encontrados al ejecutar" cuando lo hagas
 7. Aplicar las 8 adaptaciones obligatorias listadas arriba en este orden:

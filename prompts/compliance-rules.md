@@ -1,6 +1,6 @@
 # Compliance Rules
 
-**Origen:** Extraído de legacy/python-mvp-2026-05-10/agents/compliance/reviewer.py + projects/ai-brief-latam/
+**Origen:** Extraído de legacy/python-mvp-2026-05-10/agents/compliance/reviewer.py + projects/dinero-ia/
 **Status:** v1 — pendiente refinamiento para uso en n8n
 **Última revisión:** 2026-05-10
 
@@ -71,7 +71,7 @@ Risk flags previos: {risk_flags}
 
 ---
 
-## compliance_rules.yaml (projects/ai-brief-latam/)
+## compliance_rules.yaml (projects/dinero-ia/)
 
 ```yaml
 platform: instagram
@@ -86,7 +86,7 @@ financial_disclaimer_required: false
 
 ---
 
-## risk_profile.yaml (projects/ai-brief-latam/)
+## risk_profile.yaml (projects/dinero-ia/)
 
 ```yaml
 risk_level: low

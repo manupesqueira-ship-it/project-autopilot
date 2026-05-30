@@ -1,7 +1,7 @@
 # Production Stack — LOCKED 2026-05-07
 
 **Status:** Locked. Re-evaluar después de pieces #2 y #3.
-**Justificación completa:** `projects/ai-brief-latam/research/2026-05-07_production-stack-research.md`
+**Justificación completa:** `projects/dinero-ia/research/2026-05-07_production-stack-research.md`
 
 ---
 
@@ -121,7 +121,7 @@ Si alguna métrica falla → ajustar stack puntualmente. NO refactor masivo.
 
 ## Referencias data
 
-- `projects/ai-brief-latam/research/2026-05-07_production-stack-research.md` — síntesis completa de las 6 web searches
-- `projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md` — research US (sesión #1)
-- `projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md` — research LATAM (sesión #2)
-- `projects/ai-brief-latam/brand_voice.md` — sección "Voz narrada" para reglas operativas
+- `projects/dinero-ia/research/2026-05-07_production-stack-research.md` — síntesis completa de las 6 web searches
+- `projects/dinero-ia/research/2026-05-07_format-and-voice-research.md` — research US (sesión #1)
+- `projects/dinero-ia/research/2026-05-07_latam-specific-research.md` — research LATAM (sesión #2)
+- `projects/dinero-ia/brand_voice.md` — sección "Voz narrada" para reglas operativas

@@ -8,7 +8,7 @@
 > - **Voice clone DIFERIDO** — decisión final cuando Fase 2 esté a 30 días.
 > - **Newsletter adelantado:** ya no es Fase 3, ahora Fase 1 (es el activo más durable según Reports 02+05).
 >
-> **Nombre del proyecto:** carpeta sigue como `projects/ai-brief-latam/` hasta que haya handle/dominio decidido. El proyecto editorial se llama **AI × Finanzas LATAM** (working name).
+> **Nombre del proyecto:** carpeta sigue como `projects/dinero-ia/` hasta que haya handle/dominio decidido. El proyecto editorial se llama **AI × Finanzas LATAM** (working name).
 
 ---
 
@@ -61,7 +61,7 @@
 1. **Claude (próxima sesión):** refinar lista de 20 con investigación más profunda + handles/emails verificados
 2. **Manuel:** template de outreach base (corto, valor primero, NO pitch frío)
 3. **Manuel:** 5 outreaches/semana × 2 semanas = 10 outreaches en Fase -1
-4. **Manuel + Claude:** log de tracking en `projects/ai-brief-latam/inflection-lever/outreach-log.md`
+4. **Manuel + Claude:** log de tracking en `projects/dinero-ia/inflection-lever/outreach-log.md`
 
 ### Definition of Done Fase -1
 

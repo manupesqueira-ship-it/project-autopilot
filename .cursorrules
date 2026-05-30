@@ -36,9 +36,9 @@ y escalar un portafolio de propiedades de medios digitales en LATAM.
 - Las properties inactivas (crypto-brief-latam, startup-radar-latam) NO se tocan hasta su fase.
 
 ## Estado actual — Fase 1 (Manual MVP)
-- Property activa: ai-brief-latam (priority #1).
+- Property activa: dinero-ia (priority #1).
 - MIRA: snapshot congelado en repo separado (manupesqueira-ship-it/mira). NO recibe sprints.
-- Foco: producir piezas manualmente, documentar cada una en projects/ai-brief-latam/manual-mvp/pieces/.
+- Foco: producir piezas manualmente, documentar cada una en projects/dinero-ia/manual-mvp/pieces/.
 - NO automatizar nada hasta Fase 3 (post análisis de Fase 2).
 - Cada pieza publicada DEBE tener su log completo (template en MASTER_PLAN.md Anexo C).
 

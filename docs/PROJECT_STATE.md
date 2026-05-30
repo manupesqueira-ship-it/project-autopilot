@@ -18,7 +18,7 @@
 - **Human Approval** (6 tests) — Interactive CLI + auto-approve mode, decision recording, CLI `approve`
 - **Publisher** (5 tests) — Export files listos para Canva/Buffer/Beehiiv, CLI `publish`
 - **Analytics** (5 tests) — Pipeline metrics + API costs + weekly reports + recommendations, CLI `analytics`
-- **Run-all command** — `python autopilot.py run-all -p ai-brief-latam` ejecuta el pipeline completo
+- **Run-all command** — `python autopilot.py run-all -p dinero-ia` ejecuta el pipeline completo
 
 ### Pipeline end-to-end
 ```
@@ -42,9 +42,9 @@ scan → score → brief → check → compose → comply → approve → publis
 - Both repos pushed to https://github.com/manupesqueira-ship-it/
 
 ### Research (3 sessions, 19 web searches)
-- Session #1: Format/voice US — `projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md`
-- Session #2: LATAM-specific — `projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md`
-- Session #3: Production stack — `projects/ai-brief-latam/research/2026-05-07_production-stack-research.md`
+- Session #1: Format/voice US — `projects/dinero-ia/research/2026-05-07_format-and-voice-research.md`
+- Session #2: LATAM-specific — `projects/dinero-ia/research/2026-05-07_latam-specific-research.md`
+- Session #3: Production stack — `projects/dinero-ia/research/2026-05-07_production-stack-research.md`
 
 ### Content production assets
 - `brand_voice.md` con voz/acento sections (Mexican neutral, blacklist explícita)
@@ -84,7 +84,7 @@ scan → score → brief → check → compose → comply → approve → publis
 ## Pending / Next Up ⏭️
 
 **Inmediato (próxima sesión):**
-1. Correr pipeline completo con contenido fresco: `python autopilot.py run-all -p ai-brief-latam`
+1. Correr pipeline completo con contenido fresco: `python autopilot.py run-all -p dinero-ia`
 2. Revisar output, iterar scoring/compliance thresholds si hace falta
 3. Lock naming + create Instagram Business account
 4. Publicar primeras 3 piezas en IG (manual, usando files exportados por Publisher)
@@ -118,18 +118,18 @@ scan → score → brief → check → compose → comply → approve → publis
 ### CLI quick reference
 ```bash
 # Full pipeline (auto-approve mode)
-python autopilot.py run-all -p ai-brief-latam --auto-approve
+python autopilot.py run-all -p dinero-ia --auto-approve
 
 # Individual steps
-python autopilot.py scan -p ai-brief-latam
-python autopilot.py score -p ai-brief-latam --max-items 10
-python autopilot.py brief -p ai-brief-latam --items 3
-python autopilot.py check -p ai-brief-latam
-python autopilot.py compose -p ai-brief-latam
-python autopilot.py comply -p ai-brief-latam
-python autopilot.py approve -p ai-brief-latam     # interactive
-python autopilot.py publish -p ai-brief-latam
-python autopilot.py analytics -p ai-brief-latam
+python autopilot.py scan -p dinero-ia
+python autopilot.py score -p dinero-ia --max-items 10
+python autopilot.py brief -p dinero-ia --items 3
+python autopilot.py check -p dinero-ia
+python autopilot.py compose -p dinero-ia
+python autopilot.py comply -p dinero-ia
+python autopilot.py approve -p dinero-ia     # interactive
+python autopilot.py publish -p dinero-ia
+python autopilot.py analytics -p dinero-ia
 ```
 
 ### Documents to consult (en orden de prioridad para nueva sesión)
@@ -137,7 +137,7 @@ python autopilot.py analytics -p ai-brief-latam
 2. `MASTER_PLAN.md` (root) — strategic plan v2
 3. `agents/README.md` — checklist de agents y status
 4. `docs/PRODUCTION_STACK.md` — decisiones lockeadas de producción
-5. `projects/ai-brief-latam/brand_voice.md` — voz + acento + reglas duras
+5. `projects/dinero-ia/brand_voice.md` — voz + acento + reglas duras
 
 ### Reference brands (NO copiar, solo lógica estratégica)
 - **AI property US:** The Rundown AI (436K IG, 2M+ newsletter), Superhuman AI (1.5M newsletter)

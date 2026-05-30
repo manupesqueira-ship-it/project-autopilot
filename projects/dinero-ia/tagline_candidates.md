@@ -1,7 +1,7 @@
 # Tagline Candidates — AI Brief LATAM
 **Fecha:** 2026-05-07
 **Status:** Borrador. Lockear cuando se decida naming oficial.
-**Source:** projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md
+**Source:** projects/dinero-ia/research/2026-05-07_latam-specific-research.md
 
 > Aplicando fórmula LATAM probada: VALOR + TIEMPO + IDIOMA/REGIÓN + PRECIO
 

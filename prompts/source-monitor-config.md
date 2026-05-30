@@ -69,7 +69,7 @@ scoring:
 
 Si `keyword_match < 5.0`, los bonuses de `language_fit`, `length_signal` y `category_bonus` se anulan. Previene que items off-topic ranqueen alto por bonuses.
 
-## Keywords — ai-brief-latam
+## Keywords — dinero-ia
 
 ### high_priority (2x weight)
 
@@ -196,7 +196,7 @@ Si `keyword_match < 5.0`, los bonuses de `language_fit`, `length_signal` y `cate
 
 ```yaml
 priority_categories:
-  ai-brief-latam:
+  dinero-ia:
     - "oficial"
     - "latam"
 ```
@@ -213,7 +213,7 @@ output:
 
 ---
 
-## RSS Source List (from projects/ai-brief-latam/sources.yaml)
+## RSS Source List (from projects/dinero-ia/sources.yaml)
 
 ### oficial
 | Name | URL | Type | Weight |

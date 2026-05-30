@@ -51,7 +51,7 @@ Para cada candidato, aplicar la rúbrica de A2 a ojo (no necesita Claude para es
 
 ### Paso 3 — Brief con Claude (~10 min)
 
-Abrir Claude (claude.ai), nuevo chat. Pegar el system prompt completo de `projects/ai-brief-latam/prompts/a3-editorial.md` (sección "## System prompt") **una vez**. Después, por cada brief:
+Abrir Claude (claude.ai), nuevo chat. Pegar el system prompt completo de `projects/dinero-ia/prompts/a3-editorial.md` (sección "## System prompt") **una vez**. Después, por cada brief:
 
 ```
 Generá un brief editorial completo para este item:
@@ -120,7 +120,7 @@ Por ahora **NO** gpt-image-2 vía API (eso espera Fase 1). En modo manual, ChatG
 
 ### Paso 7 — Archivo (~2 min)
 
-Guardar el resultado en `projects/ai-brief-latam/manual-mvp/pieces/YYYY-MM-DD_slug.md`:
+Guardar el resultado en `projects/dinero-ia/manual-mvp/pieces/YYYY-MM-DD_slug.md`:
 
 ```markdown
 # <Título>

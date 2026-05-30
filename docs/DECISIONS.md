@@ -236,7 +236,7 @@
 - Scoring (`a2`) cambia: peso a `potencial_educativo` y `aplicabilidad_inmediata` sube, peso a `novedad` baja
 - Editorial (`a3`) cambia: estructura output → tutorial step-by-step vs news brief
 - Visual standard puede mantenerse — el dark mode editorial funciona para how-to
-- **Acción inmediata:** marcar como dirección, NO renombrar carpeta `projects/ai-brief-latam/` aún (Manuel: "el nombre es lo de menos, luego lo cambiamos")
+- **Acción inmediata:** marcar como dirección, NO renombrar carpeta `projects/dinero-ia/` aún (Manuel: "el nombre es lo de menos, luego lo cambiamos")
 - **Acción tras Deep Research:** confirmar específicamente cuál tópico how-to (AI práctico genérico vs herramientas específicas vs por industria) según Prompt 4 output
 
 ### Pivot 2 — Voz: Anti-hype sobrio → Viral hype calibrado
@@ -329,7 +329,7 @@ Validación Manual (5-10 piezas, 7-14 días) → Decision Point
 - [ ] Confirmar nicho específico how-to (output Prompt 4)
 - [ ] Decisión build vs buy (output Prompt 1)
 - [ ] Update prompts A2/A3/A7 con calibración final (después de Validación Manual)
-- [ ] Rename físico de carpeta `projects/ai-brief-latam/` → confirmed name
+- [ ] Rename físico de carpeta `projects/dinero-ia/` → confirmed name
 
 ---
 
@@ -497,16 +497,16 @@ Ejemplos del tipo de pieza:
 | `docs/ROADMAP.md` | v5 — Inflection Lever Track + métricas reset 10K/30-50K/100K + stack SaaS | Cambios 1+3+4 |
 | `docs/STACK.md` | v4 — reemplazar Upload-Post por ContentStudio+Blotato, deferir Hostinger VPS | Cambio 3 |
 | `docs/COSTS_6MO.md` | recalcular Fase 1 con SaaS stack | Cambio 3 |
-| `projects/ai-brief-latam/brand_voice.md` | v3 — nicho finanzas + voz adaptada + benchmarks reset | Cambios 1+2 |
-| `projects/ai-brief-latam/sources.yaml` | sumar fuentes finanzas LATAM | Cambio 2 |
-| `projects/ai-brief-latam/risk_profile.yaml` | agregar compliance financiero LATAM | Cambio 2 |
-| `projects/ai-brief-latam/prompts/a9-compliance.md` | reglas asesor financiero (15 → 18 reglas) | Cambio 2 |
+| `projects/dinero-ia/brand_voice.md` | v3 — nicho finanzas + voz adaptada + benchmarks reset | Cambios 1+2 |
+| `projects/dinero-ia/sources.yaml` | sumar fuentes finanzas LATAM | Cambio 2 |
+| `projects/dinero-ia/risk_profile.yaml` | agregar compliance financiero LATAM | Cambio 2 |
+| `projects/dinero-ia/prompts/a9-compliance.md` | reglas asesor financiero (15 → 18 reglas) | Cambio 2 |
 
 ### Sub-decisiones de Manuel (2026-05-29)
 
 | # | Sub-decisión | Respuesta | Implicación |
 |---|---|---|---|
-| A | Renombrar carpeta proyecto | Default: dejar `projects/ai-brief-latam/` | Cambia contenido nomás; rename físico cuando haya handle/dominio decidido |
+| A | Renombrar carpeta proyecto | Default: dejar `projects/dinero-ia/` | Cambia contenido nomás; rename físico cuando haya handle/dominio decidido |
 | B | Alcance pivot finanzas | B.1 — vertical único | Foco fuerte; expansión (marketing/ops) se reabre si llegás a 10K |
 | C | Posicionamiento compliance | C.1 — educativo, no asesoría | Disclaimer claro; permite mencionar Cocos/IOL/GBM con contexto. Modelo Sofía Macías. |
 
@@ -531,7 +531,7 @@ Ejemplos del tipo de pieza:
 2. **Pérdida de momentum:** segundo pivot grande en 11 días. Riesgo de "parálisis por análisis". Mitigado por la claridad de Fase -1 con métricas Go/No-Go.
 3. **Compliance financiero LATAM:** nuevo eje de riesgo. Mitigado por C.1 (educativo) + disclaimer en cada pieza + no recomendar valores específicos.
 4. **Stack SaaS bloquea customization:** ContentStudio + Blotato son cajas más cerradas que n8n custom. Si el moat editorial necesita feature que el SaaS no expone, bloqueante. Mitigado por mantener n8n para el moat.
-5. **Carpeta `ai-brief-latam/` confunde:** el nicho ya no es "AI Brief" ni "AI How-To" sino "AI × Finanzas". Mitigado por nota explícita en docs + decisión de rename cuando haya nombre nuevo.
+5. **Carpeta `dinero-ia/` confunde:** el nicho ya no es "AI Brief" ni "AI How-To" sino "AI × Finanzas". Mitigado por nota explícita en docs + decisión de rename cuando haya nombre nuevo.
 
 ### Acciones de este ADR (concretas)
 
@@ -539,14 +539,14 @@ Ejemplos del tipo de pieza:
 - [x] Update `docs/ROADMAP.md` → v5 con Inflection Lever Track + métricas reset + stack SaaS
 - [x] Update `docs/STACK.md` → v4 con nuevo stack SaaS
 - [x] Update `docs/COSTS_6MO.md` con nuevo stack
-- [x] Update `projects/ai-brief-latam/brand_voice.md` → v3 nicho finanzas
-- [x] Update `projects/ai-brief-latam/sources.yaml` con fuentes finanzas LATAM
-- [x] Update `projects/ai-brief-latam/risk_profile.yaml` con compliance financiero
-- [x] Update `projects/ai-brief-latam/prompts/a9-compliance.md` con reglas asesor financiero
+- [x] Update `projects/dinero-ia/brand_voice.md` → v3 nicho finanzas
+- [x] Update `projects/dinero-ia/sources.yaml` con fuentes finanzas LATAM
+- [x] Update `projects/dinero-ia/risk_profile.yaml` con compliance financiero
+- [x] Update `projects/dinero-ia/prompts/a9-compliance.md` con reglas asesor financiero
 
 ### Acciones deferred
 
 - [ ] Decidir nombre/handle/dominio del proyecto (Manuel cuando tenga claridad)
-- [ ] Rename físico de carpeta `projects/ai-brief-latam/` cuando se decida nombre
+- [ ] Rename físico de carpeta `projects/dinero-ia/` cuando se decida nombre
 - [ ] Lista concreta de 20 prospects para Inflection Lever Track (Manuel + Claude próxima sesión)
 - [ ] Decisión final voice clone (Fase 2 - 30 días)

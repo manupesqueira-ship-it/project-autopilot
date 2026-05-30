@@ -10,7 +10,7 @@
   },
   "tags": [
     {
-      "name": "ai-brief-latam"
+      "name": "dinero-ia"
     },
     {
       "name": "fase-0"
@@ -296,6 +296,6 @@
   "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": false,
-    "instanceId": "ai-brief-latam-fase-0"
+    "instanceId": "dinero-ia-fase-0"
   }
 }

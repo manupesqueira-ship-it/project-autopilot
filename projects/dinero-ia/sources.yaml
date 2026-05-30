@@ -1,0 +1,118 @@
+# Dinero IA — Source feeds (v4 post-ADR-017, 2026-05-29)
+#
+# URLs RSS verificadas via WebFetch 2026-05-29.
+# Status legend:
+#   ✅ RSS válido confirmado
+#   ⚠️ scrape viable (sin RSS, pero HTML accesible)
+#   🔍 verificación manual pendiente (WAF/403 vía bot)
+#   ❌ descartado (sin opción técnica)
+#
+# Convención weight v4:
+#   2.0 -> primaria oficial / verificada con cadencia alta y nicho directo
+#   1.8 -> tier 1 verificada
+#   1.5 -> tier 2
+#   1.3 -> tier 3 generalista
+#   1.0 -> comunidad / curaduría
+# -----------------------------------------------------------
+
+sources:
+  # -----------------------------------------------------------
+  # IA — fuentes oficiales y media tech
+  # -----------------------------------------------------------
+  oficial_ia:
+    - { name: "OpenAI Blog", url: "https://openai.com/blog/rss.xml", type: rss, weight: 2.0, status: "✅" }
+    - { name: "Anthropic Blog", url: "https://www.anthropic.com/news", type: scrape, weight: 2.0, status: "⚠️" }
+    - { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", type: rss, weight: 1.8, status: "✅" }
+
+  tech_media_ia:
+    - { name: "TechCrunch AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/", type: rss, weight: 1.8, status: "✅" }
+    - { name: "The Verge AI", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", type: rss, weight: 1.5, status: "✅" }
+    - { name: "Wired AI", url: "https://www.wired.com/feed/tag/ai/latest/rss", type: rss, weight: 1.5, status: "✅" }
+
+  newsletters_ia:
+    - { name: "Latent Space", url: "https://www.latent.space/feed", type: rss, weight: 1.5, status: "✅" }
+
+  community:
+    - { name: "Hacker News", url: "https://hnrss.org/frontpage", type: rss, weight: 1.0, status: "✅" }
+
+  # -----------------------------------------------------------
+  # FINANZAS LATAM — core post-ADR-017
+  # URLs verificadas 2026-05-29 vía Deep Research Agent
+  # -----------------------------------------------------------
+
+  # Top 3 prioritarias para activar primero en Fase 1:
+  finanzas_latam_top:
+    - { name: "Bloomberg Línea LATAM", url: "https://www.bloomberglinea.com/arc/outboundfeeds/rss/?outputType=xml", type: rss, weight: 2.0, status: "✅", _verified: "2026-05-29 Arc XP feed, alta cadencia multipaís MX/BR/AR/CO, mejor calidad editorial nicho IA+finanzas LATAM" }
+    - { name: "Cenital", url: "https://cenital.com/feed/", type: rss, weight: 1.8, status: "✅", _verified: "2026-05-29 RSS 2.0 válido, diario varios posts/día, cobertura economía AR sólida (paywall parcial 'Mejores amigos' pero feed expone público)" }
+    - { name: "Bitso Blog", url: "https://blog.bitso.com/", type: scrape, weight: 1.8, status: "⚠️", _verified: "2026-05-29 Webflow sin feed nativo, scraping HTML simple. Cadencia multi-semanal. Bilingüe ES/PT. Alternativa: RSS.app proxy" }
+
+  # Creators finanzas LATAM (RSS válidos):
+  finanzas_latam_creators:
+    - { name: "Pequeño Cerdo Capitalista", url: "https://www.pequenocerdocapitalista.com/feed/", type: rss, weight: 1.8, status: "✅", _verified: "2026-05-29 RSS WordPress válido, cadencia semanal/quincenal, educación financiera popular MX (IA escaso en contenido — filtrar por relevancia)" }
+    - { name: "Mis Propias Finanzas", url: "https://mispropiasfinanzas.com/feed/", type: rss, weight: 1.5, status: "✅", _verified: "2026-05-29 RSS WordPress válido, cadencia esporádica (últimos posts ene-mar 2026). Feed mezcla job postings con editorial — filtrar por categoría" }
+
+  # Brokers AR (scrape o WAF):
+  finanzas_latam_brokers_ar:
+    - { name: "IOL Inversor Online", url: "https://www.invertironline.com/posts/reportes/", type: scrape, weight: 1.8, status: "⚠️", _verified: "2026-05-29 sin RSS, scrape viable de /posts/reportes/. Research institucional, semanal. Sin paywall." }
+    - { name: "Cocos Capital Blog", url: "https://blog.cocos.capital/", type: scrape, weight: 1.8, status: "🔍", _verified: "2026-05-29 403 Cloudflare/WAF — requiere browser headers reales o Inoreader/RSS.app proxy. Audiencia objetivo perfecta — vale el esfuerzo técnico" }
+    - { name: "Bull Market Brokers", url: "https://bullmarket.com.ar/", type: scrape, weight: 1.3, status: "🔍", _verified: "2026-05-29 redirect 301 a bullmarket.com.ar + 403 WAF. Baja prioridad por fricción técnica" }
+
+  # Brokers MX (scrape):
+  finanzas_latam_brokers_mx:
+    - { name: "GBM Media", url: "https://gbm.com/media/", type: scrape, weight: 1.8, status: "⚠️", _verified: "2026-05-29 sin /blog/ ni RSS nativo. WordPress backend pero feed estándar no expuesto. Probar /media/feed o scrape directo de The Story/The Idea/The Academy" }
+
+  # Fintechs / Crypto LATAM:
+  finanzas_latam_fintech:
+    - { name: "Buenbit Blog", url: "https://buenbit.com/blog", type: scrape, weight: 1.3, status: "🔍", _verified: "2026-05-29 403 WAF. Baja prioridad — fintech AR, foco producto > análisis editorial" }
+
+  # Newsletters LATAM relevantes (referencia + cross-promo prospects, NO core ingesta):
+  finanzas_latam_newsletters_ref:
+    - { name: "Startupeable", url: "https://startupeable.com/feed/", type: rss, weight: 1.3, status: "✅", _verified: "2026-05-12 — Enzo Cavalié 50K subs, más startup VC que finanzas personales, pero útil para contexto fintech LATAM" }
+    # Cenital ya está en finanzas_latam_top (no duplicar)
+
+  # Reguladores (comentados — activar selectivamente cuando pieza específica toque regulación):
+  # regulatorias_latam:
+  #   _proposed: |
+  #     Reguladores LATAM relevantes solo cuando una pieza toca regulación específicamente.
+  #     DEFERRED para feed regular (agrega ruido > señal).
+  #   _candidates:
+  #     - { name: "CNV Argentina", url: "https://www.argentina.gob.ar/cnv/normativa", type: scrape, weight: 1.5 }
+  #     - { name: "CNBV Mexico", url: "https://www.gob.mx/cnbv", type: scrape, weight: 1.5 }
+  #     - { name: "SFC Colombia", url: "https://www.superfinanciera.gov.co", type: scrape, weight: 1.5 }
+  #     - { name: "CMF Chile", url: "https://www.cmfchile.cl", type: scrape, weight: 1.5 }
+  #     - { name: "SBS Peru", url: "https://www.sbs.gob.pe", type: scrape, weight: 1.5 }
+
+  # Founders/voces X — DIFERIDO Fase 1.5:
+  # founders_finanzas_latam_x:
+  #   _proposed: |
+  #     Voces LATAM finanzas en X para polleo. DIFERIDO Fase 1.5 — rate limits X API restrictivos.
+  #   _candidates:
+  #     - "@pbarbieri (Ualá, AR — intelectual público, 159K)"
+  #     - "@danielvogel (Bitso, MX — CEO unicornio)"
+  #     - "@sbdar (Cocos Capital, AR — verificar tras polémica abril 2026)"
+  #     - "@mispropiasfinanzas (Carolina+Juan Pablo, CO)"
+  #     - "@sofiamacias (PCC, MX)"
+  #     - "@nicolasabril (CO)"
+  #     - "@enzocavalie (Startupeable, PE)"
+
+# -----------------------------------------------------------
+# Resumen operativo activación
+# -----------------------------------------------------------
+# Fase 0 smoke test (Semana 3): 1-2 fuentes
+#   - Bloomberg Línea LATAM (RSS válido, cadencia alta)
+#   - + 1 anglo IA (TechCrunch AI)
+#
+# Fase 1 inicial (Semana 4-5): 5-7 fuentes core
+#   - Top 3: Bloomberg Línea, Cenital, Bitso (scrape)
+#   - +2 creators: Pequeño Cerdo Capitalista, Mis Propias Finanzas
+#   - +1 IA: TechCrunch AI o Latent Space
+#
+# Fase 1 expansión (Semana 5+): activar fuentes ⚠️ scrape y 🔍 WAF
+#   - IOL (scrape /reportes/)
+#   - GBM Media (scrape)
+#   - Cocos Capital (via Inoreader o RSS.app proxy)
+#
+# Backlog (Fase 1.5+):
+#   - Buenbit, Bull Market (si WAF se resuelve)
+#   - Reguladores (selectivo)
+#   - X founders polling

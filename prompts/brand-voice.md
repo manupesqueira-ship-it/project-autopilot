@@ -1,6 +1,6 @@
 # Brand Voice
 
-**Origen:** Extraído de projects/ai-brief-latam/brand_voice.md
+**Origen:** Extraído de projects/dinero-ia/brand_voice.md
 **Status:** v1 — pendiente refinamiento para uso en n8n
 **Última revisión:** 2026-05-10
 
@@ -9,8 +9,8 @@
 # Brand Voice — AI Brief LATAM
 **Last updated:** 2026-05-07
 **Sources:**
-- projects/ai-brief-latam/research/2026-05-07_format-and-voice-research.md
-- projects/ai-brief-latam/research/2026-05-07_latam-specific-research.md
+- projects/dinero-ia/research/2026-05-07_format-and-voice-research.md
+- projects/dinero-ia/research/2026-05-07_latam-specific-research.md
 
 > Reglas data-backed para producción de contenido. Actualizar cuando research nueva justifique cambios.
 

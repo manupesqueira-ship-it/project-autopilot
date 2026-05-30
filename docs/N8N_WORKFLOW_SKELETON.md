@@ -4,7 +4,7 @@
 **Status:** Diseño aprobado en sesión 4. Pendiente: implementación del JSON v2.
 **Source de base:** template n8n #12533 (155 nodes) — vamos a usar ~10% del esqueleto y reemplazar el resto.
 
-> **Revisión 2 (2026-05-12, tarde):** después de hacer la inspección profunda del JSON de #12533 (ver `projects/ai-brief-latam/docs/research/deep-research/n8n-templates-notes.md` § "Revisión profunda"), identificamos **8 patterns valiosos** que no estaban en el skeleton original. Esta revisión los integra:
+> **Revisión 2 (2026-05-12, tarde):** después de hacer la inspección profunda del JSON de #12533 (ver `projects/dinero-ia/docs/research/deep-research/n8n-templates-notes.md` § "Revisión profunda"), identificamos **8 patterns valiosos** que no estaban en el skeleton original. Esta revisión los integra:
 >
 > 1. **Filtro binario pre-scoring** — agregado entre A1 y A2 (ahorra 30-50% tokens)
 > 2. **Top + Shortlist en A2** — el scorer ahora separa deep-dive vs Quick Hits
@@ -114,7 +114,7 @@ flowchart LR
 - **type:** `@n8n/n8n-nodes-langchain.chainLlm`
 - **Parámetros:**
   - `promptType`: "define"
-  - `text`: contenido de `projects/ai-brief-latam/prompts/a2-signal-scorer.md` → sección "User message template"
+  - `text`: contenido de `projects/dinero-ia/prompts/a2-signal-scorer.md` → sección "User message template"
   - `hasOutputParser`: true
 - **Sub-nodes (conectados como inputs):**
   - **Anthropic Chat Model** (`@n8n/n8n-nodes-langchain.lmChatAnthropic`)
@@ -171,7 +171,7 @@ flowchart LR
 - **type:** `@n8n/n8n-nodes-langchain.chainLlm`
 - **Parámetros:**
   - `promptType`: "define"
-  - `text`: contenido de `projects/ai-brief-latam/prompts/a3-editorial.md` → sección "User message template"
+  - `text`: contenido de `projects/dinero-ia/prompts/a3-editorial.md` → sección "User message template"
   - `hasOutputParser`: true
 - **Sub-nodes:**
   - **Anthropic Chat Model**

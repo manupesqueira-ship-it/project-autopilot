@@ -4,7 +4,7 @@
 #
 # NOTA: Este archivo era un stub del MVP Python pre-pivot a n8n.
 # Las reglas COMPLETAS y operativas viven en:
-#   projects/ai-brief-latam/prompts/a9-compliance.md
+#   projects/dinero-ia/prompts/a9-compliance.md
 #
 # Este archivo se mantiene como (a) vista resumen rápida para
 # operadores humanos y (b) flags configurables que el workflow n8n
@@ -21,7 +21,7 @@ platform_targets:
 financial_disclaimer_required: false
 
 # Fuente de verdad de las reglas detalladas (15 reglas total)
-detailed_rules_source: projects/ai-brief-latam/prompts/a9-compliance.md
+detailed_rules_source: projects/dinero-ia/prompts/a9-compliance.md
 
 # Resumen de reglas (subset, info-only — el prompt tiene el detalle)
 summary_rules:

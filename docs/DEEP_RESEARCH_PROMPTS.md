@@ -6,7 +6,7 @@
 > **Cómo usar:**
 > 1. Copiá el prompt al final de cada sección (entre los `---`) en tu tool de Deep Research preferida.
 > 2. Esperá el output (típicamente 5-20 min en modo Deep Research).
-> 3. Guardá el output en `projects/ai-brief-latam/docs/research/deep-research/2026-05-XX_<nombre>.md`.
+> 3. Guardá el output en `projects/dinero-ia/docs/research/deep-research/2026-05-XX_<nombre>.md`.
 > 4. Avisame y revisamos juntos lo que cambia del plan actual.
 >
 > **Orden recomendado:** del 1 al 5. Los primeros 3 son MÁS críticos. El 4 y 5 son nice-to-have.
@@ -300,7 +300,7 @@ Devolveme análisis con citas a fuentes oficiales/news, ejemplos de casos reales
 
 Cuando Manuel ejecute los prompts y tenga outputs:
 
-1. **Guardar cada output** en `projects/ai-brief-latam/docs/research/deep-research/2026-05-XX_<nombre>.md`
+1. **Guardar cada output** en `projects/dinero-ia/docs/research/deep-research/2026-05-XX_<nombre>.md`
 2. **Avisarme** que están listos
 3. **Yo hago crítica honesta** de cada output (al igual que las del 2026-05-08): bias detection, claims sin evidencia, recomendaciones débiles
 4. **Sesión de síntesis** combinada con `docs/CRITICAL_REVIEW.md` (carril 1) y las respuestas del carril 3

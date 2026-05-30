@@ -16,7 +16,7 @@
    - Costo: 5 min de edición.
 
 2. **Documentar explícitamente "Engagement automation permanently out of scope" en compliance_rules.yaml + MASTER_PLAN §9.1**
-   - Acción: editar `projects/ai-brief-latam/compliance_rules.yaml` con regla explícita; agregar línea en §9.1.
+   - Acción: editar `projects/dinero-ia/compliance_rules.yaml` con regla explícita; agregar línea en §9.1.
    - Fuente: research multi-agente Instagram propone lo contrario; filtrarlo como decisión documentada.
    - Costo: 10 min.
 
@@ -27,7 +27,7 @@
 
 4. **Agregar fuentes IA-aplicada-LATAM a sources.yaml**
    - Lista mínima para incluir: Belvo blog, Simetrik blog, Mendel AI, Ualá research/blog, CloudWalk product blog.
-   - Acción: editar `projects/ai-brief-latam/sources.yaml` con tag "ai-applied-latam".
+   - Acción: editar `projects/dinero-ia/sources.yaml` con tag "ai-applied-latam".
    - Fuente: `fintech-insurtech-crypto-latam` lista nominal verificada.
    - Costo: 15 min (validar que cada blog publica regularmente antes de incluir).
 

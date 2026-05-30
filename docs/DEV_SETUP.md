@@ -116,10 +116,10 @@ pytest agents/source_monitor/tests/ --cov=agents/source_monitor --cov-report=ter
 ### From CLI
 ```bash
 # Run with verbose logging
-LOG_LEVEL=DEBUG python -m agents.source_monitor.cli --property ai-brief-latam
+LOG_LEVEL=DEBUG python -m agents.source_monitor.cli --property dinero-ia
 
 # Or via the autopilot command (when wired up)
-autopilot scan --property ai-brief-latam --verbose
+autopilot scan --property dinero-ia --verbose
 ```
 
 ### From Cursor debugger
@@ -136,7 +136,7 @@ autopilot scan --property ai-brief-latam --verbose
       "type": "debugpy",
       "request": "launch",
       "module": "agents.source_monitor.cli",
-      "args": ["--property", "ai-brief-latam"],
+      "args": ["--property", "dinero-ia"],
       "cwd": "${workspaceFolder}",
       "env": {"LOG_LEVEL": "DEBUG"},
       "justMyCode": false

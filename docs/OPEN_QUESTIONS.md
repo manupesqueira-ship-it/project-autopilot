@@ -66,7 +66,7 @@
   - Tabla `posts_published` — qué publicamos, cuándo, con métricas asociadas
   - Tabla `costs` — tokens consumidos por agent (Anthropic + OpenAI) para monitoreo financiero
   - Storage bucket `assets` — imágenes de gpt-image-2, videos de Seedance, audio de ElevenLabs
-- **Backup adicional:** cada brief aprobado también se commitea como markdown a `projects/ai-brief-latam/manual-mvp/pieces/{date}_{slug}.md` en GitHub (audit trail diff-eable, narrativo).
+- **Backup adicional:** cada brief aprobado también se commitea como markdown a `projects/dinero-ia/manual-mvp/pieces/{date}_{slug}.md` en GitHub (audit trail diff-eable, narrativo).
 - **Trade-off aceptado:** 30 min de setup inicial vs simplicidad operativa para los siguientes meses.
 
 ### D — Image gen: **gpt-image-2 + Seedance híbrido, decidido por brief**
@@ -188,7 +188,7 @@ Items que descubrí en el diseño y necesitan tu definición. NO son críticos p
 
 - **Decisión:** Fase -1 "Validación Manual" agregada al ROADMAP v4 — Manuel publica 5-10 piezas con prompts directos en Claude.ai antes de comprometer pipeline.
 - **Criterio de éxito:** >2% engagement promedio. Si menos, NO construir Fase 0/1.
-- **Tracker:** simple .md en `projects/ai-brief-latam/manual-mvp/validation-fase-minus-1.md` (a crear cuando arranque).
+- **Tracker:** simple .md en `projects/dinero-ia/manual-mvp/validation-fase-minus-1.md` (a crear cuando arranque).
 
 ### Q — Manuel-cara vs cuenta-de-marca pura
 
@@ -327,7 +327,7 @@ C2. **¿Dónde se guardan las imágenes generadas + assets binarios?**
 - Opción 3: Cloudinary (mejor performance + CDN, paid después de free tier).
 - Opción 4: n8n binary storage (efímero, se borra; OK para Fase 0 pero no producción).
 
-C3. **¿Querés que cada pieza generada se archive como markdown en GitHub** (igual que el MVP Python guardaba en `projects/ai-brief-latam/manual-mvp/pieces/{date}_{slug}.md`)?
+C3. **¿Querés que cada pieza generada se archive como markdown en GitHub** (igual que el MVP Python guardaba en `projects/dinero-ia/manual-mvp/pieces/{date}_{slug}.md`)?
 - Opción 1: Sí, archivo en GitHub commiteado por el workflow (audit trail permanente + searchable + diff-able).
 - Opción 2: No, suficiente con DB/Drive.
 
@@ -429,7 +429,7 @@ G3. **¿Modo de voz visual?**
 
 Mi take honesto: **Cursor es IDE para código**, no para correr workflows. n8n es 100% browser-based. Casos donde Cursor podría servirnos:
 1. Editar el JSON v2 manualmente antes de import (alternativa al patch programático en Python que propongo).
-2. Editar los prompts en `projects/ai-brief-latam/prompts/*.md` con sugerencias inline.
+2. Editar los prompts en `projects/dinero-ia/prompts/*.md` con sugerencias inline.
 3. Iterar el JSON post-export (n8n permite export JSON, lo editás en Cursor, reimportás).
 
 Si te resulta más cómodo editar JSON visualmente con autocompletado y errores en línea, Cursor es bueno para eso. Si preferís que yo haga los patches con Python sobre el archivo del repo (que es lo que vengo haciendo), Cursor no agrega valor.

@@ -1,7 +1,7 @@
 # Deep Research — Síntesis cruzada (mayo 2026)
 
 **Fecha:** 2026-05-20
-**Inputs:** 5 Deep Research outputs en `projects/ai-brief-latam/research/deep-research-2026-05/`
+**Inputs:** 5 Deep Research outputs en `projects/dinero-ia/research/deep-research-2026-05/`
 **Objetivo:** consolidar findings, identificar qué confirma el plan actual y qué lo cuestiona, y proponer decisiones concretas a Manuel.
 
 ---

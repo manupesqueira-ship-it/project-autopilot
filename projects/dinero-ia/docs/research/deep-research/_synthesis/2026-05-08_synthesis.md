@@ -103,7 +103,7 @@
 
 ## Comparación con research previo del proyecto
 
-> 3 research previos en `projects/ai-brief-latam/research/` (2026-05-07).
+> 3 research previos en `projects/dinero-ia/research/` (2026-05-07).
 
 ### Confirmaciones (los nuevos refuerzan los previos)
 

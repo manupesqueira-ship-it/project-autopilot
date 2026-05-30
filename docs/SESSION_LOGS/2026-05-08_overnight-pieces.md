@@ -71,6 +71,6 @@ Every piece passed the pre-commit checklist:
 ## What's Ready for Manuel
 
 1. **6 pieces ready to produce visually** in Canva when IG account is created
-2. **Pieces index** at `projects/ai-brief-latam/manual-mvp/pieces/_index.md`
+2. **Pieces index** at `projects/dinero-ia/manual-mvp/pieces/_index.md`
 3. **First newsletter** can be compiled from the 3 strongest newsletter sections
 4. **PROJECT_STATE.md** updated with current status

@@ -1,10 +1,10 @@
 ---
 # AI Brief LATAM — Project config
 # Última actualización: 2026-05-18 (ADR-016 pivot estratégico)
-# NOTA: nombre del proyecto pending rename — la carpeta `ai-brief-latam` se mantiene
+# NOTA: nombre del proyecto pending rename — la carpeta `dinero-ia` se mantiene
 # hasta que Manuel confirme el nombre nuevo. Ver brand_voice.md "Notas sobre el rename".
 
-property: ai-brief-latam                  # legacy name, pending rename
+property: dinero-ia                  # legacy name, pending rename
 new_name_tentative: ai-how-to-latam       # provisional, NO confirmed
 status: active
 phase: -1-manual-validation              # ADR-016: validación manual ANTES de smoke test técnico

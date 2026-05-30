@@ -27,7 +27,7 @@
 ### Sub-task B: Competitive Forensic Research ✅
 - **Accounts researched:** 8
 - **Files created:** 9 (8 per-account + 1 consolidated)
-- **Location:** `projects/ai-brief-latam/research/competitive/`
+- **Location:** `projects/dinero-ia/research/competitive/`
 
 **Accounts analyzed:**
 1. The Rundown AI — 436K IG, 2M+ newsletter (US benchmark)
@@ -43,7 +43,7 @@
 
 ### Sub-task C: Pre-drafts for Pieces #2, #3, #4 ✅
 - **Files created:** 3
-- **Location:** `projects/ai-brief-latam/manual-mvp/pieces/_drafts/`
+- **Location:** `projects/dinero-ia/manual-mvp/pieces/_drafts/`
 
 **Drafts:**
 1. `2026-05-08_corgi-insurtech-draft.md` — Corgi $1.3B insurtech, TechCrunch confirmed, LATAM angle (Pomelo/123Seguro)
@@ -73,7 +73,7 @@ None. All web searches returned usable data. No paywalls blocked critical inform
 ## What's Ready for Manuel
 
 1. **Audit results** → Review `docs/audits/2026-05-07_audit-summary.md`, approve archive/migrate actions
-2. **Competitive research** → Read `projects/ai-brief-latam/research/competitive/_consolidated-patterns.md` for tactical playbook
+2. **Competitive research** → Read `projects/dinero-ia/research/competitive/_consolidated-patterns.md` for tactical playbook
 3. **Draft pieces** → Choose which piece to produce next, answer the critical question in each draft, then produce full piece in daytime session
 
 ---

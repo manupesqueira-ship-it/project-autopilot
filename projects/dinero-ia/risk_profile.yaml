@@ -1,6 +1,6 @@
 ---
 # Risk profile — AI x Finanzas LATAM (v2 post-ADR-017, 2026-05-29)
-# Source of truth para A9 Compliance. Ver projects/ai-brief-latam/prompts/a9-compliance.md
+# Source of truth para A9 Compliance. Ver projects/dinero-ia/prompts/a9-compliance.md
 # para reglas completas y casos de uso.
 
 risk_level: medium  # subido de "low" v1 — el nicho finanzas LATAM agrega compliance regulatorio
@@ -140,6 +140,6 @@ audit_log_required:
   - menciones de productos especificos (con disclaimer aplicado)
   - cifras financieras citadas (con fuente)
 
-audit_log_path: "projects/ai-brief-latam/manual-mvp/compliance-log/"
+audit_log_path: "projects/dinero-ia/manual-mvp/compliance-log/"
 
 ---

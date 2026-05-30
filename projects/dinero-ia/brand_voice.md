@@ -1,7 +1,7 @@
 # Brand Voice — AI × Finanzas LATAM
 **Last updated:** 2026-05-29 (v3 — revisado por ADR-017 post-Deep-Research)
 **Sources:**
-- projects/ai-brief-latam/research/deep-research-2026-05/ (5 outputs)
+- projects/dinero-ia/research/deep-research-2026-05/ (5 outputs)
 - docs/DEEP_RESEARCH_SYNTHESIS.md (2026-05-20)
 - docs/DECISIONS.md ADR-017 (2026-05-29)
 
@@ -339,7 +339,7 @@ Ejemplos a testear post Fase -1:
 ## Notas sobre el rename del proyecto
 
 El nombre **"AI Brief LATAM"** está pegado en:
-- Carpeta `projects/ai-brief-latam/`
+- Carpeta `projects/dinero-ia/`
 - Múltiples archivos .md con título
 - Email business `aibrieflatam.media@gmail.com`
 

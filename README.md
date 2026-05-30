@@ -37,7 +37,7 @@ project-autopilot/
 ├── data/sources/                      # Configs de RSS, keywords
 │
 ├── projects/                          # Properties (config por marca)
-│   ├── ai-brief-latam/               # Priority #1 (activa)
+│   ├── dinero-ia/               # Priority #1 (activa)
 │   ├── crypto-brief-latam/           # Pending (Fase 5+)
 │   └── startup-radar-latam/          # Pending (Fase 6+)
 │
