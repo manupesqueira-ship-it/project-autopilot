@@ -9,9 +9,15 @@
     "saveDataSuccessExecution": "all"
   },
   "tags": [
-    { "name": "dinero-ia" },
-    { "name": "fase-0" },
-    { "name": "moat-editorial" }
+    {
+      "name": "dinero-ia"
+    },
+    {
+      "name": "fase-0"
+    },
+    {
+      "name": "moat-editorial"
+    }
   ],
   "nodes": [
     {
@@ -19,7 +25,10 @@
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [-1400, 0],
+      "position": [
+        -1400,
+        0
+      ],
       "parameters": {}
     },
     {
@@ -27,7 +36,10 @@
       "name": "RSS — Bloomberg Línea LATAM",
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1,
-      "position": [-1160, 0],
+      "position": [
+        -1160,
+        0
+      ],
       "parameters": {
         "url": "https://www.bloomberglinea.com/arc/outboundfeeds/rss/?outputType=xml",
         "options": {
@@ -40,7 +52,10 @@
       "name": "Limit 3 items",
       "type": "n8n-nodes-base.limit",
       "typeVersion": 1,
-      "position": [-920, 0],
+      "position": [
+        -920,
+        0
+      ],
       "parameters": {
         "maxItems": 3
       }
@@ -50,7 +65,10 @@
       "name": "Normalize Item",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-680, 0],
+      "position": [
+        -680,
+        0
+      ],
       "parameters": {
         "mode": "raw",
         "jsonOutput": "={\n  \"title\": \"{{ $json.title }}\",\n  \"url\": \"{{ $json.link }}\",\n  \"snippet\": \"{{ $json.contentSnippet || $json.content || '' }}\",\n  \"source_name\": \"Bloomberg Línea LATAM\",\n  \"published_at\": \"{{ $json.pubDate }}\",\n  \"tags\": []\n}",
@@ -62,13 +80,16 @@
       "name": "A2 Signal Scorer",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
-      "position": [-440, 0],
+      "position": [
+        -440,
+        0
+      ],
       "retryOnFail": true,
       "waitBetweenTries": 5000,
       "parameters": {
         "promptType": "define",
         "hasOutputParser": true,
-        "text": "=Título: {{ $json.title }}\nFuente: {{ $json.source_name }}\nURL: {{ $json.url }}\nFecha publicación: {{ $json.published_at }}\nSnippet: {{ $json.snippet || 'N/A' }}\nTags: {{ $json.tags ? $json.tags.join(', ') : '' }}",
+        "text": "=Título: {{ $json.title }}\nFuente: {{ $json.source_name }}\nURL: {{ $json.url }}\nFecha publicación: {{ $json.published_at }}\nSnippet: {{ $json.snippet || 'N/A' }}\nTags: {{ ($json.tags || []).join(', ') }}",
         "messages": {
           "messageValues": [
             {
@@ -83,9 +104,12 @@
       "name": "Anthropic Sonnet 4.5 — A2",
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
-      "position": [-440, 200],
+      "position": [
+        -440,
+        200
+      ],
       "parameters": {
-        "model": "claude-sonnet-4-5",
+        "model": "claude-sonnet-4-6",
         "options": {
           "temperature": 0.2,
           "maxTokensToSample": 600
@@ -103,7 +127,10 @@
       "name": "Parser A2",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [-300, 200],
+      "position": [
+        -300,
+        200
+      ],
       "parameters": {
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"relevancia_finanzas_latam\", \"relevancia_latam\", \"novedad\", \"credibilidad_fuente\", \"potencial_educativo\", \"potencial_viral\", \"fit_marca\", \"accionabilidad\", \"riesgo\", \"justification\", \"suggested_angle\", \"sub_categoria\", \"risk_flags\"],\n  \"properties\": {\n    \"relevancia_finanzas_latam\": {\"type\": \"number\"},\n    \"relevancia_latam\": {\"type\": \"number\"},\n    \"novedad\": {\"type\": \"number\"},\n    \"credibilidad_fuente\": {\"type\": \"number\"},\n    \"potencial_educativo\": {\"type\": \"number\"},\n    \"potencial_viral\": {\"type\": \"number\"},\n    \"fit_marca\": {\"type\": \"number\"},\n    \"accionabilidad\": {\"type\": \"number\"},\n    \"riesgo\": {\"type\": \"number\"},\n    \"justification\": {\"type\": \"string\"},\n    \"suggested_angle\": {\"type\": \"string\"},\n    \"sub_categoria\": {\"type\": \"string\"},\n    \"risk_flags\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}\n  }\n}"
@@ -114,7 +141,10 @@
       "name": "Compute total_score",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-200, 0],
+      "position": [
+        -200,
+        0
+      ],
       "parameters": {
         "language": "javaScript",
         "jsCode": "const data = $input.item.json.output || $input.item.json;\nconst original = $('Normalize Item').item.json;\n\nconst score =\n  (data.relevancia_finanzas_latam || 0) +\n  (data.relevancia_latam || 0) +\n  (data.novedad || 0) +\n  (data.credibilidad_fuente || 0) +\n  (data.potencial_educativo || 0) +\n  (data.potencial_viral || 0) +\n  (data.fit_marca || 0) +\n  (data.accionabilidad || 0) +\n  (data.riesgo || 0);\n\nlet classification = 'discard';\nif (score >= 70) classification = 'strong';\nelse if (score >= 60) classification = 'consider';\n\nreturn {\n  ...original,\n  ...data,\n  total_score: Math.round(score * 100) / 100,\n  classification,\n  signal_score: Math.round(score * 100) / 100\n};\n"
@@ -125,7 +155,10 @@
       "name": "Score >= 60?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [40, 0],
+      "position": [
+        40,
+        0
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -153,7 +186,10 @@
       "name": "A3 Editorial — Dinero IA",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
-      "position": [280, -120],
+      "position": [
+        280,
+        -120
+      ],
       "retryOnFail": true,
       "waitBetweenTries": 5000,
       "parameters": {
@@ -174,9 +210,12 @@
       "name": "Anthropic Opus 4 — A3",
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
-      "position": [280, 80],
+      "position": [
+        280,
+        80
+      ],
       "parameters": {
-        "model": "claude-opus-4-20250514",
+        "model": "claude-opus-4-6",
         "options": {
           "temperature": 0.4,
           "maxTokensToSample": 2000
@@ -194,7 +233,10 @@
       "name": "Parser A3",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [420, 80],
+      "position": [
+        420,
+        80
+      ],
       "parameters": {
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"title\", \"que_paso\", \"por_que_importa_finanzas\", \"angulo_finanzas_latam\", \"hook_tentativo\", \"datos_clave\", \"formato_recomendado\", \"cta_tentativo\", \"disclaimer_requerido\"],\n  \"properties\": {\n    \"title\": {\"type\": \"string\"},\n    \"que_paso\": {\"type\": \"string\"},\n    \"por_que_importa_finanzas\": {\"type\": \"string\"},\n    \"que_cambia\": {\"type\": \"string\"},\n    \"quien_gana_pierde\": {\"type\": \"object\"},\n    \"datos_clave\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"angulo_finanzas_latam\": {\"type\": \"string\"},\n    \"prompt_o_template_sugerido\": {\"type\": \"string\"},\n    \"angulos_posibles\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"angulo_elegido\": {\"type\": \"string\"},\n    \"formato_recomendado\": {\"type\": \"string\"},\n    \"hook_tentativo\": {\"type\": \"string\"},\n    \"cta_tentativo\": {\"type\": \"string\"},\n    \"disclaimer_requerido\": {\"type\": \"boolean\"},\n    \"disclaimer_texto_sugerido\": {\"type\": \"string\"},\n    \"productos_mencionados\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"riesgos_editorial\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"fact_check_items\": {\"type\": \"array\"}\n  }\n}"
@@ -205,7 +247,10 @@
       "name": "Merge brief into payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [620, -120],
+      "position": [
+        620,
+        -120
+      ],
       "parameters": {
         "language": "javaScript",
         "jsCode": "const brief = $input.item.json.output || $input.item.json;\nconst scored = $('Compute total_score').item.json;\nreturn {\n  ...scored,\n  brief,\n  content_to_check: JSON.stringify(brief, null, 2)\n};\n"
@@ -216,7 +261,10 @@
       "name": "A9 Compliance Financiero",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.5,
-      "position": [860, -120],
+      "position": [
+        860,
+        -120
+      ],
       "retryOnFail": true,
       "waitBetweenTries": 5000,
       "parameters": {
@@ -237,9 +285,12 @@
       "name": "Anthropic Opus 4 — A9",
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
-      "position": [860, 80],
+      "position": [
+        860,
+        80
+      ],
       "parameters": {
-        "model": "claude-opus-4-20250514",
+        "model": "claude-opus-4-6",
         "options": {
           "temperature": 0.1,
           "maxTokensToSample": 1500
@@ -257,7 +308,10 @@
       "name": "Parser A9",
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
-      "position": [1000, 80],
+      "position": [
+        1000,
+        80
+      ],
       "parameters": {
         "schemaType": "manual",
         "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"checks\", \"verdict\", \"summary\", \"blocks\", \"warnings\"],\n  \"properties\": {\n    \"checks\": {\"type\": \"array\"},\n    \"verdict\": {\"type\": \"string\", \"enum\": [\"approved\", \"approved_with_warnings\", \"blocked\"]},\n    \"summary\": {\"type\": \"string\"},\n    \"blocks\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"warnings\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}\n  }\n}"
@@ -268,10 +322,13 @@
       "name": "Format Telegram Preview",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1200, -120],
+      "position": [
+        1200,
+        -120
+      ],
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"telegram_text\": \"*💰 Dinero IA — preview Fase 0*\\n\\n*{{ $('Merge brief into payload').item.json.brief.title }}*\\nScore: {{ $('Merge brief into payload').item.json.total_score }}/100 ({{ $('Merge brief into payload').item.json.sub_categoria }})\\nCompliance: *{{ ($json.output || $json).verdict }}*\\n\\n*¿Qué pasó?*\\n{{ $('Merge brief into payload').item.json.brief.que_paso }}\\n\\n*¿Por qué importa para tus finanzas?*\\n{{ $('Merge brief into payload').item.json.brief.por_que_importa_finanzas }}\\n\\n*Ángulo finanzas LATAM:*\\n{{ $('Merge brief into payload').item.json.brief.angulo_finanzas_latam }}\\n\\n*Hook tentativo:*\\n_{{ $('Merge brief into payload').item.json.brief.hook_tentativo }}_\\n\\n*Prompt/template sugerido:*\\n`{{ $('Merge brief into payload').item.json.brief.prompt_o_template_sugerido }}`\\n\\n*Formato:* {{ $('Merge brief into payload').item.json.brief.formato_recomendado }}  •  *CTA:* {{ $('Merge brief into payload').item.json.brief.cta_tentativo }}\\n\\n*Disclaimer req?:* {{ $('Merge brief into payload').item.json.brief.disclaimer_requerido ? 'sí' : 'no' }}\\n*Productos:* {{ ($('Merge brief into payload').item.json.brief.productos_mencionados || []).join(', ') || '—' }}\\n\\n*Compliance verdict:* {{ ($json.output || $json).verdict }}\\n*Blocks:* {{ JSON.stringify(($json.output || $json).blocks || []) }}\\n*Warnings:* {{ JSON.stringify(($json.output || $json).warnings || []) }}\\n\\n*Fuente:* {{ $('Normalize Item').item.json.url }}\"\n}",
+        "jsonOutput": "={\n  \"telegram_text\": \"*💰 Dinero IA — preview Fase 0*\\n\\n*{{ $('Merge brief into payload').first().json.brief.title }}*\\nScore: {{ $('Merge brief into payload').first().json.total_score }}/100 ({{ $('Merge brief into payload').first().json.sub_categoria }})\\nCompliance: *{{ ($json.output || $json).verdict }}*\\n\\n*¿Qué pasó?*\\n{{ $('Merge brief into payload').first().json.brief.que_paso }}\\n\\n*¿Por qué importa para tus finanzas?*\\n{{ $('Merge brief into payload').first().json.brief.por_que_importa_finanzas }}\\n\\n*Ángulo finanzas LATAM:*\\n{{ $('Merge brief into payload').first().json.brief.angulo_finanzas_latam }}\\n\\n*Hook tentativo:*\\n_{{ $('Merge brief into payload').first().json.brief.hook_tentativo }}_\\n\\n*Prompt/template sugerido:*\\n`{{ $('Merge brief into payload').first().json.brief.prompt_o_template_sugerido }}`\\n\\n*Formato:* {{ $('Merge brief into payload').first().json.brief.formato_recomendado }}  •  *CTA:* {{ $('Merge brief into payload').first().json.brief.cta_tentativo }}\\n\\n*Disclaimer req?:* {{ $('Merge brief into payload').first().json.brief.disclaimer_requerido ? 'sí' : 'no' }}\\n*Productos:* {{ ($('Merge brief into payload').first().json.brief.productos_mencionados || []).join(', ') || '—' }}\\n\\n*Compliance verdict:* {{ ($json.output || $json).verdict }}\\n*Blocks:* {{ JSON.stringify(($json.output || $json).blocks || []) }}\\n*Warnings:* {{ JSON.stringify(($json.output || $json).warnings || []) }}\\n\\n*Fuente:* {{ $('Normalize Item').first().json.url }}\"\n}",
         "options": {}
       }
     },
@@ -280,7 +337,10 @@
       "name": "Telegram — Send Preview",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1440, -120],
+      "position": [
+        1440,
+        -120
+      ],
       "parameters": {
         "operation": "sendMessage",
         "chatId": "REPLACE_ME_CHAT_ID",
@@ -301,7 +361,10 @@
       "name": "Log Discarded (debug)",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [280, 240],
+      "position": [
+        280,
+        240
+      ],
       "parameters": {
         "mode": "raw",
         "jsonOutput": "={\n  \"discarded\": true,\n  \"reason\": \"total_score < 60\",\n  \"item_url\": \"{{ $json.url }}\",\n  \"item_score\": \"{{ $json.total_score }}\",\n  \"sub_categoria\": \"{{ $json.sub_categoria }}\"\n}",
@@ -311,58 +374,198 @@
   ],
   "connections": {
     "Manual Trigger": {
-      "main": [[{ "node": "RSS — Bloomberg Línea LATAM", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "RSS — Bloomberg Línea LATAM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "RSS — Bloomberg Línea LATAM": {
-      "main": [[{ "node": "Limit 3 items", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Limit 3 items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Limit 3 items": {
-      "main": [[{ "node": "Normalize Item", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Normalize Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Normalize Item": {
-      "main": [[{ "node": "A2 Signal Scorer", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "A2 Signal Scorer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Anthropic Sonnet 4.5 — A2": {
-      "ai_languageModel": [[{ "node": "A2 Signal Scorer", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "A2 Signal Scorer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parser A2": {
-      "ai_outputParser": [[{ "node": "A2 Signal Scorer", "type": "ai_outputParser", "index": 0 }]]
+      "ai_outputParser": [
+        [
+          {
+            "node": "A2 Signal Scorer",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     },
     "A2 Signal Scorer": {
-      "main": [[{ "node": "Compute total_score", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Compute total_score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Compute total_score": {
-      "main": [[{ "node": "Score >= 60?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Score >= 60?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Score >= 60?": {
       "main": [
-        [{ "node": "A3 Editorial — Dinero IA", "type": "main", "index": 0 }],
-        [{ "node": "Log Discarded (debug)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "A3 Editorial — Dinero IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Discarded (debug)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Anthropic Opus 4 — A3": {
-      "ai_languageModel": [[{ "node": "A3 Editorial — Dinero IA", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "A3 Editorial — Dinero IA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parser A3": {
-      "ai_outputParser": [[{ "node": "A3 Editorial — Dinero IA", "type": "ai_outputParser", "index": 0 }]]
+      "ai_outputParser": [
+        [
+          {
+            "node": "A3 Editorial — Dinero IA",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     },
     "A3 Editorial — Dinero IA": {
-      "main": [[{ "node": "Merge brief into payload", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Merge brief into payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Merge brief into payload": {
-      "main": [[{ "node": "A9 Compliance Financiero", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "A9 Compliance Financiero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Anthropic Opus 4 — A9": {
-      "ai_languageModel": [[{ "node": "A9 Compliance Financiero", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "A9 Compliance Financiero",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Parser A9": {
-      "ai_outputParser": [[{ "node": "A9 Compliance Financiero", "type": "ai_outputParser", "index": 0 }]]
+      "ai_outputParser": [
+        [
+          {
+            "node": "A9 Compliance Financiero",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
     },
     "A9 Compliance Financiero": {
-      "main": [[{ "node": "Format Telegram Preview", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Format Telegram Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Format Telegram Preview": {
-      "main": [[{ "node": "Telegram — Send Preview", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Telegram — Send Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},

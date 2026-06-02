@@ -549,4 +549,151 @@ Ejemplos del tipo de pieza:
 - [ ] Decidir nombre/handle/dominio del proyecto (Manuel cuando tenga claridad)
 - [ ] Rename físico de carpeta `projects/dinero-ia/` cuando se decida nombre
 - [ ] Lista concreta de 20 prospects para Inflection Lever Track (Manuel + Claude próxima sesión)
-- [ ] Decisión final voice clone (Fase 2 - 30 días)
+- [x] Decisión final voice clone → ADR-018 (activa Fase 1 con voice library, swap a clone Manuel post-grabación)
+
+---
+
+## ADR-018 — Pivot a video-first pipeline + voice clone activa desde día 1
+
+**Fecha:** 2026-06-01
+**Status:** Aceptada (Manuel decisión 2026-06-01)
+**Scope:** Dinero IA — pipeline producción
+**Supersedes parcial:** ADR-008 (voice clone deferred → ACTIVA), ADR-013 (gpt-image-2 sigue pero ahora como input a Seedance, no carouseles)
+**Trigger:** Manuel pidió rediseño tras smoke test exitoso del moat editorial. Reels son el formato dominante LATAM 2026 (algoritmo IG/TT prioriza video 2-3x sobre carousel).
+
+### Contexto
+
+ADR-017 estableció Fase 1 = texto + carouseles + newsletter, con voice clone DIFERIDO a Fase 2. Smoke test del moat editorial (A2 + A3 + A9 + Telegram) corrió con éxito 2026-06-01. Manuel evaluó el avance y pidió rediseño:
+
+> "Estos posts tienen que ser videos. Necesito una generación de videos. Seedance 2.0 más generación de imágenes de ChatGPT al mismo tiempo. Van a necesitar algo de música de fondo y mi voz. Como dice el master plan, habíamos quedado que para mi voz íbamos a usar ElevenLabs."
+
+Esto cambia el pipeline desde la base: ya no es "carousel-first con reels en Fase 2" sino "reels-first con carousel opcional".
+
+### Decisión
+
+**Pipeline Fase 1 v2 = video-first** con los siguientes componentes nuevos:
+
+| Agent | Función | Tool | Output |
+|---|---|---|---|
+| **A5 Visual Director** | Genera prompts de imagen + storyboard de 5-8 keyframes | Claude Opus 4.6 | JSON con prompts gpt-image-2 + timing |
+| **A6 Audio Director** | Genera SSML del script + pacing + mood música + voice settings ElevenLabs | Claude Opus 4.6 | JSON con script SSML + voice_settings + music_brief |
+| **A7 Script Composer** | Brief A3 → script reel 25-35s + caption IG/TT/LI + sección newsletter | Claude Opus 4.6 | JSON con todos los formatos |
+| **A8a Image Gen** | Genera 5-8 keyframes editoriales `#0F0F10` + Inter + JetBrains Mono | OpenAI gpt-image-2 | PNG 1080×1920 (formato reel vertical) |
+| **A8b Video Gen** | Anima keyframes → video continuo con transiciones | Seedance 2.0 | MP4 sin audio, 25-35s |
+| **A8c Voice Gen** | Genera audio narrado con voice clone Manuel (o voice library en arranque) | ElevenLabs Creator | MP3 con SSML pacing |
+| **A8d Music Selection** | Selecciona track stock según mood A6 | Epidemic Sound / Artlist API (o biblioteca curada local) | MP3 track |
+| **A8e Compositor** | Mezcla video + voz + música + subs → MP4 final 9:16 | FFmpeg en n8n Code node | MP4 1080×1920 listo |
+
+**Stack actualizado:**
+
+| Componente | Estado pre-ADR-018 | Estado post-ADR-018 |
+|---|---|---|
+| Anthropic API | ✅ | ✅ + más volumen (A5, A6, A7 nuevos) |
+| OpenAI gpt-image-2 | Backup visual | **Core:** genera keyframes para Seedance |
+| Seedance 2.0 | DIFERIDO Fase 2 | **ACTIVA Fase 1** |
+| ElevenLabs Creator | DIFERIDO Fase 2 | **ACTIVA Fase 1** (voice library al inicio, clone Manuel post-grabación) |
+| Música stock | NO en plan | **NUEVA** (Epidemic Sound / Artlist) |
+| Blotato (carouseles) | Core publishing | **Opcional secundario** (carousel solo si format_recomendado=carousel) |
+| ContentStudio | Publish a IG/TT/LI/X | ✅ ahora publish video reels |
+| Beehiiv | Newsletter | ✅ sin cambios |
+| Supabase Storage | NO en plan | **NUEVA:** bucket para keyframes/audio/video |
+
+### Voice clone — strategy híbrida (resuelve ADR-008)
+
+**ADR-008 status:** SUPERSEDED por ADR-018.
+
+Implementación 2 fases:
+- **Fase 1.0 (arranque):** ElevenLabs voice library — voz español neutro LATAM masculina pre-existente. Calidad alta sin requerir grabación. Permite arrancar HOY sin bloqueo.
+- **Fase 1.1 (Manuel graba):** swap a voice clone Manuel (20-30 min grabación). Un solo cambio en A8c voice_id parameter.
+
+Razón: evita que la grabación sea blocker.
+
+### Consecuencias — costos
+
+- ElevenLabs Creator: +$22/mo
+- Seedance 2.0 (60-90 videos/mo × $1.50): +$90-135/mo
+- Música stock: +$13-22/mo
+- gpt-image-2 más volumen: +$10-17/mo
+- Anthropic con A5+A6+A7: +$30-50/mo
+- **Total delta vs ADR-017:** +$165-246/mo
+- **Total Fase 1 con video:** ~$270-440/mo (vs $130-180 ADR-017)
+
+### Riesgos aceptados
+
+1. **Compliance:** TikTok auto-etiqueta AIGC con voice. Disclosure en A9.
+2. **Calidad Seedance:** animación de keyframes ≠ grabación real. Mitigación: keyframes con composición simple, no escenas complejas.
+3. **Costo:** sube significativamente. Manuel aceptó el rango.
+4. **Voice clone diferida 2 semanas:** primeros videos con voz library. Mitigación: calidad ElevenLabs library indistinguible para audiencia general.
+
+### Acciones de este ADR
+
+- [x] Documentar ADR-018
+- [ ] Deep Research Top 12-15 performers US+LATAM (Agent en curso 2026-06-01)
+- [ ] Standards docs: VISUAL, VOICE, MUSIC, POSTING (post-research)
+- [ ] Workflow JSON `infra/n8n/dinero-ia-fase1-publish-v2.json` con A5-A8e
+- [ ] Migration SQL `002_video_assets.sql` con tabla `assets_storage`
+- [ ] Runbook ElevenLabs + Seedance setup
+- [ ] Script de grabación de voz Manuel (`docs/voice-clone/recording-script.md`)
+- [ ] Update ROADMAP a v6
+
+---
+
+## ADR-019 — Cadencia 2-3 posts/día + horarios LATAM diversificados + anti-canibalización
+
+**Fecha:** 2026-06-01
+**Status:** Aceptada (Manuel decisión 2026-06-01)
+**Scope:** Dinero IA — operación
+**Supersedes parcial:** ADR-011 (1 post/día → 2-3 posts/día)
+**Trigger:** Manuel pidió "2 o 3 posts al día con información bien validada" como cadencia objetivo Fase 1.
+
+### Contexto
+
+ADR-011 estableció 1 pieza/día Fase 1 para validar antes de escalar. Con el rediseño video-first (ADR-018) y la prioridad "máximo nivel + automatizado", Manuel define cadencia 2-3 posts/día desde el inicio Fase 1.
+
+### Decisión
+
+**Cadencia objetivo:** 2-3 posts/día con diversidad obligatoria.
+
+**Slots horarios por país** (basados en cuándo audiencia LATAM scrollea):
+
+| Slot | Hora MX (CST) | Hora AR (ART) | Hora CO (COT) | Sub-categorías sugeridas |
+|---|---|---|---|---|
+| **Slot 1 — mañana** | 7:00 AM | 9:00 AM | 7:00 AM | Educativo + analítico: inversiones, comparativas |
+| **Slot 2 — mediodía** | 12:30 PM | 2:30 PM | 12:30 PM | Práctico accionable: presupuesto, prompts, herramientas |
+| **Slot 3 — tarde-noche (solo si 3/día)** | 7:00 PM | 9:00 PM | 7:00 PM | Tendencia + viral: noticias IA, inflación AR/MX, polémicas |
+
+**Reglas anti-canibalización:**
+
+1. **Diversidad de sub-categoría obligatoria:** los posts del mismo día NO pueden ser de la misma sub_categoria. Si dos items top tienen sub_categoria='inversiones', el segundo se desplaza al día siguiente.
+2. **Diversidad de fuente:** los posts del mismo día NO pueden ser de la misma `source_name`. Bloomberg Línea + Cenital en distintos slots, OK. Dos de Bloomberg no.
+3. **Diversidad de formato:** preferir alternar reel + reel + carousel en 3-post days, no 3 reels seguidos.
+
+**Dedup robusto:**
+- `dedup_history` ya implementada (URL-level)
+- **Nuevo:** `topical_dedup` — keyword extraction sobre `que_paso` evita 2 piezas sobre el mismo evento
+
+**Cron schedule en n8n:**
+- 3 cron triggers separados (Slot 1, 2, 3) en vez de un único cron
+- Cada trigger ejecuta workflow Fase 1 publish con `slot_id` parameter
+- A2 Scorer filtra items según `slot_preference` matcheado con sub_categoria
+
+### Consecuencias
+
+**Volumen producción:** 60-90 posts/mes (vs 30 en ADR-011). 2-3x impact en costos LLM + Seedance.
+
+**Calidad vs velocidad:** Manuel explicitó "no importa si no publico esta semana, lo que me interesa es que logre un producto final muy bueno". Por lo tanto:
+- NO publicar si no hay 2-3 items que pasen score≥65 + compliance
+- Mejor 1 día con 0 posts que 1 día con 3 posts mediocres
+- A2 Scorer umbral sube de 60 a **65** para asegurar calidad mínima superior
+
+**HITL bandwidth:** 2-3 previews/día en Telegram. Manuel debe estar disponible para aprobar/editar. Mitigación: timeout HITL = 4h sin respuesta, auto-postpone al día siguiente (no auto-reject).
+
+### Acciones de este ADR
+
+- [x] Documentar ADR-019
+- [ ] Update workflow Fase 1 v2: 3 cron triggers + slot_id parameter
+- [ ] Implementar `topical_dedup` en code node (keyword extraction sobre que_paso)
+- [ ] Update A2 Scorer prompt: umbral 65 + slot_preference matching
+- [ ] Update SQL: agregar `slot` column a `briefs_pending` (parte de migration 002)
+- [ ] Actualizar Compliance prompt para considerar anti-canibalización
+- [ ] Update ROADMAP a v6 con cadencia 2-3/día
