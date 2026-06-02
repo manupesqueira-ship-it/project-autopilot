@@ -1,0 +1,606 @@
+{
+  "name": "Dinero IA — Fase 1 Produce v2 (A5-A8e video asset generation)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [
+    { "name": "dinero-ia" },
+    { "name": "fase-1" },
+    { "name": "produce-v2" },
+    { "name": "video-pipeline" }
+  ],
+  "nodes": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Webhook trigger (from HITL approve)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1800, 0],
+      "parameters": {
+        "path": "dinero-ia-produce",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "notes": "Recibe trigger del workflow HITL cuando Manuel aprueba. Payload: {brief_id, triggered_by: 'hitl'}"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "Verify secret",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-1580, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "secret-check",
+              "leftValue": "={{ $json.headers['x-webhook-secret'] }}",
+              "rightValue": "={{ $env.N8N_WEBHOOK_SECRET }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "name": "Reject unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-1360, 200],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"unauthorized\"\n}",
+        "options": { "responseCode": 401 }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "name": "Ack 202",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-1360, -200],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"accepted\",\n  \"brief_id\": \"{{ $json.body.brief_id }}\",\n  \"message\": \"production iniciada en background\"\n}",
+        "options": { "responseCode": 202 }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "name": "Get brief from Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-1140, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs_pending?id=eq.{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "name": "Mark production started",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-920, 0],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs_pending?id=eq.{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"production_status\": \"script_composing\",\n  \"production_started_at\": \"{{ new Date().toISOString() }}\"\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000007",
+      "name": "A7 Script Composer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [-680, 0],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=Brief aprobado:\n\n{{ JSON.stringify(($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).brief_content, null, 2) }}\n\nSub-categoría: {{ ($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).sub_categoria }}\nDisclaimer requerido: {{ ($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).disclaimer_requerido }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sos A7 Script Composer de Dinero IA. Transformá el brief en script para reel 35-55s + caption por plataforma + sección newsletter.\n\nStandards locked (docs/standards/VOICE.md):\n- WPM target 170 (rango 165-180)\n- Estructura 5 beats: B1 Hook 0-3s (rate fast) | B2 Contexto 3-12s (rate medium) | B3 Peak 12-30s (rate medium) | B4 Resolución LATAM 30-42s (rate medium) | B5 Disclaimer+CTA 42-50s (rate slow)\n- Total palabras: 125-135 (170 WPM × 45s)\n- Pausas SSML: 400ms estándar, 600ms en cifras, 800ms antes de disclaimer\n- Emphasis SSML en cifras + power-words\n- Pronunciaciones SSML para: Cocos Capital, IOL, GBM, Claude, ChatGPT, CEDEAR, ETF, FCI, Anthropic\n- Cifras: SIEMPRE moneda + país completos en habla ('cuarenta mil pesos mexicanos' NO 'cuarenta mil pesos')\n\nVoz Dinero IA: profesor cálido LATAM + autoridad pausada. NO hype-bro. NO listicle generic.\n\nFormatos a generar:\n1. **reel_script_ssml**: script SSML completo del reel listo para ElevenLabs (max 135 palabras, ~45s @ 170 WPM)\n2. **caption_ig**: caption IG max 1500 chars con hook + value + disclaimer + 7-10 hashtags\n3. **caption_tiktok**: caption TikTok max 150 chars + 3-5 hashtags\n4. **caption_linkedin**: caption LinkedIn 1300-1500 chars (longer-form)\n5. **newsletter_section**: sección newsletter Beehiiv 300-500 palabras consolidando el contenido\n6. **subject_line_options**: 5 subject lines newsletter alternates (la mejor se usa para Beehiiv)\n\nRespondé SIEMPRE en JSON exacto (sin markdown):\n{\n  \"reel_script_ssml\": \"<speak><prosody rate='fast'>...</prosody></speak>\",\n  \"caption_ig\": \"<caption con hashtags>\",\n  \"caption_tiktok\": \"<caption corto>\",\n  \"caption_linkedin\": \"<caption longer>\",\n  \"newsletter_section\": \"<markdown body>\",\n  \"subject_line_options\": [\"<sub1>\", \"<sub2>\", \"<sub3>\", \"<sub4>\", \"<sub5>\"],\n  \"hashtags_ig\": [\"<tag1>\", \"<tag2>\", ...],\n  \"hashtags_tiktok\": [\"<tag1>\", ...],\n  \"word_count_total\": <number>,\n  \"estimated_duration_seconds\": <number>\n}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000008",
+      "name": "Opus 4.6 — A7",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [-680, 200],
+      "parameters": {
+        "model": "claude-opus-4-6",
+        "options": { "temperature": 0.4, "maxTokensToSample": 3000 }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME_ANTHROPIC_CRED_ID",
+          "name": "Anthropic Account"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000009",
+      "name": "Parser A7",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [-540, 200],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"reel_script_ssml\", \"caption_ig\", \"caption_tiktok\", \"caption_linkedin\", \"newsletter_section\", \"subject_line_options\", \"hashtags_ig\", \"hashtags_tiktok\", \"word_count_total\", \"estimated_duration_seconds\"],\n  \"properties\": {\n    \"reel_script_ssml\": {\"type\": \"string\"},\n    \"caption_ig\": {\"type\": \"string\"},\n    \"caption_tiktok\": {\"type\": \"string\"},\n    \"caption_linkedin\": {\"type\": \"string\"},\n    \"newsletter_section\": {\"type\": \"string\"},\n    \"subject_line_options\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"hashtags_ig\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"hashtags_tiktok\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}},\n    \"word_count_total\": {\"type\": \"number\"},\n    \"estimated_duration_seconds\": {\"type\": \"number\"}\n  }\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000010",
+      "name": "A5 Visual Director",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [-380, 0],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=Script aprobado (extracto narración):\n{{ ($json.output || $json).reel_script_ssml }}\n\nDuración estimada: {{ ($json.output || $json).estimated_duration_seconds }}s\nSub-categoría: {{ ($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).sub_categoria }}\nBrief content: {{ JSON.stringify(($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).brief_content) }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sos A5 Visual Director de Dinero IA. Generá storyboard de 5-8 keyframes para el reel + prompts gpt-image-2 que cumplan VISUAL.md standards.\n\nStandards locked (docs/standards/VISUAL.md):\n- Formato 1080×1920 vertical\n- Paleta: #0D1117 (fondo) + #D4A574 (acento cifras) + #00D9A5 (acento secundario) + #FFFFFF (texto)\n- Tipografía: Inter Bold (hooks), Inter Medium (body), JetBrains Mono (captions/data)\n- Safe area: 100px top, 200px bottom\n- Negative space 40-60%\n- 6 tipos de keyframes catalogados: K1 hook | K2 data | K3 screenshot Claude/ChatGPT | K4 step | K5 comparison | K6 disclaimer\n- Wordmark 'Dinero IA' en cada frame\n- NO caras humanas reales\n- Animación sutil: scale-in, slide-up, fade — NO zoom-shake/glitch/particles\n\nCalculá número de keyframes: ~1 keyframe cada 4-5 segundos del reel.\nFrame 1 SIEMPRE K1 (hook), último SIEMPRE K6 (disclaimer si productos_mencionados.length > 0).\n\nPara cada keyframe generá:\n- frame_index (0,1,2...)\n- keyframe_type (K1-K6)\n- start_second (cuándo aparece en el reel)\n- end_second (cuándo termina)\n- text_overlay (texto exacto del frame)\n- gpt_image_prompt (prompt completo para gpt-image-2 siguiendo template VISUAL.md §6)\n- animation_pattern (scale-in | slide-up | fade | cifra_counter | highlight_pulse | cut)\n- transition_to_next (fade | cut | slide)\n\nRespondé SIEMPRE en JSON exacto (sin markdown):\n{\n  \"total_keyframes\": <number>,\n  \"keyframes\": [\n    {\n      \"frame_index\": 0,\n      \"keyframe_type\": \"K1\",\n      \"start_second\": 0,\n      \"end_second\": 3,\n      \"text_overlay\": \"...\",\n      \"gpt_image_prompt\": \"Editorial design composition, 1080x1920 vertical...\",\n      \"animation_pattern\": \"scale-in\",\n      \"transition_to_next\": \"cut\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000011",
+      "name": "Opus 4.6 — A5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [-380, 200],
+      "parameters": {
+        "model": "claude-opus-4-6",
+        "options": { "temperature": 0.5, "maxTokensToSample": 4000 }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME_ANTHROPIC_CRED_ID",
+          "name": "Anthropic Account"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000012",
+      "name": "Parser A5",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [-240, 200],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"total_keyframes\", \"keyframes\"],\n  \"properties\": {\n    \"total_keyframes\": {\"type\": \"number\"},\n    \"keyframes\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"required\": [\"frame_index\", \"keyframe_type\", \"start_second\", \"end_second\", \"text_overlay\", \"gpt_image_prompt\", \"animation_pattern\", \"transition_to_next\"],\n        \"properties\": {\n          \"frame_index\": {\"type\": \"number\"},\n          \"keyframe_type\": {\"type\": \"string\"},\n          \"start_second\": {\"type\": \"number\"},\n          \"end_second\": {\"type\": \"number\"},\n          \"text_overlay\": {\"type\": \"string\"},\n          \"gpt_image_prompt\": {\"type\": \"string\"},\n          \"animation_pattern\": {\"type\": \"string\"},\n          \"transition_to_next\": {\"type\": \"string\"}\n        }\n      }\n    }\n  }\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000013",
+      "name": "A6 Audio Director",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [-80, 0],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "promptType": "define",
+        "hasOutputParser": true,
+        "text": "=Sub-categoría: {{ ($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).sub_categoria }}\nDuración reel: {{ ($('A7 Script Composer').item.json.output || $('A7 Script Composer').item.json).estimated_duration_seconds }}s\nBrief: {{ JSON.stringify(($('Get brief from Supabase').item.json[0] || $('Get brief from Supabase').item.json).brief_content) }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Sos A6 Audio Director de Dinero IA. Tu trabajo: seleccionar mood de música + voice settings ElevenLabs según sub_categoria.\n\nStandards locked (docs/standards/MUSIC.md + VOICE.md):\n\nMUSIC mood por sub_categoria:\n- inversiones: 'calm_confident' BPM 70-75\n- presupuesto: 'optimistic_warm' BPM 75-82\n- inflacion: 'tense_reflective' BPM 70-78\n- impuestos: 'steady_focus' BPM 72-80\n- comparativas: 'curious_upbeat' BPM 78-85\n- retiro: 'calm_wisdom' BPM 65-72\n- crypto: 'tech_tension' BPM 75-82\n- bancos: 'investigation' BPM 70-78\n- otros: 'optimistic_warm' default\n\nVOICE settings ElevenLabs por sub_categoria:\n- inversiones/retiro/impuestos: stability 0.60 | similarity 0.75 | style 0.30 (más pausado)\n- presupuesto/comparativas: stability 0.55 | similarity 0.75 | style 0.40 (más expresivo)\n- inflacion/bancos: stability 0.55 | similarity 0.75 | style 0.35 (neutro)\n- crypto: stability 0.50 | similarity 0.75 | style 0.40 (más energía)\n- otros: stability 0.55 | similarity 0.75 | style 0.35 (default)\n\nDevolvé JSON exacto (sin markdown):\n{\n  \"music_mood_tag\": \"<mood from list>\",\n  \"music_bpm_min\": <number>,\n  \"music_bpm_max\": <number>,\n  \"music_brief_description\": \"<descripción para selección manual si fallback>\",\n  \"voice_settings\": {\n    \"stability\": <number>,\n    \"similarity_boost\": <number>,\n    \"style\": <number>,\n    \"use_speaker_boost\": true,\n    \"model_id\": \"eleven_multilingual_v2\"\n  },\n  \"audio_mix_volume_lufs\": -20,\n  \"audio_mix_disclaimer_lufs\": -24\n}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000014",
+      "name": "Opus 4.6 — A6",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [-80, 200],
+      "parameters": {
+        "model": "claude-opus-4-6",
+        "options": { "temperature": 0.2, "maxTokensToSample": 800 }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "REPLACE_ME_ANTHROPIC_CRED_ID",
+          "name": "Anthropic Account"
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000015",
+      "name": "Parser A6",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [60, 200],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"required\": [\"music_mood_tag\", \"music_bpm_min\", \"music_bpm_max\", \"voice_settings\", \"audio_mix_volume_lufs\"],\n  \"properties\": {\n    \"music_mood_tag\": {\"type\": \"string\"},\n    \"music_bpm_min\": {\"type\": \"number\"},\n    \"music_bpm_max\": {\"type\": \"number\"},\n    \"music_brief_description\": {\"type\": \"string\"},\n    \"voice_settings\": {\"type\": \"object\"},\n    \"audio_mix_volume_lufs\": {\"type\": \"number\"},\n    \"audio_mix_disclaimer_lufs\": {\"type\": \"number\"}\n  }\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000016",
+      "name": "Get current voice_id",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/get_current_voice_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "notes": "Llama función SQL get_current_voice_id() — devuelve voice_id activo (Fase 1.0 library o Fase 1.1 clone Manuel)"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000017",
+      "name": "Loop over keyframes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [440, -200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "Procesar cada keyframe en serie: image gen → seedance animation"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000018",
+      "name": "A8a Image Gen (gpt-image-2)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, -300],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.OPENAI_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-image-2\",\n  \"prompt\": {{ JSON.stringify($json.gpt_image_prompt) }},\n  \"n\": 1,\n  \"size\": \"1024x1792\",\n  \"quality\": \"high\",\n  \"output_format\": \"png\"\n}",
+        "options": {
+          "response": { "response": { "neverError": true, "responseFormat": "json" } },
+          "timeout": 60000
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000019",
+      "name": "Upload keyframe to Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, -300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/dinero-ia-assets/keyframes/{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}/{{ $json.frame_index }}.png",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "image/png" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "binaryPropertyName": "data",
+        "options": {
+          "response": { "response": { "neverError": true, "responseFormat": "json" } }
+        }
+      },
+      "notes": "Sube el PNG generado por gpt-image-2 a Supabase Storage bucket dinero-ia-assets"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000020",
+      "name": "A8b Video Gen (Seedance) — animate keyframe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, -300],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 10000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.seedance.com/v1/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SEEDANCE_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"seedance-2.0\",\n  \"input_image_url\": \"{{ $env.SUPABASE_URL }}/storage/v1/object/public/dinero-ia-assets/keyframes/{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}/{{ $json.frame_index }}.png\",\n  \"prompt\": \"{{ $json.animation_pattern }} animation, subtle editorial style, no glitch, no rotation, smooth motion\",\n  \"duration_seconds\": {{ $json.end_second - $json.start_second }},\n  \"output_format\": \"mp4\",\n  \"aspect_ratio\": \"9:16\"\n}",
+        "options": {
+          "response": { "response": { "neverError": true, "responseFormat": "json" } },
+          "timeout": 180000
+        }
+      },
+      "notes": "URL Seedance API es placeholder — verificar al activar cuenta. Algunos providers requieren polling de status."
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000021",
+      "name": "Save asset metadata (keyframe + video segment)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, -300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/assets_storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n    \"brief_id\": \"{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}\",\n    \"asset_type\": \"keyframe\",\n    \"asset_index\": {{ $('Loop over keyframes').item.json.frame_index }},\n    \"storage_path\": \"keyframes/{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}/{{ $('Loop over keyframes').item.json.frame_index }}.png\",\n    \"mime_type\": \"image/png\",\n    \"generator_tool\": \"gpt-image-2\",\n    \"generator_params\": {{ JSON.stringify($('Loop over keyframes').item.json) }},\n    \"status\": \"ready\",\n    \"generated_at\": \"{{ new Date().toISOString() }}\"\n  },\n  {\n    \"brief_id\": \"{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}\",\n    \"asset_type\": \"video_segment\",\n    \"asset_index\": {{ $('Loop over keyframes').item.json.frame_index }},\n    \"storage_path\": \"video_segments/{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}/{{ $('Loop over keyframes').item.json.frame_index }}.mp4\",\n    \"mime_type\": \"video/mp4\",\n    \"duration_seconds\": {{ $('Loop over keyframes').item.json.end_second - $('Loop over keyframes').item.json.start_second }},\n    \"generator_tool\": \"seedance-2.0\",\n    \"generator_params\": {{ JSON.stringify({\"animation_pattern\": $('Loop over keyframes').item.json.animation_pattern}) }},\n    \"status\": \"ready\",\n    \"generated_at\": \"{{ new Date().toISOString() }}\"\n  }\n]"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000022",
+      "name": "A8c Voice Gen (ElevenLabs)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 100],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.elevenlabs.io/v1/text-to-speech/{{ $('Get current voice_id').item.json }}/with-timestamps",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "xi-api-key", "value": "={{ $env.ELEVENLABS_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify(($('A7 Script Composer').item.json.output || $('A7 Script Composer').item.json).reel_script_ssml) }},\n  \"model_id\": {{ JSON.stringify((($('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json).voice_settings).model_id) }},\n  \"voice_settings\": {{ JSON.stringify(($('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json).voice_settings) }},\n  \"output_format\": \"mp3_44100_192\"\n}",
+        "options": {
+          "response": { "response": { "neverError": true, "responseFormat": "json" } },
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000023",
+      "name": "A8d Music Selection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/select_music_track",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "mood_tag", "value": "={{ ($('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json).music_mood_tag }}" },
+            { "name": "min_bpm", "value": "={{ ($('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json).music_bpm_min }}" },
+            { "name": "max_bpm", "value": "={{ ($('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json).music_bpm_max }}" }
+          ]
+        },
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      },
+      "notes": "Llama función SQL custom select_music_track(mood_tag, bpm_range) que filtra music_library no usada en 14 días. Si fallback: usa default track. Implementar función en migration futura o code node."
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000024",
+      "name": "A8e Compositor (FFmpeg Code node)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1640, 100],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// FFmpeg compositor via shell exec\n// NOTA: n8n cloud puede no permitir spawn de FFmpeg directo.\n// Alternativa 1: API externa (Shotstack, Cloudinary, Bannerbear)\n// Alternativa 2: Self-hosted helper service\n// Alternativa 3: Replicate model que hace video composition\n\n// Por ahora, devolvemos plan de composición + URLs para que un service externo lo ejecute\n\nconst brief_id = $('Webhook trigger (from HITL approve)').item.json.body.brief_id;\nconst keyframes_data = $('A5 Visual Director').item.json.output?.keyframes || $('A5 Visual Director').item.json.keyframes;\nconst voice_url = `${$env.SUPABASE_URL}/storage/v1/object/public/dinero-ia-assets/voice/${brief_id}/narration.mp3`;\nconst music_track = $('A8d Music Selection').item.json[0] || {};\nconst audio_mix = $('A6 Audio Director').item.json.output || $('A6 Audio Director').item.json;\n\nconst composition_plan = {\n  brief_id,\n  output_path: `final/${brief_id}/reel.mp4`,\n  video_segments: keyframes_data.map(k => ({\n    url: `${$env.SUPABASE_URL}/storage/v1/object/public/dinero-ia-assets/video_segments/${brief_id}/${k.frame_index}.mp4`,\n    start: k.start_second,\n    end: k.end_second,\n    transition_out: k.transition_to_next\n  })),\n  audio_tracks: [\n    {\n      url: voice_url,\n      type: 'voice',\n      volume_lufs: -14,\n      priority: 1\n    },\n    {\n      url: music_track.url || null,\n      type: 'music',\n      volume_lufs: audio_mix.audio_mix_volume_lufs,\n      duck_to_lufs: audio_mix.audio_mix_disclaimer_lufs,\n      sidechain_from: 'voice',\n      priority: 2\n    }\n  ],\n  subtitles: {\n    enabled: true,\n    style: {\n      font_family: 'Inter',\n      font_weight: 'Bold',\n      font_size_pt: 52,\n      color: '#FFFFFF',\n      outline_color: '#000000',\n      outline_width: 4,\n      position: { x: 'center', y: '65%' },\n      highlight_color: '#D4A574'\n    }\n  },\n  output_format: {\n    width: 1080,\n    height: 1920,\n    fps: 30,\n    codec: 'h264',\n    audio_codec: 'aac',\n    bitrate_video: '6M',\n    bitrate_audio: '192k'\n  }\n};\n\nreturn {\n  composition_plan,\n  status: 'plan_generated_pending_compositor_service'\n};"
+      },
+      "notes": "Compositor plan — en n8n cloud no se puede correr FFmpeg directo. Plan: enviar a un service externo (Shotstack/Bannerbear/Cloudinary) o self-hosted helper. Para v1, plan generado va a Telegram para que Manuel decida el camino."
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000025",
+      "name": "Update brief: ready_to_publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1880, 100],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/briefs_pending?id=eq.{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"production_status\": \"ready_to_publish\",\n  \"production_completed_at\": \"{{ new Date().toISOString() }}\"\n}"
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000026",
+      "name": "Trigger fanout webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_FANOUT_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Webhook-Secret", "value": "={{ $env.N8N_WEBHOOK_SECRET }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"brief_id\": \"{{ $('Webhook trigger (from HITL approve)').item.json.body.brief_id }}\",\n  \"action\": \"video_ready\",\n  \"triggered_by\": \"produce_v2\"\n}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook trigger (from HITL approve)": {
+      "main": [[{ "node": "Verify secret", "type": "main", "index": 0 }]]
+    },
+    "Verify secret": {
+      "main": [
+        [
+          { "node": "Ack 202", "type": "main", "index": 0 },
+          { "node": "Get brief from Supabase", "type": "main", "index": 0 }
+        ],
+        [{ "node": "Reject unauthorized", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get brief from Supabase": {
+      "main": [[{ "node": "Mark production started", "type": "main", "index": 0 }]]
+    },
+    "Mark production started": {
+      "main": [[{ "node": "A7 Script Composer", "type": "main", "index": 0 }]]
+    },
+    "Opus 4.6 — A7": {
+      "ai_languageModel": [[{ "node": "A7 Script Composer", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Parser A7": {
+      "ai_outputParser": [[{ "node": "A7 Script Composer", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "A7 Script Composer": {
+      "main": [[{ "node": "A5 Visual Director", "type": "main", "index": 0 }]]
+    },
+    "Opus 4.6 — A5": {
+      "ai_languageModel": [[{ "node": "A5 Visual Director", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Parser A5": {
+      "ai_outputParser": [[{ "node": "A5 Visual Director", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "A5 Visual Director": {
+      "main": [[{ "node": "A6 Audio Director", "type": "main", "index": 0 }]]
+    },
+    "Opus 4.6 — A6": {
+      "ai_languageModel": [[{ "node": "A6 Audio Director", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Parser A6": {
+      "ai_outputParser": [[{ "node": "A6 Audio Director", "type": "ai_outputParser", "index": 0 }]]
+    },
+    "A6 Audio Director": {
+      "main": [[{ "node": "Get current voice_id", "type": "main", "index": 0 }]]
+    },
+    "Get current voice_id": {
+      "main": [[
+        { "node": "Loop over keyframes", "type": "main", "index": 0 },
+        { "node": "A8c Voice Gen (ElevenLabs)", "type": "main", "index": 0 },
+        { "node": "A8d Music Selection", "type": "main", "index": 0 }
+      ]]
+    },
+    "Loop over keyframes": {
+      "main": [[{ "node": "A8a Image Gen (gpt-image-2)", "type": "main", "index": 0 }]]
+    },
+    "A8a Image Gen (gpt-image-2)": {
+      "main": [[{ "node": "Upload keyframe to Supabase Storage", "type": "main", "index": 0 }]]
+    },
+    "Upload keyframe to Supabase Storage": {
+      "main": [[{ "node": "A8b Video Gen (Seedance) — animate keyframe", "type": "main", "index": 0 }]]
+    },
+    "A8b Video Gen (Seedance) — animate keyframe": {
+      "main": [[{ "node": "Save asset metadata (keyframe + video segment)", "type": "main", "index": 0 }]]
+    },
+    "Save asset metadata (keyframe + video segment)": {
+      "main": [[{ "node": "Loop over keyframes", "type": "main", "index": 0 }]]
+    },
+    "A8c Voice Gen (ElevenLabs)": {
+      "main": [[{ "node": "A8e Compositor (FFmpeg Code node)", "type": "main", "index": 0 }]]
+    },
+    "A8d Music Selection": {
+      "main": [[{ "node": "A8e Compositor (FFmpeg Code node)", "type": "main", "index": 0 }]]
+    },
+    "A8e Compositor (FFmpeg Code node)": {
+      "main": [[{ "node": "Update brief: ready_to_publish", "type": "main", "index": 0 }]]
+    },
+    "Update brief: ready_to_publish": {
+      "main": [[{ "node": "Trigger fanout webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "dinero-ia-fase-1-produce-v2"
+  }
+}
