@@ -15,9 +15,8 @@
 | `projects/dinero-ia/` | ✅ ACTIVO | Config, entregas, research de la property. |
 | `docs/standards/DINERO_IA_STYLE_BIBLE.md` | ✅ **FUENTE DE VERDAD** | Si algo contradice este doc, gana este doc. |
 | `README.md`, `.cursorrules`, MASTER_PLAN | ⚠️ **DESACTUALIZADOS** | Describen el viejo "AI Brief/Autopilot" (n8n + 11 agentes, MVP manual). NO refleja el trabajo actual. |
-| `core/`, `agents/`, `legacy/`, `workflows/` | 💀 viejo Autopilot | Arquitectura previa al pipeline de video. No tocar salvo orden explícita. |
-| Mira (`docs/MIRA_*`, `docs/CURRENT_STATE.md`) | 🧊 CONGELADO | App Next.js en repo aparte (manupesqueira-ship-it/mira). NO recibe trabajo aquí. |
-| Los ~150 docs en `docs/` | 📚 mayormente históricos | Snapshots de fases pasadas. Verificar fecha/relevancia antes de creerles. |
+| `docs/` vivos: `standards/`, `runbooks/`, `voice-clone/`, `EXPENSES.md`, `DECISIONS.md` (ADR-018/019), `ROADMAP.md` | ✅ vivos | Lo único de `docs/` que sigue siendo verdad de Dinero IA. El resto se archivó. |
+| `_archive/` | 💀 **archivado (recuperable)** | Viejo Autopilot (`core/`, `agents/`, `legacy/`, `workflows/` + `n8n/`, `prompts/`, `assets/`, `data/` raíz), Mira, pivots muertos (`crypto-brief-latam`, `startup-radar-latam`, `mira`), `dinero-ia/infra` (ae-pipeline+veo) y ~117 docs históricos. Gitignored: reversible vía git history + copia en disco. NO revivir sin orden. |
 
 **Regla de oro:** ante duda sobre el estado, la verdad viva está en la **Style Bible**,
 en mi memoria de proyecto, y en `git log` — NO en los docs sueltos.
@@ -126,9 +125,9 @@ luego se parametriza con los datos exactos del guion.
 
 ## 🎯 Foco actual (verificar contra Style Bible + `git log`, cambia rápido)
 
-- Problema abierto #1: **cortes abruptos entre beats** → fix recomendado = `xfade`/`acrossfade` real en `build916.py` dentro del silencio LEAD/TAIL (no el envelope de opacidad, que quedó corto).
-- Problema abierto #2: videos "un poquito aburridos" en el tramo final → urge expandir el catálogo de charts por batches.
-- Orden vigente de Manuel: 1) arreglar cortes y re-entregar El Salvador → 2) terminar catálogo por batches → 3) visuales narrativos → 4) validación/reglas/ledger. NO re-sembrar los guiones viejos ("esos ya fueron").
+- **Objetivo:** 3 posts/día en horarios estratégicos → el cuello de botella es **MATERIAL** (banco de temas), no la calidad del medio.
+- ✅ **Cortes abruptos RESUELTOS** (xfade real en `build916.py`, `XFADE=0.35`, dip de música en el silencio real entre voces). Catálogo de ~39 beats + director (`validator.py` R1–R11 31/31, `ledger.py`, lane A/B de rotación) ya existen.
+- Plan vigente (2026-06-15): Fase 1 limpieza→`_archive/` ✅ → Fase 2 doc baseline "lo que funciona" → Fase 3 **banco de temas** (`infra/n8n/temas_cola.json`) → Fase 4 n8n semi-auto con gate humano. NO re-sembrar los guiones viejos ("esos ya fueron") ni re-proponer caminos muertos.
 
 ---
 
