@@ -1,0 +1,31 @@
+{
+  "name": "dinero-ia-remotion",
+  "version": "0.1.0",
+  "description": "Remotion render service for Dinero IA reels",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "preview": "remotion preview",
+    "render": "remotion render"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.290",
+    "@remotion/cli": "^4.0.290",
+    "@remotion/fonts": "^4.0.475",
+    "@remotion/renderer": "^4.0.290",
+    "country-flag-icons": "^1.6.17",
+    "d3-geo": "^3.1.1",
+    "express": "^4.21.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-simple-maps": "^3.0.0",
+    "remotion": "^4.0.290",
+    "simple-icons": "^16.23.0"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/express": "^4.17.21",
+    "@types/react": "^18.3.0",
+    "@types/react-simple-maps": "^3.0.6"
+  }
+}

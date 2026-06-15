@@ -1,0 +1,173 @@
+{
+  "slug": "el_salvador_bitcoin_apuesta",
+  "title": "El país que apostó todo al Bitcoin",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Un país entero apostó al Bitcoin. El mundo dijo que estaban locos. Hoy ganan casi doscientos diez millones de dólares sin haber vendido una sola moneda.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [
+            {
+              "text": "Un",
+              "accent": false
+            },
+            {
+              "text": "país",
+              "accent": true
+            },
+            {
+              "text": "entero"
+            }
+          ],
+          [
+            {
+              "text": "apostó",
+              "accent": false
+            },
+            {
+              "text": "todo"
+            }
+          ],
+          [
+            {
+              "text": "al",
+              "accent": false
+            },
+            {
+              "text": "Bitcoin",
+              "accent": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b2_map",
+      "type": "BeatMapZoom",
+      "vo": "El Salvador, septiembre de dos mil veintiuno. Nayib Bukele firma la ley que convierte al Bitcoin en moneda de curso legal. Fue el primer país del mundo en hacerlo.",
+      "sfx": "whoosh",
+      "trans": "zoomPunch",
+      "props": {
+        "countryName": "El Salvador",
+        "iso2": "SV",
+        "caption": "Primer país en adoptar Bitcoin como moneda legal",
+        "label": "El Salvador",
+        "sublabel": "7 de septiembre de 2021"
+      }
+    },
+    {
+      "id": "b3_bukele",
+      "type": "BeatCharacter",
+      "vo": "Bukele acumuló Bitcoin mientras el precio se desplomaba a alrededor de dieciséis mil dólares en dos mil veintidós. El FMI presionaba para revertir la ley. Él anunció que comprarían un Bitcoin al día. Y nunca vendieron.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "props": {
+        "imageSlug": "bukele",
+        "name": "Nayib Bukele",
+        "role": "Presidente de El Salvador",
+        "quote": "Compramos 1 Bitcoin al día"
+      }
+    },
+    {
+      "id": "b4_recovery",
+      "type": "BeatRecovery",
+      "vo": "El precio cayó hasta los dieciséis mil dólares y todo el mundo los daba por perdidos. Pero aguantaron. Y la apuesta se disparó.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "Bitcoin: la caída que no los rindió",
+        "points": [
+          44739,
+          40000,
+          35000,
+          28000,
+          22000,
+          16000,
+          18000,
+          23000,
+          30000,
+          38000,
+          45000,
+          55000,
+          64000
+        ],
+        "troughIndex": 5,
+        "troughLabel": "$16,000 USD",
+        "endLabel": "$64,000 USD",
+        "labels": [
+          {
+            "text": "Fondo 2022",
+            "index": 5,
+            "color": "#FF6B6B"
+          },
+          {
+            "text": "Hoy",
+            "index": 12,
+            "color": "#00D9A5"
+          }
+        ]
+      }
+    },
+    {
+      "id": "b5_holdings",
+      "type": "BeatBars",
+      "vo": "Hoy El Salvador tiene siete mil cuatrocientos setenta y cuatro Bitcoins. Invirtieron alrededor de doscientos setenta millones de dólares a un precio promedio de cuarenta y cuatro mil setecientos treinta y nueve dólares por moneda. El valor de mercado ya supera los cuatrocientos setenta y nueve millones.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": {
+        "growWords": [
+          "dólares",
+          "moneda",
+          "millones"
+        ]
+      },
+      "props": {
+        "caption": "La posición de El Salvador en Bitcoin (USD)",
+        "prefix": "$",
+        "bars": [
+          {
+            "label": "Invertido",
+            "value": 270000000
+          },
+          {
+            "label": "Valor actual",
+            "value": 479000000
+          }
+        ]
+      }
+    },
+    {
+      "id": "b6_ganancia",
+      "type": "BeatBigNumber",
+      "vo": "Ganancia no realizada: casi doscientos nueve millones de dólares. Un setenta y siete por ciento de retorno. Sin vender una sola moneda.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "moneda"
+      },
+      "props": {
+        "value": 209000000,
+        "prefix": "$",
+        "suffix": " USD",
+        "caption": "Ganancia no realizada",
+        "subline": "+77% sobre lo invertido · 7,474 BTC",
+        "color": "#00D9A5"
+      }
+    },
+    {
+      "id": "b7_cta",
+      "type": "BeatCta",
+      "vo": "Si aguantaste la caída, ganaste. Síguenos para más historias que el banco no te cuenta.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "El que aguanta, gana.",
+        "boldWord": "aguanta",
+        "sub": "mañana: cuánto pierde tu aguinaldo guardado en el banco"
+      }
+    }
+  ]
+}

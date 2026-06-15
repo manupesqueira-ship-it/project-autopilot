@@ -1,0 +1,39 @@
+Continuamos el proyecto Dinero IA (pipeline propio Remotion de reels verticales 9:16 de
+finanzas en español, en C:\Users\manup\projects\project-autopilot\infra). ANTES de hacer
+nada, lee tu memoria: project_dinero_ia_post_adobe.md (el bloque "M19" = estado más
+reciente), project_dinero_ia_director_roadmap.md y el Style Bible. Respeta el
+congelamiento de gastos: cero herramientas nuevas sin mi OK explícito, todo $0.
+
+DÓNDE ESTAMOS: entregué el video #6 "El Salvador" v3. Lo bueno (NO tocar): primeros 18s
+10/10, hook de 3 estrofas, mapa fly-in vectorial nítido, voz Asgard eleven_v3, bandera +
+caricatura + logos.
+
+PRIORIDAD #1 — arreglar los cortes abruptos entre beats. El intento anterior (desvanecer
+solo la capa de contenido en StudioScene, "seamOpacity") NO funcionó: sigo sintiendo que
+se interrumpe, no noté ningún respiro. Plan acordado: crossfade REAL en el ensamblador
+(infra/assembler/build916.py, paso "assemble") — cambiar el concat duro por xfade
+(~0.4-0.5s) + acrossfade de audio, solapando DENTRO del silencio LEAD/TAIL que ya existe
+(el solape cae en zona muda, así el VO no se pisa). Impleméntalo, re-ensambla y
+re-entrégame El Salvador para validar el ritmo. (Probablemente convenga limpiar el
+envelope de opacidad por-beat si estorba.) Dime tu plan ANTES de codificar.
+
+DESPUÉS, EN ORDEN:
+2) Catálogo batch 1 YA construido y registrado (BeatDonut, BeatWaterfall, BeatBubble,
+   BeatCandlestick; stills en infra/assembler/out/_stills/). Muéstramelos y aplica los
+   tweaks pendientes: Bubble está muy amontonado y sus logos (microsoft/google/amazon)
+   caen a monograma; el % central del Donut no matchea el color del segmento resaltado.
+   Tras mi OK, sigue con batches 2+ (sankey, stacked area, dial/gauge, heatmap, ticker,
+   slope, lollipop/dumbbell, radar, treemap, funnel, progress-ring, histograma,
+   scaled-icon, scoreboard).
+3) Visuales narrativos (tarjeta noticia/tweet, objeto 3D Blender, debate de 2 caricaturas,
+   mapa multi-país, muro de logos, testimonio).
+4) AL FINAL: validación / reglas / ledger del "director" (NO antes). NO siembres los 6
+   guiones viejos: "esos ya fueron".
+
+COMANDOS CLAVE:
+- Build:  python build916.py guion_el_salvador_bitcoin_apuesta.json [vo|render|assemble|all]
+          (correr desde infra/assembler; re-render borra raw/*.mp4 antes)
+- Stills: npx.cmd remotion still BeatX ../assembler/out/_stills/X.png --frame=N --log=error
+          (correr desde infra/remotion-render)
+
+Arranca leyendo la memoria y proponme el plan del crossfade.

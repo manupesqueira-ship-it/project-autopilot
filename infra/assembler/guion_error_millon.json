@@ -1,0 +1,73 @@
+{
+  "slug": "error_millon",
+  "title": "El error del millón de dólares",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Este es el error del millón de dólares. Y casi todos lo están cometiendo.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [{ "text": "el" }, { "text": "error" }],
+          [{ "text": "del" }, { "text": "millón", "accent": true }],
+          [{ "text": "de dólares" }]
+        ]
+      }
+    },
+    {
+      "id": "b2_race",
+      "type": "BeatBarRace",
+      "vo": "Doscientos cincuenta dólares al mes, al diez por ciento anual. Si empiezas a los veinticinco, a los sesenta y cinco tienes un millón quinientos ochenta y un mil veinte. Empezando a los treinta y cinco: quinientos sesenta y cinco mil ciento veintidós. Y a los cuarenta y cinco: solo ciento ochenta y nueve mil ochocientos cuarenta y dos.",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "cues": {
+        "countEndWord": "veinte",
+        "pulseWords": ["quinientos:2", "ciento:2"]
+      },
+      "props": {
+        "caption": "invirtiendo $250 USD al mes · 10% anual",
+        "monthly": 250,
+        "rate": 0.1,
+        "ageStart": 25,
+        "ageEnd": 65,
+        "racers": [
+          { "label": "empiezas a los 25", "startAge": 25, "tag": "40 años" },
+          { "label": "empiezas a los 35", "startAge": 35, "tag": "30 años" },
+          { "label": "empiezas a los 45", "startAge": 45, "tag": "20 años" }
+        ],
+        "prefix": "$",
+        "winnerIndex": 0
+      }
+    },
+    {
+      "id": "b3_costo",
+      "type": "BeatBigNumber",
+      "vo": "¿La diferencia entre empezar a los veinticinco y empezar a los treinta y cinco? Un millón quince mil ochocientos noventa y ocho dólares. El error no es invertir mal. Es empezar tarde.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "ocho" },
+      "props": {
+        "caption": "el costo de esperar diez años",
+        "prefix": "$",
+        "value": 1015898,
+        "suffix": " USD",
+        "decimals": 0,
+        "color": "#FF6B6B",
+        "subline": "empezar a los 25 vs empezar a los 35"
+      }
+    },
+    {
+      "id": "b4_cta",
+      "type": "BeatCta",
+      "vo": "El mejor día para empezar fue ayer. El segundo mejor es hoy. Guarda esto. Mañana: la estafa más grande del internet.",
+      "sfx": "impact",
+      "props": {
+        "text": "El segundo mejor día es hoy",
+        "boldWord": "hoy",
+        "sub": "mañana: la estafa más grande del internet"
+      }
+    }
+  ]
+}

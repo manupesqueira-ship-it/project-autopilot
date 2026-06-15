@@ -1,0 +1,95 @@
+{
+  "slug": "estafa_ftx",
+  "title": "La estafa más grande del internet",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Le confiaron ocho mil millones de dólares. Los desapareció. Esta es la estafa más grande del internet.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [{ "text": "la" }, { "text": "estafa", "accent": true }],
+          [{ "text": "más grande" }],
+          [{ "text": "del internet" }]
+        ]
+      }
+    },
+    {
+      "id": "b2_timeline",
+      "type": "BeatTimeline",
+      "vo": "Dos mil diecinueve: nace FTX, el casino cripto de Sam Bankman-Fried. Enero de dos mil veintidós: vale treinta y dos mil millones de dólares. Noviembre: en setenta y dos horas se descubre un hueco de ocho mil millones. Dos mil veinticuatro: veinticinco años de prisión.",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "cues": { "growWords": ["diecinueve", "enero", "noviembre", "veinticuatro"] },
+      "props": {
+        "caption": "FTX · auge y colapso",
+        "nodes": [
+          { "year": "2019", "title": "nace FTX, el casino cripto", "tone": "white" },
+          { "year": "ene 2022", "title": "valuación récord", "amount": "$32,000 M USD", "tone": "green" },
+          { "year": "nov 2022", "title": "colapso en 72 horas", "amount": "−$8,000 M USD", "tone": "red" },
+          { "year": "mar 2024", "title": "Sam Bankman-Fried", "amount": "25 años de prisión", "tone": "gold" }
+        ]
+      }
+    },
+    {
+      "id": "b3_crash",
+      "type": "BeatTrendBreak",
+      "vo": "Su token ya contaba la historia. De cincuenta y nueve dólares se desplomó a un dólar con treinta y cuatro centavos. Diez mil dólares quedaron en doscientos veintiséis.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "cues": { "breakWord": "desplomó", "countEndWord": "veintiséis" },
+      "props": {
+        "caption": "token FTT · oct 2021 → nov 2022",
+        "points": [27.48, 35.31, 48.5, 51.57, 59.38, 50.69, 38.31, 43.67, 45.97, 48.89, 38.01, 28.95, 24.53, 30.41, 26.67, 24.24, 26.11, 1.34],
+        "peakIndex": 4,
+        "counterLabel": "tu inversión en FTX",
+        "countFrom": 10000,
+        "countTo": 226,
+        "countPrefix": "$",
+        "pctLabel": "−98%",
+        "peakLabel": "$59.38",
+        "troughLabel": "$1.34"
+      }
+    },
+    {
+      "id": "b4_twist",
+      "type": "BeatVersus",
+      "vo": "¿Y el final? Increíblemente, FTX devolvió el ciento diecinueve por ciento. Por un Bitcoin atrapado te dieron veinte mil doscientos setenta y un dólares. Pero ese Bitcoin hoy vale sesenta y tres mil cuatrocientos setenta y ocho.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "leftEndWord": "dólares", "rightEndWord": "ocho" },
+      "props": {
+        "caption": "1 Bitcoin atrapado en FTX · nov 2022",
+        "left": {
+          "name": "FTX te devolvió",
+          "ticker": "119% DEL RECLAMO",
+          "logo": "ftx",
+          "value": 20271,
+          "tag": "×1.19"
+        },
+        "right": {
+          "name": "Tu Bitcoin hoy",
+          "ticker": "BTC · USD",
+          "logo": "bitcoin",
+          "value": 63478,
+          "tag": "×3.7"
+        },
+        "prefix": "$",
+        "winner": "right"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Si no son tus llaves, no son tus monedas. Guarda esto. Mañana: el país que apostó todo al Bitcoin.",
+      "sfx": "impact",
+      "props": {
+        "text": "Ni tus llaves, ni tus monedas",
+        "boldWord": "llaves",
+        "sub": "mañana: el país que apostó todo al Bitcoin"
+      }
+    }
+  ]
+}

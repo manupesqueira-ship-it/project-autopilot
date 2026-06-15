@@ -1,0 +1,21 @@
+services:
+  remotion:
+    build: .
+    container_name: dinero-ia-remotion
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=3000
+      - NODE_OPTIONS=--max-old-space-size=2048
+    volumes:
+      - ./src:/app/src:ro
+      - ./server.js:/app/server.js:ro
+      - ./remotion.config.ts:/app/remotion.config.ts:ro
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks:
+      - n8n_default
+
+networks:
+  n8n_default:
+    external: true

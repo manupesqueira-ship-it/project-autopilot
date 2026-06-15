@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "tema": "CETES vs cuenta de banco — tu dinero pierde contra la inflación",
+    "as_of": "2026-06-03",
+    "estado_datos": "BORRADOR — requiere verificación por agente a4-fact-checker antes de publicar",
+    "fuentes_a_verificar": [
+      "Banxico (tasa de referencia, subasta CETES 28d)",
+      "cetesdirecto.com (rendimiento vigente CETES 28/91/182/364d)",
+      "INEGI (INPC, inflación anual MX)"
+    ],
+    "nota": "Valores realistas de anclaje 2025-2026; a4 debe sustituir por cifra vigente al día de render."
+  },
+
+  "story": {
+    "hook": "Tu dinero en el banco está perdiendo.",
+    "axioma": "Si tu ahorro rinde menos que la inflación, cada año compras menos con lo mismo.",
+    "angulo_latam": "En México hay una opción del gobierno que casi nadie de tu generación usa.",
+    "cta": "Guarda esto si tienes dinero parado en el banco."
+  },
+
+  "numeros": {
+    "rendimiento_banco_tradicional_pct": { "valor": 1.0, "color": "#FF6B6B", "label": "Cuenta de ahorro banco", "verify": true },
+    "rendimiento_cetes_28d_pct":          { "valor": 9.5, "color": "#00D9A5", "label": "CETES 28 días",          "verify": true },
+    "inflacion_anual_mx_pct":             { "valor": 4.0, "color": "#D4A574", "label": "Inflación anual MX",      "verify": true },
+    "monto_ejemplo_mxn":                  { "valor": 100000, "color": "#FFFFFF", "label": "Si inviertes",         "format": "currency_mxn" }
+  },
+
+  "rendimiento_anual_sobre_100k_mxn": {
+    "banco":  { "ganancia_mxn": 1000,  "color": "#FF6B6B", "verify": true },
+    "cetes":  { "ganancia_mxn": 9500,  "color": "#00D9A5", "verify": true },
+    "diferencia_mxn": { "valor": 8500, "color": "#D4A574", "verify": true }
+  },
+
+  "csv_chart_format": {
+    "_comment": "Formato compatible con Pack 1 (Number Data,Color Data). Para charts comparativos.",
+    "rows": [
+      "1.0,#FF6B6B",
+      "9.5,#00D9A5",
+      "4.0,#D4A574"
+    ]
+  }
+}

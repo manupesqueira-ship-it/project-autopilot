@@ -1,0 +1,307 @@
+{
+  "id": "DineroIAv1",
+  "name": "Dinero IA — video diario",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger1",
+      "name": "Ejecutar manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-560, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "tema",
+              "value": "El pais que aposto todo al Bitcoin: El Salvador, el primer pais en hacer Bitcoin moneda de curso legal, fue criticado y presionado por el FMI cuando el precio se desplomo en 2022, pero nunca vendio y hoy gana cientos de millones.",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "open_loop",
+              "value": "cuanto pierde tu aguinaldo guardado en el banco",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "datos",
+              "value": "- 7 de septiembre de 2021: El Salvador se convierte en el PRIMER pais del mundo en adoptar Bitcoin como moneda de curso legal (presidente Nayib Bukele).\n- 2022: el precio de Bitcoin se desploma a ~16,000 USD; el FMI presiona al pais para revertir la ley; las perdidas no realizadas eran fuertes.\n- Noviembre de 2022: en plena caida, Bukele anuncia la estrategia 'compramos 1 Bitcoin al dia' (dollar-cost averaging). Nunca vendieron una sola moneda.\n- Precio promedio de compra: 44,739 USD por Bitcoin.\n- Total invertido a la fecha: aproximadamente 270 millones de USD.\n- Holdings actuales (junio 2026): 7,474 Bitcoin.\n- Valor de mercado actual: aproximadamente 479 millones de USD.\n- Ganancia no realizada actual: aproximadamente 209 millones de USD, es decir +77% sobre lo invertido, SIN vender una sola moneda.\nFuentes: CoinGecko (treasuries/governments/el-salvador), bitcoinmagazine, Yahoo Finance. Usa SOLO estas cifras; redondea a palabras de forma natural en la voz."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "brief1",
+      "name": "Brief",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-340, 0]
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\manup\\projects\\project-autopilot\\infra\\n8n\\planner_system_prompt.txt",
+        "options": {}
+      },
+      "id": "readprompt1",
+      "name": "Leer prompt planner",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [-120, 0]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "extract1",
+      "name": "Extraer texto prompt",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [100, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $env.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4000, system: $json.data, messages: [{ role: 'user', content: 'TEMA: ' + $('Brief').first().json.tema + '\\nOPEN LOOP DEL SIGUIENTE VIDEO (para el sub del CTA): ' + $('Brief').first().json.open_loop + '\\nDATOS VERIFICADOS:\\n' + $('Brief').first().json.datos }] }) }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "planner1",
+      "name": "Planner (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [320, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Solo PARSEA la respuesta del planner. La VALIDACION la hace validator.py\n// (fuente de verdad en Python), en el nodo 'Validar (python)' de mas abajo.\nconst resp = $input.first().json;\nlet txt = resp.content?.[0]?.text ?? '';\ntxt = txt.trim().replace(/^```(json)?\\s*/, '').replace(/```\\s*$/, '').trim();\nconst g = JSON.parse(txt);\nif (!g.slug || !/^[a-z0-9_]+$/.test(g.slug)) throw new Error('slug invalido en la respuesta del planner');\nreturn [{ json: { slug: g.slug, data: JSON.stringify(g, null, 2) } }];"
+      },
+      "id": "parse1",
+      "name": "Parsear guion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 0]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "id": "tofile1",
+      "name": "Guion a archivo",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [760, 0]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler\\guion_{{ $('Parsear guion').first().json.slug }}.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "writefile1",
+      "name": "Guardar guion",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [980, 0]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\n8n && python validator.py ..\\assembler\\guion_{{ $('Parsear guion').first().json.slug }}.json --ledger"
+      },
+      "id": "validate1",
+      "name": "Validar (python)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1200, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cv1",
+              "leftValue": "={{ $json.exitCode }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ifvalid1",
+      "name": "Guion valido?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1420, 0]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler && python build916.py guion_{{ $('Parsear guion').first().json.slug }}.json all"
+      },
+      "id": "build1",
+      "name": "Pipeline build916",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1640, -120]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler && python ..\\qc\\filter_c_prepare.py out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 out\\{{ $('Parsear guion').first().json.slug }}\\qc_c"
+      },
+      "id": "qc1",
+      "name": "QC Filtro C",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1860, -120],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.exitCode }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if1",
+      "name": "QC PASS?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2080, -120]
+    },
+    {
+      "parameters": {
+        "command": "=copy /Y C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler\\out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 C:\\Users\\manup\\projects\\project-autopilot\\projects\\dinero-ia\\entregas\\"
+      },
+      "id": "copy1",
+      "name": "Copiar a entregas",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [2300, -220]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "resultado",
+              "value": "=LISTO (falta gate humano + registrar en ledger): entregas\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 -- tras aprobar, corre: python infra\\assembler\\ledger.py append guion_{{ $('Parsear guion').first().json.slug }}.json",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ok1",
+      "name": "Resultado OK",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2520, -220]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "resultado",
+              "value": "=FALLO QC: {{ $('QC Filtro C').first().json.stdout }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fail1",
+      "name": "Resultado FAIL QC",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2300, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fv1",
+              "name": "resultado",
+              "value": "=GUION RECHAZADO por el validador (no se renderizo, no se gasto voz): {{ $('Validar (python)').first().json.stdout }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "failv1",
+      "name": "Resultado FAIL validacion",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1640, 160]
+    }
+  ],
+  "connections": {
+    "Ejecutar manual": { "main": [[{ "node": "Brief", "type": "main", "index": 0 }]] },
+    "Brief": { "main": [[{ "node": "Leer prompt planner", "type": "main", "index": 0 }]] },
+    "Leer prompt planner": { "main": [[{ "node": "Extraer texto prompt", "type": "main", "index": 0 }]] },
+    "Extraer texto prompt": { "main": [[{ "node": "Planner (Claude)", "type": "main", "index": 0 }]] },
+    "Planner (Claude)": { "main": [[{ "node": "Parsear guion", "type": "main", "index": 0 }]] },
+    "Parsear guion": { "main": [[{ "node": "Guion a archivo", "type": "main", "index": 0 }]] },
+    "Guion a archivo": { "main": [[{ "node": "Guardar guion", "type": "main", "index": 0 }]] },
+    "Guardar guion": { "main": [[{ "node": "Validar (python)", "type": "main", "index": 0 }]] },
+    "Validar (python)": { "main": [[{ "node": "Guion valido?", "type": "main", "index": 0 }]] },
+    "Guion valido?": {
+      "main": [
+        [{ "node": "Pipeline build916", "type": "main", "index": 0 }],
+        [{ "node": "Resultado FAIL validacion", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pipeline build916": { "main": [[{ "node": "QC Filtro C", "type": "main", "index": 0 }]] },
+    "QC Filtro C": { "main": [[{ "node": "QC PASS?", "type": "main", "index": 0 }]] },
+    "QC PASS?": {
+      "main": [
+        [{ "node": "Copiar a entregas", "type": "main", "index": 0 }],
+        [{ "node": "Resultado FAIL QC", "type": "main", "index": 0 }]
+      ]
+    },
+    "Copiar a entregas": { "main": [[{ "node": "Resultado OK", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

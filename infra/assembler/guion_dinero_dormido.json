@@ -1,0 +1,85 @@
+{
+  "slug": "dinero_dormido",
+  "title": "Tu dinero está dormido",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Tu banco gana con tu dinero. Tú, no.",
+      "sub": "tu banco gana con tu dinero",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [{ "text": "tu banco" }, { "text": "gana" }],
+          [{ "text": "con tu" }, { "text": "dinero", "accent": true }],
+          [{ "text": "tú no" }]
+        ]
+      }
+    },
+    {
+      "id": "b2_picto",
+      "type": "BeatPictogram",
+      "vo": "Solo veintiuno de cada cien mexicanos ponen su dinero a trabajar.",
+      "sub": "solo 21 de cada 100 invierten",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "mexicanos que ponen su dinero a trabajar",
+        "count": 21,
+        "total": 100,
+        "statSuffix": "de cada 100"
+      }
+    },
+    {
+      "id": "b3_inflacion",
+      "type": "BeatBigNumber",
+      "vo": "Mientras tu dinero duerme, la inflación se comió dieciocho mil cuatrocientos pesos de un sueldo promedio, en solo doce meses.",
+      "sub": "la inflación no duerme",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "cues": { "countEndWord": "cuatrocientos" },
+      "props": {
+        "caption": "lo que la inflación se comió de tu sueldo",
+        "prefix": "$",
+        "value": 18400,
+        "suffix": " MXN",
+        "decimals": 0,
+        "color": "#FF6B6B",
+        "subline": "en los últimos 12 meses"
+      }
+    },
+    {
+      "id": "b4_bars",
+      "type": "BeatBars",
+      "vo": "Diez mil pesos, un año. En débito te dan doce pesos. En un pagaré del banco, cuatrocientos ochenta. En un fondo de deuda del gobierno, novecientos ochenta.",
+      "sub": "$10,000 · 1 año · tres destinos",
+      "sfx": "whoosh",
+      "trans": "flashWhite",
+      "cues": { "growWords": ["débito", "pagaré", "fondo"] },
+      "props": {
+        "caption": "lo que te paga en un año",
+        "intro": "$10,000",
+        "bars": [
+          { "label": "Débito", "value": 12 },
+          { "label": "Pagaré banco", "value": 480 },
+          { "label": "Fondo gub.", "value": 980, "highlight": true }
+        ],
+        "prefix": "$",
+        "suffix": ""
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Guarda esto antes de que lo necesites. Mañana: cuánto pierde tu aguinaldo dormido en el banco.",
+      "sub": "guárdalo · mañana viene lo del aguinaldo",
+      "sfx": "impact",
+      "props": {
+        "text": "Guarda esto antes de que lo necesites",
+        "boldWord": "Guarda",
+        "sub": "mañana: cuánto pierde tu aguinaldo en el banco"
+      }
+    }
+  ]
+}

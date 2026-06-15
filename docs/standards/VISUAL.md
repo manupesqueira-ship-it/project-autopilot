@@ -1,3 +1,5 @@
+> ⚠️ **OBSOLETO (2026-06-03).** Este doc describe una arquitectura MUERTA (gpt-image-2 + Seedance + agentes A5/A8). La pipeline real es Remotion + Blender. **Fuente de verdad vigente: [`DINERO_IA_STYLE_BIBLE.md`](./DINERO_IA_STYLE_BIBLE.md).** Se conserva solo por audit trail (la paleta y tipografía siguen vigentes y están migradas al Style Bible).
+
 # Visual Standard — Dinero IA
 
 **Versión:** 1.0

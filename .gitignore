@@ -56,3 +56,24 @@ projects/*/manual-mvp/pieces/*.mov
 *.csv
 *.xlsx
 !docs/**/*.csv
+
+# Render outputs Dinero IA (regenerables — re-render con build916/remotion/blender)
+infra/assembler/out/
+infra/blender/out/
+infra/remotion-render/out/
+infra/remotion-render/qc/
+infra/qc/out_*/
+projects/dinero-ia/infra/veo/out/
+
+# Binarios de prueba sueltos en raiz (regenerables)
+/test*.mp4
+/test_voice*.mp3
+/music_floating_cities.mp3
+
+# Dinero IA: entregables y refs pesadas (regenerables / viven en disco, no en git)
+projects/dinero-ia/entregas/*.mp4
+projects/dinero-ia/entregas/*.mov
+projects/dinero-ia/external-resources/n8n-course/
+
+# Caminos muertos archivados (recuperables vía git history + backup en disco; NO en git)
+/_archive/
