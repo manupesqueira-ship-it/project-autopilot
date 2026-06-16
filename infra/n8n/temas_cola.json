@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-15",
+  "descripcion": "Banco de temas de Dinero IA. Motor de MATERIAL para producir 3 posts/dia. Claude pre-genera lotes de temas (este archivo); Manuel los aprueba (gate editorial); el workflow n8n consume los aprobados y produce. Cada tema mapea 1:1 al nodo Brief del workflow (campos tema / open_loop / datos).",
+  "como_funciona": {
+    "estados": "propuesto -> (gate de Manuel) aprobado -> (produccion) producido",
+    "regla_datos": "REGLA DE ORO: el guion usa EXCLUSIVAMENTE cifras verificadas, nunca inventadas. Las cifras marcadas '<<verificar: descripcion — fuente>>' NO estan inventadas: son el dato que el video AFIRMARA, pendiente de confirmar contra la fuente citada ANTES de producir. Los hechos historicos publicos (fechas de eventos ya ocurridos) van en texto plano. Solo las cifras vivas (precios, tasas, market caps de hoy) llevan <<verificar>>.",
+    "mapeo_a_brief": "Al producir un tema aprobado, sus campos tema / open_loop / datos se copian tal cual al nodo Brief de workflow_dinero_ia.json. Los campos extra (id, estado, categoria, angulo_pf_latam, por_que_funciona) son metadata del gate y el workflow los ignora.",
+    "variedad": "El ledger (infra/assembler/ledger.py) bloquea tema/combo ya producido; R10 (recencia del medio) y R11 (rotacion de puntas) cuidan la rotacion visual. El banco solo alimenta; las reglas protegen la variedad. Por eso este lote cubre categorias distintas (macro-AR, macro-MX, ahorro, fintech, cripto-asignacion, IA-dinero, educativo)."
+  },
+  "temas": [
+    {
+      "id": "ar_plazo_fijo_inflacion",
+      "estado": "aprobado",
+      "categoria": "macro-AR / ahorro",
+      "tema": "El ahorro mas comun de Argentina te empobrece sin que te des cuenta: dejar los pesos en un plazo fijo durante la inflacion de tres digitos significo perder poder de compra ano tras ano, mientras quien los paso a dolares conservo su dinero.",
+      "open_loop": "el truco legal para dolarizar tus ahorros sin ir al blue",
+      "datos": "- Contexto: Argentina vivio inflacion interanual de tres digitos en 2023-2024; el gobierno de Javier Milei (desde diciembre de 2023) aplico un ajuste que desacelero la inflacion durante 2025.\n- Inflacion interanual mas reciente: <<verificar: % interanual del ultimo dato — fuente: INDEC via Cenital / Bloomberg Linea>>.\n- Tasa de un plazo fijo tradicional a 30 dias (TNA): <<verificar: % TNA actual — BCRA / banco>>.\n- Ejemplo: 1,000,000 de pesos en plazo fijo a 12 meses rinde un monto nominal de <<verificar: monto>>, pero descontando la inflacion el poder de compra cayo <<verificar: % real negativo>>.\n- Los mismos pesos pasados a dolar MEP habrian conservado <<verificar: resultado en USD — cotizacion MEP historica>>.\nFuentes: INDEC (inflacion), BCRA (tasas), Cenital y Bloomberg Linea LATAM. Usa SOLO cifras verificadas; redondea a palabras de forma natural en la voz.",
+      "por_que_funciona": "Dolor real y masivo del ahorrista argentino; el moat cultural (plazo fijo, dolar MEP, inflacion real vs nominal) es exactamente el nicho. Hook macro + leccion PF directa."
+    },
+    {
+      "id": "mx_superpeso_dolar",
+      "estado": "aprobado",
+      "categoria": "macro-MX / divisas",
+      "tema": "Te dijeron que guardar dolares era lo seguro, pero el 'superpeso' demostro lo contrario: en el periodo en que el peso mexicano se fortalecio frente al dolar, quien ahorro en dolares perdio en terminos de pesos, mientras quien dejo su dinero en pesos a tasa gano por los dos lados.",
+      "open_loop": "cuanto rinde hoy el ahorro sin riesgo en pesos vs el dolar",
+      "datos": "- El 'superpeso' fue real: en 2023-2024 el peso mexicano se aprecio hasta niveles cercanos a 17 pesos por dolar, de los mas fuertes en anos.\n- Tipo de cambio de referencia entonces: <<verificar: MXN/USD del periodo del superpeso — Banxico>>.\n- Tipo de cambio MXN/USD actual: <<verificar: cotizacion de hoy — Banxico / Bloomberg Linea>>.\n- Ejemplo: 50,000 pesos convertidos a dolares en el punto fuerte del peso y devueltos a pesos hoy darian <<verificar: resultado en pesos — calculo con los dos tipos de cambio>>.\n- Mientras tanto, esos 50,000 pesos en un instrumento en pesos a tasa habrian rendido <<verificar: % en el periodo — CETES/pagare>>.\nFuentes: Banxico (tipo de cambio y tasas), Bloomberg Linea LATAM. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Rompe la creencia 'el dolar siempre gana' con un caso mexicano real; ensena riesgo cambiario en ambos sentidos. Muy compartible por contraintuitivo."
+    },
+    {
+      "id": "mx_cuenta_debito_costo",
+      "estado": "aprobado",
+      "categoria": "ahorro-MX (evergreen)",
+      "tema": "Tener tu dinero en la cuenta del banco te esta costando dinero: mientras tu cuenta de debito paga casi cero, un instrumento sin riesgo del gobierno paga doble digito, y la diferencia en un ano es mas grande de lo que crees.",
+      "open_loop": "el error de retirar tu inversion en la primera caida",
+      "datos": "- Banxico mantuvo su tasa de referencia en niveles altos (cercanos a doble digito) durante 2023-2024, iniciando recortes despues.\n- Tasa de referencia de Banxico actual: <<verificar: % vigente — Banxico>>.\n- Rendimiento de CETES a 28 dias actual: <<verificar: % anual — cetesdirecto / Banxico>>.\n- Una cuenta de debito tradicional paga: practicamente 0% (dato general; verificar si se cita un banco puntual).\n- Ejemplo: 20,000 pesos un ano en CETES rinden <<verificar: ganancia en pesos>>; los mismos 20,000 en la cuenta de debito rinden casi cero. CetesDirecto no cobra comision de apertura.\nFuentes: Banxico, cetesdirecto.com. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Tema central del nicho (el moat: CETES, pesos, costo de oportunidad). Accionable y $0 para el espectador. Nota gate: cuidar que el render NO repita el beat-demo CETES ya visto; tratar como tema publicado nuevo, no como demo."
+    },
+    {
+      "id": "fintech_nubank_comisiones",
+      "estado": "aprobado",
+      "categoria": "fintech",
+      "tema": "Un banco sin una sola sucursal llego a valer mas que bancos latinoamericanos de cien anos: Nubank nacio digital y gratis, y su crecimiento expone cuanto te cobra en silencio tu banco tradicional cada ano.",
+      "open_loop": "las comisiones ocultas que pagas sin siquiera notarlo",
+      "datos": "- Nubank (Nu Holdings) salio a bolsa en diciembre de 2021 y se expandio desde Brasil hacia Mexico y Colombia.\n- Numero de clientes de Nubank: <<verificar: total de clientes mas reciente — reporte trimestral Nu Holdings>>.\n- Capitalizacion de mercado de Nu: <<verificar: market cap actual — Bloomberg Linea / NYSE>>, comparada con <<verificar: banco tradicional LATAM de referencia y su market cap>>.\n- Comision anual promedio de manejo de cuenta de un banco tradicional: <<verificar: monto/% — fuente local (Condusef MX / banco)>>.\n- Ejemplo del costo en 10 anos de esas comisiones: <<verificar: suma — calculo>>.\nFuentes: reportes de Nu Holdings, Bloomberg Linea LATAM, Condusef. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Hook de actualidad (fintech que todos conocen) que aterriza en una accion personal: revisar y bajar comisiones. Universal en LATAM."
+    },
+    {
+      "id": "mx_remesas_record",
+      "estado": "aprobado",
+      "categoria": "macro-MX / ahorro",
+      "tema": "Mexico recibe una cifra record de remesas cada ano, pero una parte se evapora antes de llegar: entre comisiones de envio y el tipo de cambio, las familias pierden millones que con una decision distinta se quedarian en su bolsillo.",
+      "open_loop": "el error numero uno al recibir un dinero grande de golpe",
+      "datos": "- Mexico es uno de los mayores receptores de remesas del mundo; los montos han marcado records historicos en anos recientes.\n- Remesas recibidas por Mexico en el ultimo ano: <<verificar: total en USD — Banxico (balanza de pagos)>>.\n- Comision promedio + spread cambiario por envio: <<verificar: % tipico — Banco Mundial 'Remittance Prices Worldwide'>>.\n- Perdida agregada anual por comisiones/FX: <<verificar: estimacion en USD — calculo sobre el total>>.\n- Que hacer con la remesa: separar un porcentaje a un instrumento a tasa antes de gastar (liga al tema del ahorro sin riesgo).\nFuentes: Banxico, Banco Mundial (Remittance Prices Worldwide). Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Tema profundamente LATAM (remesas) con angulo PF accionable; alto volumen de audiencia afectada. Conecta con la cola de 'que hacer con tu dinero'."
+    },
+    {
+      "id": "cripto_btc_asignacion",
+      "estado": "aprobado",
+      "categoria": "cripto / asignacion",
+      "tema": "Bitcoin ya supero en tamano a activos que parecian intocables, y eso dispara la pregunta equivocada: la clave no es 'entrar antes de que suba mas', sino cuanto de tu dinero puedes arriesgar sin arruinar tu tranquilidad.",
+      "open_loop": "el porcentaje de tu dinero que JAMAS deberia estar en cripto",
+      "datos": "- Bitcoin ha alcanzado hitos de capitalizacion que lo ubican entre los activos mas grandes del mundo en distintos momentos.\n- Capitalizacion de mercado actual de Bitcoin: <<verificar: market cap — CoinGecko>>, comparada con <<verificar: activo de referencia (p.ej. plata) y su valor>>.\n- Volatilidad: caida maxima historica de Bitcoin desde un pico (drawdown): <<verificar: % — dato historico>>.\n- Regla de asignacion sensata: un porcentaje pequeno del portafolio que puedas perder sin afectar tu fondo de emergencia (citar el rango como criterio, no como recomendacion financiera).\n- Recordatorio: el fondo de emergencia (3-6 meses de gastos) va en instrumentos estables, nunca en cripto.\nFuentes: CoinGecko. Usa SOLO cifras verificadas; redondea a palabras en la voz. Encuadre educativo, no consejo de inversion.",
+      "por_que_funciona": "Aprovecha el hype cripto pero da la leccion responsable (asignacion/riesgo), lo que diferencia del ruido. Distinto de El Salvador (ya producido): aqui el angulo es del bolsillo del espectador."
+    },
+    {
+      "id": "ai_nvidia_vs_economia",
+      "estado": "aprobado",
+      "categoria": "IA-dinero / inversion",
+      "tema": "Una sola empresa de chips llego a valer mas que la bolsa entera de varios paises latinoamericanos juntos: la historia de Nvidia no es solo de inteligencia artificial, es la prueba de por que un latino que ahorra deberia poder invertir fuera de su propio pais.",
+      "open_loop": "como comprar un pedacito de las empresas mas grandes del mundo desde LATAM con poco dinero",
+      "datos": "- Nvidia se convirtio en una de las empresas mas valiosas del mundo impulsada por la demanda de chips para inteligencia artificial.\n- Capitalizacion de mercado actual de Nvidia: <<verificar: market cap — Bloomberg / Nasdaq>>.\n- Capitalizacion total de la Bolsa Mexicana de Valores (o PIB de un pais LATAM de referencia) para comparar: <<verificar: cifra — BMV / Banco Mundial>>.\n- Cuanto valdria una sola accion de Nvidia hoy: <<verificar: precio por accion — Nasdaq>>; existen formas de comprar fracciones desde LATAM (brokers como GBM, Cocos, IOL).\n- Leccion: diversificar fuera de la moneda y economia local reduce el riesgo de concentrar todo en un solo pais.\nFuentes: Nasdaq/Bloomberg Linea, BMV, Banco Mundial. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Hook de IA (tema caliente) reconvertido en leccion PF-LATAM (invertir fuera, fraccionado). Une dos audiencias: tech y finanzas personales."
+    },
+    {
+      "id": "edu_interes_compuesto",
+      "estado": "aprobado",
+      "categoria": "educativo / evergreen",
+      "tema": "La diferencia entre empezar a los veinticinco y a los treinta y cinco no son diez anos: son cientos de miles de pesos. El interes compuesto premia al que empieza temprano de una forma que parece magia, pero es solo matematica.",
+      "open_loop": "el mito de que ya es demasiado tarde para empezar",
+      "datos": "- Concepto: interes compuesto = ganar rendimientos sobre los rendimientos; el tiempo es la variable mas poderosa.\n- Supuesto explicito a fijar antes de producir: aportacion mensual (p.ej. 1,000 pesos), tasa anual de referencia <<verificar: % razonable — CETES historico o promedio S&P 500, declarar cual se usa>> y horizonte en anos.\n- Resultado a 30 anos con esa tasa: <<verificar: monto final — calculo de anualidad>>.\n- Resultado empezando 10 anos tarde (20 anos): <<verificar: monto final — calculo>>; la diferencia es <<verificar: monto — resta>>.\n- El aporte total de tu bolsillo vs lo que generaron los intereses: <<verificar: desglose>>.\nFuentes: calculo deterministico con la tasa declarada (citar la fuente de la tasa). Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Evergreen de altisimo valor y muy visual (curva exponencial, comparativa de dos lineas). Ancla perfecta para BeatLineChart/BeatBars. Reutilizable como pilar del canal."
+    },
+    {
+      "id": "edu_efecto_latte_latam",
+      "estado": "aprobado",
+      "categoria": "educativo / habitos",
+      "tema": "No te empobrece la compra grande, te empobrece la pequena que repites todos los dias: el cafe, el delivery, la suscripcion que no usas. Sumado y multiplicado por el tiempo, ese 'gastito' es un coche.",
+      "open_loop": "donde poner ese dinero para que trabaje por ti en vez de evaporarse",
+      "datos": "- Concepto 'efecto latte': micro-gastos diarios que parecen inofensivos suman cifras grandes al ano.\n- Supuesto a fijar: gasto diario de referencia (p.ej. un cafe/antojo) en pesos <<verificar: precio promedio actual — declarar el supuesto>>.\n- Costo al ano de ese habito: <<verificar: precio x 365 — calculo>>.\n- Si en vez de gastarlo se invirtiera a tasa de referencia <<verificar: % — CETES/promedio declarado>>, en 10 anos seria: <<verificar: monto — calculo>>.\n- Matiz honesto: no se trata de no disfrutar, sino de elegir conscientemente cuales 'gastitos' valen la pena.\nFuentes: calculo con supuestos declarados. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Habito cotidiano + cifra impactante = muy compartible. El matiz 'disfruta consciente' evita el tono moralista que aleja audiencia."
+    },
+    {
+      "id": "ar_dolar_mep_brecha",
+      "estado": "aprobado",
+      "categoria": "macro-AR / divisas",
+      "tema": "Durante anos Argentina vivio con varios dolares al mismo tiempo: el oficial, el MEP y el blue, con una brecha enorme entre ellos. Entender esa brecha es la diferencia entre proteger tus ahorros legalmente o perderlos por miedo.",
+      "open_loop": "las stablecoins como refugio: ventajas y la letra chica",
+      "datos": "- Argentina convivio con multiples cotizaciones del dolar (oficial, MEP/bolsa, blue) y una brecha cambiaria amplia; el gobierno de Milei trabajo en reducirla durante 2024-2025.\n- Brecha cambiaria en su punto mas alto reciente: <<verificar: % entre oficial y blue — fuente: Cenital / Ambito>>.\n- Cotizaciones actuales: oficial <<verificar: ARS/USD — BCRA>>, MEP <<verificar: ARS/USD — mercado>>, blue <<verificar: ARS/USD — fuente local>>.\n- El dolar MEP es legal y se opera via bolsa; el blue es informal. Explicar la diferencia de riesgo.\n- Cuanto se 'perdia' al cambiar al oficial vs MEP en el pico de la brecha: <<verificar: ejemplo numerico — calculo>>.\nFuentes: BCRA, Cenital, Ambito. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
+      "por_que_funciona": "Tema 100% del moat cultural argentino; educativo y practico (MEP legal vs blue). Conecta con cripto/stablecoins como cola natural."
+    }
+  ]
+}
