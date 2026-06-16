@@ -8,6 +8,39 @@
       "name": "Ejecutar manual",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
+      "position": [-1000, 0]
+    },
+    {
+      "parameters": {
+        "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\n8n && python cola.py next"
+      },
+      "id": "cola1",
+      "name": "Siguiente tema",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [-780, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "ct1",
+              "leftValue": "={{ $json.exitCode }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "iftema1",
+      "name": "Hay tema?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [-560, 0]
     },
     {
@@ -15,30 +48,29 @@
         "assignments": {
           "assignments": [
             {
-              "id": "a1",
-              "name": "tema",
-              "value": "El pais que aposto todo al Bitcoin: El Salvador, el primer pais en hacer Bitcoin moneda de curso legal, fue criticado y presionado por el FMI cuando el precio se desplomo en 2022, pero nunca vendio y hoy gana cientos de millones.",
+              "id": "st1",
+              "name": "resultado",
+              "value": "=SIN TEMAS PRODUCIBLES en temas_cola.json. Hay temas aprobados pero con cifras sin verificar (<<verificar>>). Llena las cifras de uno y quita los marcadores antes de producir. Detalle: {{ $('Siguiente tema').first().json.stderr }}",
               "type": "string"
-            },
-            {
-              "id": "a2",
-              "name": "open_loop",
-              "value": "cuanto pierde tu aguinaldo guardado en el banco",
-              "type": "string"
-            },
-            {
-              "id": "a3",
-              "name": "datos",
-              "value": "- 7 de septiembre de 2021: El Salvador se convierte en el PRIMER pais del mundo en adoptar Bitcoin como moneda de curso legal (presidente Nayib Bukele).\n- 2022: el precio de Bitcoin se desploma a ~16,000 USD; el FMI presiona al pais para revertir la ley; las perdidas no realizadas eran fuertes.\n- Noviembre de 2022: en plena caida, Bukele anuncia la estrategia 'compramos 1 Bitcoin al dia' (dollar-cost averaging). Nunca vendieron una sola moneda.\n- Precio promedio de compra: 44,739 USD por Bitcoin.\n- Total invertido a la fecha: aproximadamente 270 millones de USD.\n- Holdings actuales (junio 2026): 7,474 Bitcoin.\n- Valor de mercado actual: aproximadamente 479 millones de USD.\n- Ganancia no realizada actual: aproximadamente 209 millones de USD, es decir +77% sobre lo invertido, SIN vender una sola moneda.\nFuentes: CoinGecko (treasuries/governments/el-salvador), bitcoinmagazine, Yahoo Finance. Usa SOLO estas cifras; redondea a palabras de forma natural en la voz."
             }
           ]
         },
         "options": {}
       },
-      "id": "brief1",
-      "name": "Brief",
+      "id": "sintema1",
+      "name": "Resultado sin temas",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
+      "position": [-560, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lee el siguiente tema PRODUCIBLE de temas_cola.json (cola.py next lo emite como JSON puro en stdout).\nconst raw = $('Siguiente tema').first().json.stdout || '';\nconst b = JSON.parse(raw.trim());\nreturn [{ json: { slug: b.slug, tema: b.tema, open_loop: b.open_loop, datos: b.datos } }];"
+      },
+      "id": "brief1",
+      "name": "Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [-340, 0]
     },
     {
@@ -87,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Solo PARSEA la respuesta del planner. La VALIDACION la hace validator.py\n// (fuente de verdad en Python), en el nodo 'Validar (python)' de mas abajo.\nconst resp = $input.first().json;\nlet txt = resp.content?.[0]?.text ?? '';\ntxt = txt.trim().replace(/^```(json)?\\s*/, '').replace(/```\\s*$/, '').trim();\nconst g = JSON.parse(txt);\nif (!g.slug || !/^[a-z0-9_]+$/.test(g.slug)) throw new Error('slug invalido en la respuesta del planner');\nreturn [{ json: { slug: g.slug, data: JSON.stringify(g, null, 2) } }];"
+        "jsCode": "// Parsea la respuesta del planner y FUERZA el slug = id del tema en la cola,\n// para que aprobar.py cierre ledger + cola con un solo <slug>. La VALIDACION la hace validator.py.\nconst resp = $input.first().json;\nlet txt = resp.content?.[0]?.text ?? '';\ntxt = txt.trim().replace(/^```(json)?\\s*/, '').replace(/```\\s*$/, '').trim();\nconst g = JSON.parse(txt);\ng.slug = $('Brief').first().json.slug;\nif (!g.slug || !/^[a-z0-9_]+$/.test(g.slug)) throw new Error('slug invalido (de la cola): ' + g.slug);\nreturn [{ json: { slug: g.slug, data: JSON.stringify(g, null, 2) } }];"
       },
       "id": "parse1",
       "name": "Parsear guion",
@@ -170,13 +202,46 @@
     },
     {
       "parameters": {
+        "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler && python ..\\qc\\filter_delivery.py out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}.timeline.json out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}.vo_stem.wav"
+      },
+      "id": "qcdel1",
+      "name": "QC Entrega (gate duro)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1860, -120],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose", "version": 2 },
+          "conditions": [
+            {
+              "id": "ce1",
+              "leftValue": "={{ $json.exitCode }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ifentrega1",
+      "name": "Entrega OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2080, -120]
+    },
+    {
+      "parameters": {
         "command": "=cd /d C:\\Users\\manup\\projects\\project-autopilot\\infra\\assembler && python ..\\qc\\filter_c_prepare.py out\\{{ $('Parsear guion').first().json.slug }}\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 out\\{{ $('Parsear guion').first().json.slug }}\\qc_c"
       },
       "id": "qc1",
       "name": "QC Filtro C",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [1860, -120],
+      "position": [2300, -120],
       "onError": "continueRegularOutput"
     },
     {
@@ -204,7 +269,7 @@
       "name": "QC PASS?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [2080, -120]
+      "position": [2520, -120]
     },
     {
       "parameters": {
@@ -214,7 +279,7 @@
       "name": "Copiar a entregas",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [2300, -220]
+      "position": [2740, -220]
     },
     {
       "parameters": {
@@ -223,7 +288,7 @@
             {
               "id": "r1",
               "name": "resultado",
-              "value": "=LISTO (falta gate humano + registrar en ledger): entregas\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 -- tras aprobar, corre: python infra\\assembler\\ledger.py append guion_{{ $('Parsear guion').first().json.slug }}.json",
+              "value": "=LISTO (falta gate humano): entregas\\{{ $('Parsear guion').first().json.slug }}_FINAL_916.mp4 -- tras tu OK, cierra el loop con UN comando: python infra\\n8n\\aprobar.py {{ $('Parsear guion').first().json.slug }}",
               "type": "string"
             }
           ]
@@ -234,7 +299,7 @@
       "name": "Resultado OK",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2520, -220]
+      "position": [2960, -220]
     },
     {
       "parameters": {
@@ -254,7 +319,7 @@
       "name": "Resultado FAIL QC",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2300, 0]
+      "position": [2520, 60]
     },
     {
       "parameters": {
@@ -275,10 +340,37 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [1640, 160]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe1",
+              "name": "resultado",
+              "value": "=ENTREGA BLOQUEADA por el gate duro (filter_delivery.py): {{ $('QC Entrega (gate duro)').first().json.stdout }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "faildel1",
+      "name": "Resultado FAIL entrega",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2080, 120]
     }
   ],
   "connections": {
-    "Ejecutar manual": { "main": [[{ "node": "Brief", "type": "main", "index": 0 }]] },
+    "Ejecutar manual": { "main": [[{ "node": "Siguiente tema", "type": "main", "index": 0 }]] },
+    "Siguiente tema": { "main": [[{ "node": "Hay tema?", "type": "main", "index": 0 }]] },
+    "Hay tema?": {
+      "main": [
+        [{ "node": "Brief", "type": "main", "index": 0 }],
+        [{ "node": "Resultado sin temas", "type": "main", "index": 0 }]
+      ]
+    },
     "Brief": { "main": [[{ "node": "Leer prompt planner", "type": "main", "index": 0 }]] },
     "Leer prompt planner": { "main": [[{ "node": "Extraer texto prompt", "type": "main", "index": 0 }]] },
     "Extraer texto prompt": { "main": [[{ "node": "Planner (Claude)", "type": "main", "index": 0 }]] },
@@ -293,7 +385,14 @@
         [{ "node": "Resultado FAIL validacion", "type": "main", "index": 0 }]
       ]
     },
-    "Pipeline build916": { "main": [[{ "node": "QC Filtro C", "type": "main", "index": 0 }]] },
+    "Pipeline build916": { "main": [[{ "node": "QC Entrega (gate duro)", "type": "main", "index": 0 }]] },
+    "QC Entrega (gate duro)": { "main": [[{ "node": "Entrega OK?", "type": "main", "index": 0 }]] },
+    "Entrega OK?": {
+      "main": [
+        [{ "node": "QC Filtro C", "type": "main", "index": 0 }],
+        [{ "node": "Resultado FAIL entrega", "type": "main", "index": 0 }]
+      ]
+    },
     "QC Filtro C": { "main": [[{ "node": "QC PASS?", "type": "main", "index": 0 }]] },
     "QC PASS?": {
       "main": [
