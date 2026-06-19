@@ -1,0 +1,93 @@
+{
+  "slug": "edu_regla_4_porciento",
+  "title": "La regla del 4%: cuánto necesitas para vivir de tus inversiones",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "Hay un número exacto que separa trabajar por dinero de que el dinero trabaje por ti. Y se calcula en 10 segundos.",
+    "valor": "La regla del 4%: multiplica tu gasto anual por 25 y ese es el capital que necesitas invertido. Si gastas $20,000 MXN al mes ($240,000 al año), tu número es $6,000,000 MXN. Retirando 4% al año ($240,000) tu capital, bien invertido, no se acaba.",
+    "cta": "No necesitas ser rico. Necesitas saber tu número y empezar a construirlo.",
+    "open_loop": "cómo construir tu número desde cero, mes a mes",
+    "pregunta": "¿Ya sabes cuál es tu número de libertad?",
+    "hashtags": ["finanzaspersonales", "libertadfinanciera", "regladel4", "inversiones", "educacionfinanciera", "retiro", "mexico"],
+    "emoji": "🔑"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "¿Cuánto necesitas para no volver a trabajar por dinero? Si gastas veinte mil pesos al mes, la respuesta son seis millones de pesos invertidos. Se llama la regla del cuatro por ciento.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "tu número de libertad financiera",
+        "stat": "$6,000,000",
+        "statColor": "#D4A574",
+        "context": "lo que necesitas invertido para vivir de los rendimientos gastando 20 mil al mes",
+        "accentColor": "#00D9A5"
+      }
+    },
+    {
+      "id": "b2_data",
+      "type": "BeatBars",
+      "vo": "Tu gasto mensual son veinte mil pesos. Al año, doscientos cuarenta mil. Multiplícalo por veinticinco y tienes tu meta: alrededor de seis millones de pesos.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "growWords": ["veinte", "doscientos", "seis"] },
+      "props": {
+        "caption": "tu meta = gasto anual × 25 (MXN)",
+        "bars": [
+          { "label": "Al mes", "value": 20000 },
+          { "label": "Al año", "value": 240000 },
+          { "label": "× 25 = meta", "value": 6000000, "highlight": true }
+        ],
+        "prefix": "$",
+        "suffix": ""
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatBubble",
+      "vo": "Tu número depende de tu vida. Si gastas quince mil al mes, necesitas cuatro y medio millones. Si gastas veinte mil, alrededor de seis millones. Mientras menos gastes, antes eres libre.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "tu meta según cuánto gastas al mes (MXN)",
+        "bubbles": [
+          { "label": "Gastas $15k/mes", "value": 4500000 },
+          { "label": "Gastas $20k/mes", "value": 6000000 }
+        ],
+        "prefix": "$",
+        "valueScale": 1000000,
+        "valueUnit": "M"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Veinticinco veces tu gasto anual, invertido, son alrededor de seis millones de pesos mexicanos. Esa es tu libertad financiera.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "para retirar $20,000/mes sin acabar tu capital",
+        "value": 6000000,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#D4A574",
+        "subline": "× 25 tu gasto anual · retiras 4% al año y no se acaba"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "La libertad financiera no es un sueldo gigante, es un número claro y tiempo. Calcula el tuyo. Mañana te muestro cómo construirlo paso a paso.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "No necesitas ser rico. Necesitas tu número.",
+        "boldWord": "número",
+        "sub": "mañana: cómo construir tu número desde cero"
+      }
+    }
+  ]
+}

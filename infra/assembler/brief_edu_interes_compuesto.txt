@@ -1,0 +1,11 @@
+TEMA: La diferencia entre empezar a los veinticinco y a los treinta y cinco no son diez anos: son cientos de miles de pesos. El interes compuesto premia al que empieza temprano de una forma que parece magia, pero es solo matematica.
+
+OPEN_LOOP (tease de manana): el mito de que ya es demasiado tarde para empezar
+
+DATOS:
+- Concepto: interes compuesto = ganar rendimientos sobre los rendimientos; el tiempo es la variable mas poderosa.
+- Supuestos DECLARADOS (capitalizacion mensual): aportacion de 1,000 MXN al mes, tasa nominal anual de 10% (nivel de referencia en linea con CETES recientes; es un supuesto, no un rendimiento garantizado), invirtiendo hasta los 55 anos.
+- Empezando a los 25 (30 anos, 360 aportes): el ahorro llega a 2,260,488 MXN. De tu bolsillo solo pusiste 360,000 MXN; los otros 1,900,488 MXN los generaron los intereses.
+- Empezando a los 35 (20 anos, 240 aportes): el ahorro llega a 759,369 MXN (aportaste 240,000 MXN; los intereses generaron 519,369 MXN).
+- La diferencia por empezar 10 anos antes es de 1,501,119 MXN, aunque el aporte extra de tu bolsillo en esos 10 anos fue de solo 120,000 MXN: esa brecha es el interes compuesto.
+Fuente: calculo deterministico de valor futuro de anualidad con la tasa declarada (10% anual nominal, capitalizacion mensual). Cifras exactas para el visual; en la voz se redondean de forma natural.

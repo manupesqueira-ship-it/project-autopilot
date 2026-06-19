@@ -1,0 +1,95 @@
+{
+  "slug": "edu_inflacion_efectivo",
+  "title": "Tu dinero bajo el colchón: lo que la inflación te quita sin avisar",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "Guardar tu dinero en efectivo se siente seguro, pero es la forma más silenciosa de perderlo.",
+    "valor": "$100,000 MXN bajo el colchón, con 5% de inflación anual, en 10 años solo compran lo que hoy compran $61,391: perdiste $38,609 de poder de compra sin que nadie te robara. Invertidos al 10%, esos mismos $100,000 serían $259,374.",
+    "cta": "El efectivo no es ahorrar: es perder despacio. Tu dinero tiene que crecerle a la inflación.",
+    "open_loop": "el instrumento sin riesgo que le gana a la inflación desde $100",
+    "pregunta": "¿Cuánto dinero tienes hoy parado sin generar nada?",
+    "hashtags": ["finanzaspersonales", "inflacion", "ahorro", "inversiones", "educacionfinanciera", "poderdecompra", "mexico"],
+    "emoji": "📉"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Guardas cien mil pesos bajo el colchón, bien seguros. Pero en diez años, sin que nadie te los robe, valdrán como sesenta mil. La inflación se los comió en silencio.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "lines": [
+          [{ "text": "cien" }, { "text": "mil" }, { "text": "pesos" }],
+          [{ "text": "bajo" }, { "text": "el" }, { "text": "colchón" }],
+          [{ "text": "en" }, { "text": "diez" }, { "text": "años" }],
+          [{ "text": "valdrán" }, { "text": "como" }, { "text": "60", "accent": true }, { "text": "mil" }],
+          [{ "text": "la" }, { "text": "INFLACIÓN", "accent": true }, { "text": "se" }, { "text": "los" }, { "text": "comió" }]
+        ]
+      }
+    },
+    {
+      "id": "b2_data",
+      "type": "BeatBars",
+      "vo": "Hoy tus cien mil pesos compran cien mil. En cinco años, con cinco por ciento de inflación, ya solo compran setenta y ocho mil. Y en diez años, apenas sesenta y un mil.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "growWords": ["cien", "setenta", "sesenta"] },
+      "props": {
+        "caption": "poder de compra de $100,000 con 5% de inflación (MXN)",
+        "bars": [
+          { "label": "Hoy", "value": 100000 },
+          { "label": "5 años", "value": 78353 },
+          { "label": "10 años", "value": 61391, "highlight": true }
+        ],
+        "prefix": "$",
+        "suffix": ""
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatBubble",
+      "vo": "Los mismos cien mil pesos, bajo el colchón, en diez años valdrán sesenta y un mil. Pero invertidos al diez por ciento, se vuelven más de doscientos cincuenta mil. La diferencia es enorme.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "los mismos $100,000 en 10 años (MXN)",
+        "bubbles": [
+          { "label": "Bajo el colchón", "value": 61391 },
+          { "label": "Invertido al 10%", "value": 259374 }
+        ],
+        "prefix": "$",
+        "valueScale": 1000,
+        "valueUnit": "k"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Cien mil pesos quietos pierden contra la inflación. Pero invertidos diez años al diez por ciento, se convierten en más de doscientos cincuenta mil pesos mexicanos.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "$100,000 invertidos 10 años al 10%",
+        "value": 259374,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#D4A574",
+        "subline": "+159% · mientras el efectivo perdió valor"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Guardar en efectivo no es ahorrar, es perder despacio. Tu dinero tiene que crecerle a la inflación. Mañana te enseño dónde ponerlo.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "El efectivo no es seguro. Pierde callado.",
+        "boldWord": "Pierde",
+        "sub": "mañana: dónde poner tu dinero para ganarle a la inflación"
+      }
+    }
+  ]
+}

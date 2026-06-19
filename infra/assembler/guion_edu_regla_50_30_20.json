@@ -1,0 +1,96 @@
+{
+  "slug": "edu_regla_50_30_20",
+  "title": "La regla 50/30/20: cómo repartir tu sueldo sin pensarlo",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "Si tu sueldo se evapora y no sabes en qué, esta regla de 3 números lo arregla sin hojas de cálculo.",
+    "valor": "50% para lo necesario (renta, comida, transporte), 30% para tus gustos, 20% para ti (ahorro e inversión). Ese 20% de un sueldo de $20,000 MXN ($4,000 al mes) invertido al 10% durante 20 años se convierte en más de $3,000,000 MXN.",
+    "cta": "Págate a ti primero. Ese 20% no es lo que sobra, es lo primero que apartas.",
+    "open_loop": "dónde poner ese 20% para que el interés compuesto haga el trabajo",
+    "pregunta": "¿Qué porcentaje de tu sueldo es HOY para ti?",
+    "hashtags": ["finanzaspersonales", "regla503020", "presupuesto", "ahorro", "educacionfinanciera", "interescompuesto", "mexico"],
+    "emoji": "💸"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Llega tu sueldo y se va sin que sepas en qué. Hay una regla tan simple que cabe en tu cabeza: cincuenta por ciento para lo necesario, treinta para tus gustos, y veinte por ciento para ti.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "lines": [
+          [{ "text": "llega" }, { "text": "tu" }, { "text": "sueldo" }],
+          [{ "text": "se" }, { "text": "va" }, { "text": "sin" }, { "text": "pensar" }],
+          [{ "text": "una" }, { "text": "regla" }, { "text": "que" }, { "text": "cabe" }, { "text": "en" }, { "text": "tu" }, { "text": "cabeza" }],
+          [{ "text": "50%", "accent": true }, { "text": "para" }, { "text": "lo" }, { "text": "necesario" }],
+          [{ "text": "30%", "accent": true }, { "text": "para" }, { "text": "tus" }, { "text": "gustos" }],
+          [{ "text": "20%", "accent": true }, { "text": "para" }, { "text": "TI", "accent": true }]
+        ]
+      }
+    },
+    {
+      "id": "b2_data",
+      "type": "BeatDonut",
+      "vo": "Cincuenta por ciento para lo que necesitas: renta, comida, transporte. Treinta por ciento para lo que disfrutas. Y el veinte por ciento más importante: para ti, ahorro e inversión.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "de cada peso que ganas",
+        "segments": [
+          { "label": "Necesidades", "value": 50 },
+          { "label": "Gustos", "value": 30 },
+          { "label": "Para ti (ahorro)", "value": 20 }
+        ],
+        "highlightIndex": 2,
+        "centerLabel": "para tu futuro",
+        "centerSuffix": "%"
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatBubble",
+      "vo": "En veinte años, aportando ese veinte por ciento, pones casi un millón de pesos de tu bolsillo. Pero con interés compuesto al diez por ciento, terminas con más de tres millones.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "ese 20% en 20 años, al 10% (MXN)",
+        "bubbles": [
+          { "label": "Lo que aportas", "value": 960000 },
+          { "label": "Lo que tienes", "value": 3037475 }
+        ],
+        "prefix": "$",
+        "valueScale": 1000000,
+        "valueUnit": "M"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Ese veinte por ciento, cuatro mil pesos al mes durante veinte años, se convierte en más de tres millones de pesos mexicanos.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "ahorrando el 20% de un sueldo de $20,000, 20 años al 10%",
+        "value": 3037475,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#D4A574",
+        "subline": "aportaste $960,000 · el interés compuesto puso $2,077,475"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "La clave no es ganar más, es repartir bien. Págate a ti primero con ese veinte por ciento. Mañana te muestro dónde invertirlo.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Págate a ti primero. Ese 20% es tuyo.",
+        "boldWord": "primero",
+        "sub": "mañana: dónde poner ese 20% para que trabaje"
+      }
+    }
+  ]
+}

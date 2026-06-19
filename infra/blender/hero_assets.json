@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-19",
+  "_doc": "Registro de LICENCIAS del lane hero-shot (Dinero IA, Track B3). hero_shot.py SOLO renderiza un asset que este aqui con licencia comercial confirmada (comercial_ok=true) y sin logos de marca (brand_safe=true). REGISTRAR un asset = el acto de VERIFICAR su licencia: es la regla B3 puesta en codigo, no en prosa. Mismo espiritu que el catalogo cerrado de set-pieces (setpiece_catalog.json): el lane no se castea de un prompt/URL en blanco. Si un asset no esta aqui, hero_shot.py aborta y pide registrarlo.",
+  "_reglas": {
+    "comercial_ok": "true SOLO si la licencia permite uso comercial. CC0 (Poly Haven, dominio publico NASA/gov) = true. CC-BY = true PERO exige atribucion (anotar en 'atribucion'). CC-NC / 'free for personal use' / Sketchfab 'editorial' = FALSE -> no se usa.",
+    "brand_safe": "true SOLO si el modelo NO lleva logos, marcas registradas, ni rostros/personas reconocibles. Un 'iPhone' o un 'Tesla' modelado = FALSE (marca). Un lingote, un cohete generico, un edificio sin letrero = true.",
+    "verificado": "fecha (YYYY-MM-DD) en que Manuel/Claude confirmo la licencia en la fuente. Sin esto, no se confia en el registro.",
+    "file": "ruta al modelo (relativa a infra/blender/ o absoluta). Formatos: glb/gltf/obj/fbx/stl. 'tipo':'procedural' o file '(procedural)' -> lo genera el propio script, sin descarga.",
+    "el_dato_va_en_overlay": "NUNCA hornear cifras/texto en el 3D: la voz redondea, el VISUAL exacto del brief lo pone Remotion encima (como todos los beats). El hero 3D es solo el OBJETO."
+  },
+  "_ejemplo_de_registro": {
+    "_como": "Para activar un modelo libre: (1) descargalo de una fuente CC0/dominio publico; (2) confirma la licencia EN la pagina de la fuente; (3) copia el archivo a infra/blender/hero_models/<archivo>; (4) agrega una entrada como estas al array 'assets' con comercial_ok/brand_safe/verificado reales. El director SUGIERE el lane hero_shot en metadata (_director); Manuel aprueba en el gate ANTES de producir.",
+    "poly_haven_cc0": {
+      "id": "ingot_polyhaven",
+      "tipo": "modelo",
+      "file": "hero_models/gold_ingot_4k.glb",
+      "descripcion": "lingote de oro (objeto 'dinero' iconico)",
+      "fuente": "https://polyhaven.com/  (CC0)",
+      "licencia": "CC0",
+      "atribucion": null,
+      "comercial_ok": true,
+      "brand_safe": true,
+      "verificado": "<<fecha real cuando se registre>>"
+    },
+    "nasa_dominio_publico": {
+      "id": "rocket_nasa",
+      "tipo": "modelo",
+      "file": "hero_models/rocket.glb",
+      "descripcion": "cohete generico (lane news: lanzamiento/espacio)",
+      "fuente": "https://nasa3d.arc.nasa.gov/  (dominio publico, sin endoso)",
+      "licencia": "dominio publico (US Gov)",
+      "atribucion": "sin endoso de NASA; no implicar patrocinio",
+      "comercial_ok": true,
+      "brand_safe": true,
+      "verificado": "<<fecha real cuando se registre>>"
+    },
+    "cc_by_con_atribucion": {
+      "id": "ejemplo_ccby",
+      "tipo": "modelo",
+      "file": "hero_models/ejemplo.glb",
+      "descripcion": "ejemplo CC-BY: SE PUEDE comercial PERO exige credito",
+      "fuente": "<<url>>",
+      "licencia": "CC-BY 4.0",
+      "atribucion": "Autor (CC-BY 4.0) -> incluir credito en la descripcion del post",
+      "comercial_ok": true,
+      "brand_safe": true,
+      "verificado": "<<fecha real cuando se registre>>"
+    }
+  },
+  "assets": [
+    {
+      "id": "procedural_ingot",
+      "tipo": "procedural",
+      "file": "(procedural)",
+      "descripcion": "lingote de oro biselado generado por el propio script (hero_shot._procedural_hero). Objeto 'dinero' iconico $0, sin descarga: ejercita TODO el lane (auto-encuadre + camera move + template premium) para validar luz/DoF/blur en R1.",
+      "fuente": "propio (hero_shot.py)",
+      "licencia": "propio",
+      "atribucion": null,
+      "comercial_ok": true,
+      "brand_safe": true,
+      "verificado": "2026-06-19"
+    }
+  ]
+}

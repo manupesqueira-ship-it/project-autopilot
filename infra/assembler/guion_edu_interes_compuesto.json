@@ -1,0 +1,94 @@
+{
+  "slug": "edu_interes_compuesto",
+  "title": "El costo de esperar: interes compuesto a los 25 contra a los 35",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "caption": {
+    "hook": "Esperar 10 años para invertir no te cuesta 10 años… te cuesta $1.5 millones de pesos.",
+    "valor": "$1,000 al mes desde los 25, al 10% anual, llegan a $2,260,488 MXN a los 55. Pero solo aportaste $360,000 — el interés compuesto puso el otro 84%.",
+    "cta": "El mejor momento para invertir fue ayer. El segundo es hoy.",
+    "open_loop": "por qué nunca es demasiado tarde para empezar",
+    "pregunta": "¿A qué edad empezaste tú?",
+    "hashtags": ["finanzaspersonales", "interescompuesto", "inversiones", "educacionfinanciera", "libertadfinanciera", "invertir", "mexico"],
+    "emoji": "💸"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Empezar a invertir diez años tarde no te cuesta diez años. Te cuesta cerca de un millón y medio de pesos. Y casi todo ese dinero no sale de tu bolsillo.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "el precio de esperar",
+        "stat": "$1.5M",
+        "statColor": "#D4A574",
+        "context": "menos en tu bolsillo por empezar diez años tarde",
+        "accentColor": "#00D9A5"
+      }
+    },
+    {
+      "id": "b2_carrera",
+      "type": "BeatBarRace",
+      "vo": "Dos personas ahorran mil pesos al mes con el mismo rendimiento. La única diferencia es cuándo empezaron. A los cincuenta y cinco, el que arrancó a los veinticinco junta casi el triple.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "countEndWord": "triple" },
+      "props": {
+        "caption": "Mil pesos al mes, mismo rendimiento",
+        "monthly": 1000,
+        "rate": 0.10,
+        "ageStart": 25,
+        "ageEnd": 55,
+        "prefix": "$",
+        "winnerIndex": 0,
+        "racers": [
+          { "label": "Empezó a los 25", "startAge": 25, "tag": "30 años" },
+          { "label": "Empezó a los 35", "startAge": 35, "tag": "20 años" }
+        ]
+      }
+    },
+    {
+      "id": "b3_donut",
+      "type": "BeatDonut",
+      "vo": "De los más de dos millones que junta el que empezó temprano, él solo aportó trescientos sesenta mil. El resto, el ochenta y cuatro por ciento, lo generaron los intereses.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "¿Quién puso el dinero?",
+        "highlightIndex": 0,
+        "centerLabel": "lo puso el interés",
+        "segments": [
+          { "label": "Lo generó el interés", "value": 1900488 },
+          { "label": "Tú lo aportaste", "value": 360000 }
+        ]
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Si empiezas hoy, a los veinticinco, y no tocas ese dinero, llegas a los cincuenta y cinco con más de dos millones doscientos mil pesos.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "pesos" },
+      "props": {
+        "caption": "Empezando a los 25",
+        "value": 2260488,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#00D9A5",
+        "subline": "+528% sobre lo que aportaste · 30 años, 360 aportes"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "El mejor momento para empezar a invertir fue hace diez años. El segundo mejor momento es hoy. Mañana: por qué nunca es demasiado tarde para empezar.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "El mejor momento fue ayer. El segundo es hoy.",
+        "boldWord": "hoy",
+        "sub": "mañana: por qué nunca es demasiado tarde para empezar"
+      }
+    }
+  ]
+}

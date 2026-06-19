@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 import cache
+from post_finish import finish_chain  # acabado filmico opcional (A5); no-op sin "finish"
 
 HERE = Path(__file__).parent
 ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
@@ -355,9 +356,27 @@ def assemble(guion, out_dir: Path):
                          f"duration={xf:.3f}:offset={off:.3f}{out}")
             cur = out
         chain = pre + steps
-    # apertura/cierre limpios desde/hacia negro
-    chain.append(f"[vbase]fade=t=in:st=0:d=0.25,"
-                 f"fade=t=out:st={max(total - 0.5, 0):.3f}:d=0.5[v]")
+    # apertura/cierre limpios desde/hacia negro. El xfade deja el video ~3-4
+    # frames corto de `total` (cuantizacion de offsets/trim a frame), mientras el
+    # audio se rellena a `total` EXACTO -> el track de video quedaba mas corto que
+    # el de audio (av_match FAIL) y el fade-out (programado para cerrar en `total`)
+    # se cortaba al ~75% sin llegar a negro. Se clona el ultimo frame y se recorta
+    # a `total` ANTES del fade: el video casa con el audio y el fade cierra a negro.
+    base = (f"[vbase]tpad=stop_mode=clone:stop_duration=1,"
+            f"trim=0:{total:.3f},setpts=PTS-STARTPTS")
+    fades = (f"fade=t=in:st=0:d=0.25,"
+             f"fade=t=out:st={max(total - 0.5, 0):.3f}:d=0.5")
+    # acabado filmico (A5) OPCIONAL: si el guion trae "finish": {bloom/grano/
+    # vineta}, se inyecta entre el trim y el fade (el fade a negro queda ENCIMA,
+    # asi apertura/cierre cierran limpios). Sin "finish" el grafo es IDENTICO al
+    # de hoy -> no toca lo ya aprobado. Cero pase extra de re-encode.
+    fin = guion.get("finish") or {}
+    if fin:
+        chain.append(f"{base}[vpre]")
+        chain.append(finish_chain("[vpre]", "[vpost]", **fin))
+        chain.append(f"[vpost]{fades}[v]")
+    else:
+        chain.append(f"{base},{fades}[v]")
     fc_v = ";".join(chain)
     run(["ffmpeg", "-y"] + vins + ["-filter_complex", fc_v, "-map", "[v]",
          "-c:v", "libx264", "-preset", "slow", "-crf", "15",
@@ -430,7 +449,8 @@ def assemble(guion, out_dir: Path):
         fc.append(f"[{i + 1}:a]adelay={ms}|{ms}[v{i}]")
         vo_labels.append(f"[v{i}]")
     # apad: sidechaincompress termina cuando se acaba el sidechain; sin pad
-    # el audio queda corto (TAIL del ultimo beat) y -shortest recorta el video
+    # el audio queda corto (TAIL del ultimo beat) y el mux -t total dejaria un
+    # tail mudo (video hasta total, audio cortado antes)
     fc.append("".join(vo_labels)
               + f"amix=inputs={len(vo_labels)}:normalize=0,"
               + f"apad=whole_dur={total:.3f}[vo]")
@@ -454,16 +474,20 @@ def assemble(guion, out_dir: Path):
     # para ver los huecos REALES entre voces sin la musica encima.
     run(["ffmpeg", "-y"] + inputs + ["-filter_complex", ";".join(fc),
          "-map", "[aout]", "-t", f"{total:.3f}", "-c:a", "aac", "-b:a", "192k",
-         str(audio),
+         "-ar", "48000", str(audio),
          "-map", "[vo_stem]", "-t", f"{total:.3f}", "-c:a", "pcm_s16le",
          "-ar", "48000", str(vo_stem)])
 
     final = out_dir / f"{guion['slug']}_FINAL_916.mp4"
     # -c:a copy: audio.m4a ya es AAC 192k con el true-peak controlado por
     # loudnorm; re-encodear aqui re-introduce picos inter-sample > -1 dBTP.
+    # -t total (NO -shortest): con -c:v copy, -shortest corta el ultimo GOP por
+    # los B-frames (DTS!=PTS) y deja el video ~4 frames corto del audio
+    # (av_match FAIL). Audio y video ya estan acotados a `total` por construccion
+    # (apad whole_dur + tpad/trim), asi que -t total casa ambos sin truncar.
     run(["ffmpeg", "-y", "-i", str(silent), "-i", str(audio),
          "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
-         "-c:a", "copy", "-shortest", str(final)])
+         "-c:a", "copy", "-dn", "-t", f"{total:.3f}", str(final)])
     print("WROTE", final, f"{dur(final):.2f}s")
 
     # QC de ENTREGA sobre el MP4 ENTREGADO (no un intermedio): mide los huecos

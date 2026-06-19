@@ -48,6 +48,11 @@ TEMA_SIMILARITY_THRESHOLD = 0.45
 SIGNATURE_EXCLUDE = {
     "BeatKinetic",      # hook: kinetic word-by-word (R4)
     "BeatStatCallout",  # hook alterno: cifra-shock de apertura
+    "BeatNapkin",       # hook set-piece: formula en servilleta (la castea el director; la rota R11, no la firma)
+    "BeatNewspaper",    # hook set-piece: titular de periodico (director; rota R11)
+    "BeatPhone",        # hook set-piece: notificacion de telefono (director; rota R11)
+    "BeatChalkboard",   # hook set-piece: leccion en pizarron (director; rota R11)
+    "BeatTicket",       # hook set-piece: recibo/ticket (director; rota R11)
     "BeatBigNumber",    # climax: la cifra protagonista
     "BeatHeroCoin",     # climax alterno: cifra protagonista en moneda 3D
     "BeatCta",          # cierre: siempre el ultimo beat (R5)

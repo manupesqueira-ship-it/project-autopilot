@@ -1,0 +1,93 @@
+{
+  "slug": "edu_minimo_tarjeta",
+  "title": "Pagar solo el mínimo: la trampa que te cuesta miles",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "El pago mínimo de tu tarjeta no está diseñado para ayudarte: está diseñado para que nunca termines de pagar.",
+    "valor": "Con una deuda de $30,000 MXN a una tasa de 45% anual, pagar solo el mínimo te hace regalar ~$13,500 al año en puros intereses. En 5 años son $67,500 MXN: más de lo que costó tu compra original.",
+    "cta": "Abona siempre más del mínimo, o no compres lo que no puedes pagar de contado.",
+    "open_loop": "el orden correcto para pagar varias deudas y salir más rápido",
+    "pregunta": "¿Sabes la tasa anual real de tu tarjeta?",
+    "hashtags": ["finanzaspersonales", "deudas", "tarjetadecredito", "educacionfinanciera", "saliendodedeudas", "interes", "mexico"],
+    "emoji": "💳"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Tu tarjeta de crédito te cobra cuarenta y cinco por ciento al año. Si debes treinta mil pesos y pagas solo el mínimo, le regalas al banco trece mil quinientos pesos cada año. Solo en intereses.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "lo que pagas por pagar el mínimo",
+        "stat": "$13,500",
+        "statColor": "#FF5A6E",
+        "context": "lo que le regalas al banco cada año por una deuda de 30 mil al 45%",
+        "accentColor": "#D4A574"
+      }
+    },
+    {
+      "id": "b2_data",
+      "type": "BeatBars",
+      "vo": "Mira cómo crece lo que regalas. En un año, trece mil quinientos. En tres años, cuarenta mil quinientos. Y en cinco años, sesenta y siete mil quinientos pesos a la basura.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "growWords": ["trece", "cuarenta", "sesenta"] },
+      "props": {
+        "caption": "intereses que regalas, deuda de $30,000 al 45% (MXN)",
+        "bars": [
+          { "label": "1 año", "value": 13500 },
+          { "label": "3 años", "value": 40500 },
+          { "label": "5 años", "value": 67500, "highlight": true }
+        ],
+        "prefix": "$",
+        "suffix": ""
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatBubble",
+      "vo": "Compraste algo de treinta mil pesos. Pagando solo el mínimo, en cinco años el banco se queda con sesenta y siete mil más en intereses. Terminas pagando tu compra más de dos veces.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "una compra de 30 mil pagada al mínimo, 5 años (MXN)",
+        "bubbles": [
+          { "label": "Lo que compraste", "value": 30000 },
+          { "label": "Lo que el banco se lleva", "value": 67500 }
+        ],
+        "prefix": "$",
+        "valueScale": 1000,
+        "valueUnit": "k"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Pagar solo el mínimo te cuesta, en cinco años, sesenta y siete mil quinientos pesos mexicanos. Regalados al banco por una sola deuda.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "5 años pagando solo el mínimo al 45%",
+        "value": 67500,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#FF5A6E",
+        "subline": "intereses regalados · más que tu compra original"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "El mínimo está diseñado para que nunca termines de pagar. Abona siempre más del mínimo, o no uses lo que no puedes pagar. Mañana, cómo salir de deudas más rápido.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Paga más del mínimo. Siempre.",
+        "boldWord": "más",
+        "sub": "mañana: el orden para pagar tus deudas y salir antes"
+      }
+    }
+  ]
+}

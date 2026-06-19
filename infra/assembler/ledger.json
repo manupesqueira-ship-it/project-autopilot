@@ -1,3 +1,40 @@
 {
-  "videos": []
+  "videos": [
+    {
+      "slug": "edu_interes_compuesto",
+      "tema": "El costo de esperar: interes compuesto a los 25 contra a los 35",
+      "beats_usados": [
+        "BeatStatCallout",
+        "BeatBarRace",
+        "BeatDonut",
+        "BeatBigNumber",
+        "BeatCta"
+      ],
+      "fecha": "2026-06-16"
+    },
+    {
+      "slug": "edu_efecto_latte_latam",
+      "tema": "El efecto latte: cuanto te cuesta de verdad el cafecito diario",
+      "beats_usados": [
+        "BeatStatCallout",
+        "BeatBars",
+        "BeatBubble",
+        "BeatBigNumber",
+        "BeatCta"
+      ],
+      "fecha": "2026-06-18"
+    },
+    {
+      "slug": "edu_regla_72",
+      "tema": "La regla del 72: cuántos años tarda tu dinero en duplicarse",
+      "beats_usados": [
+        "BeatKinetic",
+        "BeatBars",
+        "BeatWaterfall",
+        "BeatBigNumber",
+        "BeatCta"
+      ],
+      "fecha": "2026-06-18"
+    }
+  ]
 }

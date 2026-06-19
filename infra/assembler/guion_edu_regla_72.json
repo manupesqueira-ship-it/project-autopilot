@@ -1,0 +1,103 @@
+{
+  "slug": "edu_regla_72",
+  "title": "La regla del 72: cuántos años tarda tu dinero en duplicarse",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "Hay una fórmula que cabe en una servilleta y te dice cuándo se duplica tu dinero.",
+    "valor": "Divide 72 entre tu rendimiento anual: al 8%, tu dinero se duplica cada ~9 años. $100,000 MXN se vuelven $200,000 a los 9 años, $400,000 a los 18 y $800,000 a los 27, sin aportar un peso más.",
+    "cta": "No necesitas más dinero, necesitas más tiempo. Empieza hoy.",
+    "open_loop": "dónde invertir para que la regla del 72 juegue a tu favor",
+    "pregunta": "¿A qué tasa está creciendo tu dinero hoy?",
+    "hashtags": ["finanzaspersonales", "regladel72", "interescompuesto", "inversiones", "educacionfinanciera", "duplicartudinero", "mexico"],
+    "emoji": "📈"
+  },
+  "story": {
+    "question": "¿Cada cuánto se duplica tu dinero?",
+    "accentWords": ["duplica"],
+    "punch": "÷72",
+    "cta": "la fórmula, en el post de hoy"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Existe una fórmula que cabe en una servilleta y te dice en cuántos años tu dinero se duplica solo. La regla del setenta y dos.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "lines": [
+          [{ "text": "una" }, { "text": "fórmula" }, { "text": "tan" }, { "text": "simple" }],
+          [{ "text": "que" }, { "text": "cabe" }, { "text": "en" }, { "text": "una" }, { "text": "servilleta" }],
+          [{ "text": "en" }, { "text": "cuántos" }, { "text": "años" }],
+          [{ "text": "tu" }, { "text": "dinero" }, { "text": "se" }, { "text": "DUPLICA", "accent": true }],
+          [{ "text": "la" }, { "text": "regla" }, { "text": "del" }, { "text": "72", "accent": true }]
+        ]
+      }
+    },
+    {
+      "id": "b2_data",
+      "type": "BeatBars",
+      "vo": "Divides setenta y dos entre tu rendimiento. Una tasa baja duplica tu dinero en doce años. Una media, en nueve. Y una alta, en tan solo seis años.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "growWords": ["doce", "nueve", "seis"] },
+      "props": {
+        "caption": "años para duplicar tu dinero",
+        "bars": [
+          { "label": "al 6%", "value": 12 },
+          { "label": "al 8%", "value": 9, "highlight": true },
+          { "label": "al 12%", "value": 6 }
+        ],
+        "prefix": "",
+        "suffix": " años"
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatWaterfall",
+      "vo": "Y aquí está la magia. Cien mil pesos, a una tasa del ocho por ciento, se duplican cada nueve años. En nueve años son doscientos mil. En dieciocho, cuatrocientos mil. Y en veintisiete años, ochocientos mil pesos.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "100 mil pesos al 8%, duplicándose cada 9 años",
+        "startLabel": "Hoy",
+        "startValue": 100000,
+        "steps": [
+          { "label": "9 años", "delta": 100000 },
+          { "label": "18 años", "delta": 200000 },
+          { "label": "27 años", "delta": 400000 }
+        ],
+        "endLabel": "Total",
+        "prefix": "$"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Cien mil pesos, sin tocarlos, multiplicados por ocho gracias al tiempo y al interés compuesto, se convierten en ochocientos mil pesos mexicanos.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "cien mil pesos, al 8%, en 27 años",
+        "value": 800000,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#D4A574",
+        "subline": "+700% sin aportar un peso más · solo tiempo e interés compuesto"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "No necesitas un sueldo enorme. Necesitas tiempo y empezar hoy. Mañana te muestro dónde poner tu dinero para que la regla del setenta y dos juegue a tu favor.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "El tiempo hace el trabajo. Tú solo empieza.",
+        "boldWord": "tiempo",
+        "sub": "mañana: dónde invertir para duplicar tu dinero"
+      }
+    }
+  ]
+}

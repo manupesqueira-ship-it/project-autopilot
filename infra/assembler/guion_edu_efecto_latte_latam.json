@@ -1,0 +1,93 @@
+{
+  "slug": "edu_efecto_latte_latam",
+  "title": "El efecto latte: cuánto te cuesta de verdad el cafecito diario",
+  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
+  "carril": "evergreen",
+  "caption": {
+    "hook": "Ese café de $50 al día no te arruina por el gasto... te arruina por lo que DEJAS de ganar: $307,000 en 10 años.",
+    "valor": "$50 diarios = $1,500 al mes = $18,000 al año. En 10 años gastas $180,000 MXN. Pero invertidos al 10% anual serían $307,267 MXN. La diferencia ($127,267) es puro interés compuesto que regalaste.",
+    "cta": "No es dejar el café. Es saber dónde poner el dinero para que trabaje por ti.",
+    "open_loop": "dónde invertir esos $50 al día para que se conviertan en $307,000",
+    "pregunta": "¿Cuál es tu 'gastito' de cada día?",
+    "hashtags": ["finanzaspersonales", "efectolatte", "ahorro", "inversiones", "educacionfinanciera", "interescompuesto", "mexico"],
+    "emoji": "☕"
+  },
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Cincuenta pesos al día no te cambian la vida. Pero ese cafecito diario, en diez años, son más de trescientos mil pesos. No es el gasto grande el que te empobrece. Es el pequeño que repites sin pensar.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "caption": "el gastito de cada día",
+        "stat": "$307,000",
+        "statColor": "#D4A574",
+        "context": "lo que junta un café de 50 pesos al día, invertido diez años",
+        "accentColor": "#00D9A5"
+      }
+    },
+    {
+      "id": "b2_escala",
+      "type": "BeatBars",
+      "vo": "Cincuenta pesos al día son mil quinientos al mes. Y al año, ese cafecito ya se llevó dieciocho mil pesos en antojos.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": { "growWords": ["día", "mes", "año"] },
+      "props": {
+        "caption": "el mismo hábito, en el tiempo",
+        "bars": [
+          { "label": "Al día", "value": 50 },
+          { "label": "Al mes", "value": 1500 },
+          { "label": "Al año", "value": 18000, "highlight": true }
+        ],
+        "prefix": "$",
+        "suffix": ""
+      }
+    },
+    {
+      "id": "b3_wow",
+      "type": "BeatBubble",
+      "vo": "En diez años habrás gastado ciento ochenta mil pesos en ese hábito. Pero si lo hubieras invertido, esos mismos cincuenta pesos al día se habrían convertido en trescientos siete mil.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "diez años, los mismos 50 pesos al día (MXN)",
+        "bubbles": [
+          { "label": "Lo que gastas", "value": 180000 },
+          { "label": "Si lo inviertes", "value": 307267 }
+        ],
+        "prefix": "$",
+        "valueScale": 1000,
+        "valueUnit": "k"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Ese café de cincuenta pesos al día, multiplicado por diez años invertidos, se convierte en más de trescientos siete mil pesos mexicanos.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": { "countEndWord": "mexicanos" },
+      "props": {
+        "caption": "el costo real de 10 años de café",
+        "value": 307267,
+        "prefix": "$",
+        "suffix": " MXN",
+        "color": "#D4A574",
+        "subline": "+71% sobre lo que gastas · 10 años de un café diario"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "No se trata de no disfrutar tu café. Se trata de saber dónde poner ese dinero para que trabaje por ti. Mañana te enseño cómo.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "¿Tu dinero trabaja, o se evapora en antojos?",
+        "boldWord": "trabaja",
+        "sub": "mañana: dónde poner ese 'gastito' para que crezca"
+      }
+    }
+  ]
+}
