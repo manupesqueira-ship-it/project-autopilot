@@ -44,6 +44,7 @@ desktop.ini
 *.ai
 *.sketch
 *.fig
+*.docx
 
 # Media assets (imágenes finales van en Canva/drive, no en repo)
 projects/*/manual-mvp/pieces/*.png
@@ -60,10 +61,22 @@ projects/*/manual-mvp/pieces/*.mov
 # Render outputs Dinero IA (regenerables — re-render con build916/remotion/blender)
 infra/assembler/out/
 infra/blender/out/
+infra/blender/out_*/
+infra/blender/*.webm
+infra/blender/*.log
 infra/remotion-render/out/
+infra/remotion-render/build/
 infra/remotion-render/qc/
 infra/qc/out_*/
 projects/dinero-ia/infra/veo/out/
+
+# Dinero IA: assets pesados de render Remotion (licenciados/regenerables, viven en disco — NO en git)
+# audio/ = musica/SFX Envato (fuente: C:\Users\manup\envato_audio)
+infra/remotion-render/public/audio/
+# r1/ = render outputs del montaje R1 (rechazado) — regenerables
+infra/remotion-render/public/r1/
+# setpieces/ = PNGs gpt-image (regenerables via gen_setpiece.py, cache local)
+infra/remotion-render/public/setpieces/
 
 # Binarios de prueba sueltos en raiz (regenerables)
 /test*.mp4
