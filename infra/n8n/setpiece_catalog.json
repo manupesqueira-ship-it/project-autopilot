@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-19",
+  "descripcion": "Catalogo del DIRECTOR VISUAL de Dinero LATAM: el vocabulario CERRADO del que el nodo director castea la creatividad de cada video. Dos cosas: (1) set_pieces = objetos/escenas hero foto-reales generados por IA (gpt-image, un tiro), con su superficie EN BLANCO y los datos en capa controlada (Remotion) encima; (2) motions = primitivas de movimiento ($0 en Remotion) mapeadas a beats REALES del catalogo. El director NUNCA inventa de un prompt en blanco: SOLO castea de aqui. Asi se evita el error del 'cambio no pedido' (caso divide-72): la creatividad es con barandales.",
+  "como_se_usa": {
+    "triage": "Por video, el director decide el CARRIL (lane): (a) set_piece -> hay un objeto/formato recurrente del catalogo que calza con el tema (ej. formula -> servilleta) -> castea ese set-piece de hook; (b) hero_shot -> el tema tiene un objeto/evento ICONICO unico (cohete, etc.) -> lane bespoke (imagen IA o modelo 3D libre + camara; img2vid de paga SOLO si el objeto debe moverse de verdad, gateado); (c) default -> ningun set-piece calza -> hook por defecto del proposer (kinetic/stat), ya mejorado por el motor visual.",
+    "guardrail": "El director castea SOLO entradas con estado 'listo'. Las 'planeado' definen el vocabulario futuro pero NO se castean hasta construirse. El copy/dato exacto de los slots queda como '<<rellenar>>' -> lo decide Manuel / el planner, nunca el director.",
+    "gate": "El director PROPONE un plan de toma; Manuel lo aprueba/edita en el gate ANTES de producir. Reacciona, no dirige cada video."
+  },
+  "set_pieces": [
+    {
+      "id": "napkin",
+      "estado": "listo",
+      "rol": "hook",
+      "comp": "BeatNapkin",
+      "asset": "setpieces/napkin_2.png",
+      "motion": "write_on",
+      "para": "una FORMULA / regla / calculo simple y memorable que 'cabe en una servilleta' (regla del 72, regla del 4%, 50/30/20, interes simple).",
+      "triggers": ["servilleta", "formula", "regla del", "divide", "÷", "multiplica por", "calculo simple", "cabe en"],
+      "slots": {
+        "promise": "la PROMESA que el numero responde (ej. 'en cuantos anos se duplica tu dinero')",
+        "formula": "la formula / el dato EXACTO escrito a mano (negro marcador)"
+      },
+      "nota": "La IA escribe mal las cifras -> la servilleta sale EN BLANCO y la formula va en overlay controlado (Remotion). Tinta = negro marcador. Variante aprobada por Manuel: napkin_2 (2026-06-19)."
+    },
+    {
+      "id": "coin",
+      "estado": "listo",
+      "rol": "climax",
+      "comp": "BeatHeroCoin",
+      "asset": "coins/<slug>.png",
+      "motion": "float_tilt",
+      "para": "la cifra protagonista sobre una MONEDA premium foto-real (BTC, USD, MXN). Cierre/clima de temas de un activo o divisa.",
+      "triggers": ["bitcoin", "btc", "dolar", "peso", "moneda", "market cap", "capitalizacion", "divisa"],
+      "slots": {
+        "coin": "slug de la moneda (btc/usd/mxn)",
+        "value": "cifra EXACTA del brief (la voz la redondea)"
+      },
+      "nota": "Ya existe (gen_coin.py). Es el PRECEDENTE de la arquitectura objeto=IA. El proposer ya lo castea como climax alterno."
+    },
+    {
+      "id": "newspaper",
+      "estado": "planeado",
+      "rol": "hook",
+      "comp": "BeatNewspaper",
+      "asset": "setpieces/newspaper_*.png (por generar)",
+      "motion": "headline_set",
+      "para": "una NOTICIA / titular de actualidad (carril news): periodico foto-real, el titular y la cifra se 'imprimen'/resaltan en capa controlada.",
+      "triggers": ["noticia", "titular", "record", "anuncio", "esta semana", "hoy"],
+      "slots": {"headline": "titular EXACTO", "stat": "cifra resaltada"},
+      "nota": "Componente CONSTRUIDO (NewspaperSetPiece.tsx, con fallback PROCEDURAL $0; wiring proposer/validator/ledger LISTO). Complementa a BeatNewsCard. Para ACTIVAR: generar+aprobar el asset foto-real, poner el path real en 'asset' y estado:'listo' (cero cambio de codigo). Sigue 'planeado' = el gasto gpt-image y el look final esperan el gate de Manuel (como napkin_2)."
+    },
+    {
+      "id": "phone_screen",
+      "estado": "planeado",
+      "rol": "hook",
+      "comp": "BeatPhone",
+      "asset": "setpieces/phone_*.png (por generar)",
+      "motion": "notification_in",
+      "para": "una APP / transferencia / alerta de precio / notificacion: telefono foto-real, la UI/cifra va en overlay controlado.",
+      "triggers": ["app", "transferencia", "notificacion", "alerta", "cuenta", "saldo", "fintech", "cetesdirecto", "nubank"],
+      "slots": {"screen_label": "que muestra la pantalla", "amount": "monto/cifra"},
+      "nota": "Componente CONSTRUIDO (PhoneSetPiece.tsx, con fallback PROCEDURAL $0 -telefono+isla dinamica-; wiring LISTO). Alto reuso fintech/ahorro; la pantalla SIEMPRE en blanco -> overlay. Para ACTIVAR: generar+aprobar el asset, path real + estado:'listo' (cero codigo). 'planeado' = espera el gate de Manuel."
+    },
+    {
+      "id": "chalkboard",
+      "estado": "planeado",
+      "rol": "hook",
+      "comp": "BeatChalkboard",
+      "asset": "setpieces/chalkboard_*.png (por generar)",
+      "motion": "write_on",
+      "para": "una LECCION paso a paso o desglose (pizarron foto-real): comparte motion 'write_on' con la servilleta pero para varias lineas/pasos.",
+      "triggers": ["leccion", "paso a paso", "explicado", "como funciona", "concepto", "ejemplo"],
+      "slots": {"title": "titulo de la leccion", "steps": "lineas/pasos del calculo"},
+      "nota": "Componente CONSTRUIDO (ChalkboardSetPiece.tsx, con fallback PROCEDURAL $0 -pizarra+marco de madera+gis-; wiring LISTO). Hermano de la servilleta para contenido didactico/largo. Para ACTIVAR: generar+aprobar el asset, path real + estado:'listo' (cero codigo). 'planeado' = espera el gate de Manuel."
+    },
+    {
+      "id": "ticket",
+      "estado": "planeado",
+      "rol": "hook",
+      "comp": "BeatTicket",
+      "asset": "setpieces/ticket_*.png (por generar)",
+      "motion": "print_out",
+      "para": "un PRECIO / recibo / ticket de compra (efecto latte, comisiones, gasto hormiga): recibo foto-real, los montos en overlay.",
+      "triggers": ["recibo", "ticket", "comision", "precio", "cafe", "suscripcion", "gasto hormiga", "efecto latte"],
+      "slots": {"items": "conceptos del ticket", "total": "total resaltado"},
+      "nota": "Componente CONSTRUIDO (TicketSetPiece.tsx, con fallback PROCEDURAL $0 -tira termica+perforados+corte zigzag-; wiring LISTO). Calza con microgastos/comisiones. Para ACTIVAR: generar+aprobar el asset, path real + estado:'listo' (cero codigo). 'planeado' = espera el gate de Manuel."
+    }
+  ],
+  "motions": [
+    {"id": "write_on", "para": "el dato se ESCRIBE solo (manuscrito, clip-path izq->der) sobre un set-piece (servilleta/pizarron)", "comp": "BeatNapkin / BeatChalkboard", "costo": "$0 Remotion"},
+    {"id": "float_tilt", "para": "objeto 2.5D con flotacion + leve giro 3D + glint (moneda)", "comp": "BeatHeroCoin", "costo": "$0 Remotion"},
+    {"id": "headline_set", "para": "el titular se 'imprime' palabra por palabra (golpe de prensa) y la cifra se resalta con barrido sobre un periodico", "comp": "BeatNewspaper", "costo": "$0 Remotion"},
+    {"id": "notification_in", "para": "una notificacion ENTRA deslizando desde arriba (overshoot) y el monto aparece en la pantalla del telefono", "comp": "BeatPhone", "costo": "$0 Remotion"},
+    {"id": "print_out", "para": "la tira del recibo se REVELA de arriba hacia abajo (alimentacion de papel) y el total se resalta al terminar", "comp": "BeatTicket", "costo": "$0 Remotion"},
+    {"id": "zoom_push", "para": "acercamiento lento hacia un impacto / transicion a clima", "via": "seam zoomPunch + StudioScene push", "costo": "$0 Remotion"},
+    {"id": "fly_in", "para": "mapa vectorial que entra y hace zoom a un pais/region", "comp": "BeatMapZoom / BeatMultiMap", "costo": "$0 Remotion"},
+    {"id": "counter_roll", "para": "una cifra que sube hasta su valor (count-up)", "comp": "BeatBigNumber / BeatHeroCoin", "costo": "$0 Remotion"},
+    {"id": "bar_grow", "para": "barras que crecen / corren comparando magnitudes", "comp": "BeatBars / BeatBarRace", "costo": "$0 Remotion"},
+    {"id": "line_draw", "para": "una linea que se traza mostrando una tendencia/quiebre/recuperacion", "comp": "BeatLineChart / BeatTrendBreak / BeatRecovery", "costo": "$0 Remotion"},
+    {"id": "card_flip", "para": "tarjeta de noticia que entra con fuente y titular", "comp": "BeatNewsCard", "costo": "$0 Remotion"},
+    {"id": "pictograph_fill", "para": "iconos X de 100 que se rellenan (proporcion humana)", "comp": "BeatPictogram", "costo": "$0 Remotion"},
+    {"id": "waterfall_drop", "para": "cascada que descompone un total en partes", "comp": "BeatWaterfall / BeatSankey", "costo": "$0 Remotion"},
+    {"id": "kinetic_words", "para": "palabras clave que entran al ritmo de la voz (hook por defecto)", "comp": "BeatKinetic", "costo": "$0 Remotion"},
+    {"id": "stat_pop", "para": "una cifra-shock de apertura (hook alterno)", "comp": "BeatStatCallout", "costo": "$0 Remotion"},
+    {"id": "img2vid", "para": "movimiento FISICO real de un objeto iconico (cohete despegando). SOLO lane hero_shot, SOLO cuando hace falta movimiento real; arruina texto -> el dato sigue en overlay.", "via": "Higgsfield / Kling (PAGA, gateado, avisar costo)", "costo": "$ (flag)"}
+  ],
+  "hero_shot": {
+    "estado": "planeado",
+    "descripcion": "Lane bespoke para temas con objeto/evento ICONICO unico que NO esta en el catalogo de set-pieces. Se sourcea: imagen IA (gpt-image) o modelo 3D libre (Poly Haven CC0, NASA dominio publico) o footage de dominio publico, metido al template premium + camera move ($0). img2vid de paga SOLO si el objeto debe moverse de verdad. Gateado: verificar licencia comercial por asset, sin logos de marca.",
+    "comp": "hero_shot.py (Blender 3D, hereda studio_premium) -> WebM -> OffthreadVideo en Remotion",
+    "motion": "swing + push-in (camara $0; img2vid de paga gateado y aparte)",
+    "nota": "Lane CONSTRUIDO (infra/blender/hero_shot.py, con fallback PROCEDURAL $0 -lingote de oro biselado- render-testable sin descargar nada). GOBERNANZA DE LICENCIA EN CODIGO: solo renderiza un asset REGISTRADO en infra/blender/hero_assets.json con comercial_ok=true y brand_safe=true (registrar = verificar licencia; mismo espiritu que este catalogo cerrado). Para ACTIVAR un modelo libre: descargar CC0/dominio-publico, confirmar licencia, copiar a hero_models/, agregar entrada al manifest (cero cambio de codigo). El director lo SUGIERE en metadata _director (gate de Manuel), NUNCA se auto-castea. 'planeado' = espera el modelo real + el gate de Manuel; el lane y su fallback YA corren.",
+    "ejemplos": ["un cohete generico despegando", "lingotes de oro", "el edificio de un banco central (sin letrero de marca)"]
+  }
+}

@@ -34,6 +34,7 @@ from validator import (  # noqa: E402
     validate, _norm,
     TYPES, CHARTS, SPECT, WOW, DATA_VISUAL, CLIMAX_TYPES, LANDING, HOOK_TYPES,
 )
+from director import direct  # noqa: E402  (triage de set-pieces; one-way: director NO importa proposer)
 
 FILL = "<<rellenar"  # marca de hueco para Manuel / el planner
 
@@ -88,12 +89,111 @@ def _hook_stat(tema, rng):
 
 
 # El proposer solo emite hooks que sabe construir, aunque HOOK_TYPES crezca.
+# OJO: este pool es el DEFECTO ALEATORIO; NO incluye los hooks de set-piece (p.ej.
+# la servilleta), que NO deben salir al azar en un tema cualquiera -> solo los
+# emite el director cuando el tema dispara sus triggers (ver _SETPIECE_HOOK_BUILDERS).
 _HOOK_BUILDERS = {"BeatKinetic": _hook_kinetic, "BeatStatCallout": _hook_stat}
 
 
 def _hook(tema, rng):
     kinds = [k for k in sorted(HOOK_TYPES) if k in _HOOK_BUILDERS] or ["BeatKinetic"]
     return _HOOK_BUILDERS.get(rng.choice(kinds), _hook_kinetic)(tema, rng)
+
+
+# ----------------------------------------------------- hooks de SET-PIECE (director)
+# Estos NO se castean al azar: el director (director.py) decide el carril y SOLO si
+# el tema dispara los triggers del set-piece (p.ej. "regla del 72" -> servilleta)
+# pasa su cast aqui. Los slots de copy/dato quedan '<<rellenar>>' -> Manuel/planner.
+def _hook_napkin(tema, rng, cast):
+    """Hook 'servilleta': una FORMULA/regla que cabe en una servilleta (BeatNapkin).
+    Construido desde el cast del director (asset + slots promise/formula)."""
+    napkin = Path(cast.get("asset", "setpieces/napkin_2.png")).stem  # -> "napkin_2"
+    slots = cast.get("slots", {})
+    vo = "Esta regla cabe en una servilleta y te dice que hacer con tu dinero hoy"
+    return {"id": "b1_hook", "type": "BeatNapkin", "sfx": "impact",
+            "trans": rng.choice(_TRANS), "vo": vo,
+            "props": {"napkin": napkin,
+                      "promise": slots.get("promise", f"{FILL}: la promesa que el numero responde>>"),
+                      "formula": slots.get("formula", f"{FILL}: la formula EXACTA escrita a mano>>"),
+                      "_fill": f"{FILL}: hook de servilleta para el tema '{tema}'>>"}}
+
+
+def _sp_slug(cast):
+    """Slug del asset foto-real del set-piece, o '' si aun NO hay foto concreta
+    (asset 'por generar' / glob -> el componente cae a su fallback PROCEDURAL $0).
+    Asi el set-piece rinde $0 sin la foto: el gasto gpt-image queda gateado hasta
+    que Manuel genere+apruebe el asset y ponga el path real en el catalogo."""
+    asset = str(cast.get("asset", ""))
+    if not asset or "*" in asset or "por generar" in asset:
+        return ""
+    return Path(asset).stem
+
+
+def _hook_newspaper(tema, rng, cast):
+    """Hook 'periodico': un TITULAR de actualidad (BeatNewspaper, headline_set)."""
+    slots = cast.get("slots", {})
+    vo = "El titular de esta semana cambia por completo como deberias ver tu dinero ahora"
+    return {"id": "b1_hook", "type": "BeatNewspaper", "sfx": "impact",
+            "trans": rng.choice(_TRANS), "vo": vo,
+            "props": {"paper": _sp_slug(cast),
+                      "headline": slots.get("headline", f"{FILL}: titular EXACTO del brief>>"),
+                      "stat": slots.get("stat", f"{FILL}: cifra resaltada del titular>>"),
+                      "_fill": f"{FILL}: hook de periodico para el tema '{tema}'>>"}}
+
+
+def _hook_phone(tema, rng, cast):
+    """Hook 'telefono': una NOTIFICACION/app/saldo (BeatPhone, notification_in)."""
+    slots = cast.get("slots", {})
+    vo = "Mira la notificacion que le llego al telefono y lo que significa de verdad para ti"
+    return {"id": "b1_hook", "type": "BeatPhone", "sfx": "impact",
+            "trans": rng.choice(_TRANS), "vo": vo,
+            "props": {"phone": _sp_slug(cast),
+                      "screenLabel": slots.get("screen_label", f"{FILL}: que muestra la pantalla>>"),
+                      "amount": slots.get("amount", f"{FILL}: monto/cifra EXACTA del brief>>"),
+                      "_fill": f"{FILL}: hook de telefono para el tema '{tema}'>>"}}
+
+
+def _hook_chalkboard(tema, rng, cast):
+    """Hook 'pizarron': una LECCION paso a paso (BeatChalkboard, write_on multilinea)."""
+    slots = cast.get("slots", {})
+    vo = "Te lo explico en el pizarron paso a paso para que no te quede ninguna duda hoy"
+    return {"id": "b1_hook", "type": "BeatChalkboard", "sfx": "impact",
+            "trans": rng.choice(_TRANS), "vo": vo,
+            "props": {"board": _sp_slug(cast),
+                      "title": slots.get("title", f"{FILL}: titulo de la leccion>>"),
+                      "steps": [f"{FILL}: paso 1>>", f"{FILL}: paso 2>>", f"{FILL}: resultado>>"],
+                      "_fill": f"{FILL}: hook de pizarron para '{tema}'; steps = pasos EXACTOS del brief>>"}}
+
+
+def _hook_ticket(tema, rng, cast):
+    """Hook 'ticket': un PRECIO/recibo/gasto hormiga (BeatTicket, print_out)."""
+    slots = cast.get("slots", {})
+    vo = "Este ticket que parece inofensivo te esta costando mucho mas dinero de lo que crees"
+    return {"id": "b1_hook", "type": "BeatTicket", "sfx": "impact",
+            "trans": rng.choice(_TRANS), "vo": vo,
+            "props": {"ticket": _sp_slug(cast),
+                      "items": [{"label": f"{FILL}: concepto>>", "price": f"{FILL}: $>>"},
+                                {"label": f"{FILL}: concepto>>", "price": f"{FILL}: $>>"}],
+                      "total": slots.get("total", f"{FILL}: total resaltado EXACTO del brief>>"),
+                      "_fill": f"{FILL}: hook de ticket para '{tema}'; items = conceptos EXACTOS del brief>>"}}
+
+
+# Registro por COMPONENTE (el director da el comp del set-piece). Solo entran los
+# que ya tienen componente construido; si crece el catalogo, se agrega aqui.
+_SETPIECE_HOOK_BUILDERS = {
+    "BeatNapkin": _hook_napkin,
+    "BeatNewspaper": _hook_newspaper,
+    "BeatPhone": _hook_phone,
+    "BeatChalkboard": _hook_chalkboard,
+    "BeatTicket": _hook_ticket,
+}
+
+
+def _setpiece_hook(tema, rng, cast):
+    """Construye el hook de set-piece desde el cast del director, o None si su
+    componente aun no existe (entonces el proposer cae al hook por defecto)."""
+    builder = _SETPIECE_HOOK_BUILDERS.get(cast.get("comp"))
+    return builder(tema, rng, cast) if builder else None
 
 
 def _placeholder_props(t):
@@ -165,7 +265,7 @@ def _cta(tema):
 
 
 # ------------------------------------------------------------------- draft
-def _draft(tema, rng, n_data):
+def _draft(tema, rng, n_data, cast_hook=None):
     # Para 3+ datos, el wow va de CONTEXTO (no suma al conteo de datos) y asi no
     # se rebasan los 3 tipos de dato del arco (R4 avisa si hay >3).
     wow_pool = WOW_CONTEXT if (n_data >= 3 and WOW_CONTEXT) else WOW_POOL
@@ -183,12 +283,36 @@ def _draft(tema, rng, n_data):
     middle = [wow] + data
     rng.shuffle(middle)
 
-    beats = [_hook(tema, rng)]
+    # hook: set-piece del director si calza y tiene componente; si no, el de defecto.
+    hook = (cast_hook and _setpiece_hook(tema, rng, cast_hook)) or _hook(tema, rng)
+    beats = [hook]
     for j, t in enumerate(middle):
         beats.append(_generic(t, j + 2, rng))
     beats.append(_climax(tema, rng))
     beats.append(_cta(tema))
     return {"slug": _slugify(tema), "title": tema, "beats": beats}
+
+
+def _director_brief(tema, brief):
+    """Brief dict para el director (castea triggers): tema + texto libre del brief."""
+    d = {"tema": tema}
+    if isinstance(brief, str) and brief.strip():
+        d["datos"] = brief  # mas superficie de triggers (open_loop/cifras del brief)
+    return d
+
+
+def _tag(guion, plan, lane):
+    """Adjunta el plan del director al guion (visible en el gate de Manuel)."""
+    if guion is None:
+        return None
+    hook = plan.get("hook") or {}
+    guion["_director"] = {
+        "lane": lane,  # carril EFECTIVO (set_piece solo si su hook entro de verdad)
+        "hook_setpiece": hook.get("set_piece") if lane == "set_piece" else None,
+        "hero_shot_posible": plan.get("hero_shot_posible"),
+        "nota": "El director PROPONE; Manuel aprueba/edita en el gate antes de producir.",
+    }
+    return guion
 
 
 def propose(tema, brief=None, ledger=None, n_data=2, seed=None, max_tries=500):
@@ -198,17 +322,37 @@ def propose(tema, brief=None, ledger=None, n_data=2, seed=None, max_tries=500):
     Si se pasa `ledger`, reintenta hasta hallar un combo visual NO repetido.
     Si el tema mismo esta repetido en el ledger, NINGUN reintento lo salva: se
     devuelve el mejor esqueleto y el llamador vera el error R9 de tema.
+
+    TRIAGE (B4): consulta al director (director.py). Si el tema dispara un
+    set-piece 'listo' con componente construido (p.ej. "regla del 72" ->
+    servilleta) el hook del set-piece REEMPLAZA al de defecto. Si ese hook no
+    logra pasar el validador (p.ej. R11 lo choca con el hook del video anterior),
+    cae limpio al hook por defecto (kinetic/stat). hero_shot se SUGIERE en la
+    metadata `_director`, nunca se auto-castea.
     """
     rng = random.Random(seed)
+    plan = direct(_director_brief(tema, brief))
+    cast_hook = plan.get("hook") if plan.get("lane") == "set_piece" else None
+    if cast_hook and cast_hook.get("comp") not in _SETPIECE_HOOK_BUILDERS:
+        cast_hook = None  # set-piece sin componente construido -> hook por defecto
+
     best = None
+    # fase 1: hook del set-piece (preferente)
+    if cast_hook:
+        for _ in range(max_tries):
+            guion = _draft(tema, rng, n_data, cast_hook=cast_hook)
+            if not validate(guion, brief=brief, ledger=ledger)["errors"]:
+                return _tag(guion, plan, "set_piece")
+            if best is None:
+                best = guion
+    # fase 2: hooks por defecto (si no hubo set-piece o no paso -> rota la punta)
     for _ in range(max_tries):
         guion = _draft(tema, rng, n_data)
-        res = validate(guion, brief=brief, ledger=ledger)
-        if not res["errors"]:
-            return guion
+        if not validate(guion, brief=brief, ledger=ledger)["errors"]:
+            return _tag(guion, plan, "default")
         if best is None:
             best = guion
-    return best
+    return _tag(best, plan, "default")
 
 
 # --------------------------------------------------------------------- CLI
@@ -236,6 +380,11 @@ def _cli(argv):
     if "--out" in argv:
         Path(argv[argv.index("--out") + 1]).write_text(out, encoding="utf-8")
     print(out)
+    d = (guion or {}).get("_director", {})
+    print("\n-- director --", file=sys.stderr)
+    print(f"  lane: {d.get('lane')}"
+          + (f"  ->  hook set-piece: {d.get('hook_setpiece')}" if d.get("hook_setpiece") else ""),
+          file=sys.stderr)
     res = validate(guion, brief=brief, ledger=ledger)
     print("\n-- validador --", file=sys.stderr)
     for w in res["warnings"]:

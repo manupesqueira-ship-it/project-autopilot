@@ -12,23 +12,42 @@ REGLA DE ORO (la que protege la calidad): un tema NO es producible mientras su
 El planner SOLO debe recibir datos verificados; este lector se NIEGA a emitir un
 tema con huecos -> nunca se renderiza un guion con cifras placeholder.
 
+DOS CARRILES (campo `carril` de cada tema):
+  - 'news'      PERECEDERO (noticia / cifra viva). El selector lo PRIORIZA y al
+                producir se encola con TTL (caduca si no se publico a tiempo).
+                Campo opcional 'vence' (YYYY-MM-DD): tras esa fecha deja de ser
+                producible (cifra atada a un evento con fecha).
+  - 'evergreen' SIN caducidad (educativo / habito). Rellena los dias sin noticia.
+El selector entrega PRIMERO el news producible mas urgente (vence mas proximo),
+y si no hay ninguno, el primer evergreen. Asi una noticia no se "envejece" en la
+cola detras de un evergreen.
+
+NOTA (seleccion de noticias EN VIVO): elegir el tema-noticia del dia desde fuentes
+en tiempo real (auto) NO se hace aqui: requiere o bien que Claude escriba en sesion
+un tema-news con cifras verificadas, o una API (costo recurrente -> avisar antes de
+cablear). Este lector solo PRIORIZA y CADUCA por carril; el material lo alimenta el
+gate editorial.
+
 Ciclo de un tema:
   propuesto --(gate de Manuel)--> aprobado --(llenar cifras y quitar <<verificar>>)
             --> producible --(produccion + gate humano)--> producido
 
 Uso CLI:
-  python cola.py next  [--cola ruta.json]   imprime el JSON del brief (stdout) o sale !=0
+  python cola.py next  [--cola ruta.json] [--carril news|evergreen]
+        imprime el JSON del brief (stdout) o sale !=0
   python cola.py list  [--cola ruta.json]   estado de toda la cola (a stderr)
 Salidas: 0 = emitio un tema ; 3 = no hay temas producibles ; 2 = error de uso.
 """
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).parent
 DEFAULT_COLA = HERE / "temas_cola.json"
 
 MARCADORES = ("<<verificar", "<<rellenar")
+CARRIL_DEFAULT = "evergreen"
 
 
 def load(path):
@@ -41,26 +60,55 @@ def faltan_cifras(datos):
     return any(m in d for m in MARCADORES)
 
 
-def producible(t):
-    """Un tema se puede producir si Manuel lo aprobo Y sus datos estan verificados."""
-    return t.get("estado") == "aprobado" and not faltan_cifras(t.get("datos", ""))
+def carril(t):
+    return (t.get("carril") or CARRIL_DEFAULT).lower()
 
 
-def siguiente(data):
-    """Primer tema producible en orden de la cola, o None."""
-    for t in data.get("temas", []):
-        if producible(t):
-            return t
-    return None
+def vencido(t, hoy=None):
+    """True si es un tema-news con 'vence' ya pasada (cifra atada a una fecha)."""
+    v = t.get("vence")
+    if not v:
+        return False
+    try:
+        return date.fromisoformat(str(v)[:10]) < (hoy or date.today())
+    except ValueError:
+        return False  # fecha mal escrita: no la usamos para descartar
+
+
+def producible(t, hoy=None):
+    """Producible = aprobado Y datos verificados Y (si news) no vencido."""
+    return (t.get("estado") == "aprobado"
+            and not faltan_cifras(t.get("datos", ""))
+            and not vencido(t, hoy))
+
+
+def siguiente(data, carril_filtro=None, hoy=None):
+    """Siguiente tema a producir respetando carriles.
+
+    Orden: PRIMERO news producibles (los de 'vence' mas proximo van antes; los sin
+    'vence' van al final del bloque news, en orden de la cola), LUEGO evergreen en
+    orden de la cola. `carril_filtro` ('news'|'evergreen') limita a ese carril.
+    """
+    temas = [t for t in data.get("temas", []) if producible(t, hoy)]
+    if carril_filtro:
+        temas = [t for t in temas if carril(t) == carril_filtro.lower()]
+
+    news = [t for t in temas if carril(t) == "news"]
+    ever = [t for t in temas if carril(t) != "news"]
+    # news: por 'vence' ascendente; sin vence al final (clave = fecha-maxima)
+    news.sort(key=lambda t: str(t.get("vence") or "9999-12-31")[:10])
+    ordered = news + ever
+    return ordered[0] if ordered else None
 
 
 def _brief(t):
-    """Los 3 campos que consume el nodo Brief + el slug = id del tema."""
+    """Los campos que consume el Brief + el slug (= id) + el carril (para encolar)."""
     return {
         "slug": t["id"],
         "tema": t["tema"],
         "open_loop": t.get("open_loop", ""),
         "datos": t["datos"],
+        "carril": carril(t),
     }
 
 
@@ -72,6 +120,9 @@ def _cli(argv):
     cola = DEFAULT_COLA
     if "--cola" in argv:
         cola = Path(argv[argv.index("--cola") + 1])
+    carril_filtro = None
+    if "--carril" in argv:
+        carril_filtro = argv[argv.index("--carril") + 1]
     data = load(cola)
     temas = data.get("temas", [])
 
@@ -82,23 +133,30 @@ def _cli(argv):
                 marca = "producido"
             elif producible(t):
                 marca = "LISTO p/producir"
+            elif vencido(t):
+                marca = "vencido (news)"
             elif t.get("estado") == "aprobado":
                 marca = "aprobado (faltan cifras)"
             else:
                 marca = t.get("estado", "?")
-            print(f"  [{marca:24}] {t.get('id')}", file=sys.stderr)
+            cstr = carril(t)
+            vstr = f" vence={t['vence']}" if t.get("vence") else ""
+            print(f"  [{marca:24}] {cstr:9} {t.get('id')}{vstr}", file=sys.stderr)
         listos = sum(1 for t in temas if producible(t))
-        print(f"  -> {listos} listo(s) para producir", file=sys.stderr)
+        ln = sum(1 for t in temas if producible(t) and carril(t) == "news")
+        print(f"  -> {listos} listo(s): {ln} news + {listos - ln} evergreen",
+              file=sys.stderr)
         return 0
 
-    # next: emite SOLO JSON a stdout (lo parsea el nodo Brief de n8n)
-    t = siguiente(data)
+    # next: emite SOLO JSON a stdout (lo parsea el orquestador / nodo Brief)
+    t = siguiente(data, carril_filtro=carril_filtro)
     if t is None:
         aprob = sum(1 for x in temas if x.get("estado") == "aprobado")
+        extra = f" (carril={carril_filtro})" if carril_filtro else ""
         print(
-            f"NO HAY TEMAS PRODUCIBLES: {aprob} aprobado(s) pero todos con cifras "
-            f"sin verificar (<<verificar>>). Llena las cifras de uno y quita los "
-            f"marcadores antes de producir.",
+            f"NO HAY TEMAS PRODUCIBLES{extra}: {aprob} aprobado(s) pero con cifras "
+            f"sin verificar (<<verificar>>) o vencidos. Llena las cifras de uno y "
+            f"quita los marcadores antes de producir.",
             file=sys.stderr,
         )
         return 3

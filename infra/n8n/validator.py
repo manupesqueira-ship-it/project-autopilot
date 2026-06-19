@@ -145,7 +145,8 @@ WOW = {
 # tipo no se puede rotar -> R11 lo OMITE hasta que gane un 2o tipo (auto-activo).
 # OJO: estos tres sets deben espejar SIGNATURE_EXCLUDE de ledger.py (las puntas
 # se gobiernan con R11, NO con la firma/recencia R9-R10).
-HOOK_TYPES = {"BeatKinetic", "BeatStatCallout"}    # hook (beat 0): kinetic o cifra-shock
+HOOK_TYPES = {"BeatKinetic", "BeatStatCallout", "BeatNapkin",
+              "BeatNewspaper", "BeatPhone", "BeatChalkboard", "BeatTicket"}  # hook (beat 0): kinetic, cifra-shock o set-pieces del director (servilleta/periodico/telefono/pizarron/ticket)
 CLIMAX_TYPES = {"BeatBigNumber", "BeatHeroCoin"}   # clima: cifra protagonista (numero o moneda 3D)
 CTA_TYPES = {"BeatCta"}                             # cierre (ultimo beat); 2o cierre pendiente
 # "datos": beats de visualizacion que sostienen la parte media del arco.

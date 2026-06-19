@@ -1,9 +1,10 @@
 {
-  "version": 1,
-  "actualizado": "2026-06-15",
-  "descripcion": "Banco de temas de Dinero IA. Motor de MATERIAL para producir 3 posts/dia. Claude pre-genera lotes de temas (este archivo); Manuel los aprueba (gate editorial); el workflow n8n consume los aprobados y produce. Cada tema mapea 1:1 al nodo Brief del workflow (campos tema / open_loop / datos).",
+  "version": 2,
+  "actualizado": "2026-06-18",
+  "descripcion": "Banco de temas de Dinero LATAM. Motor de MATERIAL para producir posts/dia. Claude pre-genera lotes de temas (este archivo); Manuel los aprueba (gate editorial); el orquestador (cola.py / producir.py) consume el SIGUIENTE tema producible y produce. Cada tema mapea 1:1 al Brief (campos tema / open_loop / datos) y declara su CARRIL (news / evergreen).",
   "como_funciona": {
     "estados": "propuesto -> (gate de Manuel) aprobado -> (produccion) producido",
+    "carriles": "Cada tema declara 'carril': 'news' (PERECEDERO: noticia o cifra viva; al producir se encola con TTL y caduca si no se publico a tiempo; el selector lo PRIORIZA) o 'evergreen' (SIN caducidad: educativo/habito; rellena los dias sin noticia). Campo OPCIONAL 'vence' (YYYY-MM-DD) solo en news: el tema deja de ser producible despues de esa fecha (cifra ligada a un evento con fecha). El selector (cola.py) entrega PRIMERO el news producible mas urgente; si no hay, un evergreen.",
     "regla_datos": "REGLA DE ORO: el guion usa EXCLUSIVAMENTE cifras verificadas, nunca inventadas. Las cifras marcadas '<<verificar: descripcion — fuente>>' NO estan inventadas: son el dato que el video AFIRMARA, pendiente de confirmar contra la fuente citada ANTES de producir. Los hechos historicos publicos (fechas de eventos ya ocurridos) van en texto plano. Solo las cifras vivas (precios, tasas, market caps de hoy) llevan <<verificar>>.",
     "mapeo_a_brief": "Al producir un tema aprobado, sus campos tema / open_loop / datos se copian tal cual al nodo Brief de workflow_dinero_ia.json. Los campos extra (id, estado, categoria, angulo_pf_latam, por_que_funciona) son metadata del gate y el workflow los ignora.",
     "variedad": "El ledger (infra/assembler/ledger.py) bloquea tema/combo ya producido; R10 (recencia del medio) y R11 (rotacion de puntas) cuidan la rotacion visual. El banco solo alimenta; las reglas protegen la variedad. Por eso este lote cubre categorias distintas (macro-AR, macro-MX, ahorro, fintech, cripto-asignacion, IA-dinero, educativo)."
@@ -11,6 +12,7 @@
   "temas": [
     {
       "id": "ar_plazo_fijo_inflacion",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "macro-AR / ahorro",
       "tema": "El ahorro mas comun de Argentina te empobrece sin que te des cuenta: dejar los pesos en un plazo fijo durante la inflacion de tres digitos significo perder poder de compra ano tras ano, mientras quien los paso a dolares conservo su dinero.",
@@ -20,6 +22,7 @@
     },
     {
       "id": "mx_superpeso_dolar",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "macro-MX / divisas",
       "tema": "Te dijeron que guardar dolares era lo seguro, pero el 'superpeso' demostro lo contrario: en el periodo en que el peso mexicano se fortalecio frente al dolar, quien ahorro en dolares perdio en terminos de pesos, mientras quien dejo su dinero en pesos a tasa gano por los dos lados.",
@@ -29,6 +32,7 @@
     },
     {
       "id": "mx_cuenta_debito_costo",
+      "carril": "evergreen",
       "estado": "aprobado",
       "categoria": "ahorro-MX (evergreen)",
       "tema": "Tener tu dinero en la cuenta del banco te esta costando dinero: mientras tu cuenta de debito paga casi cero, un instrumento sin riesgo del gobierno paga doble digito, y la diferencia en un ano es mas grande de lo que crees.",
@@ -38,6 +42,7 @@
     },
     {
       "id": "fintech_nubank_comisiones",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "fintech",
       "tema": "Un banco sin una sola sucursal llego a valer mas que bancos latinoamericanos de cien anos: Nubank nacio digital y gratis, y su crecimiento expone cuanto te cobra en silencio tu banco tradicional cada ano.",
@@ -47,6 +52,7 @@
     },
     {
       "id": "mx_remesas_record",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "macro-MX / ahorro",
       "tema": "Mexico recibe una cifra record de remesas cada ano, pero una parte se evapora antes de llegar: entre comisiones de envio y el tipo de cambio, las familias pierden millones que con una decision distinta se quedarian en su bolsillo.",
@@ -56,6 +62,7 @@
     },
     {
       "id": "cripto_btc_asignacion",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "cripto / asignacion",
       "tema": "Bitcoin ya supero en tamano a activos que parecian intocables, y eso dispara la pregunta equivocada: la clave no es 'entrar antes de que suba mas', sino cuanto de tu dinero puedes arriesgar sin arruinar tu tranquilidad.",
@@ -65,6 +72,7 @@
     },
     {
       "id": "ai_nvidia_vs_economia",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "IA-dinero / inversion",
       "tema": "Una sola empresa de chips llego a valer mas que la bolsa entera de varios paises latinoamericanos juntos: la historia de Nvidia no es solo de inteligencia artificial, es la prueba de por que un latino que ahorra deberia poder invertir fuera de su propio pais.",
@@ -74,7 +82,8 @@
     },
     {
       "id": "edu_interes_compuesto",
-      "estado": "aprobado",
+      "carril": "evergreen",
+      "estado": "producido",
       "categoria": "educativo / evergreen",
       "tema": "La diferencia entre empezar a los veinticinco y a los treinta y cinco no son diez anos: son cientos de miles de pesos. El interes compuesto premia al que empieza temprano de una forma que parece magia, pero es solo matematica.",
       "open_loop": "el mito de que ya es demasiado tarde para empezar",
@@ -83,21 +92,85 @@
     },
     {
       "id": "edu_efecto_latte_latam",
-      "estado": "aprobado",
+      "carril": "evergreen",
+      "estado": "producido",
       "categoria": "educativo / habitos",
       "tema": "No te empobrece la compra grande, te empobrece la pequena que repites todos los dias: el cafe, el delivery, la suscripcion que no usas. Sumado y multiplicado por el tiempo, ese 'gastito' es un coche.",
       "open_loop": "donde poner ese dinero para que trabaje por ti en vez de evaporarse",
-      "datos": "- Concepto 'efecto latte': micro-gastos diarios que parecen inofensivos suman cifras grandes al ano.\n- Supuesto a fijar: gasto diario de referencia (p.ej. un cafe/antojo) en pesos <<verificar: precio promedio actual — declarar el supuesto>>.\n- Costo al ano de ese habito: <<verificar: precio x 365 — calculo>>.\n- Si en vez de gastarlo se invirtiera a tasa de referencia <<verificar: % — CETES/promedio declarado>>, en 10 anos seria: <<verificar: monto — calculo>>.\n- Matiz honesto: no se trata de no disfrutar, sino de elegir conscientemente cuales 'gastitos' valen la pena.\nFuentes: calculo con supuestos declarados. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
-      "por_que_funciona": "Habito cotidiano + cifra impactante = muy compartible. El matiz 'disfruta consciente' evita el tono moralista que aleja audiencia."
+      "datos": "- Concepto 'efecto latte': micro-gastos diarios que parecen inofensivos suman cifras grandes al ano.\n- Supuesto DECLARADO: gasto diario de referencia (un cafe/antojo) de 50 MXN al dia = 1,500 MXN al mes = 18,000 MXN al ano.\n- Supuesto DECLARADO de inversion: tasa nominal anual de 10% con capitalizacion mensual (nivel de referencia en linea con CETES recientes; es un supuesto, no un rendimiento garantizado), horizonte de 10 anos.\n- En 10 anos aportas 180,000 MXN de tu bolsillo (1,500 al mes), pero el ahorro llega a 307,267 MXN: el interes compuesto genero 127,267 MXN, un 71% mas que lo aportado.\n- Matiz honesto: no se trata de no disfrutar, sino de elegir conscientemente cuales 'gastitos' valen la pena.\nFuente: calculo deterministico de valor futuro de anualidad con la tasa declarada (10% anual nominal, capitalizacion mensual). Cifras exactas para el visual; en la voz se redondean de forma natural.",
+      "por_que_funciona": "Habito cotidiano + cifra impactante = muy compartible. El matiz 'disfruta consciente' evita el tono moralista que aleja audiencia.",
+      "producido_fecha": "2026-06-18"
+    },
+    {
+      "id": "edu_regla_72",
+      "carril": "evergreen",
+      "estado": "producido",
+      "categoria": "educativo / evergreen",
+      "tema": "Hay una formula que cabe en una servilleta y te dice en cuantos anos se duplica tu dinero: la regla del 72. Divides 72 entre tu rendimiento anual y obtienes los anos que tarda en valer el doble, sin que aportes un peso mas.",
+      "open_loop": "donde invertir para que la regla del 72 juegue a tu favor",
+      "datos": "- Concepto: 'regla del 72' = aproximacion para estimar en cuantos anos se duplica una inversion. Anos ~= 72 / (tasa de rendimiento anual en %).\n- Tabla DECLARADA (aproximacion de la regla; el calculo exacto con logaritmos da casi lo mismo): al 6% se duplica en ~12 anos, al 8% en ~9 anos, al 12% en ~6 anos.\n- Ejemplo DECLARADO: 100,000 MXN a una tasa nominal del 8% anual, sin aportar mas, se duplican cada ~9 anos: 200,000 MXN a los 9 anos, 400,000 MXN a los 18 y 800,000 MXN a los 27 (multiplicar por 8, +700%).\n- Es un supuesto educativo, no un rendimiento garantizado; a mayor rendimiento esperado, mayor riesgo.\nFuente: calculo deterministico (regla del 72 y duplicaciones sucesivas). Cifras exactas para el visual; en la voz se redondean de forma natural.",
+      "por_que_funciona": "Evergreen de altisimo valor educativo y muy visual (barras de anos por tasa + cascada de duplicaciones). Formula memorable y compartible ('cabe en una servilleta'). Distinto del interes compuesto ya producido: aqui el angulo es la VELOCIDAD de duplicacion, no el aporte mensual.",
+      "producido_fecha": "2026-06-18"
     },
     {
       "id": "ar_dolar_mep_brecha",
+      "carril": "news",
       "estado": "aprobado",
       "categoria": "macro-AR / divisas",
       "tema": "Durante anos Argentina vivio con varios dolares al mismo tiempo: el oficial, el MEP y el blue, con una brecha enorme entre ellos. Entender esa brecha es la diferencia entre proteger tus ahorros legalmente o perderlos por miedo.",
       "open_loop": "las stablecoins como refugio: ventajas y la letra chica",
       "datos": "- Argentina convivio con multiples cotizaciones del dolar (oficial, MEP/bolsa, blue) y una brecha cambiaria amplia; el gobierno de Milei trabajo en reducirla durante 2024-2025.\n- Brecha cambiaria en su punto mas alto reciente: <<verificar: % entre oficial y blue — fuente: Cenital / Ambito>>.\n- Cotizaciones actuales: oficial <<verificar: ARS/USD — BCRA>>, MEP <<verificar: ARS/USD — mercado>>, blue <<verificar: ARS/USD — fuente local>>.\n- El dolar MEP es legal y se opera via bolsa; el blue es informal. Explicar la diferencia de riesgo.\n- Cuanto se 'perdia' al cambiar al oficial vs MEP en el pico de la brecha: <<verificar: ejemplo numerico — calculo>>.\nFuentes: BCRA, Cenital, Ambito. Usa SOLO cifras verificadas; redondea a palabras en la voz.",
       "por_que_funciona": "Tema 100% del moat cultural argentino; educativo y practico (MEP legal vs blue). Conecta con cripto/stablecoins como cola natural."
+    },
+    {
+      "id": "edu_fondo_emergencia",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "educativo / habitos",
+      "tema": "Antes de invertir un solo peso necesitas un colchon: el fondo de emergencia. Son seis meses de tus gastos guardados y a la mano, para que una urgencia no te empuje a una deuda de tarjeta al 45%.",
+      "open_loop": "donde guardar tu fondo para que no pierda valor con la inflacion",
+      "datos": "- Concepto: el fondo de emergencia = 3 a 6 meses de gastos en un instrumento estable y liquido; va ANTES de invertir.\n- Supuesto DECLARADO: gasto mensual de referencia de 15,000 MXN. Meta de 6 meses = 90,000 MXN.\n- Escalera: 1 mes = 15,000; 3 meses = 45,000; 6 meses = 90,000 MXN.\n- Por que importa: sin fondo, una emergencia se paga con tarjeta de credito (tasas cercanas a 45% anual); con fondo, la cubres sin endeudarte.\nFuente: aritmetica directa (gasto x meses). Cifras exactas para el visual; la voz redondea de forma natural. NO repetir el angulo de interes compuesto: aqui el tema es la BASE/seguridad, no el crecimiento.",
+      "por_que_funciona": "Pilar #1 de finanzas personales; altisimo valor y universal. Evergreen reutilizable. Distinto de los temas de inversion: aqui el mensaje es 'primero la seguridad'. Guion ya autorado ($0)."
+    },
+    {
+      "id": "edu_regla_50_30_20",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "educativo / presupuesto",
+      "tema": "Si tu sueldo se evapora y no sabes en que, la regla 50/30/20 lo ordena sin hojas de calculo: 50% para lo necesario, 30% para tus gustos, 20% para ti (ahorro e inversion).",
+      "open_loop": "donde poner ese 20% para que el interes compuesto haga el trabajo",
+      "datos": "- Concepto: reparto del ingreso neto en 50% necesidades, 30% gustos, 20% ahorro/inversion ('pagate a ti primero').\n- Supuesto DECLARADO: sueldo de 20,000 MXN al mes; el 20% son 4,000 MXN al mes.\n- Proyeccion DECLARADA (capitalizacion mensual, 10% nominal anual, 20 anos): aportas 960,000 MXN de tu bolsillo y terminas con 3,037,475 MXN; el interes compuesto genero 2,077,475 MXN.\n- Es un supuesto educativo, no un rendimiento garantizado.\nFuente: valor futuro de anualidad con la tasa declarada. Cifras exactas para el visual; la voz redondea ('mas de tres millones'). Visual: dona 50/30/20.",
+      "por_que_funciona": "Marco de presupuesto mas conocido del mundo, aterrizado en pesos y con el payoff de invertir el 20%. Muy visual (dona). Guion ya autorado ($0)."
+    },
+    {
+      "id": "edu_minimo_tarjeta",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "educativo / deudas",
+      "tema": "El pago minimo de la tarjeta no esta hecho para ayudarte, esta hecho para que nunca termines de pagar: a 45% anual, una deuda de 30,000 te hace regalar miles cada ano en puros intereses.",
+      "open_loop": "el orden correcto para pagar varias deudas y salir mas rapido",
+      "datos": "- Supuesto DECLARADO: deuda de 30,000 MXN en tarjeta a una tasa de 45% anual, pagando solo el minimo (saldo que no baja).\n- Interes regalado: ~13,500 MXN al ano (45% de 30,000). En 3 anos = 40,500; en 5 anos = 67,500 MXN, mas que la compra original.\n- Leccion: abonar SIEMPRE mas del minimo; el minimo maximiza los intereses que cobra el banco.\nFuente: interes sobre saldo (simplificacion declarada; la amortizacion real con minimos es aun peor). Cifras exactas para el visual; la voz redondea. Color: rojo legitimo (es una perdida real).",
+      "por_que_funciona": "Dolor masivo y accionable (deuda de tarjeta) con cifra-shock. Encuadre de PERDIDA justifica el rojo semantico. Guion ya autorado ($0)."
+    },
+    {
+      "id": "edu_inflacion_efectivo",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "educativo / habitos",
+      "tema": "Guardar el dinero en efectivo se siente seguro, pero es la forma mas silenciosa de perderlo: la inflacion le quita poder de compra ano tras ano sin que nadie te robe nada.",
+      "open_loop": "el instrumento sin riesgo que le gana a la inflacion desde 100 pesos",
+      "datos": "- Supuesto DECLARADO: 100,000 MXN guardados en efectivo, inflacion de 5% anual, horizonte de 10 anos.\n- Poder de compra: hoy 100,000; a 5 anos ~78,353; a 10 anos ~61,391 MXN (pierde ~38,609 de poder de compra).\n- Contraste DECLARADO: esos 100,000 invertidos al 10% nominal (capitalizacion mensual) 10 anos = 259,374 MXN.\n- Es un supuesto educativo, no un rendimiento garantizado.\nFuente: descuento por inflacion (1.05^-10) y valor futuro al 10%. Cifras exactas para el visual; la voz redondea. La caida del efectivo es una perdida real (rojo legitimo); el lado invertido va en oro/verde.",
+      "por_que_funciona": "Rompe la creencia 'el efectivo es seguro' con numeros; conecta con CETES/instrumentos sin riesgo (cola natural del canal). Guion ya autorado ($0)."
+    },
+    {
+      "id": "edu_regla_4_porciento",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "educativo / evergreen",
+      "tema": "Hay un numero exacto que separa trabajar por dinero de que el dinero trabaje por ti: la regla del 4%. Multiplica tu gasto anual por 25 y ese es el capital que necesitas invertido para vivir de los rendimientos.",
+      "open_loop": "como construir tu numero desde cero, mes a mes",
+      "datos": "- Concepto: 'regla del 4%' = puedes retirar ~4% de tu portafolio al ano sin agotarlo; equivale a necesitar 25 veces tu gasto anual invertido.\n- Supuesto DECLARADO: gasto de 20,000 MXN al mes = 240,000 al ano; meta = 240,000 x 25 = 6,000,000 MXN. Retiro del 4% = 240,000 MXN al ano.\n- Escala con el gasto: gastando 15,000 al mes la meta baja a 4,500,000 MXN (180,000 anual x 25).\n- Es una regla de planeacion (origen: estudio Trinity), no una garantia; depende de rendimientos y secuencia.\nFuente: aritmetica de la regla del 4% (x25). Cifras exactas para el visual; la voz redondea ('alrededor de seis millones').",
+      "por_que_funciona": "Concepto aspiracional (libertad financiera / FIRE) explicado simple y en pesos. Cierra el arco de la serie evergreen (fondo -> presupuesto -> deudas -> inflacion -> meta final). Guion ya autorado ($0)."
     }
   ]
 }
