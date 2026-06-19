@@ -7,6 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
+import { enterProgress } from "../anim";
 import { StudioScene } from "../studio/StudioScene";
 
 // Stat callout: UN dato suelto enorme (string libre: "$700M", "8 de cada 10",
@@ -39,7 +40,8 @@ export const StatCallout: React.FC<StatCalloutProps> = ({
     extrapolateRight: "clamp" as const,
   };
 
-  const pop = spring({ frame: frame - 6, fps, config: { damping: 12, mass: 0.9 } });
+  // overshoot canónico §5.4 (src/anim.ts); compone con la respiración idle abajo
+  const pop = enterProgress(frame, fps, 6);
   const breathe = Math.sin(frame / 13) * 5;
   const glowPulse = 0.7 + Math.sin(frame / 10) * 0.3;
 

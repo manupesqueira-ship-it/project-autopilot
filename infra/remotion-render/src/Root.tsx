@@ -40,7 +40,15 @@ import { Scoreboard } from "./beats/Scoreboard";
 import { SankeyFlow } from "./beats/SankeyFlow";
 import { Testimonial } from "./beats/Testimonial";
 import { StatCallout } from "./beats/StatCallout";
+import { StoryHook } from "./beats/StoryHook";
+import { NapkinWriteOn } from "./beats/NapkinWriteOn";
+import { NewspaperSetPiece } from "./beats/NewspaperSetPiece";
+import { PhoneSetPiece } from "./beats/PhoneSetPiece";
+import { ChalkboardSetPiece } from "./beats/ChalkboardSetPiece";
+import { TicketSetPiece } from "./beats/TicketSetPiece";
+import { BrandSignature } from "./studio/BrandSignature";
 import { CatalogGallery, GALLERY_W, GALLERY_H } from "./CatalogGallery";
+import { R1Montage, R1_TOTAL } from "./R1Montage";
 import { withSeams } from "./studio/SeamFx";
 import "./theme";
 
@@ -83,6 +91,11 @@ const ScoreboardFx = withSeams(Scoreboard);
 const SankeyFx = withSeams(SankeyFlow);
 const TestimonialFx = withSeams(Testimonial);
 const StatCalloutFx = withSeams(StatCallout);
+const NapkinFx = withSeams(NapkinWriteOn);
+const NewspaperFx = withSeams(NewspaperSetPiece);
+const PhoneFx = withSeams(PhoneSetPiece);
+const ChalkboardFx = withSeams(ChalkboardSetPiece);
+const TicketFx = withSeams(TicketSetPiece);
 
 // duracion dinamica: el ensamblador pasa durationInFrames en --props
 const dyn =
@@ -112,6 +125,51 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={GALLERY_W}
         height={GALLERY_H}
+      />
+      {/* Firma de marca (§5.8) — OVERLAY, NO un beat (sin prefijo "Beat" => el
+          validador no lo castea). preview:true dibuja un backdrop oscuro para
+          juzgar tamaño/posicion/sutileza en R1. mascot:"" => placeholder $0. */}
+      <Composition
+        id="BrandSignature"
+        component={BrandSignature}
+        durationInFrames={120}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          mascot: "",
+          wordmark: "DINERO LATAM",
+          placement: "tl" as const,
+          preview: true,
+        }}
+      />
+      {/* R1Montage (Track R1) — reel de VALIDACION del salto de calidad: encadena
+          las piezas 3D nuevas (hero/chart/demo Blender WebM) + set-piece servilleta
+          + firma de marca para juzgar luz/DoF/bloom. NO es un beat (sin prefijo
+          "Beat" => el validador no lo castea). Silencioso (voz = gasto gateado). */}
+      <Composition
+        id="R1Montage"
+        component={R1Montage}
+        durationInFrames={R1_TOTAL}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="StoryHook"
+        component={StoryHook}
+        calculateMetadata={dyn(180) as never}
+        durationInFrames={180}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          kicker: "DINERO LATAM",
+          question: "¿Cada cuánto se duplica tu dinero?",
+          accentWords: ["duplica"],
+          punch: "×2",
+          cta: "la fórmula, en el post de hoy",
+        }}
       />
       <Composition
         id="BeatLineChart"
@@ -556,6 +614,86 @@ export const RemotionRoot: React.FC = () => {
           suffix: " BTC",
           decimals: 0,
           subline: "comprado en plena caída",
+        }}
+      />
+      <Composition
+        id="BeatNapkin"
+        component={NapkinFx}
+        calculateMetadata={dyn(160) as never}
+        durationInFrames={160}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          napkin: "napkin_2",
+          promise: "tu dinero se duplica en…",
+          formula: "72 ÷ %  =  años",
+        }}
+      />
+      <Composition
+        id="BeatNewspaper"
+        component={NewspaperFx}
+        calculateMetadata={dyn(170) as never}
+        durationInFrames={170}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          paper: "",
+          kicker: "ÚLTIMA HORA",
+          headline: "El Salvador rompe su récord en Bitcoin",
+          stat: "$700M",
+          nameplate: "LATAM TIMES",
+          dateline: "Hoy",
+        }}
+      />
+      <Composition
+        id="BeatPhone"
+        component={PhoneFx}
+        calculateMetadata={dyn(150) as never}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          phone: "",
+          appName: "CetesDirecto",
+          screenLabel: "saldo disponible",
+          amount: "$12,480",
+        }}
+      />
+      <Composition
+        id="BeatChalkboard"
+        component={ChalkboardFx}
+        calculateMetadata={dyn(190) as never}
+        durationInFrames={190}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          board: "",
+          title: "el interés compuesto",
+          steps: ["inviertes $1,000", "10% cada año", "en 30 años → $17,449"],
+          accentStep: 2,
+        }}
+      />
+      <Composition
+        id="BeatTicket"
+        component={TicketFx}
+        calculateMetadata={dyn(170) as never}
+        durationInFrames={170}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          ticket: "",
+          store: "CAFÉ DIARIO",
+          items: [
+            { label: "latte grande", price: "$75" },
+            { label: "x 30 días", price: "" },
+          ],
+          totalLabel: "AL MES",
+          total: "$2,250",
         }}
       />
       <Composition

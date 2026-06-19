@@ -8,6 +8,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
+import { riseIn } from "../anim";
 import { StudioScene } from "../studio/StudioScene";
 
 export type BigNumberProps = {
@@ -100,16 +101,9 @@ export const BigNumberCounter: React.FC<BigNumberProps> = ({
 
   const capWords = caption.split(" ");
 
-  const rise = (start: number): React.CSSProperties => {
-    const s = spring({ frame: frame - start, fps, config: { damping: 14, mass: 0.6 } });
-    return {
-      opacity: interpolate(frame, [start, start + 6], [0, 1], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-      }),
-      transform: `translateY(${(1 - s) * 16}px)`,
-    };
-  };
+  // entrada canónica con overshoot sutil (Style Bible §5.4, src/anim.ts)
+  const rise = (start: number): React.CSSProperties =>
+    riseIn({ frame, fps, delay: start, distance: 16 });
 
   const numStyle: React.CSSProperties = {
     fontSize: 128,

@@ -23,6 +23,11 @@ export type BarsProps = {
 };
 
 const STUB_H = 18;
+// profundidad del slab 2.5D (cara superior iluminada + lateral en sombra).
+// Sutil/premium (luz desde arriba-izq), NO 3D de juguete. Cierra el gap del
+// teardown 0x100x: "barras con CUERPO, no rectangulos planos" (juez B).
+const OX = 17;
+const OY = 12;
 
 const BASE_Y = 1280;
 const MAX_H = 540;
@@ -126,17 +131,35 @@ export const BarsValue: React.FC<BarsProps> = ({
           <defs>
             <linearGradient id="barG" x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stopColor={theme.green} stopOpacity="0.95" />
-              <stop offset="60%" stopColor={theme.green} stopOpacity="0.45" />
-              <stop offset="100%" stopColor={theme.green} stopOpacity="0.12" />
+              <stop offset="60%" stopColor={theme.green} stopOpacity="0.55" />
+              <stop offset="100%" stopColor={theme.green} stopOpacity="0.18" />
             </linearGradient>
             <linearGradient id="barD" x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.16" />
               <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.04" />
             </linearGradient>
+            {/* cara lateral en sombra: verde profundo, da el "cuerpo" del slab */}
+            <linearGradient id="barGside" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#067256" stopOpacity="0.95" />
+              <stop offset="60%" stopColor="#067256" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#067256" stopOpacity="0.16" />
+            </linearGradient>
+            {/* cara superior iluminada: capta la luz de arriba-izq */}
+            <linearGradient id="barGtop" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#5FF0CE" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#15C79C" stopOpacity="0.9" />
+            </linearGradient>
+            <linearGradient id="barDside" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.02" />
+            </linearGradient>
             <linearGradient id="refl" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={theme.green} stopOpacity="0.14" />
               <stop offset="100%" stopColor={theme.green} stopOpacity="0" />
             </linearGradient>
+            <filter id="cshadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="10" />
+            </filter>
           </defs>
 
           <line
@@ -152,26 +175,52 @@ export const BarsValue: React.FC<BarsProps> = ({
             const h = barH(i, b.value);
             const cx = x0 + slot * i + slot / 2;
             const hl = b.highlight && frame >= growAt(i);
+            const x = cx - barW / 2;
+            const top = BASE_Y - h;
+            const w = barW;
+            const topPts = `${x},${top} ${x + w},${top} ${x + w + OX},${top - OY} ${x + OX},${top - OY}`;
+            const sidePts = `${x + w},${top} ${x + w + OX},${top - OY} ${x + w + OX},${BASE_Y - OY} ${x + w},${BASE_Y}`;
             return (
               <g key={i}>
+                <ellipse
+                  cx={cx + OX * 0.4}
+                  cy={BASE_Y + 10}
+                  rx={w * 0.62}
+                  ry={13}
+                  fill="rgba(0,0,0,0.45)"
+                  filter="url(#cshadow)"
+                />
+                <polygon points={sidePts} fill={hl ? "url(#barGside)" : "url(#barDside)"} />
+                <polygon
+                  points={topPts}
+                  fill={hl ? "url(#barGtop)" : "rgba(255,255,255,0.20)"}
+                />
                 <rect
-                  x={cx - barW / 2}
-                  y={BASE_Y - h}
-                  width={barW}
+                  x={x}
+                  y={top}
+                  width={w}
                   height={h}
-                  rx={10}
+                  rx={5}
                   fill={hl ? "url(#barG)" : "url(#barD)"}
                   style={
                     hl
-                      ? { filter: `drop-shadow(0 0 18px ${theme.green}66)` }
+                      ? { filter: `drop-shadow(0 0 22px ${theme.green}66)` }
                       : undefined
                   }
                 />
+                <rect
+                  x={x}
+                  y={top}
+                  width={w}
+                  height={3}
+                  rx={2}
+                  fill={hl ? "rgba(220,255,245,0.85)" : "rgba(255,255,255,0.45)"}
+                />
                 {hl && (
                   <rect
-                    x={cx - barW / 2}
+                    x={x}
                     y={BASE_Y + 4}
-                    width={barW}
+                    width={w}
                     height={70}
                     rx={10}
                     fill="url(#refl)"
