@@ -1,6 +1,6 @@
 # Expenses Tracker — Project Autopilot
 
-**Last updated:** 2026-06-14
+**Last updated:** 2026-06-18
 **Owner:** Manuel · **Rule:** registrar ABSOLUTAMENTE todo. No perder cuenta de ningún gasto. Si aparece un cargo nuevo, va aquí el mismo día.
 
 > ## 🔒 CONGELAMIENTO DE GASTOS (2026-06-03)
@@ -81,3 +81,8 @@
 - 2026-06-13 · OpenAI gpt-image-1 (high 1024x1536) · caricatura 'economista' · ~$0.17 USD · Dinero IA beats de personaje (cacheada)
 - 2026-06-13 · ElevenLabs eleven_v3 (voz Asgard) · re-TTS 3 beats El Salvador (b1/b3/b4, ~83 palabras / ~500 chars) · ~$0.10 USD est. (plan/tarifa TBD) · redondeo de números HABLADOS: "más de 200 millones", "alrededor de", "casi 480 millones" (el visual mantiene la cifra exacta del brief)
 - 2026-06-15 · OpenAI gpt-image-1 (high 1024x1024) · moneda hero 'btc' · ~$0.12 USD · Dinero IA BeatHeroCoin (cacheada)
+- 2026-06-15 · ElevenLabs eleven_v3 (voz Asgard) · TTS 5 beats edu_interes_compuesto (~144 palabras / ~780 chars, ~49s audio) · ~$0.15 USD est. (plan/tarifa TBD) · 1er video del loop semi-auto desde la cola de temas; voz redondea ("cerca de un millón y medio", "más de dos millones doscientos mil") y el visual muestra la cifra exacta
+- 2026-06-18 · ElevenLabs eleven_v3 (voz Asgard) · TTS 5 beats edu_efecto_latte_latam (~137 palabras / ~740 chars, ~49s audio) · ~$0.14 USD est. (plan/tarifa TBD) · PRUEBA del loop completo producir.py end-to-end (1ª corrida real del orquestador): build+QC OK → gate Telegram APPROVED → encolado en Supabase para auto-publicar ~8pm CDMX. Único costo de la corrida (render/ensamblado/upload/publicar = $0)
+- 2026-06-18 · ElevenLabs eleven_v3 (voz Asgard) · re-TTS 5 beats edu_efecto_latte_latam · ~$0.14 USD est. (plan/tarifa TBD) · FIX del bug "ano"→"año" que reportó Manuel: el guion se reescribió con ñ/acentos (día/año/más), lo que rebusto el cache de TTS y re-sintetizó las voces. El row viejo (con "ano") se borró de la cola; no se publica. Render/upload/ensamblado = $0. NOTA: el re-envío a Telegram tras el fix usó --skip-build = $0 (sin voz nueva); solo se cambió el nombre del objeto en Storage (cache-bust por hash) para que Telegram dejara de servir la copia vieja cacheada
+- 2026-06-18 · ElevenLabs eleven_v3 (voz Asgard) · TTS 5 beats edu_regla_72 (~141 palabras, ~62s VO) · ~$0.14 USD est. (plan/tarifa TBD) · 2ª corrida real de producir.py (tema tomado solo de la cola). Build+QC ENTREGA OK → subido a Supabase. El gate de Telegram crasheó en un 429 transitorio ("Too Many Requests: retry after 5") porque _call convertía cualquier HTTPError en SystemExit → la corrida salió exit 1 y el video NO se encoló. FIX en telegram_bot._call: honra retry_after y reintenta en 429/5xx/blip de red (el long-poll de horas ya no muere por un hipo). Recuperación = re-correr con --skip-build = $0 (sin voz nueva). Este ~$0.14 es el ÚNICO cargo de edu_regla_72; render/ensamblado/upload = $0
+- 2026-06-19 · OpenAI gpt-image-1 (high 1024x1536) x2 · set-piece 'napkin' · ~$0.38 USD · Dinero IA hook object

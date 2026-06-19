@@ -1,3 +1,10 @@
+> ⛔ **SUPERSEDED (2026-06-19) — NO seguir este roadmap.** Describe la era SaaS/cloud MUERTA
+> (n8n cloud + Seedance + Supabase + ContentStudio + Blotato + Beehiiv, $270-440/mo, agentes A2/A3/A9).
+> Hoy el sistema es **100% propio y $0**: Remotion + Blender + FFmpeg local, orquestado por
+> `infra/n8n/producir.py` + Task Scheduler, gate humano por Telegram. Se conserva solo como **audit trail**.
+> **Verdad viva:** `CLAUDE.md` (raíz) · `docs/standards/DINERO_IA_STYLE_BIBLE.md` ·
+> `docs/PLAN_SALTO_CALIDAD.md` · `git log`. Plan vigente de calidad: `docs/PLAN_SALTO_CALIDAD.md`.
+
 # Roadmap — Dinero IA (v6, 2026-06-01)
 
 > **Cambios v6 vs v5** (post smoke test 2026-06-01 + ADR-018/019):

@@ -1,9 +1,9 @@
 # Dinero IA — Style Bible (FUENTE DE VERDAD ÚNICA)
 
-**Versión:** 2.1 · **Fecha:** 2026-06-03 · **Estado:** ACTIVO
+**Versión:** 2.2 · **Fecha:** 2026-06-19 (base 2026-06-03) · **Estado:** ACTIVO
 **Reemplaza a:** `docs/standards/VISUAL.md` (v1.0 — arquitectura muerta gpt-image-2/Seedance, NO usar)
-**Base empírica:** teardown frame-by-frame de @0x100x + 13 creators benchmark + 8 directivas de Manuel + 3 iteraciones de quality-bar (test015→test017).
-**v2.1:** §8 cerrada — método DECIDIDO (plantillas Envato + Nexrender + n8n, sin diseñadores) + congelamiento de gastos.
+**Base empírica:** teardown frame-by-frame de @0x100x + 13 creators benchmark + 8 directivas de Manuel + iteraciones de quality-bar (test015→test017) + pipeline propio Remotion/Blender end-to-end.
+**v2.2 (2026-06-19):** §8 REESCRITA — método vigente = sistema PROPIO (recreación 1:1 de 0x100x + Remotion/Blender/FFmpeg local + cadena de filtros QC, todo $0). Plantillas Envato/AE/Nexrender/n8n RECHAZADAS (gate 2026-06-11, ver §9). Congelamiento de gastos más estricto: $0, AE+Envato cancelados.
 
 > Este es el ÚNICO documento de estándares vivo de Dinero IA. Toda la investigación que Manuel mandó está destilada aquí. Si algo contradice este doc, gana este doc. Si falta algo que Manuel mandó, se agrega aquí — no en otro archivo nuevo.
 
@@ -85,7 +85,7 @@ Lo que hace que se vea premium, en orden de impacto:
 5. **Bloom global + grano sutil (3-5%):** unifica y mata la frialdad "CGI demasiado limpio". (Hornear glow, no blur full-screen por frame.)
 6. **Espacio negativo y silencios INTENCIONALES:** dejar el punchline respirar sobre negro un beat. Contraste vacío→lleno hace pegar el dato. (OJO: distinto de los "silencios raros" por bug de timing — ver §7.)
 7. **Retención: open-loop al inicio + payoff al final + loop-back** (última línea conecta con la primera → replays).
-8. **Activo de marca recurrente (firma):** UN objeto/mascota propio en CADA video, reconocible en 0.5s. **PENDIENTE: definir cuál es la mascota de Dinero IA** (será el primer asset 3D orgánico).
+8. **Activo de marca recurrente (firma):** UN objeto/mascota propio en CADA video, reconocible en 0.5s. **Sistema CONSTRUIDO** (`src/studio/BrandSignature.tsx`, $0): "bug" de esquina que respeta las safe-areas del 9:16, entra con el easing LOCKED (§5.4) y no compite con el contenido; arquitectura de set-piece (OBJETO de marca = asset en `public/brand/<slug>.png`, slug por prop; sin asset → **placeholder PROCEDURAL $0** = chip neutro "dinero sube" + wordmark, render-testable HOY). Composición QC `BrandSignature` (con backdrop) para juzgar tamaño/posición/sutileza en R1. **PENDIENTE de Manuel (gate):** (a) **definir cuál es la mascota** (será el primer asset 3D orgánico — gpt-image PNG **[👁️ ~$3 MXN]** o frame hero del modelo 3D, ambos caen en el mismo slot PNG); (b) aprobar el look de la firma; (c) decidir el wire-up "en cada video" (overlay único en el ensamblado — se prende cuando el look esté aprobado, NO se toca el master aprobado sin su OK). El componente NO inventa la identidad de marca: es el SLOT + el sistema.
 
 ---
 
@@ -98,45 +98,62 @@ Lo que hace que se vea premium, en orden de impacto:
 
 ---
 
-## 7. Pacing y audio (BUG a arreglar, independiente del método)
+## 7. Pacing y audio (RESUELTO — verificado en código 2026-06-19)
 
-**Problema reportado (test017):** "despasado, silencios raros." **Causa raíz:** los beats usan duración FIJA (`duration_frames`) no atada a la duración real del voiceover → cuando la voz termina antes/después del beat, aparece aire muerto o el corte cae a destiempo.
+**Problema reportado (test017):** "despasado, silencios raros." **Causa raíz original:** los beats usaban duración FIJA (`duration_frames`) no atada al voiceover → aire muerto o corte a destiempo.
 
-**Fix:** tomar timestamps de palabra de ElevenLabs (API devuelve timing por carácter/palabra) y **atar cada beat al audio** — el corte cae con la voz, sin silencios. Regla: ningún beat queda en silencio salvo un "breath beat" INTENCIONAL (§5.6). Esto es ortogonal al fork de método; se arregla en cualquier camino.
+**RESUELTO en `infra/assembler/build916.py`:**
+- **Duración atada a la voz:** cada beat dura `LEAD + dur(VO_mp3) + TAIL` frames (≈línea 220), calculado por-beat de la duración REAL del mp3 de ElevenLabs. Ya NO hay `duration_frames` fijo.
+- **Animación sincronizada a la palabra:** `apply_cues()` lee `words.json` (timestamps por palabra de ElevenLabs `/with-timestamps`) y ata cada cue (growWords, pulseWords, countEnd, kinetic word-by-word…) al frame de SU palabra en la voz.
+- **Costura sin pisar la voz:** el xfade (0.35s) cae DENTRO del silencio LEAD/TAIL; el dip de música se centra en el HUECO AUDIBLE real (fin de la última palabra → inicio de la primera de la siguiente, vía `words.json`), no en el borde del mp3.
+- **Guard de entrega:** `filter_delivery.py` mide los huecos reales entre voces (`vo_stem`) + loudness/TP/duración sobre el MP4 ENTREGADO; exit!=0 BLOQUEA la entrega.
 
----
-
-## 8. EL MÉTODO (DECIDIDO 2026-06-03)
-
-Probado empíricamente 3 veces: **generar-desde-cero topa por debajo de la barra de Manuel.** El gap es **craft / dirección de arte**, no técnica ni medio. La forma más barata de ADQUIRIR craft es partir del trabajo de un pro, no seguir generando de cero.
-
-**Decisión (Manuel, 2026-06-03):** rechazó contratar diseñadores (esperar/pagar de más) y recrear 1:1 en código (sin sentido). Camino elegido:
-
-> **Plantillas premium de marketplace + automatización propia.**
-> 1. **Diseño base:** plantillas AE premium nivel 0x100x compradas en **Envato Elements** ($16/mo, ya autorizado). El marketplace es la fuente de craft; NO se contrata a nadie.
-> 2. **Automatización:** **Nexrender** (gratis, open-source) llena datos + renderiza AE headless, orquestado por **n8n**. Envato NO tiene API de render; es solo el origen del asset.
-> 3. **Datos/charts variables:** los maneja el código/CSV (paleta semántica §2-3 inyectada por job).
-> 4. **3D propio cuando aplique:** pipeline Blender validado (abajo) para hero objects + mascota.
-
-**Restricción dura (CONGELAMIENTO DE GASTOS, 2026-06-03):** After Effects (~$23/mo tras trial 7 días) es la **ÚLTIMA herramienta de paga autorizada**. CERO suscripciones nuevas sin OK explícito de Manuel. Si AE no valida el camino dentro del trial → cancelar (costo $0), NO pivotar a otra herramienta de paga. Ver `docs/EXPENSES.md` y `memory/feedback_congelamiento_gastos.md`.
-
-**Requisito de extensibilidad:** el pipeline debe ser modular por-segmentos (intro → datos → outro) para que (a) Manuel pueda ajustarlo él mismo con el tiempo y (b) agregar a futuro un segmento de presentador/avatar realista (HeyGen/Synthesia/D-ID) sea ADITIVO, no un rewrite. Por eso AE-templates (editables visualmente) ganan sobre Remotion-puro cuando empatan.
-
-**Estado de validación (2026-06-04 — MÉTODO VALIDADO ✓):** Nexrender 1.63.3 ✓. AE 2026 + aerender ✓. Render base de "Dark Numbers" (Pack 2) salió OK en 2m19s y **Manuel lo aprobó: "se ve muy bien"** — el craft de una plantilla de marketplace SÍ clarea la barra (primera vez en el proyecto). Esto confirma §0/§8.
-**Arquitectura multi-plantilla por COMPONENTE:** ninguna plantilla sola hace todo. Se ensamblan beats:
-- **Beat de número** → "Dark Numbers" (validado). Solo contadores, NO tiene charts.
-- **Beat de chart** (pie/línea/barras) → **Pack 3 "Modern Infographic Data Visualization"** (Envato, GANADOR): oscuro, 4K 3840x2160 60fps, glow, control de Color por elemento, 20 escenas modulares. Varias YA son financieras: `Infographics_02` Growth Stocks (línea), `_03` Portfolio Balance, `_07/_08` ±% verde/rojo, `_09` Investment Growth, `_11` Crypto Wallet (BTC/ETH/USDT). Archivo: `infra/ae-pipeline/templates/Pack3_DataViz.aep`.
-- **Banco de layouts (no premium tal cual)** → Pack 4 "Modern Animated Infographics" (CandyMustache): enorme y recoloreable PERO base plana/clara/corporativa (como Pack 1). Usar solo para tomar prestado un layout puntual, ya oscurecido. NO como cara principal.
-- **Descartado:** Pack 1 "Statistics CSV" (blanco/plano).
-- **Hero/mascota 3D** → pipeline Blender (abajo).
-**Pendientes técnicos:** conseguir plantilla de charts oscura; reencuadre 16:9→9:16; tematizar a paleta §3; inyectar `data/payload_cetes_vs_banco.json` vía Nexrender; ensamblar beats en n8n.
-
-**Pipeline 3D ya validado (complementa, no reemplaza):** Blender local RTX 4060 (OptiX ~2.3s/frame) → PNG alpha → WebM VP9 yuva420p → Remotion `<OffthreadVideo transparent>`. Ver `memory/project_dinero_ia_3d_pipeline.md`.
+**Silencio remanente = INTENCIONAL:** queda ~1.0s de respiro entre voces (`LEAD 0.25 + TAIL 1.10 − XFADE 0.35`), puntuado por el SFX de transición y el dip de música — es el "breath beat" de §5.6, no un bug. El video auto-producido del 2026-06-19 pasó QC 12/12 sin queja de pacing.
 
 ---
 
-## 9. Qué está MUERTO / no usar
+## 8. EL MÉTODO (VIGENTE — reescrito 2026-06-19)
 
+Probado empíricamente: **generar-desde-cero topa por debajo de la barra de Manuel** (test007/8/9/015). El gap es **craft / dirección de arte**, no técnica ni medio (§0). Y **comprar** craft empaquetado tampoco funcionó: las plantillas de marketplace (**Envato AE + Nexrender + n8n**, que fueron este §8 hasta el 2026-06-10) dieron un look genérico/viejo e incoherente entre beats → **RECHAZADO en el gate 2026-06-11** (ver §9). AE + Envato Elements quedaron CANCELADOS.
+
+**Método VIGENTE — sistema PROPIO "recreación 1:1 de 0x100x + cadena de filtros QC" (todo $0):**
+
+La forma de ADQUIRIR craft sin generar de cero ni pagar plantillas es **clonar el trabajo de un pro plano por plano**: cada beat recrea un plano real de la referencia 0x100x (cuya dirección de arte ya está resuelta) y luego se **parametriza con los datos exactos del guion**. No se inventa dirección de arte: se hereda de la referencia y se rellena con el dato LATAM.
+
+**El motor (todo local, $0):**
+1. **Render 2D:** Remotion 4.x local. Cada beat = un componente en `infra/remotion-render/src/beats/` (la **fuente viva del catálogo**, ~39 beats — leer la carpeta, no fiarse de un número fijo). Theme y paleta semántica en `src/theme.ts`.
+2. **3D hero (cuando aplica):** Blender 5.1, OptiX en la RTX 4060 → PNG alpha → WebM VP9 yuva420p → Remotion `<OffthreadVideo transparent>`. Para objetos hero y set-pieces con volumen real.
+3. **Voz:** ElevenLabs `/with-timestamps`, voz **Asgard `eleven_v3`** (id `lJtjZw9ZjSbD9Zs9bOWq`). Los timestamps atan cada beat al audio (§7).
+4. **Ensamblado:** FFmpeg vía `infra/assembler/build916.py` — VO + renders + música ducked + SFX + xfade en costuras → `out/{slug}/{slug}_FINAL_916.mp4` (9:16).
+
+**Creatividad con barandales (NUNCA prompt en blanco):** un **director** castea de un **catálogo cerrado de set-pieces** (`infra/n8n/setpiece_catalog.json` — servilleta ✅, periódico, hero-shot, etc.) en vez de inventar libremente cada video. Da variedad SIN romper la coherencia ni reintroducir el error de "cambio no solicitado".
+
+**Cadena de filtros QC (sube el piso de calidad sin humano):**
+- **Filtro A** (`infra/qc/filter_a.py`): programático — paleta, luminancia, safe-areas, motion. Exit 1 = FAIL.
+- **Filtro B** (`filter_b_prepare.py`): juez visual del beat vs. la referencia 0x100x.
+- **Filtro C** (`filter_c_prepare.py`): video completo + loudness.
+- **Gate humano:** Manuel aprueba/rechaza el MP4 final por **Telegram** (`infra/distribution/telegram_bot.py`).
+
+**Orquestación + distribución:** el motor real es un orquestador Python (`infra/n8n/producir.py`) corrido por Windows Task Scheduler — **NO n8n como servidor** (importado pero 0 ejecuciones, ver §9). Producir LOCAL (Blender/RTX 4060) + publicar NUBE (Supabase + Edge Function). `infra/distribution/publish_ig.py` postea a IG (Graph API, ya probado).
+
+**CONGELAMIENTO DE GASTOS (2026-06-19, más estricto que la v2.1):** todo el pipeline corre **$0**. CERO herramientas/suscripciones/APIs nuevas de paga sin OK explícito de Manuel. AE (~$23/mo) + Envato Elements ($16/mo) quedaron CANCELADOS junto con el método de plantillas. Único costo marginal posible, siempre avisando antes: créditos puntuales de gpt-image-1 (~$0.17 USD/≈$3 MXN por asset) y planner Anthropic (~$0.03-0.05/guion). Ver `docs/EXPENSES.md` y `memory/feedback_congelamiento_gastos.md`.
+
+**Extensibilidad:** el pipeline es modular por-segmentos (cada beat es un componente aislado) para que (a) Manuel lo toque él mismo y (b) agregar a futuro un segmento de presentador/avatar realista sea ADITIVO, no un rewrite.
+
+**Pipeline 3D validado:** Blender local RTX 4060 (OptiX ~2.3s/frame) → PNG alpha → WebM VP9 yuva420p → Remotion `<OffthreadVideo transparent>`. Ver `memory/project_dinero_ia_3d_pipeline.md`.
+
+---
+
+## 9. Qué está MUERTO / no usar (NUNCA re-proponer)
+
+Cada uno se probó y Manuel lo rechazó. Re-proponerlos quema su confianza.
+
+- **Plantillas Envato AE + Nexrender + n8n** (era el §8 hasta 2026-06-10): look genérico/viejo, 3 lenguajes visuales incoherentes por video. **RECHAZADO en gate 2026-06-11.** AE + Envato Elements CANCELADOS. Plainly/pagar AE solo quedaría como motor PUNTUAL de charts, NO decidido — no pagar sin replantear con Manuel.
+- **Que Claude arme el video desde cero** en AE/ExtendScript/Remotion-puro como "yo lo genero": salió "chafa" (test007/8/9). El camino vigente es recrear 1:1 un plano real, no inventar dirección de arte.
+- **Veo / IA generativa** (Kling/Hailuo/Higgsfield/Seedance) como **medio principal**: "falta muchísimo", cero gráficas, look-IA. Queda SOLO como posible b-roll dentro del sistema propio.
+- **Diseñador / freelancer externo** (ni one-time): PROHIBIDO. El sistema es 100% nuestro y automatizado.
+- **n8n como servidor de orquestación:** `workflow_dinero_ia.json` está importado pero con 0 ejecuciones — nunca produjo un video. Reemplazado por `producir.py` + Windows Task Scheduler.
 - `docs/standards/VISUAL.md` v1.0 — arquitectura gpt-image-2 + Seedance + agentes A5/A8. Superseded por este doc.
+- **`docs/ROADMAP.md` v6** — era SaaS/cloud ($270-440/mo: n8n cloud, Seedance, Supabase, ContentStudio, Blotato, Beehiiv). SUPERSEDED por el sistema propio $0; se mantiene solo como audit trail.
 - Estética "viral de alto impacto" (v11): fondos que cambian de color, números gigantes variables, springs bouncy. RECHAZADO.
 - "Otra pasada de 2D genérico" como camino a premium. El 2D es el PISO (datos/charts); no es el diferenciador.
