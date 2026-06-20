@@ -23,6 +23,13 @@ const X1 = 990;
 const YTOP = 600;
 const YBOT = 1300;
 
+// Mantener una caja de texto absoluta de `w`px dentro del frame 1080 (margen 16).
+// Sin esto, un label sobre el último punto (x≈990, caja 400 centrada) se sale a
+// 1190 y RECORTA el número — el bug exacto que arruinó R1.
+const SAFE_X = 16;
+const clampLabelLeft = (rawLeft: number, w: number) =>
+  Math.min(Math.max(rawLeft, SAFE_X), 1080 - w - SAFE_X);
+
 export const LineChartSemantic: React.FC<LineChartProps> = ({
   caption,
   points,
@@ -250,14 +257,15 @@ export const LineChartSemantic: React.FC<LineChartProps> = ({
           const s = appeared
             ? spring({ frame: frame - appearFrame, fps, config: { damping: 13, mass: 0.6 } })
             : 0;
+          const LBL_W = 400;
           return (
             <div
               key={k}
               style={{
                 position: "absolute",
-                left: p.x - 200,
+                left: clampLabelLeft(p.x - LBL_W / 2, LBL_W),
                 top: p.y - 110,
-                width: 400,
+                width: LBL_W,
                 textAlign: "center",
                 fontSize: 42,
                 fontWeight: 600,
@@ -275,7 +283,7 @@ export const LineChartSemantic: React.FC<LineChartProps> = ({
           <div
             style={{
               position: "absolute",
-              left: peak.x - 230,
+              left: clampLabelLeft(peak.x - 230, 460),
               top: peak.y - 150,
               width: 460,
               textAlign: "center",
