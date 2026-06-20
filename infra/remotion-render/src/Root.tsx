@@ -48,7 +48,6 @@ import { ChalkboardSetPiece } from "./beats/ChalkboardSetPiece";
 import { TicketSetPiece } from "./beats/TicketSetPiece";
 import { BrandSignature } from "./studio/BrandSignature";
 import { CatalogGallery, GALLERY_W, GALLERY_H } from "./CatalogGallery";
-import { R1Montage, R1_TOTAL } from "./R1Montage";
 import { withSeams } from "./studio/SeamFx";
 import "./theme";
 
@@ -142,18 +141,6 @@ export const RemotionRoot: React.FC = () => {
           placement: "tl" as const,
           preview: true,
         }}
-      />
-      {/* R1Montage (Track R1) — reel de VALIDACION del salto de calidad: encadena
-          las piezas 3D nuevas (hero/chart/demo Blender WebM) + set-piece servilleta
-          + firma de marca para juzgar luz/DoF/bloom. NO es un beat (sin prefijo
-          "Beat" => el validador no lo castea). Silencioso (voz = gasto gateado). */}
-      <Composition
-        id="R1Montage"
-        component={R1Montage}
-        durationInFrames={R1_TOTAL}
-        fps={30}
-        width={1080}
-        height={1920}
       />
       <Composition
         id="StoryHook"
