@@ -7,12 +7,17 @@ mudo) -> audio (voz + música duckeada + SFX) -> mux -> mp4 final en el Desktop.
 
 Uso: python build_reels.py [slug1 slug2 ...]   (sin args = los 3)
 """
+import copy
 import json
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from datasheet import Datasheet, verify_reel  # P1.1b: gate de datos
+
 ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
+DATASHEETS = Path(__file__).resolve().parent / "datasheets"
 REMOTION = ROOT / "infra" / "remotion-render"
 VOZ = ROOT / "infra" / "voz" / "tts_timestamps.py"
 AUDIO = Path(r"C:\Users\manup\envato_audio")
@@ -33,8 +38,49 @@ def ff(args):
     run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", *[str(a) for a in args]])
 
 
+def _apply_binds(rd, binds):
+    """Aplica el mapa _binds del datasheet ("b3.left.value" -> clave) a las escenas del reel."""
+    by_id = {b["id"]: b["scene"] for b in rd["beats"]}
+    for path, key in (binds or {}).items():
+        parts = path.split(".")
+        sc = by_id.get(parts[0])
+        if not sc:
+            continue
+        rest = parts[1:]
+        if rest == ["value"]:
+            sc["bind"] = key
+        elif len(rest) == 2 and rest[0] in ("left", "right") and rest[1] == "value":
+            sc.setdefault(rest[0], {})["bind"] = key
+        elif rest and rest[0] in ("from", "to", "delta"):
+            sc[f"bind_{rest[0]}"] = key
+
+
+def gate(rd):
+    """GATE VERIFY (P1.1b): corre ANTES de gastar (voz/render). Aborta si un dato no cuadra.
+    Usa datasheets/{slug}.json si existe; si no, corre el lint ligero (<<verify>> + temporal)."""
+    slug = rd["slug"]
+    ds_path = DATASHEETS / f"{slug}.json"
+    rd_check = copy.deepcopy(rd)
+    ds = None
+    if ds_path.exists():
+        raw = json.loads(ds_path.read_text(encoding="utf-8"))
+        ds = Datasheet(raw["figures"], raw.get("lane", "evergreen"))
+        _apply_binds(rd_check, raw.get("_binds"))
+    elif rd.get("lane"):
+        ds = Datasheet({}, rd["lane"])  # sin ledger pero con carril (para el lint temporal)
+    ok, errors = verify_reel(rd_check, ds)
+    for e in errors:
+        print(("  x " if e.startswith("BLOQUEA") else "  . ") + e)
+    if not ok:
+        raise SystemExit(f"[GATE] '{slug}' NO pasa verify — build abortado ANTES de gastar (voz/render).")
+    tag = "" if ds and ds.figures else " [lint ligero: sin datasheet]"
+    print(f"  gate VERIFY OK ({slug}){tag}")
+
+
 def build(rd):
     slug = rd["slug"]
+    print(f"=== gate {slug} ===")
+    gate(rd)                       # P1.1b: falla en segundos si un dato no cuadra
     work = WORK / slug
     work.mkdir(parents=True, exist_ok=True)
 

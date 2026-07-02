@@ -1,0 +1,12 @@
+{
+  "_doc": "Ledger del reel interes_compuesto. Derivado por la calculadora: 6,982,016 (empezó a los 25) / 2,980,719 (a los 35) / 4,001,297 (ventaja). Premisa ilustrativa: $2,000/mes, 8% anual.",
+  "slug": "interes_compuesto",
+  "lane": "evergreen",
+  "figures": {
+    "aporte_mes": {"value": 2000, "unit": "MXN/mes", "currency": "MXN", "source": "ilustrativo", "as_of": "2026-01-01", "method": {"kind": "sourced"}},
+    "fv_25": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio (8% anual · 40 años)", "method": {"kind": "fv_annuity", "pmt": "aporte_mes", "annual_rate": 0.08, "years": 40, "freq": 12}},
+    "fv_35": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio (8% anual · 30 años)", "method": {"kind": "fv_annuity", "pmt": "aporte_mes", "annual_rate": 0.08, "years": 30, "freq": 12}},
+    "ventaja": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio", "method": {"kind": "diff", "a": "fv_25", "b": "fv_35"}}
+  },
+  "_binds": {"b2.value": "fv_25", "b3.value": "fv_35", "b4.value": "ventaja"}
+}

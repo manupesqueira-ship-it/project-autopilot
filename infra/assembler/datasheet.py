@@ -191,13 +191,20 @@ def verify_reel(reel_def: dict, datasheet: Datasheet | None = None, today: date 
     if "<<verify>>" in blob or "<<VERIFY>>" in blob:
         errors.append("BLOQUEA: sobrevive un marcador <<verify>> sin resolver.")
 
-    # (e) claims temporales relativos sin fecha, en carril noticia
+    # (e) claim temporal relativo SIN ninguna fecha-ancla en el reel (carril noticia).
+    #     "hoy"/"esta semana" es OK si el reel se ancla a una fecha en algún lado (VO,
+    #     pie de fuente, o as_of del ledger); se bloquea solo si NO hay ancla en ningún lado.
     if lane == "noticia":
-        for b in reel_def.get("beats", []):
-            vo = b.get("vo", "")
-            if REL_TIME.search(vo) and not HAS_DATE.search(vo):
-                m = REL_TIME.search(vo).group(0)
-                errors.append(f"BLOQUEA [{b.get('id')}]: claim temporal relativo '{m}' sin fecha en carril=noticia.")
+        texts = [b.get("vo", "") for b in reel_def.get("beats", [])] + [reel_def.get("source", "")]
+        anchor = any(HAS_DATE.search(t) for t in texts)
+        if datasheet is not None:
+            anchor = anchor or any(fig.get("as_of") for fig in datasheet.figures.values())
+        if not anchor:
+            for b in reel_def.get("beats", []):
+                mm = REL_TIME.search(b.get("vo", ""))
+                if mm:
+                    errors.append(f"BLOQUEA [{b.get('id')}]: claim temporal relativo '{mm.group(0)}' sin NINGUNA fecha-ancla en el reel (carril=noticia).")
+                    break
 
     if datasheet is None:
         return (len(errors) == 0, errors)

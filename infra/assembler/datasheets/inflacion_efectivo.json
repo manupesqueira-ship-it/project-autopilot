@@ -1,0 +1,12 @@
+{
+  "_doc": "Ledger del reel inflacion_efectivo. efectivo_1y (96,209) y la erosión (3,791) los computa la calculadora (real_value al 3.94%, INEGI). invertido_1y (102,242) es una premisa ilustrativa (tasa neta real ~Banxico 7.17%), marcada sourced.",
+  "slug": "inflacion_efectivo",
+  "lane": "evergreen",
+  "figures": {
+    "efectivo_hoy": {"value": 100000, "unit": "MXN", "currency": "MXN", "source": "ilustrativo", "as_of": "2026-01-01", "method": {"kind": "sourced"}},
+    "efectivo_1y": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio (INEGI inflación 3.94%)", "method": {"kind": "real_value", "principal": "efectivo_hoy", "annual_infl": 0.0394, "years": 1}},
+    "erosion_delta": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio", "method": {"kind": "diff", "a": "efectivo_hoy", "b": "efectivo_1y"}},
+    "invertido_1y": {"value": 102242, "unit": "MXN", "currency": "MXN", "source": "ilustrativo (tasa neta real · Banxico 7.17%)", "as_of": "2026-01-01", "method": {"kind": "sourced"}}
+  },
+  "_binds": {"b2.from": "efectivo_hoy", "b2.to": "efectivo_1y", "b2.delta": "erosion_delta", "b3.left.value": "efectivo_1y", "b3.right.value": "invertido_1y"}
+}

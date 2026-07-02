@@ -1,0 +1,13 @@
+{
+  "_doc": "Ledger del reel efecto_latte. Todo derivado por la calculadora determinista (nadie teclea el número): 21,900 / 438,000 / 1,074,962. Premisa ilustrativa: $60/día, 8% anual, 20 años.",
+  "slug": "efecto_latte",
+  "lane": "evergreen",
+  "figures": {
+    "cafe_dia": {"value": 60, "unit": "MXN/día", "currency": "MXN", "source": "ilustrativo", "as_of": "2026-01-01", "method": {"kind": "sourced"}},
+    "cafe_ano": {"unit": "MXN/año", "currency": "MXN", "source": "cálculo propio", "method": {"kind": "scale", "of": "cafe_dia", "factor": 365}},
+    "cafe_mes": {"unit": "MXN/mes", "currency": "MXN", "source": "cálculo propio", "method": {"kind": "scale", "of": "cafe_ano", "factor": 0.08333333333}},
+    "guardado_20": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio", "method": {"kind": "scale", "of": "cafe_ano", "factor": 20}},
+    "invertido_20": {"unit": "MXN", "currency": "MXN", "source": "cálculo propio (8% anual · 20 años)", "method": {"kind": "fv_annuity", "pmt": "cafe_mes", "annual_rate": 0.08, "years": 20, "freq": 12}}
+  },
+  "_binds": {"b2.value": "cafe_ano", "b3.left.value": "guardado_20", "b3.right.value": "invertido_20", "b4.value": "invertido_20"}
+}

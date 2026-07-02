@@ -113,8 +113,12 @@ ves las 2-3 opciones/beat **en papel** y **eliges** antes de renderizar/gastar (
 - **P1.1 [KEYSTONE] ✅ NÚCLEO CONSTRUIDO** (`infra/assembler/datasheet.py`): ledger tipado + calculadora
   determinista + `verify_reel()`. Auto-prueba en verde: caza el $475M (recomputa 476.63M→477) y el "esta
   semana" sin fecha; compone el pie de fuente. Primer ledger real: `datasheets/btc_apuesta.json`.
-  FALTA (P1.1b): bindear las cifras de `reels_defs` a claves del ledger + llamar `verify_reel()` en
-  `build_reels.py` ANTES del render (que BLOQUEE), y autorar el datasheet de cada reel.
+- **P1.1b ✅ HECHO**: `gate()` cableado en `build_reels.py` — corre ANTES de la voz/render y **ABORTA** si
+  un dato no cuadra (probado: BTC 475 aborta / 477 pasa; petróleo-como-noticia sin fecha aborta). Datasheets
+  para los 5 reels; la calculadora **reproduce EXACTO** todo derivado (21,900 / 438,000 / 1,074,962 /
+  6,982,016 / 2,980,719 / 4,001,297 / 96,209 / 476.63M). `_binds` mapea escena→clave (reels_defs queda limpio).
+  "Datos exactos con fuente" = invariante en verde. FALTA: cifras VIVAS con fuente primaria real (hoy varias
+  son premisas ilustrativas marcadas sourced).
 - **P1.2** Motor de datos (calculadora determinista) ✅ incluido en `datasheet.py` (multiply/sum/diff/
   pct_change/real_value/fv_annuity). FALTA: binder datasheet→props en el compilador.
 - **P1.3** Unificar los dos directores en UN `director.py` "writers-room" (IDEA→ELIGE→VERIFICA);
