@@ -121,9 +121,13 @@ ves las 2-3 opciones/beat **en papel** y **eliges** antes de renderizar/gastar (
   son premisas ilustrativas marcadas sourced).
 - **P1.2** Motor de datos (calculadora determinista) ✅ incluido en `datasheet.py` (multiply/sum/diff/
   pct_change/real_value/fv_annuity). FALTA: binder datasheet→props en el compilador.
-- **P1.3** Unificar los dos directores en UN `director.py` "writers-room" (IDEA→ELIGE→VERIFICA);
-  arreglar el reintento roto y el KeyError.
-- **P1.4** Cablear i2v al director (menú + VALID + manifest de clips existentes para reuso $0 + G2 para nuevos).
+- **P1.3 ✅ HECHO**: `director.py` "writers-room" unificado — `ideate()` genera 2-3 OPCIONES por beat
+  (cada una un `scene` listo del menú cerrado) + recomendación; `compile_treatment()` aterriza las elecciones
+  a reel_def resolviendo `bind`→valor desde el ledger (el director NUNCA teclea números). Probado en El
+  Salvador (mapzoom→bignum→compare→payoff→close, generado y compilado; gate en verde; build end-to-end OK).
+  parseo robusto (raw_decode). QC humano/mío corrige overflows del LLM antes de build (label largo, etc.).
+- **P1.4 ✅ (parcial)**: i2v cableado al director vía `I2V_MANIFEST` (clips existentes para reuso $0);
+  plate/hero_i2v en el menú. FALTA: G2 de gasto para sujetos i2v NUEVOS (still→i2v_engine) dentro del flujo.
 - **P1.5** Idempotencia i2v (no re-pagar tras crash; reconciliar con `generate list`) + cache de voz por hash.
 - **P1.6** Fix del mapa por-país (agrandar protagonista, centrar por bbox) + re-targetear `validator.py` al schema editorial + enchufar los filtros de píxel al gate.
 - **P1.7** Doctrina de color + `docs/standards/EDITORIAL_BRAND.md` como marca ejecutable (theme unificado).

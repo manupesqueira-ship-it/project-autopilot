@@ -1,0 +1,12 @@
+{
+  "_doc": "Ledger de El Salvador — apuesta Bitcoin. reserve computed = qty x price. Datos al corte 2 jul 2026 (Oficina Nacional de Bitcoin).",
+  "slug": "el_salvador_btc",
+  "lane": "noticia",
+  "_source_line": "Fuente: Oficina Nacional de Bitcoin · corte 2 jul 2026",
+  "figures": {
+    "btc_qty":    {"value": 7700,  "unit": "BTC",     "currency": null,  "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02", "method": {"kind": "sourced"}},
+    "btc_avg_buy":{"value": 45000, "unit": "USD/BTC", "currency": "USD", "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02", "method": {"kind": "sourced"}},
+    "btc_price":  {"value": 61900, "unit": "USD/BTC", "currency": "USD", "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02", "method": {"kind": "sourced"}},
+    "btc_reserve":{"unit": "USD", "currency": "USD", "source": "cálculo propio", "as_of": "2026-07-02", "method": {"kind": "multiply", "factors": ["btc_qty", "btc_price"]}}
+  }
+}
