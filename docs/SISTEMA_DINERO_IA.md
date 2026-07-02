@@ -135,7 +135,10 @@ ves las 2-3 opciones/beat **en papel** y **eliges** antes de renderizar/gastar (
 ### 🟡 P2 — robustez y escala
 - **P2.1** Colapsar `build_reels`/`re_render`/`finish_reel_audio` en UN DAG content-addressed
   (mata lógica triplicada + bug `-shortest` que recorta el CTA; pre-check que falle si falta un asset).
-- **P2.2** Gramática de transiciones sobria renderizable + `<EditorialPlate>` que hornee el tratamiento i2v único.
+- **P2.2 ✅ (base)**: transición **dip-a-papel** entre escenas (SceneView entra desde el papel salvo la 1ª,
+  sale al papel; dentro de los frames de cada escena → sin desincronizar audio; el marco editorial persiste =
+  page-turn). Probado en El Salvador (msg 63). FALTA: rule-wipe opcional + SFX ligado al tipo de transición
+  (hoy whoosh genérico) + aplicar a los 6 reels ya entregados (pendiente OK de Manuel al look).
 - **P2.3** Escenas metafóricas $0 nuevas (pictograma/símbolo/objeto-tipográfico) para subir el techo creativo sin pagar i2v.
 - **P2.4** Loop de mejora: biblioteca de metáforas few-shot (sujeto→visual aprobados por ti) + realimentación de retención IG.
 
