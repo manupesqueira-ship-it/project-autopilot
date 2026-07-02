@@ -57,11 +57,13 @@ export type Scene =
   | { type: "hero_i2v"; src: string; kicker?: string; caption?: string; punch?: string };
 
 // ------- escena render -------
-const SceneView: React.FC<{ scene: Scene; durF: number }> = ({ scene, durF }) => {
+const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  // fade de entrada corto + fade de salida en los últimos 8 frames (transición suave sobre el papel)
+  // TRANSICIÓN dip-a-papel (P2.2): la escena SALE fundiéndose al papel (últimos 9f) y —salvo la
+  // primera— ENTRA desde el papel (primeros 8f). No consume frames extra → no desincroniza el audio.
   const outO = interpolate(frame, [durF - 9, durF - 1], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const inO = inFade ? interpolate(frame, [0, 8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1;
 
   let body: React.ReactNode = null;
 
@@ -293,7 +295,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number }> = ({ scene, durF }) =>
     );
   }
 
-  return <AbsoluteFill style={{ opacity: outO }}>{body}</AbsoluteFill>;
+  return <AbsoluteFill style={{ opacity: inO * outO }}>{body}</AbsoluteFill>;
 };
 
 export const EditorialReel: React.FC<{
@@ -317,7 +319,7 @@ export const EditorialReel: React.FC<{
       <AbsoluteFill style={{ transform: `translate(${dx}px, ${dy}px) scale(${sc})`, transformOrigin: "50% 46%" }}>
         {scenes.map((s, i) => (
           <Sequence key={i} from={starts[i]} durationInFrames={s.durF}>
-            <SceneView scene={s.scene} durF={s.durF} />
+            <SceneView scene={s.scene} durF={s.durF} inFade={i > 0} />
           </Sequence>
         ))}
       </AbsoluteFill>
