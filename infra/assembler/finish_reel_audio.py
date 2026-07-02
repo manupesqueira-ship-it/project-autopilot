@@ -44,9 +44,9 @@ for idx,(st,(_,_,_,typ)) in enumerate(zip(starts,durs)):
     if idx==0:  # P0.3: golpe suave en t=0 = arranque con presencia (freno de scroll)
         ins += ["-i", AUDIO/"sfx"/"impact_02.wav"]
         filt.append(f"[{k}:a]aformat=channel_layouts=stereo,volume=0.3[s{k}]"); k+=1
-    if idx>0:
+    if idx>0:  # SFX suave que acompaña el dip-a-papel (P2.2), no un whoosh que compite con él
         ins += ["-i", AUDIO/"sfx"/"whoosh_02.wav"]
-        filt.append(f"[{k}:a]aformat=channel_layouts=stereo,adelay={int(st*1000)}|{int(st*1000)},volume=0.32[s{k}]"); k+=1
+        filt.append(f"[{k}:a]aformat=channel_layouts=stereo,adelay={int(st*1000)}|{int(st*1000)},volume=0.18[s{k}]"); k+=1
     if typ=="payoff":
         ins += ["-i", AUDIO/"sfx"/"impact_02.wav"]
         filt.append(f"[{k}:a]aformat=channel_layouts=stereo,adelay={int(st*1000)}|{int(st*1000)},volume=0.4[s{k}]"); k+=1
