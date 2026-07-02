@@ -1,0 +1,33 @@
+{
+  "_doc": "Ledger tipado del reel btc_apuesta — primer datasheet real (P1.2). Cada cifra MOSTRADA en el reel se bindea a una de estas claves; verify_reel() (datasheet.py) recomputa las COMPUTED y bloquea el build si algo no cuadra. Ver docs/SISTEMA_DINERO_IA.md §2.",
+  "slug": "btc_apuesta",
+  "lane": "noticia",
+  "figures": {
+    "btc_qty": {
+      "value": 7700, "unit": "BTC", "currency": null,
+      "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02",
+      "method": {"kind": "sourced"}
+    },
+    "btc_avg_buy": {
+      "value": 45000, "unit": "USD/BTC", "currency": "USD",
+      "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02",
+      "method": {"kind": "sourced"}
+    },
+    "btc_price": {
+      "value": 61900, "unit": "USD/BTC", "currency": "USD",
+      "source": "Oficina Nacional de Bitcoin", "url": "", "as_of": "2026-07-02",
+      "method": {"kind": "sourced"}
+    },
+    "btc_reserve": {
+      "unit": "USD", "currency": "USD",
+      "source": "cálculo propio", "as_of": "2026-07-02",
+      "method": {"kind": "multiply", "factors": ["btc_qty", "btc_price"]},
+      "_shown_as": "$477 M USD (b4 bignum) — 476,630,000 redondeado al millón"
+    }
+  },
+  "_binds": {
+    "b3.left.value": "btc_avg_buy",
+    "b3.right.value": "btc_price",
+    "b4.value": "btc_reserve"
+  }
+}

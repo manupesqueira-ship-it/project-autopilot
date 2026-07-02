@@ -7,19 +7,24 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
-import { IglooStage } from "../studio/IglooStage";
+import { PremiumStage } from "../studio/PremiumStage";
 
-export type CtaCloseProps = {
-  text: string;
+// b7 cierre/CTA en el MISMO mundo premium (PremiumStage) que el resto del reel,
+// reemplaza la versión IglooStage. Misma mecánica que CtaClose (bookmark que late,
+// palabras que entran, sub tenue), sólo cambia el escenario (piso en perspectiva
+// + luz) para que el reel sea un solo plano coherente.
+
+export type CtaClosePremiumProps = {
+  text?: string;
   boldWord?: string;
   sub?: string;
   accent?: string;
 };
 
-export const CtaClose: React.FC<CtaCloseProps> = ({
-  text,
-  boldWord,
-  sub,
+export const CtaClosePremium: React.FC<CtaClosePremiumProps> = ({
+  text = "El que aguanta, gana.",
+  boldWord = "aguanta",
+  sub = "mañana: cuánto pierde tu aguinaldo guardado en el banco",
   accent = theme.gold,
 }) => {
   const frame = useCurrentFrame();
@@ -37,12 +42,12 @@ export const CtaClose: React.FC<CtaCloseProps> = ({
   });
 
   return (
-    <IglooStage accent={accent} glowY={0.52}>
+    <PremiumStage tint={accent}>
       <AbsoluteFill style={{ fontFamily: theme.font, alignItems: "center" }}>
         <div
           style={{
             position: "absolute",
-            top: 660,
+            top: 600,
             transform: `scale(${(0.7 + iconIn * 0.3) * pulse})`,
             opacity: Math.min(iconIn * 1.4, 1),
           }}
@@ -64,7 +69,7 @@ export const CtaClose: React.FC<CtaCloseProps> = ({
         <div
           style={{
             position: "absolute",
-            top: 920,
+            top: 870,
             width: 860,
             textAlign: "center",
             lineHeight: 1.25,
@@ -106,13 +111,13 @@ export const CtaClose: React.FC<CtaCloseProps> = ({
           <div
             style={{
               position: "absolute",
-              top: 1140,
+              top: 1110,
               width: 820,
               textAlign: "center",
               fontSize: 29,
               fontWeight: 300,
               letterSpacing: "0.12em",
-              color: "#7E8C9A",
+              color: "#9FB0C0",
               opacity: Math.min(subIn * 1.3, 1),
               transform: `translateY(${(1 - subIn) * 14}px)`,
             }}
@@ -121,6 +126,6 @@ export const CtaClose: React.FC<CtaCloseProps> = ({
           </div>
         )}
       </AbsoluteFill>
-    </IglooStage>
+    </PremiumStage>
   );
 };

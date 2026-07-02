@@ -8,7 +8,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
-import { StudioScene } from "../studio/StudioScene";
+import { IglooStage } from "../studio/IglooStage";
 
 // Grafica "aguantó el desplome y se recuperó": tramo rojo (caida hasta el
 // fondo) -> tramo verde (recuperacion que termina arriba = la ganancia).
@@ -28,7 +28,6 @@ const YTOP = 600;
 const YBOT = 1300;
 
 export const RecoveryChart: React.FC<RecoveryChartProps> = ({
-  caption,
   points,
   troughIndex,
   labels = [],
@@ -103,36 +102,9 @@ export const RecoveryChart: React.FC<RecoveryChartProps> = ({
     easing: Easing.bezier(0.2, 0, 0.3, 1),
   });
 
-  const capWords = caption.split(" ");
-
   return (
-    <StudioScene grid spotlightColor={onGreen ? theme.green : theme.red}>
+    <IglooStage accent={onGreen ? theme.green : theme.red} glowY={0.56}>
       <AbsoluteFill style={{ fontFamily: theme.font }}>
-        <div
-          style={{
-            position: "absolute",
-            top: 280,
-            width: "100%",
-            textAlign: "center",
-            fontSize: 40,
-            fontWeight: 500,
-            color: theme.textDim,
-            letterSpacing: "0.01em",
-          }}
-        >
-          {capWords.map((w, i) => {
-            const o = interpolate(frame, [2 + i * 3, 8 + i * 3], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            return (
-              <span key={i} style={{ opacity: o }}>
-                {w}{" "}
-              </span>
-            );
-          })}
-        </div>
-
         <svg width="1080" height="1920" style={{ position: "absolute" }}>
           <defs>
             <linearGradient id="rcRfill" x1="0" y1="0" x2="0" y2="1">
@@ -314,6 +286,6 @@ export const RecoveryChart: React.FC<RecoveryChartProps> = ({
           </div>
         )}
       </AbsoluteFill>
-    </StudioScene>
+    </IglooStage>
   );
 };

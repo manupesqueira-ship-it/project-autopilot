@@ -9,7 +9,7 @@ import {
 } from "remotion";
 import { theme } from "../theme";
 import { riseIn } from "../anim";
-import { StudioScene } from "../studio/StudioScene";
+import { IglooStage } from "../studio/IglooStage";
 
 export type BigNumberProps = {
   caption: string;
@@ -106,10 +106,10 @@ export const BigNumberCounter: React.FC<BigNumberProps> = ({
     riseIn({ frame, fps, delay: start, distance: 16 });
 
   const numStyle: React.CSSProperties = {
-    fontSize: 128,
-    fontWeight: 900,
+    fontSize: 116,
+    fontWeight: 600,
     color,
-    letterSpacing: "-0.02em",
+    letterSpacing: "-0.015em",
     fontVariantNumeric: "tabular-nums",
     // nowrap: el suffix (" USD") se quedaba en 2a linea bajo el numero ancho y
     // chocaba con la barra/chips. Una sola linea = $209,000,000 USD limpio.
@@ -117,18 +117,20 @@ export const BigNumberCounter: React.FC<BigNumberProps> = ({
   };
 
   return (
-    <StudioScene spotlightColor={color}>
+    <IglooStage accent={color} glowY={0.46}>
       <AbsoluteFill style={{ fontFamily: theme.font }}>
         {/* caption */}
         <div
           style={{
             position: "absolute",
-            top: 580,
+            top: 560,
             width: "100%",
             textAlign: "center",
-            fontSize: 44,
-            fontWeight: 500,
-            color: theme.textDim,
+            fontSize: 34,
+            fontWeight: 300,
+            letterSpacing: "0.34em",
+            textTransform: "uppercase",
+            color: "#8497A9",
           }}
         >
           {capWords.map((w, i) => {
@@ -160,7 +162,7 @@ export const BigNumberCounter: React.FC<BigNumberProps> = ({
           <div
             style={{
               ...numStyle,
-              textShadow: `${extrude()}, 0 0 ${50 * glowPulse}px ${color}99, 0 0 ${120 * glowPulse}px ${color}44`,
+              textShadow: `${extrude(3)}, 0 0 ${56 * glowPulse}px ${color}99, 0 0 ${130 * glowPulse}px ${color}44`,
               transform: `scale(${scale})`,
             }}
           >
@@ -267,6 +269,6 @@ export const BigNumberCounter: React.FC<BigNumberProps> = ({
           </div>
         )}
       </AbsoluteFill>
-    </StudioScene>
+    </IglooStage>
   );
 };

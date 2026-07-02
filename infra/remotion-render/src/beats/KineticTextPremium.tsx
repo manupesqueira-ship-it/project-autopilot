@@ -1,29 +1,31 @@
 import React from "react";
 import {
   AbsoluteFill,
+  OffthreadVideo,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
-import { IglooStage } from "../studio/IglooStage";
+import { PremiumStage } from "../studio/PremiumStage";
+
+// b1 hook — texto cinético en el MISMO mundo premium (PremiumStage) que las
+// gráficas aprobadas, para que el reel sea un solo plano coherente. Misma
+// mecánica que KineticText (palabras que entran sincronizadas a la voz, acento
+// esmeralda en las clave), sólo cambia el escenario (piso en perspectiva + luz).
 
 type Word = { text: string; accent?: boolean };
 
-export type KineticTextProps = {
-  // modo legacy: un solo bloque de lineas, todas visibles a la vez
+export type KineticTextPremiumProps = {
   lines?: Word[][];
-  // modo estrofas: cada estrofa (grupo de lineas) entra y sale sincronizada a su
-  // frase de la voz -> el kinetico cubre TODA la narracion sin frame muerto.
   stanzas?: Word[][][];
   accentColor?: string;
   startFrame?: number;
-  // separacion entre palabras en frames (fallback si no hay timestamps reales)
   wordSpacing?: number;
-  // frame exacto de cada palabra (timestamp real de la voz), en orden global
-  // estrofa->linea->palabra. Mismo orden que arma el ensamblador.
   wordFrames?: number[];
+  logo?: string; // "bitcoin" ancla el sujeto con la marca ₿ vectorial (no IA)
 };
 
 const Words: React.FC<{
@@ -45,7 +47,6 @@ const Words: React.FC<{
         >
           {line.map((w, wi) => {
             const t = frameOf(g++);
-            // rise sobreamortiguado = sin rebote, elegante (igloo.inc = calma)
             const s = spring({ frame: frame - t, fps, config: { damping: 200, mass: 0.9 } });
             const o = interpolate(frame, [t, t + 9], [0, 1], {
               extrapolateLeft: "clamp",
@@ -81,27 +82,49 @@ const Words: React.FC<{
   );
 };
 
-export const KineticText: React.FC<KineticTextProps> = ({
-  lines,
+export const KineticTextPremium: React.FC<KineticTextPremiumProps> = ({
+  lines = [
+    [{ text: "Un" }, { text: "país", accent: true }, { text: "entero" }],
+    [{ text: "apostó" }, { text: "todo" }],
+    [{ text: "al" }, { text: "Bitcoin", accent: true }],
+  ],
   stanzas,
   accentColor = theme.green,
   startFrame = 6,
-  wordSpacing = 5,
+  wordSpacing = 7,
   wordFrames,
+  logo,
 }) => {
   const frame = useCurrentFrame();
+  const { durationInFrames, fps } = useVideoConfig();
 
   const breathe = Math.sin(frame / 42) * 3;
   const glowPulse = 0.72 + Math.sin(frame / 22) * 0.22;
 
-  // frame de la palabra #g en orden global (timestamp real si existe)
+  // El hook NUNCA se congela: push-in continuo de todo el plano + deriva lenta
+  // del bloque (parallax). La voz dura ~13s; el visual sigue vivo todo el beat.
+  const push = interpolate(frame, [0, durationInFrames], [1.0, 1.06], {
+    extrapolateRight: "clamp",
+  });
+  const driftY = interpolate(frame, [0, durationInFrames], [12, -12], {
+    extrapolateRight: "clamp",
+  });
+
+  // moneda ₿ (Higgsfield i2v, NO a mano): es el héroe del hook. Aparece temprano
+  // y sostiene el plano; el clip de ~5s se estira a todo el beat -> cámara lenta
+  // cinematográfica que casa con el mundo negro mate de la biblia.
+  const showCoin = logo === "bitcoin";
+  const coinIn = interpolate(frame, [6, 30], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const coinPlayback = Math.min(1, (5.0 * fps) / durationInFrames);
+
   const frameOf = (g: number) =>
     wordFrames && wordFrames[g] != null ? wordFrames[g] : startFrame + g * wordSpacing;
 
-  // normaliza a estrofas: legacy lines = una sola estrofa
   const groups: Word[][][] = stanzas ?? (lines ? [lines] : []);
 
-  // indice global del primer word de cada estrofa, y su frame de entrada
   const starts: number[] = [];
   const startFrames: number[] = [];
   let acc = 0;
@@ -112,14 +135,47 @@ export const KineticText: React.FC<KineticTextProps> = ({
   }
 
   return (
-    <IglooStage accent={accentColor} glowY={0.5}>
-      <AbsoluteFill
-        style={{ fontFamily: theme.font, justifyContent: "center", alignItems: "center" }}
-      >
-        {groups.map((st, i) => {
+    <PremiumStage tint={accentColor}>
+      <AbsoluteFill style={{ transform: `scale(${push})`, transformOrigin: "50% 47%" }}>
+        {showCoin && (
+          <>
+            {/* moneda ₿ Higgsfield a sangre. screen-blend: el vacío negro del clip
+                cae y el mundo PremiumStage sigue vivo detrás (coherencia del reel). */}
+            <AbsoluteFill style={{ opacity: coinIn }}>
+              <OffthreadVideo
+                src={staticFile("i2v/btc_coin_hook.mp4")}
+                muted
+                playbackRate={coinPlayback}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center 28%",
+                  mixBlendMode: "screen",
+                }}
+              />
+            </AbsoluteFill>
+            {/* velo inferior: la moneda manda arriba, el texto se lee abajo. */}
+            <AbsoluteFill
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent 42%, rgba(7,10,15,0.55) 54%, rgba(7,10,15,0.96) 64%, #070707 76%)",
+                opacity: coinIn,
+              }}
+            />
+          </>
+        )}
+        <AbsoluteFill
+          style={{
+            fontFamily: theme.font,
+            justifyContent: "center",
+            alignItems: "center",
+            transform: `translateY(${driftY + (showCoin ? 430 : 0)}px)`,
+          }}
+        >
+          {groups.map((st, i) => {
           const enter = startFrames[i];
           const next = i + 1 < startFrames.length ? startFrames[i + 1] : Infinity;
-          // entra justo antes de su 1a palabra; sale al empezar la siguiente estrofa
           const inO = interpolate(frame, [enter - 4, enter + 6], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
@@ -158,7 +214,8 @@ export const KineticText: React.FC<KineticTextProps> = ({
             </AbsoluteFill>
           );
         })}
+        </AbsoluteFill>
       </AbsoluteFill>
-    </IglooStage>
+    </PremiumStage>
   );
 };

@@ -7,7 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import { theme } from "../theme";
-import { StudioScene } from "../studio/StudioScene";
+import { IglooStage } from "../studio/IglooStage";
 
 export type BarsProps = {
   caption: string;
@@ -68,35 +68,9 @@ export const BarsValue: React.FC<BarsProps> = ({
   const barW = Math.min(130, slot * 0.58);
   const x0 = (1080 - 820) / 2;
 
-  const capWords = caption.split(" ");
-
   return (
-    <StudioScene spotlightColor={theme.green}>
+    <IglooStage accent={theme.green} glowY={0.64}>
       <AbsoluteFill style={{ fontFamily: theme.font }}>
-        <div
-          style={{
-            position: "absolute",
-            top: 280,
-            width: "100%",
-            textAlign: "center",
-            fontSize: 40,
-            fontWeight: 500,
-            color: theme.textDim,
-          }}
-        >
-          {capWords.map((w, i) => {
-            const o = interpolate(frame, [2 + i * 3, 8 + i * 3], [0, 1], {
-              extrapolateLeft: "clamp",
-              extrapolateRight: "clamp",
-            });
-            return (
-              <span key={i} style={{ opacity: o }}>
-                {w}{" "}
-              </span>
-            );
-          })}
-        </div>
-
         {intro && (
           <div
             style={{
@@ -174,14 +148,17 @@ export const BarsValue: React.FC<BarsProps> = ({
           {bars.map((b, i) => {
             const h = barH(i, b.value);
             const cx = x0 + slot * i + slot / 2;
-            const hl = b.highlight && frame >= growAt(i);
+            // todas las barras son esmeralda (un solo mundo); la heroe (Valor
+            // actual) entra encendida + glow, la base queda en brasa tenue.
+            const hero = b.highlight;
+            const lit = hero && frame >= growAt(i);
             const x = cx - barW / 2;
             const top = BASE_Y - h;
             const w = barW;
             const topPts = `${x},${top} ${x + w},${top} ${x + w + OX},${top - OY} ${x + OX},${top - OY}`;
             const sidePts = `${x + w},${top} ${x + w + OX},${top - OY} ${x + w + OX},${BASE_Y - OY} ${x + w},${BASE_Y}`;
             return (
-              <g key={i}>
+              <g key={i} opacity={hero ? 1 : 0.46}>
                 <ellipse
                   cx={cx + OX * 0.4}
                   cy={BASE_Y + 10}
@@ -190,21 +167,18 @@ export const BarsValue: React.FC<BarsProps> = ({
                   fill="rgba(0,0,0,0.45)"
                   filter="url(#cshadow)"
                 />
-                <polygon points={sidePts} fill={hl ? "url(#barGside)" : "url(#barDside)"} />
-                <polygon
-                  points={topPts}
-                  fill={hl ? "url(#barGtop)" : "rgba(255,255,255,0.20)"}
-                />
+                <polygon points={sidePts} fill="url(#barGside)" />
+                <polygon points={topPts} fill="url(#barGtop)" />
                 <rect
                   x={x}
                   y={top}
                   width={w}
                   height={h}
                   rx={5}
-                  fill={hl ? "url(#barG)" : "url(#barD)"}
+                  fill="url(#barG)"
                   style={
-                    hl
-                      ? { filter: `drop-shadow(0 0 22px ${theme.green}66)` }
+                    lit
+                      ? { filter: `drop-shadow(0 0 26px ${theme.green}66)` }
                       : undefined
                   }
                 />
@@ -214,9 +188,9 @@ export const BarsValue: React.FC<BarsProps> = ({
                   width={w}
                   height={3}
                   rx={2}
-                  fill={hl ? "rgba(220,255,245,0.85)" : "rgba(255,255,255,0.45)"}
+                  fill={lit ? "rgba(220,255,245,0.9)" : "rgba(180,235,220,0.55)"}
                 />
-                {hl && (
+                {lit && (
                   <rect
                     x={x}
                     y={BASE_Y + 4}
@@ -250,16 +224,17 @@ export const BarsValue: React.FC<BarsProps> = ({
               <div
                 style={{
                   position: "absolute",
-                  left: cx - 160,
-                  top: BASE_Y - h - 78,
-                  width: 320,
+                  left: cx - 200,
+                  top: BASE_Y - h - 86,
+                  width: 400,
                   textAlign: "center",
-                  fontSize: hl ? 50 : 38,
-                  fontWeight: hl ? 800 : 600,
-                  color: hl ? theme.green : theme.textDim,
-                  opacity: Math.min(labelIn * 1.3, 1),
+                  fontSize: hl ? 56 : 42,
+                  fontWeight: hl ? 500 : 300,
+                  letterSpacing: "-0.01em",
+                  color: hl ? theme.green : "#9FB2C2",
+                  opacity: (hl ? 1 : 0.85) * Math.min(labelIn * 1.3, 1),
                   transform: `translateY(${(1 - labelIn) * 12}px)`,
-                  textShadow: hl ? `0 0 30px ${theme.green}66` : undefined,
+                  textShadow: hl ? `0 0 34px ${theme.green}55` : undefined,
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
@@ -270,13 +245,15 @@ export const BarsValue: React.FC<BarsProps> = ({
               <div
                 style={{
                   position: "absolute",
-                  left: cx - 160,
-                  top: BASE_Y + 26,
-                  width: 320,
+                  left: cx - 200,
+                  top: BASE_Y + 30,
+                  width: 400,
                   textAlign: "center",
-                  fontSize: 30,
-                  fontWeight: 500,
-                  color: hl && frame >= growAt(i) ? theme.text : theme.textDim,
+                  fontSize: 26,
+                  fontWeight: 300,
+                  letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  color: hl && frame >= growAt(i) ? "#C9D6E2" : "#7E8C9A",
                   opacity: Math.min(catIn * 1.3, 1),
                 }}
               >
@@ -286,6 +263,6 @@ export const BarsValue: React.FC<BarsProps> = ({
           );
         })}
       </AbsoluteFill>
-    </StudioScene>
+    </IglooStage>
   );
 };

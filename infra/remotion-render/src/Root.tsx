@@ -1,20 +1,42 @@
 import { CalculateMetadataFunction, Composition } from "remotion";
 import { DineroIAReel } from "./Composition";
+import { StoryboardLabCompositions } from "./storyboardlab/labCompositions";
 import { TestReel, TEST_REEL_DURATION } from "./TestReel";
 import { LineChartSemantic } from "./beats/LineChartSemantic";
+import { LineChartPremium } from "./beats/LineChartPremium";
 import { PictogramPersons } from "./beats/PictogramPersons";
 import { BigNumberCounter } from "./beats/BigNumberCounter";
+import { SigErosion } from "./beats/SigErosion";
+import { SigErosionHero } from "./beats/SigErosionHero";
+import { Ref0x100xOrb } from "./beats/Ref0x100xOrb";
+import { StyleProbe } from "./beats/StyleProbe";
+import { EditorialHouse } from "./beats/EditorialHouse";
+import { EditorialHouseMotion } from "./beats/EditorialHouseMotion";
+import { EditorialReel } from "./beats/EditorialReel";
+import { Logo } from "./beats/Logo";
+import { BtcShowcase } from "./beats/BtcShowcase";
+import { MapZoomEditorial } from "./beats/MapZoomEditorial";
 import { BarsValue } from "./beats/BarsValue";
 import { KineticText } from "./beats/KineticText";
+import { KineticTextPremium } from "./beats/KineticTextPremium";
 import { CtaClose } from "./beats/CtaClose";
+import { CtaClosePremium } from "./beats/CtaClosePremium";
 import { AssetCard } from "./beats/AssetCard";
 import { TrendBreak } from "./beats/TrendBreak";
 import { VersusCards } from "./beats/VersusCards";
 import { BarRace } from "./beats/BarRace";
 import { Timeline } from "./beats/Timeline";
 import { MapZoom } from "./beats/MapZoom";
+import { GlobeHero } from "./beats/GlobeHero";
+import { GlobeHero3D } from "./beats/GlobeHero3D";
+import { ElSalvadorMapHero } from "./beats/ElSalvadorMapHero";
 import { CharacterCard } from "./beats/CharacterCard";
 import { RecoveryChart } from "./beats/RecoveryChart";
+import { RecoveryChartPremium } from "./beats/RecoveryChartPremium";
+import { IcePillarCrash } from "./beats/IcePillarCrash";
+import { HoldingsIceGold } from "./beats/HoldingsIceGold";
+import { HoldingsGainBars } from "./beats/HoldingsGainBars";
+import { ThawClimax } from "./beats/ThawClimax";
 import { DonutChart } from "./beats/DonutChart";
 import { WaterfallChart } from "./beats/WaterfallChart";
 import { BubbleChart } from "./beats/BubbleChart";
@@ -24,6 +46,11 @@ import { MultiMap } from "./beats/MultiMap";
 import { LogoWall } from "./beats/LogoWall";
 import { DebateCards } from "./beats/DebateCards";
 import { HeroCoin } from "./beats/HeroCoin";
+import { MovingHero } from "./beats/MovingHero";
+import { MovingData } from "./beats/MovingData";
+import { MovingDataPremium } from "./beats/MovingDataPremium";
+import { RealValueMelt } from "./beats/RealValueMelt";
+import { HeroCoin3D } from "./HeroCoin3D";
 import { StackedAreaChart } from "./beats/StackedAreaChart";
 import { DialGauge } from "./beats/DialGauge";
 import { SlopeChart } from "./beats/SlopeChart";
@@ -48,6 +75,7 @@ import { ChalkboardSetPiece } from "./beats/ChalkboardSetPiece";
 import { TicketSetPiece } from "./beats/TicketSetPiece";
 import { BrandSignature } from "./studio/BrandSignature";
 import { CatalogGallery, GALLERY_W, GALLERY_H } from "./CatalogGallery";
+import { ReelCoherencePreview, COHERENCE_TOTAL } from "./ReelCoherencePreview";
 import { withSeams } from "./studio/SeamFx";
 import "./theme";
 
@@ -74,6 +102,8 @@ const MultiMapFx = withSeams(MultiMap);
 const LogoWallFx = withSeams(LogoWall);
 const DebateFx = withSeams(DebateCards);
 const HeroCoinFx = withSeams(HeroCoin);
+const MovingHeroFx = withSeams(MovingHero);
+const MovingDataFx = withSeams(MovingData);
 const StackedAreaFx = withSeams(StackedAreaChart);
 const DialGaugeFx = withSeams(DialGauge);
 const SlopeFx = withSeams(SlopeChart);
@@ -124,6 +154,165 @@ export const RemotionRoot: React.FC = () => {
         fps={30}
         width={GALLERY_W}
         height={GALLERY_H}
+      />
+      {/* SF v2 (concepto brasa / invierno cripto) — styleframes $0 para gate de look */}
+      <Composition
+        id="SF-Crash"
+        component={IcePillarCrash}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="SF-Holdings"
+        component={HoldingsIceGold}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="SF-Thaw"
+        component={ThawClimax}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* Holdings como GRÁFICA explicativa premium (reset 2026-06-29: "no elementos,
+          haz gráficas de alta calidad explicativas"). Columnas de vidrio (craft
+          aprobado ErosionRace + ref 0x100x bars_label_5090): invertido vs valor,
+          la ganancia = cap dorado sobre el nivel invertido. Juzgar en VIDEO. */}
+      <Composition
+        id="HoldingsGainBars"
+        component={HoldingsGainBars}
+        calculateMetadata={dyn(150) as never}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* b4 recuperación en el MISMO mundo premium (PremiumStage glass), reemplaza
+          la versión IglooStage. Línea roja (caída $44,739->$16,000) -> verde
+          (recuperación ->$64,000). Datos exactos del guion. Juzgar en VIDEO. */}
+      <Composition
+        id="RecoveryChartPremium"
+        component={RecoveryChartPremium}
+        calculateMetadata={dyn(150) as never}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* b1 hook en el MISMO mundo premium (PremiumStage) que las graficas
+          aprobadas: texto cinetico sincronizado a la voz, acento esmeralda en las
+          palabras clave. Un solo plano coherente para todo el reel. */}
+      <Composition
+        id="KineticTextPremium"
+        component={KineticTextPremium}
+        calculateMetadata={dyn(100) as never}
+        durationInFrames={100}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* b7 cierre/CTA en el MISMO mundo premium (PremiumStage). Reemplaza la
+          version IglooStage (CtaClose). bookmark dorado que late + "El que
+          AGUANTA, gana." + sub gancho del siguiente video. */}
+      <Composition
+        id="CtaClosePremium"
+        component={CtaClosePremium}
+        calculateMetadata={dyn(120) as never}
+        durationInFrames={120}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          text: "El que aguanta, gana.",
+          boldWord: "aguanta",
+          sub: "mañana: cuánto pierde tu aguinaldo guardado en el banco",
+          accent: "#00D9A5",
+        }}
+      />
+      {/* Stitch MUDO de coherencia (juzgar EN VIDEO): hook -> mapa -> recovery ->
+          holdings. Prueba si el plano establishing full-bleed (mapa) corta
+          coherente con los beats sobre el piso iluminado. NO es el corte final
+          (sin voz/xfade; eso vive en build916.py). */}
+      <Composition
+        id="ReelCoherencePreview"
+        component={ReelCoherencePreview}
+        durationInFrames={COHERENCE_TOTAL}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* Showcase del hero 3D bespoke (Blender -> WebM alpha) sobre la StudioScene.
+          NO es un beat (sin prefijo "Beat" => el validador no lo castea); es la
+          evidencia R1 del lane hero custom in-script para el gate de Manuel. */}
+      <Composition
+        id="HeroCoin3D"
+        component={HeroCoin3D}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      {/* GlobeHero — opener "globo terrAqueo" (look biblia igloo.inc, negro mate)
+          que ANCLA el lugar antes de los nUmeros. Reusa la geografIa 50m + bandera
+          real de MapZoom. NO es un beat (sin prefijo "Beat" => el validador no lo
+          castea); es el prototipo $0 de direcciOn del hero El Salvador. */}
+      <Composition
+        id="GlobeHero"
+        component={GlobeHero}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          countryName: "El Salvador",
+          iso2: "SV",
+          label: "EL SALVADOR",
+          lon: -88.8965,
+          lat: 13.7942,
+          scale: 470,
+        }}
+      />
+      {/* GlobeHero3D — el MISMO opener pero en 3D-CG real (R3F via @remotion/three):
+          esfera obsidiana/vidrio, atmOsfera Fresnel azul fria, El Salvador encendido
+          en brasa con bloom. Geografia 50m real horneada en textura equirectangular.
+          Tier igloo.inc "wow". $0 (render local). */}
+      <Composition
+        id="GlobeHero3D"
+        component={GlobeHero3D}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          countryName: "El Salvador",
+          iso2: "SV",
+          label: "EL SALVADOR",
+          lon: -88.8965,
+          lat: 13.7942,
+        }}
+      />
+      {/* ElSalvadorMapHero — DESTINO real: mapa vectorial a escala de pais.
+          El Salvador = silueta protagonista encendida en brasa, vecinos en
+          obsidiana para contexto, bandera + nombre. "mapa = codigo". $0. */}
+      <Composition
+        id="ElSalvadorMapHero"
+        component={ElSalvadorMapHero}
+        calculateMetadata={dyn(100) as never}
+        durationInFrames={100}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          countryName: "El Salvador",
+          iso2: "SV",
+          label: "EL SALVADOR",
+        }}
       />
       {/* Firma de marca (§5.8) — OVERLAY, NO un beat (sin prefijo "Beat" => el
           validador no lo castea). preview:true dibuja un backdrop oscuro para
@@ -178,6 +367,54 @@ export const RemotionRoot: React.FC = () => {
           peakLabel: "+$108,000",
         }}
       />
+      {/* BeatLineChartPremium — la MISMA grafica/data (BTC) reconstruida sobre el
+          KIT compartido + PremiumStage. Antes/despues honesto vs BeatLineChart
+          para el gate de Manuel del nuevo look. Sin withSeams (beat limpio). */}
+      <Composition
+        id="BeatLineChartPremium"
+        component={LineChartPremium}
+        calculateMetadata={dyn(160) as never}
+        durationInFrames={160}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          caption: "el Bitcoin subió 8 meses seguidos",
+          points: [18, 26, 23, 34, 31, 47, 44, 62, 78, 96, 71, 52, 38, 30],
+          peakIndex: 9,
+          labels: [
+            { text: "$43,200", index: 3 },
+            { text: "$69,000", index: 7 },
+            { text: "-$38,000", index: 12, color: "#FF6B6B" },
+          ],
+          peakLabel: "+$108,000",
+        }}
+      />
+      {/* BeatRealValueMelt — centerpiece data-viz PREMIUM (look-test 2026-06-26):
+          el "efecto tijera" del plazo fijo argentino sobre el escenario VIVO
+          (PremiumStage). Datos EXACTOS jun 2026 (verificar a la fecha de lanzar).
+          Sin withSeams para juzgar el beat limpio. */}
+      <Composition
+        id="BeatRealValueMelt"
+        component={RealValueMelt}
+        calculateMetadata={dyn(150) as never}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          caption: "pusiste un millón en un plazo fijo a un año",
+          currency: "$",
+          principal: 1000000,
+          nominalEnd: 1211300,
+          realEnd: 909400,
+          teaTag: "plazo fijo +21%",
+          inflTag: "el plazo fijo no le ganó a la inflación del 33%",
+          nominalLabel: "te devuelve el banco",
+          realLabel: "te alcanza en el súper",
+          punch: "−9,1% de poder de compra",
+        }}
+      />
       <Composition
         id="BeatPictogram"
         component={PictogramFx}
@@ -191,6 +428,93 @@ export const RemotionRoot: React.FC = () => {
           count: 21,
           total: 100,
           statSuffix: "de cada 100",
+        }}
+      />
+      <Composition id="MapZoomEditorial" component={MapZoomEditorial as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{} as never} />
+      <Composition id="BtcShowcase" component={BtcShowcase as never} durationInFrames={150} fps={30} width={1080} height={1920} defaultProps={{} as never} />
+      <Composition id="Logo" component={Logo as never} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ variant: "sheet", bg: "paper" } as never} />
+      <Composition id="LogoWordmark" component={Logo as never} durationInFrames={1} fps={30} width={1500} height={420} defaultProps={{ variant: "wordmark", bg: "transparent" } as never} />
+      <Composition
+        id="EditorialReel"
+        component={EditorialReel as never}
+        durationInFrames={600}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{ edition: "INFORME · 2026", source: "Dinero IA", scenes: [] as never }}
+        calculateMetadata={({ props }: { props: { scenes: { durF: number }[] } }) => ({
+          durationInFrames: Math.max(1, props.scenes.reduce((a, s) => a + (s.durF || 0), 0)),
+        })}
+      />
+      <Composition
+        id="EditorialHouseMotion"
+        component={EditorialHouseMotion}
+        durationInFrames={165}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{}}
+      />
+      <Composition
+        id="EditorialHouse"
+        component={EditorialHouse}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{}}
+      />
+      <Composition
+        id="StyleProbe"
+        component={StyleProbe}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{ variant: "editorial" as const }}
+      />
+      <Composition
+        id="Ref0x100xOrb"
+        component={Ref0x100xOrb}
+        durationInFrames={75}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{ caption: "Then the market" }}
+      />
+      <Composition
+        id="SigErosionHero"
+        component={SigErosionHero}
+        durationInFrames={90}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          plate: "erosion_plate.mp4",
+          kicker: "SI LO DEJAS EN EFECTIVO",
+          currency: "$",
+          from: 100000,
+          to: 96209,
+          unit: "MXN",
+          lossLabel: "se lo comió la inflación",
+          contextLabel: "inflación 3.94% · 12 meses",
+        }}
+      />
+      <Composition
+        id="SigErosion"
+        component={SigErosion}
+        durationInFrames={110}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          kicker: "EN EFECTIVO",
+          currency: "$",
+          from: 100000,
+          to: 96209,
+          unit: "MXN",
+          lossLabel: "es lo que de verdad te queda",
+          contextLabel: "inflación 3.94% · 12 meses",
         }}
       />
       <Composition
@@ -601,6 +925,115 @@ export const RemotionRoot: React.FC = () => {
           suffix: " BTC",
           decimals: 0,
           subline: "comprado en plena caída",
+        }}
+      />
+      {/* BeatHeroShot — el beat que SE MUEVE: clip i2v (still gpt-image-1 +
+          movimiento Kling) a pantalla completa + kicker-gancho opcional. El clip
+          vive en public/i2v/<clip>.mp4 (build916.ensure_moving_clips lo copia
+          desde out/_i2v, $0). Es la FIRMA del canal (1-2 por video, hook/acento). */}
+      <Composition
+        id="BeatHeroShot"
+        component={MovingHeroFx}
+        calculateMetadata={dyn(150) as never}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          clip: "b1_hero_colchon",
+          photo: "",
+          kicker: "Antes de invertir, necesitas esto",
+          accentColor: "#00D9A5",
+        }}
+      />
+      {/* BeatMovingData — ARQUITECTURA NUEVA (rechazo Manuel 2026-06-26): un mundo
+          i2v caricatura-fino EN MOVIMIENTO de lecho a pantalla completa + la data
+          EXACTA compuesta encima en codigo (nunca pantalla plana con numero quieto).
+          Slice de prueba concepto-colchon: b3 build -> b4 timeline -> b5 climax. */}
+      <Composition
+        id="BeatColchonB3"
+        component={MovingDataFx}
+        calculateMetadata={dyn(240) as never}
+        durationInFrames={240}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          clip: "colchon_b3",
+          kind: "build",
+          caption: "Así se infla tu colchón",
+          prefix: "$",
+          suffix: " MXN",
+          accentColor: "#D4A574",
+          steps: [
+            { label: "empezar", value: 15000 },
+            { label: "real", value: 45000 },
+            { label: "sólida", value: 90000 },
+          ],
+          meterLabel: "Tu fondo de emergencia",
+        }}
+      />
+      <Composition
+        id="BeatColchonB4"
+        component={MovingDataFx}
+        calculateMetadata={dyn(220) as never}
+        durationInFrames={220}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          clip: "colchon_b4",
+          kind: "timeline",
+          caption: "En 6 meses está lista",
+          nodes: [
+            { label: "Mes 1", tone: "white" },
+            { label: "Mes 3", tone: "green" },
+            { label: "Mes 6", tone: "gold" },
+          ],
+        }}
+      />
+      <Composition
+        id="BeatColchonB5"
+        component={MovingDataFx}
+        calculateMetadata={dyn(240) as never}
+        durationInFrames={240}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          clip: "colchon_b5",
+          kind: "climax",
+          caption: "Meta del fondo",
+          prefix: "$",
+          suffix: " MXN",
+          accentColor: "#D4A574",
+          value: 90000,
+          subline: "6 meses × $15,000 MXN",
+        }}
+      />
+      {/* BeatColchonB5Premium — REPLANTEO del lenguaje data-viz (rechazo Manuel
+          2026-06-26: el overlay plano estaba "dramaticamente aburrido"). Misma
+          data/lecho que BeatColchonB5, pero la cifra vive INTEGRADA al mundo i2v:
+          cuenta atada a la caida, barrido especular al aterrizar, luz dorada en
+          escena, pulso del colchon, grade unico. landFrame=180 (t6.0 = contacto
+          con el colchon, verificado en pixeles). Sin withSeams (beat limpio). */}
+      <Composition
+        id="BeatColchonB5Premium"
+        component={MovingDataPremium}
+        calculateMetadata={dyn(240) as never}
+        durationInFrames={240}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{
+          clip: "colchon_b5",
+          kicker: "Meta del fondo",
+          prefix: "$",
+          suffix: " MXN",
+          accentColor: "#D4A574",
+          value: 90000,
+          subline: "6 meses × $15,000 MXN",
+          landFrame: 180,
         }}
       />
       <Composition
@@ -1022,6 +1455,7 @@ export const RemotionRoot: React.FC = () => {
           accent_color: "#00D9A5",
         }}
       />
+      <StoryboardLabCompositions />
     </>
   );
 };
