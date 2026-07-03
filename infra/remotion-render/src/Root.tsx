@@ -18,6 +18,10 @@ import { LottieHero } from "./beats/LottieHero";
 import { EChartsHero } from "./beats/EChartsHero";
 import { RiveHero } from "./beats/RiveHero";
 import { PhotoHero } from "./beats/PhotoHero";
+import { WaffleReveal } from "./beats/WaffleReveal";
+import { ShockNumber } from "./beats/ShockNumber";
+import { ScaleReveal } from "./beats/ScaleReveal";
+import { ReelClose } from "./beats/ReelClose";
 import { Logo } from "./beats/Logo";
 import { BtcShowcase } from "./beats/BtcShowcase";
 import { MapZoomEditorial } from "./beats/MapZoomEditorial";
@@ -441,6 +445,10 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="LogoWordmark" component={Logo as never} durationInFrames={1} fps={30} width={1500} height={420} defaultProps={{ variant: "wordmark", bg: "transparent" } as never} />
       <Composition id="StyleHero" component={StyleHero as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{ variant: "a" } as never} />
       <Composition id="LottieHero" component={LottieHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ src: "lottie/lf20_5n8yfkac.json" } as never} />
+      <Composition id="ReelClose" component={ReelClose as never} durationInFrames={95} fps={30} width={1080} height={1920} defaultProps={{} as never} />
+      <Composition id="WaffleReveal" component={WaffleReveal as never} durationInFrames={70} fps={30} width={1080} height={1920} defaultProps={{ highlight: 20, headline: "SOLO 20 DE 100", sub: "ahorra para su retiro" } as never} />
+      <Composition id="ShockNumber" component={ShockNumber as never} durationInFrames={70} fps={30} width={1080} height={1920} defaultProps={{ target: 730, prefix: "-$", valence: "loss", kicker: "LO QUE PIERDES", caption: "cada año, sin invertir" } as never} />
+      <Composition id="ScaleReveal" component={ScaleReveal as never} durationInFrames={95} fps={30} width={1080} height={1920} defaultProps={{} as never} />
       <Composition id="PhotoHero" component={PhotoHero as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{ photo: "photos/trump.jpg" } as never} />
       <Composition id="RiveHero" component={RiveHero as never} durationInFrames={90} fps={30} width={1080} height={1920} defaultProps={{ src: "rive/vehicles.riv" } as never} />
       <Composition id="EChartsHero" component={EChartsHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ variant: "area", theme: "light" } as never} />
