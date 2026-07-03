@@ -25,6 +25,7 @@ import { ReelClose } from "./beats/ReelClose";
 import { CardHook, MinPayFeel, DebtTimeline, CompareBars } from "./beats/CreditBeats";
 import { NewsHook, Reveal, TrendLine } from "./beats/NewsBeats";
 import { TypeAB } from "./beats/TypeAB";
+import { NewsReel, calcNewsReel } from "./beats2/NewsReel";
 import { Logo } from "./beats/Logo";
 import { BtcShowcase } from "./beats/BtcShowcase";
 import { MapZoomEditorial } from "./beats/MapZoomEditorial";
@@ -448,6 +449,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="LogoWordmark" component={Logo as never} durationInFrames={1} fps={30} width={1500} height={420} defaultProps={{ variant: "wordmark", bg: "transparent" } as never} />
       <Composition id="StyleHero" component={StyleHero as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{ variant: "a" } as never} />
       <Composition id="LottieHero" component={LottieHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ src: "lottie/lf20_5n8yfkac.json" } as never} />
+      <Composition id="NewsReel" component={NewsReel as never} durationInFrames={900} fps={30} width={1080} height={1920} defaultProps={{ beats: [] } as never} calculateMetadata={calcNewsReel as never} />
       <Composition id="TypeAB" component={TypeAB as never} durationInFrames={110} fps={30} width={1080} height={1920} defaultProps={{ variant: "thin" } as never} />
       <Composition id="NewsHook" component={NewsHook as never} durationInFrames={400} fps={30} width={1080} height={1920} defaultProps={{} as never} />
       <Composition id="Reveal" component={Reveal as never} durationInFrames={400} fps={30} width={1080} height={1920} defaultProps={{} as never} />
