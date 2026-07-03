@@ -125,6 +125,7 @@ Devuelve SOLO un JSON con el schema EXACTO de assemble_news.py:
 Reglas duras:
 - target_word OBLIGATORIO en shock/gauge (y recomendado en donut): la palabra EXACTA del VO de ese
   beat donde la cifra debe aterrizar (una palabra que el TTS pronuncia, sin signos).
+- Todo kicker va en MAYÚSCULAS, 2-4 palabras ("EL DATO", "LA COMPARACIÓN") — es el estilo del look A.
 - Datos SOLO del brief (exactos, con moneda explícita). NO inventes cifras ni series: si una gráfica
   necesita puntos que el brief no tiene, elige otro beat.
 - El campo trans del ÚLTIMO beat se omite. La VO de todos los beats leída seguida = historia completa.
@@ -186,6 +187,8 @@ def validate(t):
 
 
 if __name__ == "__main__":
+    # consola Windows cp1252: no morir por un carácter de adorno
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     brief = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8-sig"))
     t = direct(brief)
     errs = validate(t)
