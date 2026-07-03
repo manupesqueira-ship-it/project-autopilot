@@ -90,3 +90,6 @@ projects/dinero-ia/external-resources/n8n-course/
 
 # Caminos muertos archivados (recuperables vía git history + backup en disco; NO en git)
 /_archive/
+
+# Lottie POC assets (throwaway free samples)
+infra/remotion-render/public/lottie/
