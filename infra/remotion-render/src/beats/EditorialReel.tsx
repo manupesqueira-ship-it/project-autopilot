@@ -61,7 +61,8 @@ export type Scene =
   | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string }
   | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string }
   | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string }
-  | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string };
+  | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
+  | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -328,6 +329,36 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "gauge") {
+    // GAUGE / MEDIDOR: semicírculo cuyo arco se llena + aguja que barre. Redondo, dinámico. $0.
+    const cx = 540, cy = 1020, R = 330, SW = 62;
+    const col = scene.color === "accent" ? ACCENT : GREEN;
+    const prog = Math.min(1, spring({ frame: frame - 14, fps, config: { damping: 16, stiffness: 80 } }));
+    const pct = scene.pct * prog;
+    const theta = Math.PI + (pct / 100) * Math.PI;
+    const px = cx + R * Math.cos(theta), py = cy + R * Math.sin(theta);
+    const nx = cx + (R - 30) * Math.cos(theta), ny = cy + (R - 30) * Math.sin(theta);
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: col, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <path d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy}`} fill="none" stroke={HAIR} strokeWidth={SW} strokeLinecap="round" />
+          <path d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${px.toFixed(1)} ${py.toFixed(1)}`} fill="none" stroke={col} strokeWidth={SW} strokeLinecap="round" />
+          <line x1={cx} y1={cy} x2={nx.toFixed(1)} y2={ny.toFixed(1)} stroke={INK} strokeWidth={9} strokeLinecap="round" />
+          <circle cx={cx} cy={cy} r={26} fill={INK} />
+        </svg>
+        <div style={{ position: "absolute", top: cy - 210, left: 0, width: 1080, textAlign: "center" }}>
+          {scene.centerBig && <div style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: col }}>{scene.centerBig}</div>}
+          {scene.centerSub && <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "0.14em", color: MUTE, marginTop: 8 }}>{scene.centerSub}</div>}
+        </div>
+        {scene.leftLabel && <div style={{ position: "absolute", top: cy + 20, left: cx - R - 30, width: 220, textAlign: "center", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.leftLabel}</div>}
+        {scene.rightLabel && <div style={{ position: "absolute", top: cy + 20, left: cx + R - 190, width: 220, textAlign: "center", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.rightLabel}</div>}
+        {scene.note && <div style={{ position: "absolute", top: cy + 110, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 34) }}>{scene.note}</div>}
       </>
     );
   }
