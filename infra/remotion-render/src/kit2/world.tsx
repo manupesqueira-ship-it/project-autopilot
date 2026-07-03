@@ -9,11 +9,13 @@ import { CURVE, PAL, TOK } from "./tokens";
 // grano vivo + viñeta, cámara con MASA (Tendril). DM Mono = labels y números
 // (mismo lenguaje que la web); grotesca fina para frases.
 
-loadFont({ family: "DMMono", url: staticFile("fonts/DMMono-Regular.ttf"), weight: "400" });
-loadFont({ family: "DMMono", url: staticFile("fonts/DMMono-Medium.ttf"), weight: "500" });
-loadFont({ family: "DMMono", url: staticFile("fonts/DMMono-Light.ttf"), weight: "300" });
+// Chivo Mono (variable, OFL, Omnibus-Type/AR): CERO LIMPIO — Manuel rechazó el
+// cero tachado ("no se ve profesional", 2026-07-03). DM Mono y Roboto Mono lo
+// traen cruzado de fábrica (fuentes de código); verificado en píxeles que
+// Chivo Mono no. Grotesca-mono geométrica = el carácter del mundo de la página.
+loadFont({ family: "ChivoMono", url: staticFile("fonts/ChivoMono-Var.ttf"), weight: "100 900" });
 
-export const MONO = "DMMono, 'Cascadia Mono', Consolas, monospace";
+export const MONO = "ChivoMono, 'Cascadia Mono', Consolas, monospace";
 export const SANS = "InterVar, Inter, 'Segoe UI', sans-serif";
 
 // Fondo: negro mate + respiración volumétrica fría MUY contenida (igloo, no neón)
