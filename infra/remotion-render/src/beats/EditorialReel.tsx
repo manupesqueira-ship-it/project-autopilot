@@ -54,7 +54,8 @@ export type Scene =
   | { type: "close"; headline: { text: string; accent?: boolean }[]; sub?: string; cta: string }
   | { type: "plate"; kicker?: string; logo?: string; src: string; caption: string; note?: string }
   | { type: "mapzoom"; countryName: string; iso2: string; label: string; region?: string[]; kicker?: string }
-  | { type: "hero_i2v"; src: string; kicker?: string; caption?: string; punch?: string };
+  | { type: "hero_i2v"; src: string; kicker?: string; caption?: string; punch?: string }
+  | { type: "pictogram"; kicker?: string; label: string; total?: number; highlight: number; suffix?: string; note?: string; color?: "accent" | "green" };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -282,6 +283,45 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           {scene.caption && <div style={{ fontSize: 62, fontWeight: 800, lineHeight: 1.06, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 20, 20) }}>{scene.caption}</div>}
           {scene.punch && <div style={{ marginTop: 16, fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 30) }}>{scene.punch}</div>}
         </div>
+      </>
+    );
+  }
+
+  if (scene.type === "pictogram") {
+    // PICTOGRAMA: rejilla de puntos; los resaltados se llenan en secuencia (staggered) con pop
+    // de resorte + un contador que sube sincronizado. Muy dinámico, 100% código ($0).
+    const total = scene.total ?? 100;
+    const cols = 10;
+    const DOT = 46, GAP = 20;
+    const gridW = cols * DOT + (cols - 1) * GAP;
+    const rows = Math.ceil(total / cols);
+    const gridLeft = (1080 - gridW) / 2;
+    const gridTop = 690;
+    const fillColor = scene.color === "green" ? GREEN : ACCENT;
+    const perDot = 1.5;               // frames de stagger por punto resaltado
+    const t0 = 16;
+    const shownFilled = Math.max(0, Math.min(scene.highlight, Math.floor((frame - t0) / perDot)));
+    const bigN = Math.round(interpolate(frame, [t0, t0 + scene.highlight * perDot], [0, scene.highlight], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: fillColor, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        <div style={{ position: "absolute", top: 396, left: M, right: M, display: "flex", alignItems: "baseline", gap: 22 }}>
+          <span style={{ fontSize: 168, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: fillColor }}>{bigN}{scene.suffix ?? ""}</span>
+          <span style={{ fontSize: 52, fontWeight: 700, color: INK }}>de {total}</span>
+        </div>
+        {scene.label && <div style={{ position: "absolute", top: 600, left: M, right: M, fontSize: 40, fontWeight: 500, color: "#4A443B", ...reveal(frame, 10) }}>{scene.label}</div>}
+        {Array.from({ length: total }).map((_, i) => {
+          const r = Math.floor(i / cols), c = i % cols;
+          const x = gridLeft + c * (DOT + GAP), y = gridTop + r * (DOT + GAP);
+          const appear = 8 + i * 0.5;
+          const s = Math.min(1, spring({ frame: frame - appear, fps, config: { damping: 13, stiffness: 160 } }));
+          const on = i < shownFilled;
+          const pop = on ? spring({ frame: frame - (t0 + i * perDot), fps, config: { damping: 9, stiffness: 200 } }) : 0;
+          return (
+            <div key={i} style={{ position: "absolute", left: x, top: y, width: DOT, height: DOT, borderRadius: 11, opacity: s, transform: `scale(${s * (1 + 0.12 * Math.min(1, pop) * (1 - Math.min(1, pop)) * 4)})`, background: on ? fillColor : "transparent", border: on ? "none" : `2.5px solid ${HAIR}` }} />
+          );
+        })}
+        {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
       </>
     );
   }
