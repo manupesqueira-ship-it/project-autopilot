@@ -31,6 +31,21 @@ const reveal = (frame: number, start: number, dist = 22, dur = 14): React.CSSPro
   })}px)`,
 });
 
+// path bezier SUAVE (Catmull-Rom) desde puntos [x,y] — compartido por escenas de curva
+const smoothPath = (p: [number, number][]) => {
+  if (p.length < 2) return "";
+  let d = `M ${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const [x0, y0] = p[Math.max(0, i - 1)], [x1, y1] = p[i], [x2, y2] = p[i + 1], [x3, y3] = p[Math.min(p.length - 1, i + 2)];
+    const c1x = x1 + (x2 - x0) / 6, c1y = y1 + (y2 - y0) / 6, c2x = x2 - (x3 - x1) / 6, c2y = y2 - (y3 - y1) / 6;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+  }
+  return d;
+};
+
+const semColor = (c: string | undefined, fb: string) =>
+  c === "green" ? GREEN : c === "accent" ? ACCENT : c === "ink" ? INK : c === "mute" ? MUTE : fb;
+
 const count = (frame: number, start: number, end: number, from: number, to: number) =>
   interpolate(frame, [start, end], [from, to], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic),
@@ -62,7 +77,10 @@ export type Scene =
   | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string }
   | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string }
   | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
-  | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string };
+  | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string }
+  | { type: "divergence"; kicker?: string; label?: string; a: number[]; b: number[]; labelA?: string; labelB?: string; colorA?: "green" | "accent" | "ink"; colorB?: "green" | "accent" | "ink"; note?: string }
+  | { type: "arcflow"; kicker?: string; label?: string; originLabel: string; targets: { label: string; sub?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
+  | { type: "balance"; kicker?: string; label?: string; leftLabel: string; leftValue: number; rightLabel: string; rightValue: number; prefix?: string; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -329,6 +347,109 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "divergence") {
+    // DIVERGENCIA / TIJERA: dos curvas suaves que se dibujan a la vez desde un origen común y se separan. $0.
+    const cx0 = M, cx1 = 1080 - M, W = cx1 - cx0, cyBot = 1170, H = 470;
+    const all = [...scene.a, ...scene.b], maxV = Math.max(...all), minV = Math.min(...all, 0), rng = maxV - minV || 1;
+    const mk = (arr: number[]) => arr.map((v, i) => [cx0 + (i / (arr.length - 1)) * W, cyBot - ((v - minV) / rng) * H] as [number, number]);
+    const pa = mk(scene.a), pb = mk(scene.b);
+    const prog = interpolate(frame, [12, 84], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+    const colA = semColor(scene.colorA, GREEN), colB = semColor(scene.colorB, INK);
+    const tip = (p: [number, number][]) => { const fi = prog * (p.length - 1), i0 = Math.floor(fi), i1 = Math.min(p.length - 1, i0 + 1), f = fi - i0; return [p[i0][0] + (p[i1][0] - p[i0][0]) * f, p[i0][1] + (p[i1][1] - p[i0][1]) * f] as [number, number]; };
+    const ta = tip(pa), tb = tip(pb);
+    const endIn = interpolate(prog, [0.84, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 66, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <line x1={cx0} y1={cyBot} x2={cx1} y2={cyBot} stroke={HAIR} strokeWidth={3} />
+          <path d={smoothPath(pb)} pathLength={1} fill="none" stroke={colB} strokeWidth={7} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={1 - prog} />
+          <path d={smoothPath(pa)} pathLength={1} fill="none" stroke={colA} strokeWidth={7} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={1 - prog} />
+          <circle cx={tb[0]} cy={tb[1]} r={13} fill={colB} />
+          <circle cx={ta[0]} cy={ta[1]} r={13} fill={colA} />
+        </svg>
+        {scene.labelA && <div style={{ position: "absolute", top: ta[1] - 66, left: Math.min(cx1 - 300, ta[0] - 30), width: 320, fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", color: colA, opacity: endIn }}>{scene.labelA}</div>}
+        {scene.labelB && <div style={{ position: "absolute", top: tb[1] + 22, left: Math.min(cx1 - 300, tb[0] - 30), width: 320, fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", color: colB, opacity: endIn }}>{scene.labelB}</div>}
+        {scene.note && <div style={{ position: "absolute", top: cyBot + 70, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 84) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "arcflow") {
+    // ARCOS DE FLUJO: desde un origen salen arcos curvos hacia varios destinos, dibujados por un cometa. $0.
+    const ox = 150, oy = 880, tx = 742, tg = scene.targets, N = tg.length;
+    const tyOf = (i: number) => 660 + (N === 1 ? 260 : (i / (N - 1)) * 520);
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 66, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          {tg.map((t, i) => {
+            const ty = tyOf(i), midx = (ox + tx) / 2, midy = (oy + ty) / 2 - 150;
+            const d = `M ${ox} ${oy} Q ${midx} ${midy} ${tx} ${ty}`;
+            const appear = 18 + i * 12;
+            const prog = interpolate(frame, [appear, appear + 28], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+            const col = semColor(t.color, ACCENT);
+            const qt = prog, bx = (1 - qt) * (1 - qt) * ox + 2 * (1 - qt) * qt * midx + qt * qt * tx, by = (1 - qt) * (1 - qt) * oy + 2 * (1 - qt) * qt * midy + qt * qt * ty;
+            return (
+              <React.Fragment key={i}>
+                <path d={d} pathLength={1} fill="none" stroke={col} strokeWidth={5} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={1 - prog} opacity={0.9} />
+                <circle cx={tx} cy={ty} r={18} fill={col} opacity={interpolate(prog, [0.9, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })} />
+                {prog > 0.02 && prog < 0.99 && <circle cx={bx} cy={by} r={12} fill={col} />}
+              </React.Fragment>
+            );
+          })}
+          <circle cx={ox} cy={oy} r={24} fill={INK} />
+        </svg>
+        <div style={{ position: "absolute", top: oy + 40, left: ox - 110, width: 220, textAlign: "center", fontSize: 32, fontWeight: 700, color: INK, ...reveal(frame, 8) }}>{scene.originLabel}</div>
+        {tg.map((t, i) => (
+          <div key={`t${i}`} style={{ position: "absolute", top: tyOf(i) - 24, left: tx + 34, width: 260, ...reveal(frame, 18 + i * 12 + 20) }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: INK }}>{t.label}</div>
+            {t.sub && <div style={{ fontSize: 26, fontWeight: 400, color: MUTE }}>{t.sub}</div>}
+          </div>
+        ))}
+        {scene.note && <div style={{ position: "absolute", top: 1300, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "balance") {
+    // BALANZA: viga que pivota; el lado más pesado baja. Metáfora de equilibrio (deuda vs ahorro...). $0.
+    const fx = 540, fy = 900, armLen = 348;
+    const lv = scene.leftValue, rv = scene.rightValue, denom = Math.max(lv, rv) || 1;
+    const angTarget = Math.max(-0.34, Math.min(0.34, ((rv - lv) / denom) * 0.5));
+    const prog = Math.min(1, spring({ frame: frame - 18, fps, config: { damping: 11, stiffness: 60 } }));
+    const ang = angTarget * prog;
+    const lx = fx - armLen * Math.cos(ang), ly = fy - armLen * Math.sin(ang);
+    const rx = fx + armLen * Math.cos(ang), ry = fy + armLen * Math.sin(ang);
+    const pan = (px: number, py: number, val: number, lab: string, i: number) => (
+      <div key={i} style={{ position: "absolute", top: py + 40, left: px - 160, width: 320, textAlign: "center", ...reveal(frame, 26) }}>
+        <div style={{ fontSize: 66, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>{scene.prefix ?? ""}{fmtNum(val)}</div>
+        <div style={{ fontSize: 32, fontWeight: 500, color: "#5A544A", marginTop: 2 }}>{lab}</div>
+      </div>
+    );
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 66, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <line x1={fx} y1={fy} x2={fx} y2={fy + 190} stroke={INK} strokeWidth={8} />
+          <path d={`M ${fx - 60} ${fy + 190} L ${fx + 60} ${fy + 190} L ${fx} ${fy + 90} Z`} fill={INK} />
+          <line x1={lx} y1={ly} x2={rx} y2={ry} stroke={INK} strokeWidth={12} strokeLinecap="round" />
+          <line x1={lx} y1={ly} x2={lx} y2={ly + 100} stroke={MUTE} strokeWidth={4} />
+          <line x1={rx} y1={ry} x2={rx} y2={ry + 100} stroke={MUTE} strokeWidth={4} />
+          <path d={`M ${lx - 84} ${ly + 100} A 84 44 0 0 0 ${lx + 84} ${ly + 100}`} fill="none" stroke={semColor(scene.leftValue > scene.rightValue ? "accent" : "ink", INK)} strokeWidth={7} />
+          <path d={`M ${rx - 84} ${ry + 100} A 84 44 0 0 0 ${rx + 84} ${ry + 100}`} fill="none" stroke={semColor(scene.rightValue > scene.leftValue ? "accent" : "ink", INK)} strokeWidth={7} />
+          <circle cx={fx} cy={fy} r={16} fill={INK} />
+        </svg>
+        {pan(lx, ly + 100, lv, scene.leftLabel, 0)}
+        {pan(rx, ry + 100, rv, scene.rightLabel, 1)}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
