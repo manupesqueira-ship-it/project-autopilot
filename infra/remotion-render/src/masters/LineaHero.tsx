@@ -76,7 +76,9 @@ export const LineaHero: React.FC<LineaHeroProps> = ({
 
   const rule = tprog(frame, ruleAt, ruleAt + D.ruleDrawF, "standard");
   const kickerT = tprog(frame, kickerAt, kickerAt + D.enterF);
-  const draw = tprog(frame, drawAt, drawEnd, "standard");
+  // curve.mass (Tendril): SLOW-IN — el trazado arranca pesado, no dispara
+  // (gate de Manuel: "rápido especialmente al inicio" con curva standard)
+  const draw = tprog(frame, drawAt, drawEnd, "mass");
   const evolved = evolvePath(draw, d);
   const head = getPointAtLength(d, Math.max(0.001, len * draw));
   const subT = tprog(frame, subAt, subAt + D.enterF);
