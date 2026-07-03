@@ -199,6 +199,13 @@ def main():
         print(f"  {gate}: {line}")
         if g.returncode != 0 or "[FAIL]" in line:
             ok = False
+    # filter_D: el render ES el tratamiento (arco/duración/anclas/frame0/voz)
+    g = subprocess.run([sys.executable, str(QC / "filter_d.py"), str(final), sys.argv[1], str(out)],
+                       capture_output=True, text=True)
+    line = (g.stdout or g.stderr).strip().splitlines()[-1] if (g.stdout or g.stderr) else "?"
+    print(f"  filter_d.py: {line}")
+    if g.returncode != 0 or "[FAIL]" in line:
+        ok = False
     if not ok:
         raise SystemExit("GATE FAIL — el reel NO pasa la barra; no entregar")
     print("✔ todos los gates pasan")
