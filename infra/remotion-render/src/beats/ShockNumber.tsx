@@ -55,9 +55,9 @@ export const ShockNumber: React.FC<ShockNumberProps> = ({
       <AbsoluteFill style={{ background: "radial-gradient(120% 100% at 50% 44%, transparent 40%, rgba(0,0,0,0.7) 100%)" }} />
       {/* kicker arriba (no encima del numero) */}
       <div style={{ position: "absolute", top: 470, left: 0, right: 0, textAlign: "center", fontSize: 34, fontWeight: 700, letterSpacing: "0.24em", color: ACCENT, opacity: kO }}>{kicker}</div>
-      {/* numero heroe */}
+      {/* numero heroe — fontSize auto-ajustado para no salirse (max ~980px de ancho) */}
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
-        <div style={{ fontSize: 300, fontWeight: 800, letterSpacing: "-0.03em", color, transform: `scale(${scale})`, filter: glow, fontVariantNumeric: "tabular-nums" }}>{shown}</div>
+        <div style={{ fontSize: Math.min(300, Math.floor(980 / (shown.length * 0.58))), fontWeight: 800, letterSpacing: "-0.03em", color, transform: `scale(${scale})`, filter: glow, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{shown}</div>
       </AbsoluteFill>
       {/* caption abajo (aparece tras el aterrizaje) */}
       <div style={{ position: "absolute", bottom: 520, left: 96, right: 96, textAlign: "center", fontSize: 46, fontWeight: 500, color: MUTE, opacity: cO }}>{caption}</div>
