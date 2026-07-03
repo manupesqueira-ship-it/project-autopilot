@@ -60,7 +60,8 @@ export type Scene =
   | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string }
   | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string }
   | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string }
-  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string };
+  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string }
+  | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -327,6 +328,40 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "bubbles") {
+    // BURBUJAS PROPORCIONALES: círculos ∝ √valor que emergen (pop) y flotan. Orgánico, redondo. $0.
+    const items = scene.items;
+    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : ACCENT);
+    const gap = 26;
+    let radii = items.map((it) => 30 * Math.sqrt(it.value));
+    const rawW = radii.reduce((a, r) => a + 2 * r, 0) + gap * (items.length - 1);
+    const fit = Math.min(1, 980 / rawW);              // auto-ajuste al ancho seguro
+    radii = radii.map((r) => r * fit);
+    const totalW = radii.reduce((a, r) => a + 2 * r, 0) + gap * (items.length - 1);
+    let xacc = (1080 - totalW) / 2;
+    const centers = radii.map((r, i) => { const cx = xacc + r; xacc += 2 * r + gap; return [cx, 880 + (i % 2 === 0 ? -26 : 30), r] as [number, number, number]; });
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 68, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        {items.map((it, i) => {
+          const [cx, cyb, r] = centers[i];
+          const s = Math.min(1, spring({ frame: frame - (16 + i * 11), fps, config: { damping: 11, stiffness: 150 } }));
+          const fy = Math.sin(frame / 22 + i * 1.3) * 8;
+          return (
+            <React.Fragment key={i}>
+              <div style={{ position: "absolute", left: cx - r, top: cyb - r + fy, width: 2 * r, height: 2 * r, borderRadius: "50%", background: colOf(it.color), transform: `scale(${s})`, display: "flex", alignItems: "center", justifyContent: "center", color: PAPER }}>
+                <div style={{ fontSize: Math.min(r * 0.62, 88), fontWeight: 800, letterSpacing: "-0.03em" }}>{it.value}{it.suffix ?? ""}</div>
+              </div>
+              <div style={{ position: "absolute", left: cx - 130, top: cyb + r + fy + 16, width: 260, textAlign: "center", fontSize: 32, fontWeight: 600, color: INK, opacity: s }}>{it.label}</div>
+            </React.Fragment>
+          );
+        })}
+        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
