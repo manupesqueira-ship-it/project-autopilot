@@ -1,0 +1,11 @@
+{
+  "_doc": "Escenario HIPOTÉTICO ilustrativo (Trump compra 20 BTC) para el POC del director + motor generativo. Cifras ilustrativas.",
+  "slug": "trump_btc",
+  "lane": "noticia",
+  "_source_line": "Escenario hipotético · ilustrativo · precio BTC referencia",
+  "figures": {
+    "btc_qty":   {"value": 20, "unit": "BTC", "currency": null, "source": "escenario hipotético", "as_of": "2026-07-03", "method": {"kind": "sourced"}},
+    "btc_price": {"value": 62000, "unit": "USD/BTC", "currency": "USD", "source": "precio referencia", "as_of": "2026-07-03", "method": {"kind": "sourced"}},
+    "compra_usd":{"unit": "USD", "currency": "USD", "source": "cálculo propio", "as_of": "2026-07-03", "method": {"kind": "multiply", "factors": ["btc_qty", "btc_price"]}}
+  }
+}

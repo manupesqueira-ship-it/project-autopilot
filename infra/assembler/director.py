@@ -92,7 +92,7 @@ SALIDA: SOLO JSON (sin markdown):
    "recomendado":0} ]}"""
 
 
-def call_claude(user, max_tokens=8000):
+def call_claude(user, max_tokens=16000):
     body = json.dumps({"model": MODEL, "max_tokens": max_tokens, "system": SYSTEM,
                        "messages": [{"role": "user", "content": user}]}).encode("utf-8")
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, method="POST")
