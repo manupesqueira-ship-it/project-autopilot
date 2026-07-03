@@ -57,7 +57,8 @@ export type Scene =
   | { type: "hero_i2v"; src: string; kicker?: string; caption?: string; punch?: string }
   | { type: "pictogram"; kicker?: string; label: string; total?: number; highlight: number; suffix?: string; note?: string; color?: "accent" | "green" }
   | { type: "proportion"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; note?: string }
-  | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string };
+  | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string }
+  | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -324,6 +325,41 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "timeline") {
+    // LÍNEA DE TIEMPO: la línea se dibuja hacia abajo y los eventos aparecen en secuencia. $0.
+    const evs = scene.events;
+    const N = evs.length;
+    const lineX = M + 26, lineTop = 480, lineBottom = 1380, lineH = lineBottom - lineTop;
+    const slotH = lineH / N;
+    const eventY = (i: number) => lineTop + slotH * i + slotH * 0.4;
+    const drawnBottom = interpolate(frame, [12, 12 + N * 16], [lineTop, lineBottom], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 68, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <line x1={lineX} y1={lineTop} x2={lineX} y2={lineBottom} stroke={HAIR} strokeWidth={4} />
+          <line x1={lineX} y1={lineTop} x2={lineX} y2={drawnBottom} stroke={INK} strokeWidth={4} />
+        </svg>
+        {evs.map((e, i) => {
+          const y = eventY(i);
+          const s = Math.min(1, spring({ frame: frame - (12 + i * 16), fps, config: { damping: 13, stiffness: 150 } }));
+          const col = e.accent ? ACCENT : INK;
+          return (
+            <React.Fragment key={i}>
+              <div style={{ position: "absolute", left: lineX - 13, top: y - 13, width: 26, height: 26, borderRadius: "50%", background: col, transform: `scale(${s})`, boxShadow: `0 0 0 6px ${PAPER}` }} />
+              <div style={{ position: "absolute", left: lineX + 46, top: y - 52, right: M, opacity: s, transform: `translateX(${(1 - s) * 22}px)` }}>
+                <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: "0.02em", color: col }}>{e.year}</div>
+                <div style={{ fontSize: 35, fontWeight: 400, lineHeight: 1.25, color: "#3B372F", marginTop: 4 }}>{e.text}</div>
+              </div>
+            </React.Fragment>
+          );
+        })}
+        {scene.note && <div style={{ position: "absolute", top: 1430, left: M, right: M, fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 12 + N * 16) }}>{scene.note}</div>}
       </>
     );
   }

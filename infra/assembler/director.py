@@ -62,6 +62,10 @@ MENÚ CERRADO de `scene` (usa EXACTAMENTE estos tipos y campos):
 - {"type":"compare","kicker":"..","prefix":"$","left":{"tag":"..","bind":"<clave>"},"right":{"tag":"..","bind":"<clave>"},"winner":"left"|"right","note":".."}
 - {"type":"fallchart","kicker":"..","fromLabel":"..","toLabel":"..","prefix":"$","bind_from":"<clave>","bind_to":"<clave>","bind_delta":"<clave>","axisRight":"..","note":".."}
 - {"type":"payoff","kicker":"..","prefix":"$","suffix":"..","bind":"<clave>","deltaText":"..","body":".."}
+- {"type":"pictogram","kicker":"..","label":"de cada 100 ...","total":100,"highlight":<n o "bind":"<clave>">,"color":"green"|"accent","note":".."}  (X de 100, muy dinámico)
+- {"type":"proportion","kicker":"..","label":"¿a dónde va...?","segments":[{"tag":"..","pct":50,"color":"ink"},{"tag":"..","pct":30,"color":"accent"},{"tag":"..","pct":20,"color":"green"}],"note":".."}  (desglose, la suma de pct = 100)
+- {"type":"level","kicker":"..","label":"..","fillPct":<n o "bind":"<clave>">,"color":"green"|"accent","note":".."}  (recipiente que se llena: metas/cobertura)
+- {"type":"timeline","kicker":"..","label":"cómo llegamos aquí","events":[{"year":"2021","text":"..","accent":true},{"year":"2024","text":".."}],"note":".."}  (paso a paso, 3-5 eventos)
 - {"type":"plate","kicker":"..","src":"<clip i2v del manifest>","caption":"..","logo":"logos/bitcoin.svg"(opcional),"note":".."}
 - {"type":"hero_i2v","src":"<clip i2v>","kicker":"..","caption":"..","punch":".."}
 - {"type":"close","headline":[{"text":".."},{"text":"..","accent":true}],"sub":"..","cta":"Guarda esto"}
@@ -141,6 +145,10 @@ def compile_treatment(tr, choices, ds_raw):
                 bk = sc.pop(f"bind_{f}", None)
                 if bk:
                     sc[f] = resolve_num(bk, sc.get("suffix", ""))
+        if t == "pictogram" and "bind" in sc:
+            sc["highlight"] = resolve_num(sc.pop("bind"))
+        if t == "level" and "bind" in sc:
+            sc["fillPct"] = resolve_num(sc.pop("bind"))
         beats.append({"id": b.get("id", f"b{i+1}"), "vo": opt["vo"], "scene": sc})
     return {"slug": ds_raw["slug"], "edition": tr.get("edition", "INFORME 2026"),
             "source": ds_raw.get("_source_line", "Fuente: ver ledger"),
