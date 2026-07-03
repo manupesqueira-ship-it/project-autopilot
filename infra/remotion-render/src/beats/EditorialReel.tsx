@@ -83,7 +83,10 @@ export type Scene =
   | { type: "balance"; kicker?: string; label?: string; leftLabel: string; leftValue: number; rightLabel: string; rightValue: number; prefix?: string; note?: string }
   | { type: "radialbars"; kicker?: string; label?: string; items: { label: string; value: number; color?: "accent" | "green" | "ink" }[]; centerBig?: string; centerSub?: string; note?: string }
   | { type: "spiral"; kicker?: string; label?: string; turns?: number; centerBig?: string; centerSub?: string; note?: string }
-  | { type: "grow"; kicker?: string; label?: string; topLabel?: string; note?: string };
+  | { type: "grow"; kicker?: string; label?: string; topLabel?: string; note?: string }
+  | { type: "odometer"; kicker?: string; label?: string; value: number; prefix?: string; suffix?: string; sublabel?: string; note?: string }
+  | { type: "curvedText"; kicker?: string; label?: string; text: string; sub?: string; color?: "accent" | "green" | "ink"; note?: string }
+  | { type: "erosion"; kicker?: string; label?: string; fromValue: number; toValue: number; prefix?: string; fromLabel?: string; toLabel?: string; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -350,6 +353,95 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "odometer") {
+    // ODÓMETRO: cada dígito rueda en un cilindro (0-9) hasta su cifra, con vueltas extra. $0.
+    const FS = 140, DH = Math.round(FS * 1.04), DW = Math.round(FS * 0.6);
+    const prog = interpolate(frame, [12, 74], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+    const full = (scene.prefix ?? "") + fmtNum(scene.value) + (scene.suffix ?? "");
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 56, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <div style={{ position: "absolute", top: 800, left: 0, width: 1080, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          {[...full].map((ch, i) => {
+            if (ch >= "0" && ch <= "9") {
+              const d = +ch, total = d + 20, cur = total * prog;
+              return (
+                <div key={i} style={{ width: DW, height: DH, overflow: "hidden", position: "relative" }}>
+                  <div style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${(-cur * DH).toFixed(1)}px)` }}>
+                    {Array.from({ length: total + 1 }).map((_, k) => (
+                      <div key={k} style={{ height: DH, lineHeight: `${DH}px`, textAlign: "center", fontSize: FS, fontWeight: 800, letterSpacing: "-0.04em", color: INK }}>{k % 10}</div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            return <div key={i} style={{ height: DH, lineHeight: `${DH}px`, fontSize: FS, fontWeight: 800, letterSpacing: "-0.02em", color: ch === "," ? MUTE : INK, padding: ch === "," ? "0 3px" : "0 4px" }}>{ch}</div>;
+          })}
+        </div>
+        {scene.sublabel && <div style={{ position: "absolute", top: 800 + DH + 30, left: M, right: M, textAlign: "center", fontSize: 36, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.sublabel}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 70) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "curvedText") {
+    // TEXTO EN CURVA: la frase cabalga una baseline en arco (SVG textPath) y se revela. $0.
+    const prog = interpolate(frame, [10, 58], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+    const col = semColor(scene.color, INK);
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 400, left: M, right: M, fontSize: 40, fontWeight: 500, color: "#4A443B", ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <defs>
+            <path id="txtarc" d="M 30 1030 Q 540 740 1050 1030" fill="none" />
+            <clipPath id="tclip"><rect x="0" y="0" width={30 + prog * 1030} height="1920" /></clipPath>
+          </defs>
+          <g clipPath="url(#tclip)">
+            <text fontSize="62" fontWeight="800" fill={col} letterSpacing="0" style={{ fontFamily: FONT }}>
+              <textPath href="#txtarc" startOffset="50%" textAnchor="middle">{scene.text}</textPath>
+            </text>
+          </g>
+        </svg>
+        {scene.sub && <div style={{ position: "absolute", top: 1120, left: M, right: M, textAlign: "center", fontSize: 40, fontWeight: 400, color: "#4A443B", ...reveal(frame, 46) }}>{scene.sub}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "erosion") {
+    // EROSIÓN: un bloque pierde altura y se desgrana en partículas (inflación / comisiones comiendo valor). $0.
+    const bx = 420, bw = 240, byBot = 1210, maxH = 480;
+    const from = scene.fromValue, to = scene.toValue;
+    const prog = interpolate(frame, [16, 86], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+    const cur = from + (to - from) * prog;
+    const curH = maxH * (cur / from), topY = byBot - curH;
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 60, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <rect x={bx} y={byBot - maxH} width={bw} height={maxH} fill="none" stroke={HAIR} strokeWidth={2} strokeDasharray="7 9" rx={6} />
+          <rect x={bx} y={topY} width={bw} height={curH} fill={INK} rx={6} />
+          {Array.from({ length: 14 }).map((_, i) => {
+            const sp = 18 + i * 4.2, life = frame - sp;
+            if (life <= 0 || prog >= 0.99) return null;
+            const px = bx + ((i * 53) % (bw - 20)) + 10, py = topY + life * 4.4 - 8;
+            const op = Math.max(0, 0.7 - life / 60);
+            return <circle key={i} cx={px} cy={py} r={5} fill={INK} opacity={op} />;
+          })}
+        </svg>
+        <div style={{ position: "absolute", top: byBot - maxH - 130, left: 0, width: 1080, textAlign: "center" }}>
+          <span style={{ fontSize: 110, fontWeight: 800, letterSpacing: "-0.04em", color: ACCENT }}>{scene.prefix ?? ""}{fmtNum(Math.round(cur))}</span>
+        </div>
+        {scene.fromLabel && <div style={{ position: "absolute", top: byBot + 24, left: bx - 260, width: 240, textAlign: "right", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.fromLabel}</div>}
+        {scene.toLabel && <div style={{ position: "absolute", top: byBot + 24, left: bx + bw + 20, width: 240, fontSize: 30, fontWeight: 600, color: ACCENT, ...reveal(frame, 70) }}>{scene.toLabel}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
   }
