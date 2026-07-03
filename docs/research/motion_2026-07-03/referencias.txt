@@ -1,0 +1,85 @@
+{
+  "references": [
+    {
+      "title": "Terminal Industries — homepage (videos propios del sitio)",
+      "url": "https://terminal-industries.com/",
+      "platform": "web",
+      "downloadable_ytdlp": false,
+      "why_motion_matches": "Es literalmente la firma que definió la barra: texto que entra con destello gris→esmeralda→hueso, labels monospace en MAYÚS con tracking ancho, scroll lento coreografiado sobre negro mate. Sitio hecho por REJOUICE + PROPAGANDE (SOTD en Awwwards: awwwards.com/sites/terminal-industries).",
+      "what_to_steal": "El 'ink flash' exacto: el acento esmeralda vive solo ~200-400ms EN la transición de entrada del texto y muere al asentarse en hueso; las reglas/líneas finas se dibujan ANTES que el contenido; cadencia de labels mono como metrónomo de escena. Los MP4 del sitio cargan por JS (yt-dlp genérico probablemente falla); se pueden extraer las URLs .mp4 desde el network tab del navegador."
+    },
+    {
+      "title": "Stripe City | Stripe (por el estudio Whimsy)",
+      "url": "https://vimeo.com/1141544925",
+      "platform": "vimeo",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Brand film de Stripe (nov 2025, 30s, verificado vía oEmbed: autor 'Whimsy') que muestra datos REALES de Black Friday/Cyber Monday en una ciudad miniatura: data viva presentada con contención cinematográfica, no con dashboard. Es la prueba de que un counter puede ser premium.",
+      "what_to_steal": "El tratamiento del odómetro/counter EN contexto: el número es un objeto de la escena (con luz y perspectiva), no un overlay plano; un solo movimiento de cámara (dolly lento) por plano; 30 segundos totales como presupuesto de calma — nada re-anima dos veces."
+    },
+    {
+      "title": "Apple Event — October 30, 2023 ('Scary Fast', chips M3)",
+      "url": "https://www.youtube.com/watch?v=ctkW3V0Mh-k",
+      "platform": "youtube",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Keynote íntegramente OSCURA (filmada de noche) con los charts de performance de M3 sobre negro: el estándar mundial de data-viz lenta y perfecta, números grandes sincronizados al VO, cero decoración. Verificado vía oEmbed (canal oficial Apple).",
+      "what_to_steal": "El build de chart en 2 fases: ejes/labels aparecen primero, el dato después; UNA sola curva/barra animándose a la vez; el counter aterriza EXACTAMENTE cuando el presentador dice la cifra (sincronía VO↔número, igual que su pipeline TTS por palabra). Los momentos de chart están en la sección de chips M3, aprox. mitad del evento — recortar esos 60-90s para el gate de Telegram."
+    },
+    {
+      "title": "Territory Studio — Blade Runner 2049 UI Reel",
+      "url": "https://vimeo.com/240920045",
+      "platform": "vimeo",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Screen graphics reales del film: data-UI sobre casi-negro, tipografía monospace, lecturas de datos LENTAS y jerarquía por brillo — es el look 'readout industrial' de Terminal llevado a datos, hecho por un estudio de clase mundial. Mirror en YouTube: youtube.com/watch?v=H07HumKRQKE (también bajable).",
+      "what_to_steal": "La coreografía de readouts: números que tickean a velocidad LEGIBLE (no slot machine), reglas de 1px que se dibujan antes del dato, jerarquía por luminancia (gris→hueso) en vez de por tamaño, y parpadeo mínimo funcional — nunca glitch decorativo."
+    },
+    {
+      "title": "Tendril — Industrial Design Reel 2025",
+      "url": "https://vimeo.com/1050113072",
+      "platform": "vimeo",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Reel (71s, verificado oEmbed) de CG industrial premium: robótica, logística, relojes de lujo, automotive — el mismo mundo material de la barra (metal, vidrio, luz volumétrica) con cámara contenida y easing largo. Tendril es top-tier mundial.",
+      "what_to_steal": "Usar la respuesta del material a la luz COMO transición (un specular sweep recorre el objeto en vez de un wipe/corte); micro-movimientos de cámara con easing de 2-4s; una superficie/objeto por plano. Patrón directo para sus escenas hero i2v y fondos."
+    },
+    {
+      "title": "DIA Studio — Squarespace Kinetic Behaviors",
+      "url": "https://vimeo.com/443070935",
+      "platform": "vimeo",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Pieza de 12s (verificada oEmbed, autor DIA) que muestra la identidad cinética de Squarespace: la tipografía se mueve según UNA regla de comportamiento (cadencia rítmica de 2 tiempos, 'square'-'space'), no animaciones ad-hoc. Es exactamente la filosofía de 'masters congelados' que su pipeline necesita: motion como sistema parametrizable.",
+      "what_to_steal": "Definir la entrada de texto como UN comportamiento reglado y reutilizable (mismo timing, misma curva, siempre) que solo cambia de contenido — igual que el destello de Terminal. Robar la idea de 'kinetic behavior spec' como formato de documentación del master."
+    },
+    {
+      "title": "Financial Times — Bar chart race: the most populous cities through time (John Burn-Murdoch)",
+      "url": "https://www.youtube.com/watch?v=pMs5xapBewM",
+      "platform": "youtube",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "EL bar-chart-race canónico, del canal oficial del Financial Times (verificado oEmbed), hecho por su periodista senior de data-viz. Serio, legible, cero decoración — el patrón racing con dignidad editorial, no el de YouTube compilations.",
+      "what_to_steal": "Interpolación CONTINUA de rango y valor (las barras nunca saltan de posición, siempre lerp), odómetro de fecha como reloj de la escena, máximo ~12 barras, labels que viajan pegados a su barra. Es el spec exacto para parametrizar una familia 'racing' en Remotion."
+    },
+    {
+      "title": "Neil Halloran — The Fallen of World War II",
+      "url": "https://www.youtube.com/watch?v=DwKPFT-RioU",
+      "platform": "youtube",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "La referencia mundial de documental de datos serio y LENTO (millones de views; verificado oEmbed, canal de Neil Halloran; versión interactiva en fallen.io/ww2 — el Vimeo original ya no está embebido, ahora vive en YouTube). Los números ganan peso por tiempo de permanencia y silencio, no por efectos.",
+      "what_to_steal": "El 'dwell time': dejar el número QUIETO 2-3s después de aterrizar; magnitudes contadas por acumulación incremental unidad-por-unidad (pictograma que se apila); pausas de silencio como puntuación del guion. Directamente aplicable a la sincronía TTS→odómetro."
+    },
+    {
+      "title": "Linear — Introducing Linear Initiatives",
+      "url": "https://www.youtube.com/watch?v=FlDVDvzCmn0",
+      "platform": "youtube",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Canal oficial de Linear (verificado oEmbed). Linear es el referente actual de product-motion contenida en SaaS oscuro: paneos lentos sobre UI negra, springs sutiles, jerarquía tipográfica impecable — la misma familia estética que igloo/Terminal pero en video producido.",
+      "what_to_steal": "Velocidad de paneo/zoom sobre fondo oscuro (nunca whip); un solo elemento en foco por beat; entradas por opacity + translate CORTO (~8-16px), jamás escala grande; el 'espacio negativo' como parte del timing (los holds cuentan como animación)."
+    },
+    {
+      "title": "ManvsMachine — VERSUS (para Maxon)",
+      "url": "https://vimeo.com/176337266",
+      "platform": "vimeo",
+      "downloadable_ytdlp": true,
+      "why_motion_matches": "Film de estudio de MvsM (canal vimeo.com/mvsm): CG con peso físico, atmósfera y revelados graduales — el estándar de 'movimiento lento con masa' en CG de autor. OJO: es la referencia más 'artística' del tablero; algunos planos no son oscuros — validar en píxeles qué planos enseñar en el gate.",
+      "what_to_steal": "Curvas de easing con masa (nada llega a su pose en menos de ~1s), revelado por luz/atmósfera en lugar de por corte, y la disciplina de UN sujeto por plano. Nota: su otra pieza candidata (Squarespace Blueprint AI, vimeo.com/1068776467) se DESCARTÓ: es estilo sketchbook táctil, fuera de la barra."
+    }
+  ],
+  "notes": "MÉTODO Y VERIFICACIÓN: Todos los URLs de video fueron verificados con el endpoint oEmbed de Vimeo/YouTube (título + autor + duración reales), porque las páginas de Vimeo bloquean el fetch directo con muro de verificación. Lo NO verificable en píxeles desde aquí: las descripciones de 'qué robar' salen de metadata verificada + descripciones publicadas + conocimiento del corpus, NO de ver los frames — antes del gate de Telegram hay que bajar cada pieza (yt-dlp) y confirmar en píxeles (regla R1 de Manuel). Para Vimeo, yt-dlp a veces requiere --referer \"https://vimeo.com/\". DESCARTES RAZONADOS (no re-buscar): (1) Mercury 'Banking Should Do More' (Instrument/Scholar) — pintado a mano/atlético, fuera de la barra dark-restrained; (2) MvsM 'Squarespace ~ Blueprint AI' — verificado en mvsm.com: estilo sketchbook táctil, no encaja; (3) Revolut Metal — no existe film CG oficial localizable de calidad, solo unboxings; (4) Ramp/Mercury rebrands en general tiran a cálido/ilustrado. HALLAZGO ÚTIL EXTRA: el sitio terminal-industries.com fue hecho por REJOUICE® + PROPAGANDE (crédito en awwwards.com/sites/terminal-industries); REJOUICE tiene canal Vimeo (vimeo.com/rejouice/videos) con un SHOWREEL 2025 cuyo ID concreto no pude extraer (Vimeo no renderiza perfiles al fetch) — vale la pena abrirlo a mano: es el estudio que autoró la firma de movimiento que Manuel quiere. igloo.inc tiene case study técnico en awwwards.com/igloo-inc-case-study.html (Site of the Year 2024). Instagram quedó fuera del tablero: no logré URLs de reels concretos verificables (0x100x ya está en el canon de Manuel con teardown propio). Sugerencia operativa para el gate: bajar las 9 piezas descargables, recortar 15-30s del momento relevante (ffmpeg -ss), y mandar cada clip por Telegram con la pregunta binaria '¿este MOVIMIENTO sí o no?' — del set aprobado se extraen los specs (duración, curva, hold) para congelar los masters de Remotion."
+}
