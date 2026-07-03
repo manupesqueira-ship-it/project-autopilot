@@ -80,7 +80,10 @@ export type Scene =
   | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string }
   | { type: "divergence"; kicker?: string; label?: string; a: number[]; b: number[]; labelA?: string; labelB?: string; colorA?: "green" | "accent" | "ink"; colorB?: "green" | "accent" | "ink"; note?: string }
   | { type: "arcflow"; kicker?: string; label?: string; originLabel: string; targets: { label: string; sub?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
-  | { type: "balance"; kicker?: string; label?: string; leftLabel: string; leftValue: number; rightLabel: string; rightValue: number; prefix?: string; note?: string };
+  | { type: "balance"; kicker?: string; label?: string; leftLabel: string; leftValue: number; rightLabel: string; rightValue: number; prefix?: string; note?: string }
+  | { type: "radialbars"; kicker?: string; label?: string; items: { label: string; value: number; color?: "accent" | "green" | "ink" }[]; centerBig?: string; centerSub?: string; note?: string }
+  | { type: "spiral"; kicker?: string; label?: string; turns?: number; centerBig?: string; centerSub?: string; note?: string }
+  | { type: "grow"; kicker?: string; label?: string; topLabel?: string; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -347,6 +350,91 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "radialbars") {
+    // CORONA / RAYOS: barras que crecen HACIA AFUERA desde un hub central, en cascada. Radial. $0.
+    const cx = 540, cy = 902, r0 = 96, rMax = 330;
+    const items = scene.items, N = items.length, maxV = Math.max(...items.map((i) => i.value)) || 1;
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <circle cx={cx} cy={cy} r={r0 - 16} fill="none" stroke={HAIR} strokeWidth={3} />
+          {items.map((it, i) => {
+            const ang = -Math.PI / 2 + (i / N) * 2 * Math.PI;
+            const grow = interpolate(frame, [16 + i * 8, 16 + i * 8 + 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+            const len = r0 + (it.value / maxV) * (rMax - r0) * grow;
+            return <line key={i} x1={cx + Math.cos(ang) * r0} y1={cy + Math.sin(ang) * r0} x2={cx + Math.cos(ang) * len} y2={cy + Math.sin(ang) * len} stroke={semColor(it.color, ACCENT)} strokeWidth={24} strokeLinecap="round" />;
+          })}
+        </svg>
+        {items.map((it, i) => {
+          const ang = -Math.PI / 2 + (i / N) * 2 * Math.PI, lr = r0 + (it.value / maxV) * (rMax - r0) + 44;
+          const lx = cx + Math.cos(ang) * lr, ly = cy + Math.sin(ang) * lr;
+          return <div key={`rl${i}`} style={{ position: "absolute", left: lx - 100, top: ly - 22, width: 200, textAlign: "center", fontSize: 30, fontWeight: 700, color: INK, ...reveal(frame, 16 + i * 8 + 18) }}>{it.label}</div>;
+        })}
+        {scene.centerBig && (
+          <div style={{ position: "absolute", top: cy - 58, left: 0, width: 1080, textAlign: "center" }}>
+            <div style={{ fontSize: 72, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>{scene.centerBig}</div>
+            {scene.centerSub && <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.12em", color: MUTE }}>{scene.centerSub}</div>}
+          </div>
+        )}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "spiral") {
+    // ESPIRAL: espiral de Arquímedes que se dibuja del centro hacia afuera (crecimiento que compone). $0.
+    const cx = 540, cy = 908, turns = scene.turns ?? 3.4, a = 11, steps = Math.round(turns * 64);
+    const pts: [number, number][] = [];
+    for (let s = 0; s <= steps; s++) { const th = (s / 64) * 2 * Math.PI, r = a * th; pts.push([cx + Math.cos(th - Math.PI / 2) * r, cy + Math.sin(th - Math.PI / 2) * r]); }
+    const path = smoothPath(pts);
+    const prog = interpolate(frame, [12, 94], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+    const ti = Math.min(pts.length - 1, Math.round(prog * (pts.length - 1))), tip = pts[ti];
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <path d={path} pathLength={1} fill="none" stroke={ACCENT} strokeWidth={7} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={1 - prog} />
+          <circle cx={tip[0]} cy={tip[1]} r={14} fill={ACCENT} />
+        </svg>
+        {scene.centerBig && (
+          <div style={{ position: "absolute", top: cy - 56, left: 0, width: 1080, textAlign: "center" }}>
+            <div style={{ fontSize: 64, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>{scene.centerBig}</div>
+            {scene.centerSub && <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.12em", color: MUTE }}>{scene.centerSub}</div>}
+          </div>
+        )}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 90) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "grow") {
+    // BROTE: tallo orgánico que se dibuja hacia arriba + hojas que brotan. Crecimiento. $0.
+    const cx = 540;
+    const stemPts: [number, number][] = [[cx, 1330], [cx - 46, 1180], [cx + 34, 1020], [cx - 26, 858], [cx + 6, 720]];
+    const stem = smoothPath(stemPts);
+    const prog = interpolate(frame, [12, 84], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+    const leaves = [{ p: stemPts[1], dir: -1, at: 0.28 }, { p: stemPts[2], dir: 1, at: 0.5 }, { p: stemPts[3], dir: -1, at: 0.72 }];
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: GREEN, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <path d={stem} pathLength={1} fill="none" stroke={GREEN} strokeWidth={13} strokeLinecap="round" strokeDasharray="1 1" strokeDashoffset={1 - prog} />
+          {leaves.map((lf, i) => {
+            const s = interpolate(prog, [lf.at, lf.at + 0.16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            return <ellipse key={i} cx={lf.p[0] + lf.dir * 46} cy={lf.p[1] - 6} rx={54 * s} ry={26 * s} fill={GREEN} opacity={0.9} transform={`rotate(${lf.dir * 32} ${lf.p[0] + lf.dir * 46} ${lf.p[1] - 6})`} />;
+          })}
+          <circle cx={stemPts[4][0]} cy={stemPts[4][1]} r={Math.min(1, interpolate(prog, [0.9, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })) * 30} fill={ACCENT} />
+        </svg>
+        {scene.topLabel && <div style={{ position: "absolute", top: 640, left: 0, width: 1080, textAlign: "center", fontSize: 40, fontWeight: 800, color: ACCENT, opacity: interpolate(prog, [0.9, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>{scene.topLabel}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1400, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
   }
