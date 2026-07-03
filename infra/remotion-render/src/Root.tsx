@@ -26,6 +26,7 @@ import { TypeAB } from "./beats/TypeAB";
 import { NewsReel, calcNewsReel } from "./beats2/NewsReel";
 import { Bars2, Donut2, Gauge2, Lines2, Race2, TrendPro2 } from "./beats2/ChartBeats2";
 import { CifraHero } from "./masters/CifraHero";
+import { LineaHero } from "./masters/LineaHero";
 import { Logo } from "./beats/Logo";
 import { BtcShowcase } from "./beats/BtcShowcase";
 import { MapZoomEditorial } from "./beats/MapZoomEditorial";
@@ -465,6 +466,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="EChartsHero" component={EChartsHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ variant: "area", theme: "light" } as never} />
       {/* MASTER #1 — mundo de la página (kit2 tokens); motion test con datos demo */}
       <Composition id="CifraHero" component={CifraHero as never} durationInFrames={205} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LO QUE PIERDES AL AÑO", value: "$96,209", unit: "MXN", sub: "el poder real de tu dinero guardado en efectivo", foot: "MOTION TEST · DATOS DEMO · BANXICO/INEGI" } as never} />
+      <Composition id="LineaHero" component={LineaHero as never} durationInFrames={215} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL INTERÉS COMPUESTO", points: [10, 10.8, 11.7, 12.6, 13.6, 14.7, 15.9, 17.2, 18.6, 20.1, 23.4, 27.2, 31.6, 34.0], xLabels: ["2012", "2016", "2020", "2026"], endTag: "×3.4", sub: "cada peso trabajando 14 años, sin mover un dedo", foot: "MOTION TEST · DATOS DEMO" } as never} />
       {/* CHART BEATS v2 (kit/charts.tsx, look A) — demos con datos ilustrativos marcados */}
       <Composition id="Bars2" component={Bars2 as never} durationInFrames={150} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA COMPARACIÓN", label: "Valor de mercado (USD, demo)", cats: ["Nvidia", "México (PIB)", "Brasil (PIB)"], values: [3500, 1800, 2100], accentIndex: 0, valence: "gain", prefix: "$", suffix: " mil M", caption: "Una empresa vs economías enteras" } as never} />
       <Composition id="TrendPro2" component={TrendPro2 as never} durationInFrames={160} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL DESPEGUE", label: "Precio de la acción (demo)", points: [18, 22, 20, 27, 34, 31, 46, 63, 88, 130], xLabels: ["2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"], threshold: 30, valence: "gain", endTag: "+622%", caption: "Rojo: debajo del precio de compra" } as never} />
