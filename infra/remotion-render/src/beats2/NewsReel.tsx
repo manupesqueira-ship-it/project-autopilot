@@ -3,6 +3,7 @@ import React from "react";
 import { AbsoluteFill, CalculateMetadataFunction } from "remotion";
 import { Camera, Grade } from "../kit/cinema";
 import { dipToBlack, whipPan, zoomThrough } from "../kit/transitions";
+import { Bars2, Donut2, Gauge2, Lines2, Race2, TrendPro2 } from "./ChartBeats2";
 import { Close2, NewsHook2, Reveal2, Scale2, Shock2, Trend2 } from "./NewsBeats2";
 
 // NEWSREEL — el reel ENTERO como UNA composición: beats en TransitionSeries con
@@ -10,7 +11,9 @@ import { Close2, NewsHook2, Reveal2, Scale2, Shock2, Trend2 } from "./NewsBeats2
 // + Grade global. El ensamblador (assemble_news.py) le pasa el treatment compilado.
 
 export type BeatSpec = {
-  type: "hook" | "reveal" | "shock" | "scale" | "trend" | "close";
+  type:
+    | "hook" | "reveal" | "shock" | "scale" | "trend" | "close"
+    | "bars" | "trendpro" | "lines" | "gauge" | "donut" | "race";
   props: Record<string, unknown>;
   durF: number;
   trans?: "cut" | "zoom" | "whip" | "whipL" | "dip";  // transición HACIA el siguiente beat
@@ -25,6 +28,13 @@ const MAP: Record<BeatSpec["type"], React.FC<Record<string, unknown>>> = {
   scale: Scale2 as never,
   trend: Trend2 as never,
   close: Close2 as never,
+  // gráficas ECharts premium (kit/charts.tsx)
+  bars: Bars2 as never,
+  trendpro: TrendPro2 as never,
+  lines: Lines2 as never,
+  gauge: Gauge2 as never,
+  donut: Donut2 as never,
+  race: Race2 as never,
 };
 
 const pres = (t?: string) =>

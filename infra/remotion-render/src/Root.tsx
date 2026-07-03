@@ -14,9 +14,7 @@ import { EditorialHouse } from "./beats/EditorialHouse";
 import { EditorialHouseMotion } from "./beats/EditorialHouseMotion";
 import { EditorialReel } from "./beats/EditorialReel";
 import { StyleHero } from "./beats/StyleHero";
-import { LottieHero } from "./beats/LottieHero";
 import { EChartsHero } from "./beats/EChartsHero";
-import { RiveHero } from "./beats/RiveHero";
 import { PhotoHero } from "./beats/PhotoHero";
 import { WaffleReveal } from "./beats/WaffleReveal";
 import { ShockNumber } from "./beats/ShockNumber";
@@ -26,6 +24,7 @@ import { CardHook, MinPayFeel, DebtTimeline, CompareBars } from "./beats/CreditB
 import { NewsHook, Reveal, TrendLine } from "./beats/NewsBeats";
 import { TypeAB } from "./beats/TypeAB";
 import { NewsReel, calcNewsReel } from "./beats2/NewsReel";
+import { Bars2, Donut2, Gauge2, Lines2, Race2, TrendPro2 } from "./beats2/ChartBeats2";
 import { Logo } from "./beats/Logo";
 import { BtcShowcase } from "./beats/BtcShowcase";
 import { MapZoomEditorial } from "./beats/MapZoomEditorial";
@@ -448,7 +447,6 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="Logo" component={Logo as never} durationInFrames={1} fps={30} width={1080} height={1920} defaultProps={{ variant: "sheet", bg: "paper" } as never} />
       <Composition id="LogoWordmark" component={Logo as never} durationInFrames={1} fps={30} width={1500} height={420} defaultProps={{ variant: "wordmark", bg: "transparent" } as never} />
       <Composition id="StyleHero" component={StyleHero as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{ variant: "a" } as never} />
-      <Composition id="LottieHero" component={LottieHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ src: "lottie/lf20_5n8yfkac.json" } as never} />
       <Composition id="NewsReel" component={NewsReel as never} durationInFrames={900} fps={30} width={1080} height={1920} defaultProps={{ beats: [] } as never} calculateMetadata={calcNewsReel as never} />
       <Composition id="TypeAB" component={TypeAB as never} durationInFrames={110} fps={30} width={1080} height={1920} defaultProps={{ variant: "thin" } as never} />
       <Composition id="NewsHook" component={NewsHook as never} durationInFrames={400} fps={30} width={1080} height={1920} defaultProps={{} as never} />
@@ -463,8 +461,14 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="ShockNumber" component={ShockNumber as never} durationInFrames={300} fps={30} width={1080} height={1920} defaultProps={{ target: 730, prefix: "-$", valence: "loss", kicker: "LO QUE PIERDES", caption: "cada año, sin invertir" } as never} />
       <Composition id="ScaleReveal" component={ScaleReveal as never} durationInFrames={95} fps={30} width={1080} height={1920} defaultProps={{} as never} />
       <Composition id="PhotoHero" component={PhotoHero as never} durationInFrames={130} fps={30} width={1080} height={1920} defaultProps={{ photo: "photos/trump.jpg" } as never} />
-      <Composition id="RiveHero" component={RiveHero as never} durationInFrames={90} fps={30} width={1080} height={1920} defaultProps={{ src: "rive/vehicles.riv" } as never} />
       <Composition id="EChartsHero" component={EChartsHero as never} durationInFrames={120} fps={30} width={1080} height={1920} defaultProps={{ variant: "area", theme: "light" } as never} />
+      {/* CHART BEATS v2 (kit/charts.tsx, look A) — demos con datos ilustrativos marcados */}
+      <Composition id="Bars2" component={Bars2 as never} durationInFrames={150} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA COMPARACIÓN", label: "Valor de mercado (USD, demo)", cats: ["Nvidia", "México (PIB)", "Brasil (PIB)"], values: [3500, 1800, 2100], accentIndex: 0, valence: "gain", prefix: "$", suffix: " mil M", caption: "Una empresa vs economías enteras" } as never} />
+      <Composition id="TrendPro2" component={TrendPro2 as never} durationInFrames={160} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL DESPEGUE", label: "Precio de la acción (demo)", points: [18, 22, 20, 27, 34, 31, 46, 63, 88, 130], xLabels: ["2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"], threshold: 30, valence: "gain", endTag: "+622%", caption: "Rojo: debajo del precio de compra" } as never} />
+      <Composition id="Lines2" component={Lines2 as never} durationInFrames={170} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA CARRERA", label: "Inflación anual %, demo", series: [{ name: "México", data: [7.8, 6.9, 5.5, 4.7, 4.2, 3.9] }, { name: "Brasil", data: [9.3, 7.2, 6.1, 5.4, 4.8, 4.5] }, { name: "Chile", data: [11.6, 8.1, 6.6, 4.9, 4.1, 3.8] }], xLabels: ["2022", "2023", "2024", "2025", "H1", "hoy"], threshold: 3.0, thresholdLabel: "meta Banxico 3%", valence: "gain", suffix: "%", caption: "Quién domó la inflación primero" } as never} />
+      <Composition id="Gauge2" component={Gauge2 as never} durationInFrames={140} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL DATO", label: "De cada 100 pesos de deuda (demo)", value: 68, suffix: "%", valence: "loss", caption: "…se va solo en intereses" } as never} />
+      <Composition id="Donut2" component={Donut2 as never} durationInFrames={150} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA PROPORCIÓN", label: "Presupuesto familiar (demo)", parts: [{ name: "Deuda", value: 42 }, { name: "Gasto fijo", value: 33 }, { name: "Ahorro", value: 15 }, { name: "Libre", value: 10 }], centerValue: "42%", centerLabel: "se va a deuda", valence: "loss", caption: "Casi la mitad ya está comprometida" } as never} />
+      <Composition id="Race2" component={Race2 as never} durationInFrames={200} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA CARRERA", label: "Valor de mercado (USD mil M, demo)", steps: [{ period: "2020", values: { Nvidia: 320, Apple: 2250, Microsoft: 1680, Amazon: 1630, Google: 1180 } }, { period: "2022", values: { Nvidia: 360, Apple: 2070, Microsoft: 1790, Amazon: 860, Google: 1150 } }, { period: "2024", values: { Nvidia: 3280, Apple: 3760, Microsoft: 3120, Amazon: 2310, Google: 2380 } }, { period: "2026", values: { Nvidia: 3500, Apple: 3400, Microsoft: 3300, Amazon: 2500, Google: 2600 } }], accentName: "Nvidia", prefix: "$", caption: "De actor secundario a protagonista" } as never} />
       <Composition
         id="EditorialReel"
         component={EditorialReel as never}
