@@ -1,0 +1,48 @@
+{
+  "$description": "MOTION TOKENS CONGELADOS — mundo de la página (igloo/Terminal). Fuentes: Heer&Robertson 2007, Material 3, IBM Carbon, Netflix es-MX 17cps, Bostock bar-chart-race; ajustados por el tablero aprobado por Manuel 2026-07-03 (Tendril=cámara con masa · Fallen=dwell sin estirar · FT=racing legible). REGLA DURA: ningún código de escena escribe duraciones/beziers literales — todo sale de aquí. El director LLM no puede emitir motion por schema.",
+  "fps": 30,
+  "curve": {
+    "enter": { "$type": "cubicBezier", "$value": [0.05, 0.7, 0.1, 1], "$description": "MD3 emphasized-decelerate — TODA entrada" },
+    "exit": { "$type": "cubicBezier", "$value": [0.3, 0, 0.8, 0.15], "$description": "MD3 emphasized-accelerate — salidas, SIEMPRE más cortas que entradas" },
+    "standard": { "$type": "cubicBezier", "$value": [0.2, 0, 0, 1], "$description": "MD3 standard — trazados, movimientos de valor" },
+    "mass": { "$type": "cubicBezier", "$value": [0.55, 0, 0.12, 1], "$description": "cámara con masa (Tendril): arranque pesado, frenado largo; nada llega a su pose en <1s" },
+    "countLand": { "$type": "cubicBezier", "$value": [0.16, 1, 0.3, 1], "$description": "easeOutExpo aprox — count-up desacelera fuerte al final (CountUp.js)" }
+  },
+  "dur": {
+    "sceneTransitionF": 28,
+    "stageF": 30,
+    "barRevealF": 17,
+    "lineDrawF": 27,
+    "countupF": 52,
+    "enterF": 14,
+    "exitF": 10,
+    "microF": 6,
+    "accentFlashF": 16,
+    "ruleDrawF": 16
+  },
+  "hold": {
+    "numberMinF": 30,
+    "charsPerSec": 17,
+    "chartPostMotionF": 75,
+    "$description": "hold de texto = max(numberMinF, chars/charsPerSec). Netflix es-MX + Cowan ≤4 chunks + H&R 3s. Fallen aprobado 'pero corto' → usar el piso del rango, no estirar."
+  },
+  "stagger": { "perItemF": 1, "maxTotalF": 5, "$description": "Chevalier 2014: beneficio ≈0 → solo estético, corto" },
+  "stages": { "max": 2, "$description": "H&R: rescale de eje SEPARADO del cambio de valor; multi-etapa AUMENTA el error" },
+  "racing": { "periodF": 75, "maxBars": 12, "$description": "Bostock canónico: 250ms×k=10 por periodo, lerp continuo, labels con interpolación" },
+  "camera": { "pushScale": 0.04, "driftPx": 2, "$description": "push-in lento con curve.mass en TODA la escena; drift determinista mínimo" },
+  "accent": {
+    "$description": "el esmeralda vive SOLO en la transición (firma Terminal): gris→esmeralda→hueso dentro del primer ~40% de la ventana de entrada; reposo SIEMPRE en hueso/dim",
+    "flashWindowPct": 0.4
+  },
+  "palette": {
+    "bg": "#070707",
+    "ink": "#E9E7E0",
+    "dim": "#9AA3AD",
+    "faint": "#5C636B",
+    "accent": "#2ECB4F",
+    "bad": "#C75146",
+    "warn": "#C9A44C",
+    "lineSoft": "rgba(233,231,224,0.13)",
+    "$description": "idéntica a la página (plan maestro §06). bad SOLO pérdida."
+  }
+}
