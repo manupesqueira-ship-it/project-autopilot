@@ -1,0 +1,69 @@
+{
+  "topic": "Nvidia vale más que el PIB de México (golden reel v2 — kit completo)",
+  "beats": [
+    {
+      "type": "hook",
+      "vo": "Existe una empresa que vale más que un país entero de Latinoamérica. Y no… no es una petrolera.",
+      "props": {
+        "kicker": "LA NOTICIA",
+        "words": [
+          {"t": "Una"}, {"t": "empresa"}, {"t": "vale"}, {"t": "más"},
+          {"t": "que"}, {"t": "un"}, {"t": "país", "accent": true}, {"t": "entero.", "accent": true}
+        ],
+        "tease": "Y no es una petrolera…"
+      },
+      "trans": "zoom", "transF": 12
+    },
+    {
+      "type": "reveal",
+      "vo": "Se llama Nvidia. Es la empresa que fabrica los chips que entrenan casi toda la inteligencia artificial del mundo.",
+      "props": { "name": "NVIDIA", "tagline": "Los chips que entrenan la IA del mundo", "color": "#76B900" },
+      "trans": "cut"
+    },
+    {
+      "type": "shock",
+      "vo": "Hoy vale más de tres punto cinco billones de dólares.",
+      "target_word": "billones",
+      "props": { "value": "$3.5 billones", "kicker": "VALOR DE MERCADO", "caption": "billones de dólares (USD)", "valence": "gain" },
+      "trans": "zoom", "transF": 12,
+      "min_s": 4.0
+    },
+    {
+      "type": "scale",
+      "vo": "Para dimensionarlo: todo lo que produce México en un año entero… se ve así de chico junto a Nvidia.",
+      "props": {
+        "smallLabel": "México · PIB anual", "smallValue": "$1.8 B",
+        "bigLabel": "Nvidia", "bigValue": "$3.5 B",
+        "cue": 40
+      },
+      "trans": "whip", "transF": 9,
+      "min_s": 5.2
+    },
+    {
+      "type": "trend",
+      "vo": "Y esto no ha parado: en solo cinco años, Nvidia multiplicó su valor unas veinte veces.",
+      "props": {
+        "kicker": "EL BOOM DE LA IA",
+        "label": "Valor de Nvidia · últimos 5 años",
+        "points": [1, 2, 4, 8, 15, 20],
+        "caption": "unas 20 veces en 5 años",
+        "endTag": "20×"
+      },
+      "trans": "zoom", "transF": 12
+    },
+    {
+      "type": "shock",
+      "vo": "Hoy, una sola empresa vale casi el doble que todo lo que produce tu país en un año.",
+      "target_word": "doble",
+      "props": { "value": "1.9×", "kicker": "UNA EMPRESA VS TU PAÍS", "caption": "casi el doble del PIB de México", "valence": "gold" },
+      "trans": "dip", "transF": 8,
+      "min_s": 4.0
+    },
+    {
+      "type": "close",
+      "vo": "Una empresa vale más que un país. Así de grande es la IA… y apenas empieza.",
+      "props": { "line1": "Una empresa > un país.", "punch": "Así de grande es la IA.", "cta": "Guarda esto" },
+      "min_s": 4.2, "tail_s": 0.8
+    }
+  ]
+}
