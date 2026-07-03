@@ -58,7 +58,8 @@ export type Scene =
   | { type: "pictogram"; kicker?: string; label: string; total?: number; highlight: number; suffix?: string; note?: string; color?: "accent" | "green" }
   | { type: "proportion"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; note?: string }
   | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string }
-  | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string };
+  | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string }
+  | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -325,6 +326,43 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "donut") {
+    // DONA / ANILLO: cada sector se dibuja en arco (barrido) en secuencia. Redondo, no cuadrado. $0.
+    const cx = 540, cy = 838, R = 276, SW = 70;
+    const C = 2 * Math.PI * R;
+    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? "#B8AE9B" : ACCENT);
+    let accP = 0;
+    const segs = scene.segments.map((s, i) => { const start = accP; accP += s.pct; return { ...s, start, i }; });
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 64, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <circle cx={cx} cy={cy} r={R} fill="none" stroke={HAIR} strokeWidth={SW} />
+          {segs.map((s) => {
+            const appear = 16 + s.i * 13;
+            const grow = interpolate(frame, [appear, appear + 22], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+            const len = (s.pct / 100) * C;
+            return <circle key={s.i} cx={cx} cy={cy} r={R} fill="none" stroke={colOf(s.color)} strokeWidth={SW} strokeDasharray={`${Math.max(0, len * grow - 7)} ${C}`} transform={`rotate(${-90 + (s.start / 100) * 360} ${cx} ${cy})`} />;
+          })}
+        </svg>
+        <div style={{ position: "absolute", top: cy - 96, left: 0, width: 1080, textAlign: "center" }}>
+          {scene.centerBig && <div style={{ fontSize: 138, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: INK }}>{scene.centerBig}</div>}
+          {scene.centerSub && <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "0.14em", color: MUTE, marginTop: 8 }}>{scene.centerSub}</div>}
+        </div>
+        <div style={{ position: "absolute", top: 1244, left: M, right: M, display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 40 }}>
+          {segs.map((s) => (
+            <div key={`lg${s.i}`} style={{ display: "flex", alignItems: "center", gap: 14, ...reveal(frame, 16 + s.i * 13 + 12) }}>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", background: colOf(s.color) }} />
+              <div style={{ fontSize: 34, fontWeight: 600, color: INK }}>{s.tag} <span style={{ color: colOf(s.color), fontWeight: 800 }}>{s.pct}%</span></div>
+            </div>
+          ))}
+        </div>
+        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
