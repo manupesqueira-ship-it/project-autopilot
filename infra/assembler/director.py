@@ -36,6 +36,8 @@ I2V_MANIFEST = {
     "i2v/bank_ink_bloom.mp4": "tinta negra difundiéndose en agua (abstracto: mercados, incertidumbre, contagio)",
     "i2v/bank_gold_liquid.mp4": "líquido dorado fluyendo, brillante (riqueza, dinero abstracto, lujo)",
     "i2v/bank_city_dusk.mp4": "skyline de ciudad moderna al atardecer con luces (economía, país, urbano)",
+    "i2v/bank_seed_grow.mp4": "semilla brotando en la tierra (crecimiento, empezar, interés compuesto)",
+    "i2v/bank_figure_walk.mp4": "figura solitaria caminando hacia la luz cálida en niebla (aspiración, meta, camino; sin rostro)",
 }
 
 
