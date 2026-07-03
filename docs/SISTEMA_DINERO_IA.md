@@ -130,7 +130,10 @@ ves las 2-3 opciones/beat **en papel** y **eliges** antes de renderizar/gastar (
   plate/hero_i2v en el menú. FALTA: G2 de gasto para sujetos i2v NUEVOS (still→i2v_engine) dentro del flujo.
 - **P1.5** Idempotencia i2v (no re-pagar tras crash; reconciliar con `generate list`) + cache de voz por hash.
 - **P1.6** Fix del mapa por-país (agrandar protagonista, centrar por bbox) + re-targetear `validator.py` al schema editorial + enchufar los filtros de píxel al gate.
-- **P1.7** Doctrina de color + `docs/standards/EDITORIAL_BRAND.md` como marca ejecutable (theme unificado).
+- **P1.7 ✅ (doc)**: `docs/standards/EDITORIAL_BRAND.md` escrito — paleta/hex EXACTOS del código,
+  color semántico (oxblood=acento ÚNICO, verde=sube, pérdida por contexto/movimiento), tipo, motion,
+  i2v integrado, layout. SUPERSEDE CANON §3. FALTA: extraer tokens a `src/beats/editorial_brand.ts`
+  + unificar `MUTE` (#7A7264 vs #8A806F en MapZoom).
 
 ### 🟡 P2 — robustez y escala
 - **P2.1** Colapsar `build_reels`/`re_render`/`finish_reel_audio` en UN DAG content-addressed
