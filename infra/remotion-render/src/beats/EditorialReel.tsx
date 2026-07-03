@@ -55,7 +55,9 @@ export type Scene =
   | { type: "plate"; kicker?: string; logo?: string; src: string; caption: string; note?: string }
   | { type: "mapzoom"; countryName: string; iso2: string; label: string; region?: string[]; kicker?: string }
   | { type: "hero_i2v"; src: string; kicker?: string; caption?: string; punch?: string }
-  | { type: "pictogram"; kicker?: string; label: string; total?: number; highlight: number; suffix?: string; note?: string; color?: "accent" | "green" };
+  | { type: "pictogram"; kicker?: string; label: string; total?: number; highlight: number; suffix?: string; note?: string; color?: "accent" | "green" }
+  | { type: "proportion"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; note?: string }
+  | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string };
 
 // ------- escena render -------
 const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({ scene, durF, inFade }) => {
@@ -322,6 +324,70 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           );
         })}
         {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "proportion") {
+    // PROPORCIÓN: barra 100% segmentada; cada segmento crece desde su borde en secuencia. $0.
+    const barL = M, barW = 1080 - 2 * M, barY = 800, barH = 156;
+    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? "#B8AE9B" : ACCENT);
+    let accP = 0;
+    const segs = scene.segments.map((s, i) => { const start = accP; accP += s.pct; return { ...s, start, i }; });
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 380, left: M, right: M, fontSize: 80, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        {segs.map((s) => {
+          const x = barL + (s.start / 100) * barW;
+          const wFull = (s.pct / 100) * barW;
+          const appear = 16 + s.i * 11;
+          const grow = interpolate(frame, [appear, appear + 18], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+          return <div key={s.i} style={{ position: "absolute", left: x, top: barY, width: Math.max(0, wFull * grow - 4), height: barH, background: colOf(s.color), borderRadius: 4 }} />;
+        })}
+        {segs.map((s) => {
+          const cx = barL + ((s.start + s.pct / 2) / 100) * barW;
+          return (
+            <div key={`l${s.i}`} style={{ position: "absolute", top: barY + barH + 26, left: cx - 130, width: 260, textAlign: "center", ...reveal(frame, 16 + s.i * 11 + 10) }}>
+              <div style={{ fontSize: 64, fontWeight: 800, letterSpacing: "-0.02em", color: colOf(s.color) }}>{s.pct}%</div>
+              <div style={{ fontSize: 30, fontWeight: 500, color: "#5A544A", marginTop: 4 }}>{s.tag}</div>
+            </div>
+          );
+        })}
+        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 44) }}>{scene.note}</div>}
+      </>
+    );
+  }
+
+  if (scene.type === "level") {
+    // METÁFORA FÍSICA: un recipiente que se llena hasta un nivel, con superficie líquida ondulante. $0.
+    const vw = 340, vh = 720, vx = (1080 - vw) / 2, vy = 500;
+    const col = scene.color === "accent" ? ACCENT : GREEN;
+    const prog = Math.min(1, spring({ frame: frame - 14, fps, config: { damping: 15, stiffness: 90 } }));
+    const pct = scene.fillPct * prog;
+    const filledH = (pct / 100) * vh;
+    const surfaceY = vy + vh - filledH;
+    const amp = 9, ph = frame / 8;
+    const wave = `M ${vx} ${surfaceY.toFixed(1)} ` +
+      Array.from({ length: 21 }).map((_, k) => { const x = vx + (k / 20) * vw; const y = surfaceY + Math.sin(ph + k * 0.6) * amp; return `L ${x.toFixed(1)} ${y.toFixed(1)}`; }).join(" ") +
+      ` L ${vx + vw} ${vy + vh} L ${vx} ${vy + vh} Z`;
+    const onFill = surfaceY < vy + vh / 2 - 30;
+    body = (
+      <>
+        {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: col, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 60, fontWeight: 800, lineHeight: 1.05, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+        <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+          <clipPath id="vclip"><rect x={vx} y={vy} width={vw} height={vh} rx={26} /></clipPath>
+          <g clipPath="url(#vclip)">
+            <rect x={vx} y={vy} width={vw} height={vh} fill="#E6DFD0" />
+            <path d={wave} fill={col} />
+          </g>
+          <rect x={vx} y={vy} width={vw} height={vh} rx={26} fill="none" stroke={INK} strokeWidth={3} />
+        </svg>
+        <div style={{ position: "absolute", top: vy + vh / 2 - 90, left: 0, width: 1080, textAlign: "center" }}>
+          <span style={{ fontSize: 150, fontWeight: 800, letterSpacing: "-0.04em", color: onFill ? PAPER : INK }}>{Math.round(pct)}{scene.bigSuffix ?? "%"}</span>
+        </div>
+        {scene.note && <div style={{ position: "absolute", top: vy + vh + 40, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 30) }}>{scene.note}</div>}
       </>
     );
   }
