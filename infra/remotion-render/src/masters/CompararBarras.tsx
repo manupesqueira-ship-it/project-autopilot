@@ -68,9 +68,10 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
   growOrder.forEach((barIdx, k) => {
     growStart[barIdx] = railsAt + D.enterF + 4 + k * overlapF;
   });
-  // ancla del VO: el protagonista TERMINA en land
+  // ancla del VO: el protagonista TERMINA en land (clamp: nunca antes de que
+  // los rieles existan + su propia rodada completa)
   const protagDefaultEnd = growStart[accentIndex] + D.barRevealF;
-  const landAt = land ?? protagDefaultEnd;
+  const landAt = Math.max(land ?? protagDefaultEnd, railsAt + D.enterF + 4 + D.barRevealF);
   const protagStart = landAt - D.barRevealF;
   growStart[accentIndex] = protagStart;
 

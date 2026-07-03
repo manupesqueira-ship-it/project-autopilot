@@ -46,7 +46,8 @@ export const HookKinetico: React.FC<HookKineticoProps> = ({
   const accentIdx = Math.max(0, words.findIndex((w) => w.accent));
   const defaultAccentAt = wordsAt + accentIdx * WORD_STAG;
   const shift = land != null ? land - defaultAccentAt : 0;
-  const startAt = wordsAt + shift;
+  // clamp: las palabras nunca arrancan encima del kicker (ancla temprana del VO)
+  const startAt = Math.max(wordsAt + shift, kickerAt + 6);
 
   const lastWordAt = startAt + (words.length - 1) * WORD_STAG;
   const teaseAt = lastWordAt + D.enterF + 10;

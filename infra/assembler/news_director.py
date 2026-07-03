@@ -27,50 +27,44 @@ def load_key():
     raise SystemExit("no ANTHROPIC key")
 
 
-# MENÚ CERRADO v2 = NewsReel MAP (beats2/NewsBeats2 + beats2/ChartBeats2). Props EXACTAS.
+# MENÚ CERRADO v3 = MASTERS congelados (kit2, mundo de la página; MastersReel MAP).
+# El movimiento NO existe en este schema: solo DATOS. Props EXACTAS.
 CATALOG = r"""
-- hook     : titular kinético palabra-por-palabra. props {kicker, words:[{t,accent?:true}...], tease}
-             (words = el hook partido en palabras; accent SOLO en la palabra clave)
-- reveal   : revela el sujeto (empresa/activo), tipográfico gigante con glow.
-             props {name, tagline, color:"#hex de la marca"}
-- shock    : CIFRA HÉROE con odómetro + punch en la sílaba. props {value:"$3.5 billones" (string
-             YA formateado, unidad inline), kicker, caption, valence:"gain"|"loss"|"gold"}
-             ⚠ OBLIGATORIO target_word = la palabra del VO donde aterriza la cifra.
-- scale    : zoom-OUT de escala (chico gris vs gigante oro, focus+context).
-             props {smallLabel, smallValue, bigLabel, bigValue}
-- trend    : línea SVG con glow y cabeza viva (tendencia simple). props {kicker, label,
-             points:[números...], caption, endTag:"+35%"}
-- bars     : comparación de barras ECharts, UN acento en el sujeto. props {kicker, label,
-             cats:["A","B","C"], values:[n,n,n], accentIndex, valence, prefix:"$", suffix:" mil M", caption}
-- trendpro : línea héroe ECharts con área y UMBRAL semántico (rojo debajo / verde arriba —
-             precio de compra, meta, break-even). props {kicker, label, points:[...],
-             xLabels:["2020"...], threshold:número, valence, endTag, caption}
-- lines    : hasta 3 series con nombre+valor al final + línea de meta punteada (carrera entre
-             países/activos). props {kicker, label, series:[{name,data:[...]},...(máx 3, [0]=protagonista)],
-             xLabels, threshold?, thresholdLabel?:"meta Banxico 3%", valence, suffix:"%", caption}
-- gauge    : UN porcentaje protagonista en arco fino. props {kicker, label, value:68, suffix:"%",
-             valence, caption}   ⚠ target_word = palabra donde aterriza el número.
-- donut    : proporción ultrafina con cifra central. props {kicker, label,
-             parts:[{name,value}...([0]=protagonista)], centerValue:"42%", centerLabel, valence, caption}
-             ⚠ target_word recomendado.
-- race     : carrera de barras entre periodos (quién sube/quién cae). props {kicker, label,
-             steps:[{period:"2020",values:{"A":n,"B":n,...}},...], accentName, prefix, suffix, caption}
-- close    : cierre corto que reconecta con el hook. props {line1, punch, cta}
+- hook    : titular que frena el scroll, palabra por palabra (grotesca fina MAYÚS; las palabras
+            accent REPOSAN en esmeralda — máx 2). props {kicker:"MAYÚS 2-4 palabras",
+            words:[{t,accent?:true}...], tease:"remate corto"}
+            ⚠ target_word = LA palabra del VO donde entra la primera palabra accent.
+- cifra   : CIFRA HÉROE con odómetro que asienta de izquierda a derecha.
+            props {kicker, value:"$96,209" (string exacto YA formateado), unit:"MXN"|"%"|"",
+            sub:"frase de contexto", foot?:"FUENTE · FECHA"}
+            ⚠ OBLIGATORIO target_word = palabra del VO donde aterriza la cifra.
+- linea   : línea héroe que se TRAZA completa (curva sin overshoot) con punto esmeralda en la
+            cabeza; el endTag aterriza al final. props {kicker, points:[números... serie completa],
+            xLabels:["2020","2022",...], endTag:"×3.4"|"+622%", sub, foot?}
+            ⚠ target_word = palabra del VO donde aterriza el endTag.
+- barras  : comparación horizontal estilo keynote (2-4 barras; protagonista esmeralda crece AL
+            FINAL y su valor cuenta; referencias en azules). props {kicker,
+            bars:[{label:"MAYÚS", value:número, display:"7.2%"}...], accentIndex, sub, foot?}
+            ⚠ target_word = palabra del VO donde aterriza el valor del protagonista.
+- carrera : carrera de barras entre periodos (valores deslizan continuo, 2.5s por periodo; el
+            protagonista esmeralda). props {kicker, steps:[{period:"2020",values:{"BTC":n,...}}...
+            (3-5 periodos, 4-6 nombres)], accentName, prefix:"$", suffix:" mil M", sub, foot?}
+- cierre  : cierre corto que reconecta con el hook (mismo lenguaje kinético). props {kicker,
+            words:[{t,accent?}...] (la frase citable, corta), tease:"el imperativo/CTA"}
 """
 
 RULEBOOK = r"""
 REGLAS DE DIRECCIÓN (docs/standards/DIRECTION_RULEBOOK.md — cítalas por beat):
-- Cifra shock -> shock (odómetro + punch + color en el aterrizaje del VO). Magnitud a dimensionar ->
-  scale (zoom-out focus+context). A vs B -> bars (sujeto en color, resto gris = Von Restorff).
-  Tendencia c/historia de pérdida->ganancia -> trendpro con threshold. Carrera entre 2-3 -> lines o race.
-  UN porcentaje que duele -> gauge. Proporción del todo -> donut. Figura pública -> NO hay beat aún en
-  este menú: usa reveal con su nombre (NUNCA cara generada por IA).
-- Von Restorff: UN solo acento de color por cuadro. Peak-end: clímax al ~80% y cierre que reconecta
-  con el hook (Zeigarnik: el loop del hook se CIERRA ahí).
-- zoom-IN=urgencia/detalle · zoom-OUT=revelación de contexto · whip=contraste o cambio de sujeto ·
-  dip=respiro antes del clímax · cut=continuidad. Campo trans del beat = transición HACIA el siguiente:
-  "cut"|"zoom"|"whip"|"whipL"|"dip". Similares->suave (cut/zoom), contraste->whip, antes del clímax->dip.
-- TIMING legible: revelar temprano y SOSTENER. min_s por beat si el VO es corto (default 3.2s).
+- Cifra que impacta -> cifra (el odómetro aterriza CON la voz). Tendencia/crecimiento -> linea.
+  A vs B (2-4 cosas hoy) -> barras (protagonista esmeralda, resto azules). Evolución de ranking en
+  el tiempo -> carrera. El gancho y el cierre -> hook/cierre (kinético).
+- Von Restorff: UN protagonista esmeralda por escena; todo lo demás reposa en hueso/azules.
+  Peak-end: clímax al ~80% y cierre que reconecta con el hook (Zeigarnik: el loop se CIERRA ahí).
+- Transiciones del mundo (sobrias): "cut" = continuidad · "dip" = respiro/cambio de capítulo
+  (fade por negro). Campo trans del beat = transición HACIA el siguiente. Nada más existe.
+- EL MOVIMIENTO NO SE DIRIGE: vive congelado en los masters. Tú NO puedes emitir duraciones,
+  curvas ni efectos — solo elegir master, llenar datos y anclar target_word.
+- TIMING legible: min_s por beat si el VO es corto (default 4.0s); el sistema sostiene solo.
 """
 
 WRITING = r"""
@@ -109,27 +103,28 @@ Te dan una NOTICIA con hechos verificados y DISEÑAS el reel completo para el pi
 
 MENÚ CERRADO de beats (usa EXACTAMENTE estos tipos y estas props):{CATALOG}
 
-Devuelve SOLO un JSON con el schema EXACTO de assemble_news.py:
+Devuelve SOLO un JSON con el schema EXACTO de assemble_masters.py:
 {{
  "topic": "...",
  "hook_text": "el gancho reescrito",
  "vision": "el ángulo en una línea",
  "beats": [
    {{"type":"hook","vo":"narración es-MX de este beat","props":{{...}},
-     "trans":"zoom","technique":"regla del rulebook que aplicas"}},
-   {{"type":"shock","vo":"...la cifra dicha con palabras...","props":{{...}},
+     "target_word":"país","trans":"dip","technique":"regla del rulebook que aplicas"}},
+   {{"type":"cifra","vo":"...la cifra dicha con palabras...","props":{{...}},
      "target_word":"billones","trans":"dip","technique":"..."}},
-   ... 5 a 7 beats, arco: hook -> reveal/desarrollo -> clímax (~80%) -> close ...
+   ... 4 a 6 beats, arco: hook -> desarrollo (cifra/linea/barras/carrera) -> clímax (~80%) -> cierre ...
  ]
 }}
 Reglas duras:
-- target_word OBLIGATORIO en shock/gauge (y recomendado en donut): la palabra EXACTA del VO de ese
-  beat donde la cifra debe aterrizar (una palabra que el TTS pronuncia, sin signos).
-- Todo kicker va en MAYÚSCULAS, 2-4 palabras ("EL DATO", "LA COMPARACIÓN") — es el estilo del look A.
-- Datos SOLO del brief (exactos, con moneda explícita). NO inventes cifras ni series: si una gráfica
-  necesita puntos que el brief no tiene, elige otro beat.
+- target_word OBLIGATORIO en cifra/linea/barras y en hook/cierre (la palabra accent): la palabra
+  EXACTA del VO de ese beat donde aterriza (una palabra que el TTS pronuncia, sin signos).
+- Todo kicker va en MAYÚSCULAS, 2-4 palabras ("EL DATO", "LA CARRERA").
+- Datos SOLO del brief (exactos, con moneda explícita). NO inventes cifras ni series: si un master
+  necesita puntos que el brief no tiene, elige otro master.
 - El campo trans del ÚLTIMO beat se omite. La VO de todos los beats leída seguida = historia completa.
-- Varía el menú: no repitas el mismo tipo de gráfica 2 veces en un reel."""
+- No repitas el mismo master 2 veces seguidas; máximo 2 usos del mismo master por reel (hook/cierre
+  cuentan aparte)."""
 
 
 def direct(brief):
@@ -155,31 +150,35 @@ def direct(brief):
     return obj
 
 
-VALID_TYPES = {"hook", "reveal", "shock", "scale", "trend", "close",
-               "bars", "trendpro", "lines", "gauge", "donut", "race"}
-VALID_TRANS = {"cut", "zoom", "whip", "whipL", "dip"}
+VALID_TYPES = {"hook", "cifra", "linea", "barras", "carrera", "cierre"}
+VALID_TRANS = {"cut", "dip"}
+MOTION_FIELDS = {"land", "durF", "easing", "duration", "curve", "stagger", "speed"}
 
 
 def validate(t):
-    """Contrato v2: tipos del menú, target_word donde es obligatorio, arco hook->close."""
+    """Contrato v3 (masters): tipos del menú, target_word obligatorio, CERO motion en props."""
     errs = []
     beats = t.get("beats", [])
     if not beats:
         return ["sin beats"]
     if beats[0].get("type") != "hook":
         errs.append("el beat 1 debe ser hook")
-    if beats[-1].get("type") != "close":
-        errs.append("el último beat debe ser close")
+    if beats[-1].get("type") != "cierre":
+        errs.append("el último beat debe ser cierre")
     for i, b in enumerate(beats):
         ty = b.get("type")
         if ty not in VALID_TYPES:
             errs.append(f"b{i}: tipo '{ty}' fuera del menú")
         if b.get("trans") and b["trans"] not in VALID_TRANS:
-            errs.append(f"b{i}: trans '{b['trans']}' inválida")
-        if ty in ("shock", "gauge") and not b.get("target_word"):
+            errs.append(f"b{i}: trans '{b['trans']}' inválida (solo cut|dip)")
+        if ty in ("cifra", "linea", "barras") and not b.get("target_word"):
             errs.append(f"b{i} ({ty}): falta target_word")
         if not b.get("vo"):
             errs.append(f"b{i}: falta vo")
+        # el director NO puede emitir motion — se valida por SCHEMA, no por prompt
+        leaked = MOTION_FIELDS & set(b.get("props", {}).keys())
+        if leaked:
+            errs.append(f"b{i}: props de motion prohibidas {sorted(leaked)}")
     total_words = sum(len(b.get("vo", "").split()) for b in beats)
     if total_words > 175:
         errs.append(f"VO total {total_words} palabras (presupuesto ≤150+margen)")
@@ -210,4 +209,4 @@ if __name__ == "__main__":
         print(f"     VO: {b.get('vo','')}")
     print("═" * 70)
     print(f"VO total: {sum(len(b.get('vo','').split()) for b in t.get('beats',[]))} palabras")
-    print("guardado en", out, "\nsiguiente:  python assemble_news.py", out, "<slug>")
+    print("guardado en", out, "\nsiguiente:  python assemble_masters.py", out, "<slug>")

@@ -42,7 +42,9 @@ export const CifraHero: React.FC<CifraHeroProps> = ({
   const ruleAt = 4;
   const kickerAt = ruleAt + Math.round(D.ruleDrawF * 0.6);
   const rollStart = kickerAt + D.enterF + 4;
-  const landAt = land ?? rollStart + D.countupF;
+  // clamp: si el ancla del VO cae demasiado temprano, el odómetro necesita un
+  // mínimo de rodada — nunca aterrizar antes de rollStart+16
+  const landAt = Math.max(land ?? rollStart + D.countupF, rollStart + 16);
   const subAt = landAt + 10;
   const exitAt = total - D.exitF - 2;
 

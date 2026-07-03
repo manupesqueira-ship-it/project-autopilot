@@ -1,0 +1,174 @@
+{
+  "topic": "Nvidia vale más que el PIB de México",
+  "hook_text": "Tu país entero produce menos en un año que lo que vale una sola empresa.",
+  "vision": "Dimensionar el boom de la IA: Nvidia ya vale casi el doble que toda la economía mexicana anual, y multiplicó ese valor veinte veces en cinco años.",
+  "beats": [
+    {
+      "type": "hook",
+      "vo": "Tu país entero produce menos en un año... que lo que vale una sola empresa.",
+      "props": {
+        "kicker": "MÁS QUE TU PAÍS",
+        "words": [
+          {
+            "t": "Tu"
+          },
+          {
+            "t": "país",
+            "accent": true
+          },
+          {
+            "t": "entero"
+          },
+          {
+            "t": "produce"
+          },
+          {
+            "t": "menos"
+          },
+          {
+            "t": "en"
+          },
+          {
+            "t": "un"
+          },
+          {
+            "t": "año"
+          },
+          {
+            "t": "que"
+          },
+          {
+            "t": "lo"
+          },
+          {
+            "t": "que"
+          },
+          {
+            "t": "vale"
+          },
+          {
+            "t": "una"
+          },
+          {
+            "t": "sola"
+          },
+          {
+            "t": "empresa",
+            "accent": true
+          }
+        ],
+        "tease": "Y no hablamos de cualquier empresa."
+      },
+      "target_word": "país",
+      "trans": "dip",
+      "technique": "Hook: pérdida/impacto personal en 2ª persona ('tu país') con plazo concreto ('en un año'), ≤20 palabras, sin abrir con institución; Von Restorff con dos accents esmeralda ('país'/'empresa')."
+    },
+    {
+      "type": "cifra",
+      "vo": "Nvidia, la empresa detrás de los chips de inteligencia artificial... hoy vale alrededor de tres billones y medio de dólares. Casi lo suficiente para comprarte México completo... dos veces. Pero espera, porque ahí no acaba.",
+      "props": {
+        "kicker": "EL GIGANTE",
+        "value": "$3.5",
+        "unit": "billones USD",
+        "sub": "Nvidia, la empresa de los chips de inteligencia artificial.",
+        "foot": "NVIDIA · JUL 2026"
+      },
+      "target_word": "billones",
+      "trans": "cut",
+      "technique": "Cifra que impacta -> odómetro aterriza con la voz en 'billones'; analogía física obligatoria ('comprarte México completo dos veces') en vez de inventar dato; loop abierto ('Pero espera...') por Zeigarnik."
+    },
+    {
+      "type": "barras",
+      "vo": "Mientras México produce un billón ochocientos mil millones de dólares al año... Nvidia sola vale casi dos veces eso: tres billones y medio de dólares.",
+      "props": {
+        "kicker": "DAVID Y GOLIAT",
+        "bars": [
+          {
+            "label": "NVIDIA · VALOR DE MERCADO",
+            "value": 3.5,
+            "display": "$3.5 B"
+          },
+          {
+            "label": "MÉXICO · PIB ANUAL",
+            "value": 1.8,
+            "display": "$1.8 B"
+          }
+        ],
+        "accentIndex": 0,
+        "sub": "Nvidia vale casi el doble que todo México junto.",
+        "foot": "EN BILLONES USD · PIB 2025 · CAP. JUL 2026"
+      },
+      "target_word": "billones",
+      "trans": "dip",
+      "technique": "A vs B (2 cosas hoy) -> barras, protagonista esmeralda (Nvidia) contra referencia azul (México); cierra el loop abierto en el beat anterior."
+    },
+    {
+      "type": "linea",
+      "vo": "Hace cinco años, Nvidia valía veinte veces menos que hoy. El problema es que ninguna economía crece así de rápido. Resultado: hoy vale veinte veces más que en dos mil veintiuno.",
+      "props": {
+        "kicker": "CINCO AÑOS",
+        "points": [
+          1,
+          2,
+          4,
+          8,
+          15,
+          20
+        ],
+        "xLabels": [
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "endTag": "×20",
+        "sub": "Nvidia multiplicó su valor veinte veces en cinco años.",
+        "foot": "NVIDIA · 2021-2026"
+      },
+      "target_word": "veinte",
+      "trans": "dip",
+      "technique": "Tendencia/crecimiento -> línea trazada completa con endTag que aterrizar en la voz; clímax al ~80% del reel (peak-end); conector de consecuencia 'Resultado:'."
+    },
+    {
+      "type": "cierre",
+      "vo": "Una sola empresa... ya vale más que tu país entero. La próxima vez que hables de tu economía, pregúntate quién manda ahora.",
+      "props": {
+        "kicker": "AHORA LO SABES",
+        "words": [
+          {
+            "t": "Una"
+          },
+          {
+            "t": "empresa",
+            "accent": true
+          },
+          {
+            "t": "ya"
+          },
+          {
+            "t": "vale"
+          },
+          {
+            "t": "más"
+          },
+          {
+            "t": "que"
+          },
+          {
+            "t": "tu"
+          },
+          {
+            "t": "PAÍS",
+            "accent": true
+          }
+        ],
+        "tease": "La próxima vez que hables de economía, pregúntate quién manda ahora."
+      },
+      "target_word": "empresa",
+      "trans": "cut",
+      "technique": "Cierre kinético que reconecta con el hook (mismo par 'empresa'/'país'), cierra el Zeigarnik; MAYÚS reservado a una sola palabra de todo el guion ('PAÍS'); imperativo final citable sin CTA genérico."
+    }
+  ]
+}

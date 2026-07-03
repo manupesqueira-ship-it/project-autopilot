@@ -30,10 +30,12 @@ from PIL import Image
 
 FPS = 30
 TOL_S = 0.75            # tolerancia mux/encode sobre la duración esperada
-# D4 calibrado contra el golden nvidia_v2 (2026-07-03): f0 std=5.6 (bg+masthead),
-# t=0.9s std=19.6 (hook en pantalla). Negro plano ~0-2. Piso con margen:
-MIN_F0_STD = 3.0        # frame 0: no abre en negro absoluto
-MIN_HOOK_STD = 10.0     # t=0.9s: el hook YA debe estar en pantalla
+# D4 recalibrado 2026-07-03 para el MUNDO DE LA PÁGINA (masters kit2, apertura
+# oscura por diseño): bg+grano solo = std 1.6 · contenido fino en pantalla a
+# t=0.9s = std 6.8 · render ROTO/negro puro (sin grano) = std ~0.1-0.3.
+# (El mundo viejo bold medía f0=5.6 / hook=19.6 — umbrales anteriores 3.0/10.0.)
+MIN_F0_STD = 0.8        # frame 0: distingue render roto de apertura oscura con grano
+MIN_HOOK_STD = 4.5      # t=0.9s: el contenido (regla+kicker+palabras) ya está formándose
 HOOK_T = 0.9
 MIN_LAND = 8            # un land antes de esto = la cifra ya estaba spoileada
 

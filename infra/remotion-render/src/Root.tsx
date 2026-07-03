@@ -30,6 +30,7 @@ import { LineaHero } from "./masters/LineaHero";
 import { CompararBarras } from "./masters/CompararBarras";
 import { CarreraBars } from "./masters/CarreraBars";
 import { HookKinetico } from "./masters/HookKinetico";
+import { MastersReel, calcMastersReel } from "./masters/MastersReel";
 import { Logo } from "./beats/Logo";
 import { BtcShowcase } from "./beats/BtcShowcase";
 import { MapZoomEditorial } from "./beats/MapZoomEditorial";
@@ -471,6 +472,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="CifraHero" component={CifraHero as never} durationInFrames={205} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LO QUE PIERDES AL AÑO", value: "$96,209", unit: "MXN", sub: "el poder real de tu dinero guardado en efectivo", foot: "MOTION TEST · DATOS DEMO · BANXICO/INEGI" } as never} />
       <Composition id="LineaHero" component={LineaHero as never} durationInFrames={240} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL INTERÉS COMPUESTO", points: [10, 10.8, 11.7, 12.6, 13.6, 14.7, 15.9, 17.2, 18.6, 20.1, 23.4, 27.2, 31.6, 34.0], xLabels: ["2012", "2016", "2020", "2026"], endTag: "×3.4", sub: "cada peso trabajando 14 años, sin mover un dedo", foot: "MOTION TEST · DATOS DEMO" } as never} />
       <Composition id="CompararBarras" component={CompararBarras as never} durationInFrames={280} fps={30} width={1080} height={1920} defaultProps={{ kicker: "EL MISMO PESO, TRES DESTINOS", bars: [{ label: "INFLACIÓN", value: 3.9, display: "3.9%" }, { label: "CUENTA DE AHORRO", value: 0.1, display: "0.1%" }, { label: "CETES 28 DÍAS", value: 7.2, display: "7.2%" }], accentIndex: 2, sub: "solo uno de los tres le gana a la inflación", foot: "MOTION TEST · DATOS DEMO" } as never} />
+      <Composition id="MastersReel" component={MastersReel as never} durationInFrames={900} fps={30} width={1080} height={1920} defaultProps={{ beats: [] } as never} calculateMetadata={calcMastersReel as never} />
       <Composition id="CarreraBars" component={CarreraBars as never} durationInFrames={365} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA CARRERA CRIPTO", steps: [{ period: "2018", values: { BTC: 65, ETH: 14, XRP: 13, BNB: 1, SOL: 0 } }, { period: "2020", values: { BTC: 350, ETH: 84, XRP: 10, BNB: 5, SOL: 1 } }, { period: "2022", values: { BTC: 320, ETH: 147, XRP: 17, BNB: 44, SOL: 12 } }, { period: "2024", values: { BTC: 1350, ETH: 400, XRP: 35, BNB: 85, SOL: 105 } }], accentName: "BTC", prefix: "$", suffix: " mil M", sub: "el líder nunca soltó la corona (demo)", foot: "MOTION TEST · DATOS DEMO" } as never} />
       <Composition id="HookKinetico" component={HookKinetico as never} durationInFrames={220} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA NOTICIA", words: [{ t: "Una" }, { t: "empresa" }, { t: "vale" }, { t: "más" }, { t: "que" }, { t: "un" }, { t: "país", accent: true }, { t: "entero", accent: true }], tease: "y no es una petrolera…", foot: "MOTION TEST · DATOS DEMO" } as never} />
       {/* CHART BEATS v2 (kit/charts.tsx, look A) — demos con datos ilustrativos marcados */}

@@ -54,7 +54,9 @@ export const LineaHero: React.FC<LineaHeroProps> = ({
   const labelsAt = ruleAt + D.ruleDrawF;                    // etapa 1: ejes/labels (Apple)
   const drawAt = labelsAt + D.enterF + 2;                   // etapa 2: el dato
   const drawEnd = drawAt + D.lineDrawF;
-  const landAt = land ?? drawEnd + 8;
+  // clamp: el endTag NUNCA aterriza antes de que el trazo termine (si la palabra
+  // del VO cae antes, el tag espera al trazo — el motion congelado no se comprime)
+  const landAt = Math.max(land ?? drawEnd + 8, drawEnd + 4);
   const subAt = landAt + 10;
   const exitAt = total - D.exitF - 2;
 
