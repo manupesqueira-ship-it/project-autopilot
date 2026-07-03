@@ -1,0 +1,152 @@
+{
+  "slug": "fondo_emergencia_base",
+  "title": "Antes de invertir: tu fondo de emergencia",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Una emergencia sin fondo de emergencia se convierte en deuda al cuarenta y cinco por ciento anual. Así destruyes tu patrimonio antes de construirlo.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "props": {
+        "stat": "45% anual",
+        "context": "lo que te cobra la tarjeta cuando no tienes colchón",
+        "statColor": "#FF6B6B",
+        "caption": "Tasa de interés tarjeta de crédito"
+      }
+    },
+    {
+      "id": "b2_que_es",
+      "type": "BeatKinetic",
+      "vo": "El fondo de emergencia es dinero tuyo, estable, a la mano. No es para invertir. Es para sobrevivir lo inesperado sin pedir prestado.",
+      "sfx": "whoosh",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [
+            {
+              "text": "Tu",
+              "accent": false
+            },
+            {
+              "text": "COLCHÓN",
+              "accent": true
+            },
+            {
+              "text": "financiero"
+            }
+          ],
+          [
+            {
+              "text": "estable,",
+              "accent": false
+            },
+            {
+              "text": "líquido,"
+            }
+          ],
+          [
+            {
+              "text": "ANTES",
+              "accent": true
+            },
+            {
+              "text": "de invertir"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b3_escalera",
+      "type": "BeatBars",
+      "vo": "Con un gasto mensual de quince mil pesos, tu meta es clara: un mes te da quince mil, tres meses cuarenta y cinco mil, y seis meses te dan la meta completa de noventa mil pesos.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": {
+        "growWords": [
+          "quince",
+          "cuarenta",
+          "noventa"
+        ]
+      },
+      "props": {
+        "caption": "Escalera del fondo de emergencia (gasto mensual: $15,000 MXN)",
+        "bars": [
+          {
+            "label": "1 mes",
+            "value": 15000
+          },
+          {
+            "label": "3 meses",
+            "value": 45000
+          },
+          {
+            "label": "6 meses",
+            "value": 90000
+          }
+        ],
+        "prefix": "$"
+      }
+    },
+    {
+      "id": "b4_sin_vs_con",
+      "type": "BeatVersus",
+      "vo": "Sin fondo, una emergencia de noventa mil pesos en tarjeta te cuesta mucho más por los intereses. Con fondo, la pagas de tu propio dinero y sigues adelante sin deuda.",
+      "sfx": "impact",
+      "trans": "zoomPunch",
+      "cues": {
+        "leftEndWord": "intereses",
+        "rightEndWord": "deuda"
+      },
+      "props": {
+        "caption": "¿Qué pasa ante una emergencia de $90,000 MXN?",
+        "left": {
+          "name": "Sin fondo",
+          "ticker": "Tarjeta al 45% anual",
+          "logo": "creditcard",
+          "value": 90000,
+          "tag": "+45%"
+        },
+        "right": {
+          "name": "Con fondo",
+          "ticker": "Tu dinero, sin intereses",
+          "logo": "piggybank",
+          "value": 90000,
+          "tag": "$0 extra"
+        },
+        "prefix": "$",
+        "winner": "right"
+      }
+    },
+    {
+      "id": "b5_meta",
+      "type": "BeatHeroCoin",
+      "vo": "Tu meta: acumular alrededor de noventa mil pesos en un lugar seguro y accesible. Esa es la base que protege todo lo que construyas después.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "accesible"
+      },
+      "props": {
+        "value": 90000,
+        "prefix": "$",
+        "suffix": " MXN",
+        "caption": "Meta del fondo de emergencia",
+        "subline": "6 meses de gastos · $15,000 MXN/mes",
+        "accentColor": "#00D9A5"
+      }
+    },
+    {
+      "id": "b6_cta",
+      "type": "BeatCta",
+      "vo": "Primero el colchón, luego la inversión. Empieza hoy aunque sea con mil pesos.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Construye tu BASE primero",
+        "boldWord": "BASE",
+        "sub": "mañana: dónde guardar tu fondo para que no pierda valor con la inflación"
+      }
+    }
+  ]
+}

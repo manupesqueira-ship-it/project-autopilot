@@ -36,7 +36,9 @@ NO renderiza ahora; se ESCRIBE. Render en el lote final (R1):
 Salida: out_hero/hero_#####.png (RGBA transparente, ~84 frames @30fps).
 """
 import json
+import math
 import os
+import random
 import sys
 
 import bpy  # noqa: E402  (solo dentro de Blender; py_compile no lo ejecuta)
@@ -150,6 +152,106 @@ def _procedural_hero():
     bar.data.materials.append(
         sp.pbr_metal("Ingot", hex_lin(PALETTE["gold"]), rough=0.17, coat=0.6))
     return [bar]
+
+
+def _one_coin(loc, rotz=0.0, r=1.0, t=0.16, tiltx=0.0, emblem=False, tag="Coin"):
+    """Una moneda: cilindro con canto BISELADO. Si emblem=True le agrega RELIEVE
+    en la cara +Z (borde realzado + sol radiante + boton central) -> lee como
+    MONEDA, no como ficha/disco. El relieve es geometria, NO texto (brand_safe).
+    Se ensambla en el ORIGEN y luego se traslada/inclina rigido (los hijos del
+    relieve siguen al cuerpo). Devuelve [cuerpo, *partes_relieve]."""
+    parts = []
+    bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=r, depth=t, location=(0, 0, 0))
+    body = bpy.context.active_object
+    body.name = tag
+    bev = body.modifiers.new("Bevel", "BEVEL")
+    bev.width = t * 0.18
+    bev.segments = 4
+    bpy.ops.object.shade_smooth()
+    try:
+        bpy.ops.object.shade_auto_smooth(angle=math.radians(34))
+    except Exception:
+        pass
+
+    if emblem:
+        zf = t * 0.5  # cara superior
+        # borde realzado (anillo): torus aplanado en el canto de la cara
+        bpy.ops.mesh.primitive_torus_add(
+            location=(0, 0, zf), major_radius=r * 0.88, minor_radius=r * 0.05)
+        ring = bpy.context.active_object
+        ring.name = tag + "_Ring"
+        ring.scale.z = 0.45
+        bpy.ops.object.shade_smooth()
+        parts.append(ring)
+        # sol radiante: rayos finos alrededor del centro (iconografia de moneda LATAM)
+        rays = 18
+        for k in range(rays):
+            a = (2 * math.pi / rays) * k
+            cx, cy = math.cos(a) * r * 0.5, math.sin(a) * r * 0.5
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, zf + t * 0.18))
+            ray = bpy.context.active_object
+            ray.name = f"{tag}_Ray{k:02d}"
+            ray.rotation_euler = (0, 0, a)
+            ray.scale = (r * 0.34, r * 0.028, t * 0.14)  # X largo = radial
+            bpy.ops.object.shade_smooth()
+            parts.append(ray)
+        # boton central
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=48, radius=r * 0.2, depth=t * 0.55, location=(0, 0, zf + t * 0.12))
+        boss = bpy.context.active_object
+        boss.name = tag + "_Boss"
+        bb = boss.modifiers.new("Bevel", "BEVEL")
+        bb.width = t * 0.06
+        bb.segments = 3
+        bpy.ops.object.shade_smooth()
+        parts.append(boss)
+        for p in parts:  # ensamblar al cuerpo en el ORIGEN (inverse = identidad)
+            p.parent = body
+
+    body.rotation_euler = (tiltx, 0.0, rotz)
+    body.location = loc
+    return [body] + parts
+
+
+def _procedural_coin_stack(seed=7):
+    """Hero PROCEDURAL $0: una COMPOSICION de dinero coherente -> stack de monedas
+    de oro (canto abanicado) + UNA moneda hero inclinada hacia camara con relieve
+    (sol radiante) + un par de monedas derramadas. El stack da el 'lomo' de cantos;
+    la moneda hero muestra la CARA con relieve -> lee inequivoco como dinero, no
+    fichas. Todo el mismo material/luz/mundo = UN plano coherente (leccion R1), sin
+    texto/logo (brand_safe), $0. La cifra exacta va en overlay Remotion."""
+    random.seed(seed)
+    # oro-MONEDA: amarillo rico (no el tan #D4A574 de UI, que bajo el HDRI calido
+    # lee rosa/cobre). El gold semantico locked es para tipo/UI; el METAL fisico de
+    # una moneda lee dinero solo si es amarillo-oro saturado. rough bajo = pulido.
+    gold = sp.pbr_metal("CoinGold", hex_lin("#E8B23C"), rough=0.16, coat=0.55)
+    r, t = 1.0, 0.16
+    objs = []
+
+    # stack abanicado (el 'lomo' de cantos) -> CENTRO-ATRAS, el sujeto principal
+    lean = mathutils.Vector((0.0, 0.0))
+    for i in range(9):
+        lean += mathutils.Vector((random.uniform(-0.012, 0.018),
+                                  random.uniform(-0.015, 0.015)))
+        loc = (lean.x + random.uniform(-0.02, 0.02),
+               0.55 + lean.y + random.uniform(-0.02, 0.02),  # +Y = atras
+               t * 0.5 + i * t)
+        objs += _one_coin(loc, rotz=random.uniform(-0.38, 0.38), r=r, t=t, tag=f"Stack{i:02d}")
+
+    # moneda HERO: a la IZQUIERDA-frente, inclinada con la CARA a camara (-Y), con
+    # relieve. Mas chica que el stack y CORRIDA al carril izquierdo -> NO encima al
+    # stack (leccion 'no encimar elementos'); ambos se leen completos.
+    objs += _one_coin((-1.55, -1.35, 0.92), rotz=0.14, r=1.15, t=0.18,
+                      tiltx=math.radians(62), emblem=True, tag="HeroCoin")
+
+    # monedas derramadas (caras a la vista) -> carril DERECHO-frente
+    objs += _one_coin((1.5, -1.15, t * 0.5), rotz=0.5, r=1.05, t=t, tag="Spill0")
+    objs += _one_coin((1.15, -0.2, t * 0.5), rotz=-0.7, r=0.95, t=t, tag="Spill1")
+
+    for o in objs:
+        if o.type == "MESH" and not o.data.materials:
+            o.data.materials.append(gold)
+    return objs
 
 
 # -------------------------------------------------------- material (override)
@@ -309,9 +411,14 @@ def _args():
 
     return {
         "asset": g("--asset"),               # id en hero_assets.json (None -> procedural)
+        "proc": g("--proc", "coins"),         # forma procedural: coins|ingot
         "material": g("--material", "keep"),  # keep|gold|silver|teal|gold-glow|green
         "frames": int(g("--frames", FRAMES)),
         "size": float(g("--size", "3.2")),
+        "hdri": g("--hdri"),                  # ruta a .hdr/.exr CC0 (None -> gradiente procedural)
+        "env": float(g("--env", "0.7")),      # fuerza del entorno HDRI (reflejos); <1 = key domina -> drama
+        "lens": float(g("--lens", "70")),     # focal (mm); largo = product/tele
+        "fill": float(g("--fill", "0.92")),   # fraccion del cuadro que ocupa el hero (margen)
     }
 
 
@@ -321,7 +428,13 @@ def main():
 
     scene = sp.fresh_scene()
     sp.setup_render(scene, res=1080, samples=180, fps=30, motion_blur=True)
-    sp.world_studio(scene, strength=1.0)
+
+    hdri = opt["hdri"]
+    if hdri and not os.path.isabs(hdri):
+        hdri = os.path.join(HERE, hdri)
+    if hdri and not os.path.exists(hdri):
+        raise SystemExit(f"hero_shot: HDRI no existe: {hdri}")
+    sp.world_studio(scene, hdri_path=hdri, strength=opt["env"])
     out_dir, prefix = sp.parse_out_arg("out_hero", "hero_")
     sp.set_output(scene, out_dir, prefix, frame_start=1, frame_end=frames)
 
@@ -330,19 +443,37 @@ def main():
         objs = import_model(path)
         print(f"[hero] modelo = {entry['id']} ({entry.get('licencia')}, {os.path.basename(path)})")
     else:
-        objs = _procedural_hero()
-        tag = entry["id"] if entry else "procedural (lingote $0)"
+        shape = opt["proc"] if entry is None else "ingot"
+        objs = _procedural_coin_stack() if shape == "coins" else _procedural_hero()
+        tag = entry["id"] if entry else f"procedural {shape} $0"
         print(f"[hero] {tag} -> sin descarga")
 
     _override_material(objs, opt["material"])
     pivot, height = frame_objects(objs, target_size=opt["size"])
 
-    look = (0.0, 0.0, height * 0.46)
-    cam = sp.add_camera(scene, location=(0.0, -opt["size"] * 1.85, height * 0.66),
-                        look_at=look, lens=70, dof=True, fstop=2.8)
-    sp.studio_lights(scene, target_loc=look)
+    # ENCUADRE robusto p/cualquier forma: distancia de camara desde la esfera
+    # envolvente + el FOV de la lente, apuntando a una fraccion `fill` del cuadro
+    # (margen). Antes la distancia era fija (size*1.85) y recortaba las formas
+    # no-disco (la barra ancha llenaba el cuadro). La esfera tambien cubre el
+    # swing -> el hero no se sale al rotar.
+    meshes = [o for o in objs if o.type == "MESH"]
+    mn, mx = _bbox_world(meshes)
+    center = (mn + mx) / 2.0
+    radius = (mx - center).length or 1.0
+    half_fov = math.atan((36.0 * 0.5) / opt["lens"])  # sensor default 36mm
+    dist = radius / max(0.05, opt["fill"] * math.tan(half_fov))
 
-    swing(pivot, frames)
+    look = (0.0, 0.0, center.z)
+    cam = sp.add_camera(scene, location=(0.0, -dist, center.z + radius * 0.3),
+                        look_at=look, lens=opt["lens"], dof=True, fstop=2.8)
+    # luz dramatica: key fuerte + fill bajo + HDRI a 0.7 -> contraste direccional
+    # (el HDRI solo, a 1.0, lavaba el metal a 'catalogo plano'). El rim separa del fondo.
+    sp.studio_lights(scene, target_loc=look, key=2600, rim=1000, fill=140)
+
+    # swing SUTIL: la composicion (hero + stack + spills) solo "cierra" en su
+    # orientacion disenada; un giro grande la rompe (encimaria el hero al stack).
+    # ~7 grados de deriva + push-in + motion blur = vida, sin perder el layout.
+    swing(pivot, frames, a0=-0.14, a1=-0.02)
     camera_move(cam, look, frames)
 
     sp.render(scene, animation=True)

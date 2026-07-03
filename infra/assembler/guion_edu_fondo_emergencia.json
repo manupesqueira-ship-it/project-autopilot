@@ -1,93 +1,129 @@
 {
   "slug": "edu_fondo_emergencia",
-  "title": "Fondo de emergencia: cuánto necesitas para no depender de nadie",
-  "voice": "lJtjZw9ZjSbD9Zs9bOWq",
-  "carril": "evergreen",
-  "caption": {
-    "hook": "Antes de invertir un solo peso, necesitas esto: un colchón que te deje dormir tranquilo aunque mañana pierdas tu ingreso.",
-    "valor": "Tu fondo de emergencia = 6 meses de gastos. Si gastas $15,000 MXN al mes, son $90,000 guardados y a la mano. No es para invertir ni para crecer: es para que una emergencia no te empuje a una deuda de tarjeta al 45%.",
-    "cta": "Primero el colchón, luego a invertir. Empieza con un mes y súbele.",
-    "open_loop": "dónde guardar tu fondo para que no pierda valor con la inflación",
-    "pregunta": "¿Cuántos meses aguantarías hoy sin ingresos?",
-    "hashtags": ["finanzaspersonales", "fondodeemergencia", "ahorro", "educacionfinanciera", "saludfinanciera", "presupuesto", "mexico"],
-    "emoji": "🛟"
-  },
+  "title": "El colchón antes de invertir: tu fondo de emergencia",
   "beats": [
     {
-      "id": "b1_hook",
-      "type": "BeatStatCallout",
-      "vo": "Si mañana pierdes tu ingreso, ¿cuánto aguantas? Con noventa mil pesos cubres seis meses de gastos sin pedirle prestado a nadie. Eso es un fondo de emergencia, y va antes que cualquier inversión.",
+      "id": "b1_hero",
+      "type": "BeatHeroShot",
+      "vo": "Antes de invertir un solo peso, necesitas esto.",
       "sfx": "impact",
       "trans": "zoomPunch",
       "props": {
-        "caption": "lo primero, antes de invertir",
-        "stat": "$90,000",
-        "statColor": "#00D9A5",
-        "context": "lo que necesitas para cubrir 6 meses de gastos sin depender de nadie",
-        "accentColor": "#D4A574"
+        "shot_id": "b1_hero_colchon",
+        "object": "a thick stack of crisp banknotes bound with a rubber band, resting on a solid dark studio surface, stylized premium cartoon illustration, centered, no text, no logo, no hands",
+        "motion": "slow heroic push-in toward the stack, a golden shimmer sweeping across the bills from left to right, camera slightly orbiting the stack",
+        "kicker": "Antes de invertir, necesitas esto"
       }
     },
     {
-      "id": "b2_escala",
+      "id": "b2_hook",
+      "type": "BeatStatCallout",
+      "vo": "Una emergencia pagada con tarjeta de crédito te cuesta hasta cuarenta y cinco por ciento de interés al año. El fondo de emergencia existe para que eso nunca pase.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "stat": "45%",
+        "context": "de interés anual en tarjeta de crédito",
+        "statColor": "#FF6B6B",
+        "caption": "El costo de no tener colchón"
+      }
+    },
+    {
+      "id": "b3_bars",
       "type": "BeatBars",
-      "vo": "Empieza por un mes de gastos: quince mil pesos. Súbele a tres meses: cuarenta y cinco mil. Y tu meta, seis meses, son noventa mil pesos guardados.",
+      "vo": "La meta es clara: guarda al menos un mes para empezar, tres meses es el mínimo real, y seis meses te da una protección sólida.",
       "sfx": "tick",
       "trans": "scrollUp",
-      "cues": { "growWords": ["quince", "cuarenta", "noventa"] },
+      "cues": {
+        "growWords": [
+          "empezar",
+          "real",
+          "sólida"
+        ]
+      },
       "props": {
-        "caption": "tu meta, paso a paso (MXN)",
+        "caption": "Tu escalera del fondo de emergencia (gasto mensual: $15,000 MXN)",
         "bars": [
-          { "label": "1 mes", "value": 15000 },
-          { "label": "3 meses", "value": 45000 },
-          { "label": "6 meses", "value": 90000, "highlight": true }
+          {
+            "label": "1 mes",
+            "value": 15000
+          },
+          {
+            "label": "3 meses",
+            "value": 45000
+          },
+          {
+            "label": "6 meses",
+            "value": 90000
+          }
         ],
-        "prefix": "$",
-        "suffix": ""
-      }
-    },
-    {
-      "id": "b3_wow",
-      "type": "BeatWaterfall",
-      "vo": "No tienes que juntarlo de golpe. Guardando quince mil al mes, en dos meses llevas treinta mil. Al mes cuatro, sesenta mil. Y al mes seis, tu colchón de noventa mil pesos está completo.",
-      "sfx": "whoosh",
-      "trans": "scrollUp",
-      "props": {
-        "caption": "guardando $15,000 al mes (MXN)",
-        "startLabel": "Mes 2",
-        "startValue": 30000,
-        "steps": [
-          { "label": "Mes 4", "delta": 30000 },
-          { "label": "Mes 6", "delta": 30000 }
-        ],
-        "endLabel": "Tu colchón",
         "prefix": "$"
       }
     },
     {
-      "id": "b4_climax",
-      "type": "BeatBigNumber",
-      "vo": "Un fondo de emergencia de seis meses, noventa mil pesos, es lo que te da algo que ningún rendimiento puede comprar: tranquilidad.",
-      "sfx": "impact",
-      "trans": "flashWhite",
-      "cues": { "countEndWord": "tranquilidad" },
+      "id": "b4_timeline",
+      "type": "BeatTimeline",
+      "vo": "Así se construye: arrancas con quince mil pesos guardados, llegas a cuarenta y cinco mil en tres meses, y al sexto mes tienes la meta completa. Paso a paso, sin prisa.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": {
+        "growWords": [
+          "guardados",
+          "meses",
+          "completa"
+        ]
+      },
       "props": {
-        "caption": "6 meses de gastos, a la mano",
-        "value": 90000,
-        "prefix": "$",
-        "suffix": " MXN",
-        "color": "#D4A574",
-        "subline": "tu colchón antes de invertir un solo peso · paz mental, no rendimiento"
+        "caption": "Construcción del fondo (base: $15,000 MXN/mes)",
+        "nodes": [
+          {
+            "year": "Mes 1",
+            "title": "Primer respiro",
+            "amount": "$15,000 MXN",
+            "tone": "white"
+          },
+          {
+            "year": "Mes 3",
+            "title": "Mínimo real",
+            "amount": "$45,000 MXN",
+            "tone": "green"
+          },
+          {
+            "year": "Mes 6",
+            "title": "Meta completa",
+            "amount": "$90,000 MXN",
+            "tone": "gold"
+          }
+        ]
       }
     },
     {
-      "id": "b5_cta",
+      "id": "b5_climax",
+      "type": "BeatBigNumber",
+      "vo": "La meta final: alrededor de noventa mil pesos listos, líquidos y a la mano. Eso es seguridad real antes de cualquier inversión.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "inversión"
+      },
+      "props": {
+        "value": 90000,
+        "prefix": "$",
+        "suffix": " MXN",
+        "caption": "Meta del fondo de emergencia",
+        "subline": "6 meses × $15,000 MXN de gasto mensual",
+        "color": "#D4A574"
+      }
+    },
+    {
+      "id": "b6_cta",
       "type": "BeatCta",
-      "vo": "Antes de pensar en inversiones, asegura tu colchón. Es la base de todo. Mañana te muestro dónde guardarlo para que no se lo coma la inflación.",
+      "vo": "Construye tu colchón primero. Después invertimos. Síguenos para no perderte el siguiente paso.",
       "sfx": "whoosh",
       "props": {
-        "text": "Primero el colchón. Luego, a invertir.",
-        "boldWord": "colchón",
-        "sub": "mañana: dónde guardar tu fondo para que no pierda valor"
+        "text": "El colchón va PRIMERO",
+        "boldWord": "PRIMERO",
+        "sub": "mañana: dónde guardar tu fondo para que no lo devore la inflación"
       }
     }
   ]

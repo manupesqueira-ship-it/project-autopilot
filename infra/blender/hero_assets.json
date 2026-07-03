@@ -60,6 +60,18 @@
       "comercial_ok": true,
       "brand_safe": true,
       "verificado": "2026-06-19"
+    },
+    {
+      "id": "vintage_pocket_watch",
+      "tipo": "modelo",
+      "file": "hero_models/vintage_pocket_watch/vintage_pocket_watch_1k.gltf",
+      "descripcion": "reloj de bolsillo de oro/laton con texturas PBR (diff/nor/arm). RECHAZADO tras R1: (1) la textura del dial trae horneada la MARCA 'AVVENTURA' (wordmark de un tercero) -> rompe brand_safe Y la regla locked 'SIN texto horneado en el 3D'; no se quita sin matar el detalle del grabado. (2) Direccion equivocada: reloj antiguo victoriano ornamentado = foto-stock de producto vintage, no el hero fintech moderno/oscuro de la Style Bible. La licencia CC0 si es real; falla el brand_safe y el arte. NO renderizar.",
+      "fuente": "https://polyhaven.com/a/vintage_pocket_watch  (CC0, autor Tal Swicegood)",
+      "licencia": "CC0",
+      "atribucion": null,
+      "comercial_ok": true,
+      "brand_safe": false,
+      "verificado": "2026-06-19"
     }
   ]
 }

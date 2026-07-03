@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "actualizado": "2026-06-18",
+  "version": 3,
+  "actualizado": "2026-06-26",
   "descripcion": "Banco de temas de Dinero LATAM. Motor de MATERIAL para producir posts/dia. Claude pre-genera lotes de temas (este archivo); Manuel los aprueba (gate editorial); el orquestador (cola.py / producir.py) consume el SIGUIENTE tema producible y produce. Cada tema mapea 1:1 al Brief (campos tema / open_loop / datos) y declara su CARRIL (news / evergreen).",
   "como_funciona": {
     "estados": "propuesto -> (gate de Manuel) aprobado -> (produccion) producido",
@@ -171,6 +171,56 @@
       "open_loop": "como construir tu numero desde cero, mes a mes",
       "datos": "- Concepto: 'regla del 4%' = puedes retirar ~4% de tu portafolio al ano sin agotarlo; equivale a necesitar 25 veces tu gasto anual invertido.\n- Supuesto DECLARADO: gasto de 20,000 MXN al mes = 240,000 al ano; meta = 240,000 x 25 = 6,000,000 MXN. Retiro del 4% = 240,000 MXN al ano.\n- Escala con el gasto: gastando 15,000 al mes la meta baja a 4,500,000 MXN (180,000 anual x 25).\n- Es una regla de planeacion (origen: estudio Trinity), no una garantia; depende de rendimientos y secuencia.\nFuente: aritmetica de la regla del 4% (x25). Cifras exactas para el visual; la voz redondea ('alrededor de seis millones').",
       "por_que_funciona": "Concepto aspiracional (libertad financiera / FIRE) explicado simple y en pesos. Cierra el arco de la serie evergreen (fondo -> presupuesto -> deudas -> inflacion -> meta final). Guion ya autorado ($0)."
+    },
+    {
+      "id": "mx_renta_vs_compra",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "vivienda-MX (evergreen)",
+      "tema": "Te repiten que rentar es 'tirar el dinero', pero casi nadie hace la cuenta de cuanto cuesta de verdad una casa a credito: en treinta anos terminas pagandola varias veces por culpa de los intereses.",
+      "open_loop": "cuanto deberias invertir cada mes para comprar de contado en vez de a credito",
+      "datos": "- Supuesto DECLARADO: credito hipotecario de 1,500,000 MXN, tasa fija de 11% anual, plazo de 30 anos (360 mensualidades).\n- Mensualidad resultante (capital + interes): 14,285 MXN al mes.\n- Total pagado al banco en 30 anos: 5,142,546 MXN, sobre una casa que costaba 1,500,000 MXN (terminas pagando 3.43 veces el precio).\n- De ese total, 3,642,546 MXN son SOLO intereses (mas del doble del precio de la casa).\n- Interes acumulado por etapa: al ano 1 llevas 164,666 MXN de puros intereses; a la mitad (ano 15), 2,328,082 MXN; al final (ano 30), 3,642,546 MXN.\nFuente: calculo deterministico de amortizacion francesa con la tasa y plazo declarados. Cifras exactas para el visual; la voz redondea ('alrededor de cinco millones', 'casi tres millones y medio de intereses'). Matiz honesto: comprar no es malo, pero la decision debe hacerse con la cuenta completa, no con el eslogan. Encuadre educativo, no consejo. Tasa hipotecaria de referencia: <<verificar: tasa promedio vigente de credito hipotecario en MX si se cita como 'tasa actual' — Banxico / CONDUSEF; el ejemplo del 11% es un supuesto declarado, no requiere verificacion>>.",
+      "por_que_funciona": "Vivienda es el gasto mas grande de una vida y nadie hace la cuenta de los intereses; rompe el eslogan 'rentar es tirar el dinero' con matematica exacta. Muy visual (Bars precio vs total, Timeline de intereses por etapa). $0 (calculo deterministico)."
+    },
+    {
+      "id": "estafa_piramidal_latam",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "fraudes / estafas (evergreen)",
+      "tema": "Te prometen duplicar tu dinero en treinta dias sin riesgo: eso no es una inversion, es una piramide, y la matematica garantiza que va a colapsar. La unica duda es si vas a estar adentro cuando reviente.",
+      "open_loop": "las tres senales para detectar un esquema piramidal antes de meter un peso",
+      "datos": "- Concepto: un esquema piramidal/Ponzi paga a los viejos con el dinero de los nuevos; no genera valor, solo necesita reclutar mas gente sin parar.\n- Matematica DECLARADA del colapso: si cada participante debe reclutar a 10 nuevos para cobrar, el nivel 3 ya necesita 1,000 personas, el nivel 6 necesita 1,000,000 y el nivel 10 necesita 10,000,000,000 (diez mil millones), mas que toda la poblacion del planeta. Por eso SIEMPRE colapsa.\n- Quien gana es solo la cuspide: la enorme mayoria de los ultimos en entrar pierde todo lo aportado.\n- Senales de alerta: rendimiento fijo y altisimo 'sin riesgo', presion para reclutar amigos/familia, y que las 'ganancias' dependan de meter gente nueva, no de un producto real.\nFuente: aritmetica de crecimiento exponencial (10^nivel) y poblacion mundial (~8,100 millones, Banco Mundial/ONU). La proporcion de los que pierden y cualquier caso/cifra concreta de una estafa real: <<verificar: % de victimas que pierde y monto del caso si se cita uno puntual — fuente: CNBV / Condusef / prensa local>>. El ejemplo del 'doble en 30 dias' y el reclutar-10 son supuestos ilustrativos declarados. Color: rojo legitimo (es una perdida real).",
+      "por_que_funciona": "Tema de altisimo alcance y muy LATAM (boom de estafas cripto/forex/'cajas de ahorro'); el payoff matematico (mas personas que el planeta) es memorable y compartible. TrendBreak (sube y colapsa) es el visual nativo. $0."
+    },
+    {
+      "id": "emprender_mezclar_finanzas",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "emprender / negocio (evergreen)",
+      "tema": "El error que quiebra mas negocios pequenos no es vender poco: es mezclar el dinero del negocio con el personal. Sin darte cuenta, le sacas al negocio gota a gota hasta secarlo.",
+      "open_loop": "el sistema de tres cuentas que usan los negocios que si sobreviven",
+      "datos": "- Problema: el dueno que no separa la cuenta del negocio de la personal no sabe cuanto gana de verdad y financia su vida con el flujo del negocio.\n- Ejemplo DECLARADO de 'retiros hormiga': sacar 1,000 MXN al dia del negocio para gastos personales = 365,000 MXN al ano salidos del negocio sin registrarse como sueldo ni como costo.\n- Consecuencia: el negocio parece sano por las ventas, pero se queda sin capital de trabajo y muere por falta de liquidez, no por falta de clientes.\n- Solucion (sistema de cuentas separadas): una cuenta para el negocio, un sueldo fijo para el dueno, y una reserva; el dueno cobra un sueldo definido en vez de 'agarrar de la caja'.\nFuente: aritmetica directa (1,000 x 365). Cifras exactas para el visual; la voz redondea. Estadistica de cierre de negocios ('8 de cada 10 cierran antes de 5 anos' u otra): <<verificar: % y horizonte reales en MX/LATAM — fuente: INEGI (esperanza de vida de los negocios) / banca de desarrollo>>; usar como contexto, no como cifra protagonista.",
+      "por_que_funciona": "Audiencia enorme de emprendedores/changarros en LATAM; el error es universal y la solucion es accionable y gratis (separar cuentas). Distinto de los temas de ahorro personal: aqui el sujeto es el negocio. Recovery (casi quiebra y se recupera al separar) es el visual. $0."
+    },
+    {
+      "id": "mx_afore_retiro",
+      "carril": "news",
+      "estado": "aprobado",
+      "categoria": "retiro-MX / inversion",
+      "tema": "Tu Afore decide con cuanto dinero te vas a retirar y la mayoria ni la voltea a ver: por no elegir, miles quedan en una administradora que cobra mas comision y rinde menos, regalando anos de rendimiento.",
+      "open_loop": "el tramite de 5 minutos para mover tu Afore a la que mas rinde",
+      "datos": "- Contexto: en Mexico el ahorro para el retiro se administra en una Afore; quien no elige queda asignado por default y muchos nunca la revisan.\n- Aportacion obligatoria actual al retiro (% del salario, en aumento por la reforma de pensiones 2020-2030): <<verificar: % vigente y calendario de aumento — CONSAR>>.\n- Rendimiento neto de comisiones: varia por Afore; la diferencia de rendimiento entre la mejor y la peor: <<verificar: puntos de diferencia y comision promedio vigente — CONSAR (comparativo de Afores)>>.\n- Ejemplo DECLARADO del costo de no elegir: 1 punto porcentual de rendimiento anual menos, sobre un saldo que crece 30 anos, puede significar cientos de miles de pesos menos al final (calculo de valor futuro con el % declarado).\n- Que hacer: comparar Afores en el sitio de la CONSAR y solicitar el traspaso (es gratuito).\nFuente: CONSAR (comisiones, rendimientos, aportaciones). Usa SOLO cifras verificadas; el ejemplo del 1% es un supuesto declarado. La voz redondea; el visual muestra cifras exactas.",
+      "por_que_funciona": "Toca a todo trabajador formal en Mexico y casi nadie actua; accion concreta y gratuita (traspaso). Conecta con interes compuesto (el tiempo y la comision deciden el resultado). Moat cultural fuerte (Afore/CONSAR)."
+    },
+    {
+      "id": "mx_msi_trampa",
+      "carril": "evergreen",
+      "estado": "aprobado",
+      "categoria": "deuda / consumo (evergreen)",
+      "tema": "Los meses sin intereses se sienten gratis, pero te hacen comprar lo que no necesitas y comprometen tu sueldo de los proximos meses: cuando se acumulan varios, una parte de tu quincena ya esta gastada antes de cobrarla.",
+      "open_loop": "la regla simple para usar los MSI a tu favor sin que te ahorquen",
+      "datos": "- Concepto: 'meses sin intereses' (MSI) difieren el pago pero comprometen tu ingreso futuro; el riesgo no es el interes, es acumular varias compras a plazos a la vez.\n- Ejemplo DECLARADO: tres compras a 12 MSI de 12,000 MXN cada una = pagos mensuales de 1,000 + 1,000 + 1,000 = 3,000 MXN al mes comprometidos durante un ano.\n- Sobre un sueldo de 15,000 MXN al mes, esos 3,000 son el 20% de tu ingreso ya comprometido antes de cobrar; si pierdes el ingreso, la deuda sigue.\n- Trampa de consumo: el 'sin intereses' empuja a comprar lo que no comprarias de contado (compras de mas), y si dejas de pagar, suele revertirse a la tasa de tarjeta (cercana a 45% anual).\n- Regla sana: que la suma de TODOS tus MSI no pase de un % bajo de tu ingreso y solo para compras planeadas que ya ibas a hacer.\nFuente: aritmetica directa (numero de MSI x mensualidad). Cifras exactas para el visual; la voz redondea. La tasa de reversion (~45%) es la de tarjeta ya usada en el tema edu_minimo_tarjeta. Color: el tramo comprometido del sueldo es perdida de libertad financiera, no necesariamente rojo de 'perdida' contable; cuidar el semantico del color.",
+      "por_que_funciona": "Habito masivo en Mexico (MSI en todo); angulo nuevo respecto a edu_minimo_tarjeta (aqui el problema es comprometer el ingreso futuro y la compra de mas, no la tasa). Muy visual (barras del sueldo comprometido). $0."
     }
   ]
 }

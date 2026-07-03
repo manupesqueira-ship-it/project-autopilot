@@ -38,11 +38,39 @@ from director import direct  # noqa: E402  (triage de set-pieces; one-way: direc
 
 FILL = "<<rellenar"  # marca de hueco para Manuel / el planner
 
-# Pools derivados de los sets VIVOS del validador (se adaptan si crece Root.tsx).
-# Excluimos LANDING de wow/data para no pelear con R1 (solo el climax aterriza).
-WOW_POOL = sorted((WOW & TYPES) - LANDING - {"BeatCharacter"})
-DATA_POOL = sorted((DATA_VISUAL & TYPES) - LANDING)
-CHART_POOL = sorted((CHARTS & TYPES) - LANDING - SPECT)  # graficas "seguras"
+# CONGELAMIENTO DEL KIT (A1 del fork del freeze, 2026-06-19, decidido por Manuel):
+# el proposer auto-selecciona SOLO del kit-10 (evergreen) + mini-set de noticia. El
+# resto del catalogo (Donut/Waterfall/Bubble/BarRace/...) sigue REGISTRADO y se puede
+# renderear a mano o desde un guion ya escrito; simplemente NO entra al muestreo
+# automatico. "Archivar" = sacar del auto-pick, NO desregistrar. Para ensanchar el
+# kit (opcion B), agrega tipos aqui.
+#
+# DOS sutilezas del kit frozen (verificadas contra el codigo, no obvias):
+#   - Bars/Versus son LANDING (animan-y-se-quedan): validos en el kit, pero el
+#     auto-pick del MEDIO los OMITE (solo el climax aterriza -R1-, ver pools abajo).
+#     Quedan para guiones a mano / del planner. El auto-pick de datos efectivo es
+#     {LineChart, Pictogram, Timeline}.
+#   - Los hooks de SET-PIECE del director (BeatNapkin 'listo'; newspaper/phone/
+#     chalkboard/ticket 'planeado') NO van en este set: los castea director.py por
+#     TRIGGER de tema (no el auto-pick aleatorio). Un video de formula PUEDE traer
+#     BeatNapkin fuera de FROZEN a proposito (carril deliberado, no fuga del freeze).
+FROZEN = {
+    # --- kit-10 evergreen ---
+    "BeatKinetic", "BeatStatCallout",                            # hooks
+    "BeatLineChart", "BeatBars", "BeatPictogram", "BeatVersus",  # datos
+    "BeatMapZoom",                                               # wow
+    "BeatBigNumber", "BeatHeroCoin",                             # climax
+    "BeatCta",                                                   # cierre
+    # --- mini-set de noticia (carril actualidad) ---
+    "BeatNewsCard", "BeatTimeline", "BeatMultiMap",
+}
+
+# Pools derivados de los sets VIVOS del validador, ACOTADOS al kit frozen. Se
+# adaptan si crece Root.tsx Y el tipo esta en FROZEN. Excluimos LANDING de wow/data
+# para no pelear con R1 (solo el climax aterriza).
+WOW_POOL = sorted((WOW & TYPES & FROZEN) - LANDING - {"BeatCharacter"})
+DATA_POOL = sorted((DATA_VISUAL & TYPES & FROZEN) - LANDING)
+CHART_POOL = sorted((CHARTS & TYPES & FROZEN) - LANDING - SPECT)  # graficas "seguras"
 # wow que NO son data_visual (sirven de contexto sin sumar al conteo de datos)
 WOW_CONTEXT = sorted(t for t in WOW_POOL if t not in DATA_VISUAL)
 

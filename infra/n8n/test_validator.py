@@ -163,6 +163,15 @@ def _no_chart(g):
     # ahora media = MapZoom? no, mapa esta en 1. media tiene pictogram+versus -> 2 datos distintos OK
 case("sin grafica de datos", "R8", _mut(_no_chart))
 
+# R8 roster desde registro: un personaje REGISTRADO pero con en_roster=false
+# (economista, fondo horneado) NO se puede castear -> R8. Bloquea el drift que
+# motivo character_roster.json (la fuente de verdad del roster en F4).
+def _offroster(g):
+    g["beats"][1] = {"id": "b2_char", "type": "BeatCharacter", "sfx": "tick",
+                     "vo": "Aqui aparece el analista que explica la cifra a todos ustedes.",
+                     "props": {"imageSlug": "economista", "name": "X", "role": "Y"}}
+case("personaje fuera del roster (en_roster=false)", "R8", _mut(_offroster))
+
 
 # --------------------------------------------------------------- runner
 def run_cases():
@@ -272,25 +281,25 @@ def run_color():
 
 
 def run_maxbeats():
-    print("\n-- conteo de beats (MAX_BEATS=7) --")
+    print("\n-- conteo de beats (MAX_BEATS=10, banda de retencion 7-10) --")
     # GOOD tiene 6 beats. +1 = 7 (valido, El Salvador aprobado tiene 7).
     _pic = {"id": "b2b_pic", "type": "BeatPictogram", "sfx": "tick", "trans": "scrollUp",
             "vo": "Veintiuno de cada cien no llegan a fin de mes nunca jamas.",
             "props": {"total": 100, "highlight": 21, "caption": "21 de 100"}}
-    _line = {"id": "b3b_line", "type": "BeatLineChart", "sfx": "tick", "trans": "scrollUp",
-             "vo": "La tendencia subio sin parar durante toda la decada pasada completa.",
-             "props": {"caption": "tendencia", "points": [1, 2, 3, 4], "label": "x"}}
     g7 = _mut(lambda g: g["beats"].insert(2, dict(_pic)))
     r = validate(g7)
     n = len(g7["beats"])
     print(f"  [{'PASS' if n == 7 and not r['errors'] else 'FAIL'}] guion de 7 beats valido -> PASS{'' if not r['errors'] else ' | ' + '; '.join(r['errors'])}")
-    # +2 = 8 -> R5
-    def _eight(g):
-        g["beats"].insert(2, dict(_pic))
-        g["beats"].insert(3, dict(_line))
-    g8 = _mut(_eight)
+    # 8 beats ahora DENTRO de la banda (antes disparaba R5): no debe haber error de CONTEO.
+    g8 = _mut(lambda g: [g["beats"].insert(2, dict(_pic)) for _ in range(2)] and None)
     r8 = validate(g8)
-    print(f"  [{'PASS' if any(e.startswith('R5') for e in r8['errors']) else 'FAIL'}] guion de 8 beats -> R5")
+    no_count_err = not any("numero de beats" in e for e in r8["errors"])
+    print(f"  [{'PASS' if len(g8['beats']) == 8 and no_count_err else 'FAIL'}] guion de 8 beats dentro de banda -> sin R5 de conteo")
+    # 11 beats -> excede MAX_BEATS=10 -> R5 de conteo (otras reglas pueden disparar tambien; solo exijo el conteo).
+    g11 = _mut(lambda g: [g["beats"].insert(2, dict(_pic)) for _ in range(5)] and None)
+    r11 = validate(g11)
+    has_count_err = any("numero de beats" in e for e in r11["errors"])
+    print(f"  [{'PASS' if len(g11['beats']) == 11 and has_count_err else 'FAIL'}] guion de 11 beats -> R5 de conteo")
 
 
 def run_proposer():
@@ -359,10 +368,11 @@ def run_ledger():
 
 
 def run_recency():
-    """R10: no reusar un visual de FIRMA usado en los ultimos RECENCY_WINDOW
-    videos (rota el medio dia a dia). Tambien prueba que la firma es lista-NEGRA
-    autosostenible (un beat nuevo cuenta sin tocar el codigo). Cuenta al total."""
-    print("\n-- R10 recencia + firma autosostenible --")
+    """R10: no reusar un visual de FIRMA (= espectaculo wow, ledger.SIGNATURE_WOW)
+    usado en los ultimos RECENCY_WINDOW videos (rota el wow del dia). Opcion A del
+    freeze: la firma EXENTA las graficas/datos (lenguaje constante del canal) y las
+    puntas del arco (esas las rota R11). Cuenta al total."""
+    print("\n-- R10 recencia + firma wow-only (Opcion A del freeze) --")
     from validator import RECENCY_WINDOW
     from ledger import signature_types
     ok = total = 0
@@ -373,51 +383,55 @@ def run_recency():
         ok += bool(cond)
         print(f"  [{'PASS' if cond else 'FAIL'}] {label}")
 
-    # firma autosostenible: beats NUEVOS (no estaban en la vieja lista-blanca)
-    # cuentan; las puntas del arco (hook/climax/cierre) se excluyen.
-    sig = signature_types(["BeatKinetic", "BeatScoreboard", "BeatFunnel",
-                           "BeatBigNumber", "BeatHeroCoin", "BeatCta"])
-    chk(set(sig) == {"BeatScoreboard", "BeatFunnel"},
-        "firma incluye beats nuevos (Scoreboard/Funnel), excluye puntas (Kinetic/BigNumber/HeroCoin/Cta)")
+    # firma = SOLO el espectaculo wow; graficas/datos y puntas del arco quedan FUERA.
+    sig = signature_types(["BeatKinetic", "BeatMapZoom", "BeatBars",
+                           "BeatPictogram", "BeatBigNumber", "BeatCta"])
+    chk(set(sig) == {"BeatMapZoom"},
+        "firma = solo wow (MapZoom); excluye graficas (Bars/Pictogram) y puntas (Kinetic/BigNumber/Cta)")
+    # un video cuyo unico 'visual' son graficas constantes -> firma VACIA: invisible
+    # a R9-combo/R10 (la linea verde->rojo sale a diario A PROPOSITO, no es repeticion).
+    chk(signature_types(["BeatKinetic", "BeatLineChart", "BeatPictogram", "BeatCta"]) == [],
+        "video sin espectaculo wow -> firma vacia (la grafica constante no cuenta)")
 
     tmp = Path(tempfile.gettempdir()) / "ledger_recency_test.json"
     tmp.unlink(missing_ok=True)
     led = Ledger(path=tmp)
-    # video reciente cuyo medio reusa BeatBars (un visual de GOOD), con tema y
-    # combo DISTINTOS de GOOD para aislar R10 de R9.
+    # video reciente cuyo wow es BeatMapZoom (el wow de GOOD), con tema y combo
+    # DISTINTOS de GOOD para aislar R10 de R9.
     led.append_video("otro_video_reciente",
                      "Petroleo Venezuela colapso bolivar hiperinflacion",
-                     ["BeatKinetic", "BeatBars", "BeatCta"], fecha="2026-06-13")
-    chk(led.recent_beats(RECENCY_WINDOW) == {"BeatBars"},
-        "recent_beats() = solo el visual de firma del video reciente (BeatBars)")
+                     ["BeatKinetic", "BeatMapZoom", "BeatLineChart", "BeatCta"], fecha="2026-06-13")
+    chk(led.recent_beats(RECENCY_WINDOW) == {"BeatMapZoom"},
+        "recent_beats() = solo el espectaculo wow del video reciente (BeatMapZoom)")
     chk(led.recent_beats(0) == set(), "recent_beats(0) desactiva la recencia")
 
-    # GOOD (medio: MapZoom+Bars+Versus) reusa BeatBars recien usado -> R10, y
-    # SOLO R10 (tema/combo/slug son novedosos, no debe saltar R9).
+    # GOOD (wow: BeatMapZoom) reusa el MapZoom recien usado -> R10, y SOLO R10
+    # (tema/combo/slug son novedosos, no debe saltar R9).
     r = validate(GOOD(), ledger=led)
     fired = [e for e in r["errors"] if e.startswith("R10")]
-    chk(fired and all("BeatBars" in e for e in fired)
+    chk(fired and all("BeatMapZoom" in e for e in fired)
         and not any(e.startswith("R9") for e in r["errors"]),
-        "GOOD reusa BeatBars en ventana -> R10 (solo BeatBars; sin R9 falso)")
+        "GOOD reusa BeatMapZoom en ventana -> R10 (solo BeatMapZoom; sin R9 falso)")
 
-    # empuja BeatBars fuera de la ventana con N videos sin ese visual
+    # empuja BeatMapZoom fuera de la ventana con N videos cuyo wow es OTRO (MultiMap)
     for k in range(RECENCY_WINDOW):
         led.append_video(f"filler_{k}", f"relleno aislado numero {k} omega",
-                         ["BeatKinetic", "BeatDonut", "BeatCta"],
+                         ["BeatKinetic", "BeatMultiMap", "BeatLineChart", "BeatCta"],
                          fecha="2026-06-13", save=False)
     r2 = validate(GOOD(), ledger=led)
     chk(not any(e.startswith("R10") for e in r2["errors"]),
-        "BeatBars fuera de la ventana (N videos despues) -> sin R10")
+        "BeatMapZoom fuera de la ventana (N videos despues) -> sin R10")
     tmp.unlink(missing_ok=True)
     return ok, total
 
 
 def run_bookend():
-    """R11: las PUNTAS del arco (hook/climax/cierre) ROTAN respecto al video
-    anterior (variedad en secuencia). Un slot con un solo tipo (hoy el cierre) se
-    OMITE. Tambien prueba que BeatStatCallout es un hook valido y que, como punta,
-    queda FUERA de la firma (lo gobierna R11, no la recencia). Cuenta al total."""
-    print("\n-- R11 rotacion de puntas (hook/climax/cierre) --")
+    """R11: las PUNTAS del arco (hook/cierre) ROTAN respecto al video anterior
+    (variedad en secuencia). El climax NO se rota (BeatHeroCoin es solo-cripto, su
+    default es BeatBigNumber). Un slot con un solo tipo (hoy el cierre) se OMITE.
+    Tambien prueba que BeatStatCallout es un hook valido y que, como punta, queda
+    FUERA de la firma (lo gobierna R11, no la recencia). Cuenta al total."""
+    print("\n-- R11 rotacion de puntas (hook/cierre) --")
     from validator import HOOK_TYPES
     from ledger import signature_types
     ok = total = 0
@@ -479,20 +493,65 @@ def run_bookend():
             "vo": "Esta sola cifra deberia bastar para que cambies como ves tu dinero hoy",
             "props": {"stat": "200%", "context": "de inflacion anual"}}
 
-    # REPITE hook(Kinetic)+climax(BigNumber) del anterior -> R11 x2
+    # REPITE hook(Kinetic)+climax(BigNumber) del anterior -> R11 SOLO en el hook
+    # (el climax no se rota: BeatBigNumber repetido es valido).
     r_rep = validate(_arg_video("repite_puntas", kin, big), ledger=led)
     fired = [e for e in r_rep["errors"] if e.startswith("R11")]
-    chk(any("hook" in e for e in fired) and any("climax" in e for e in fired),
-        "repetir hook(Kinetic)+climax(BigNumber) del anterior -> R11 x2")
+    chk(any("hook" in e for e in fired) and not any("climax" in e for e in fired),
+        "repetir hook(Kinetic) dispara R11; el climax (BigNumber) repetido NO")
     chk(not any("cierre" in e for e in fired),
         "el cierre NO dispara R11 (un solo tipo de CTA -> slot omitido)")
 
-    # ROTA las puntas (hook->StatCallout, climax->HeroCoin) -> sin R11 y valido
+    # ROTA el hook (->StatCallout) y usa climax HeroCoin (permitido) -> sin R11
     r_rot = validate(_arg_video("rota_puntas", stat, coin), ledger=led)
     chk(not any(e.startswith("R11") for e in r_rot["errors"]),
-        "rotar hook->StatCallout y climax->HeroCoin -> sin R11")
+        "rotar hook->StatCallout (climax HeroCoin permitido) -> sin R11")
     chk(not r_rot["errors"], f"video con puntas rotadas es totalmente valido ({'; '.join(r_rot['errors']) or 'ok'})")
     tmp.unlink(missing_ok=True)
+    return ok, total
+
+
+def run_freeze_deadlock():
+    """REGRESION del deadlock R8/R10 (sesion 2026-06-19). Al congelar el catalogo al
+    kit-10, R8 forzaba la unica grafica frozen (LineChart) en cada video y la firma
+    'todo el medio' + window=3 la bloqueaba al 2o dia -> 9/10 deadlocks. La Opcion A
+    (firma wow-only + RECENCY_WINDOW=2 + R9-combo solo si firma>=2) lo rompe.
+
+    Esta sim corre N videos CONSECUTIVOS contra un ledger VIVO (maxima presion: cada
+    video aprobado entra y aprieta al siguiente) y exige 0 deadlocks (= validate con
+    errores DESPUES de que el proposer agoto sus reintentos). Temas 100% unicos por
+    video (Jaccard 0) -> aisla el deadlock REAL (R10/R9-combo) de un falso R9-tema.
+    La sim multi-video es la AUTORIDAD de la libertad de deadlock; los unit tests de
+    arriba cubren casos puntuales, esto cubre la DINAMICA dia-a-dia."""
+    print("\n-- freeze: 0 deadlocks en N videos consecutivos (Opcion A) --")
+    from proposer import propose
+    ok = total = 0
+
+    def chk(cond, label):
+        nonlocal ok, total
+        total += 1
+        ok += bool(cond)
+        print(f"  [{'PASS' if cond else 'FAIL'}] {label}")
+
+    def sim(n_videos, n_data):
+        tmp = Path(tempfile.gettempdir()) / f"ledger_freeze_dl_{n_data}.json"
+        tmp.unlink(missing_ok=True)
+        led = Ledger(path=tmp)
+        deadlocks = []
+        for i in range(n_videos):
+            tema = f"alfa{i} beta{i} gamma{i} delta{i}"   # tokens unicos -> Jaccard 0
+            g = propose(tema, ledger=led, n_data=n_data, seed=1000 + i)
+            errs = validate(g, ledger=led)["errors"]
+            if errs:
+                deadlocks.append((i, errs))
+            led.append_video(g["slug"], g["title"], g["beats"], fecha="2026-06-19")
+        tmp.unlink(missing_ok=True)
+        return deadlocks
+
+    for n_data in (2, 3):
+        dl = sim(20, n_data)
+        detail = "ok" if not dl else f"v{dl[0][0]}: {'; '.join(dl[0][1])}"
+        chk(not dl, f"20 videos consecutivos n_data={n_data} -> 0 deadlocks ({detail})")
     return ok, total
 
 
@@ -513,5 +572,8 @@ if __name__ == "__main__":
     okb, totb = run_bookend()
     ok += okb
     total += totb
+    okd, totd = run_freeze_deadlock()
+    ok += okd
+    total += totd
     print(f"\nRESULTADO casos duros: {ok}/{total}")
     sys.exit(0 if ok == total else 1)

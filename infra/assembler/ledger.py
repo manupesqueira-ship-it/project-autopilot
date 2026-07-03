@@ -24,8 +24,10 @@ Uso como CLI:
     python ledger.py append guion_x.json [--tema "..."] [--fecha YYYY-MM-DD]
 """
 import json
+import os
 import re
 import sys
+import tempfile
 import unicodedata
 from datetime import date
 from pathlib import Path
@@ -36,26 +38,37 @@ DEFAULT_LEDGER = HERE / "ledger.json"
 # Umbral de similitud de tema (Jaccard de tokens de contenido). >= => repetido.
 TEMA_SIMILARITY_THRESHOLD = 0.45
 
-# La FIRMA visual de un video = sus beats del MEDIO. Se EXCLUYEN las puntas del
-# arco (hook, climax-cifra y cierre): R4/R5 las obligan en CADA video, asi que no
-# distinguen un video de otro ni rotan por la firma -> las rota R11 aparte. Antes
-# esto era una lista-BLANCA que se quedaba vieja al crecer el catalogo (listaba
-# ~15 de ~39 beats); ahora es una lista-NEGRA: cualquier Beat* nuevo entra a la
-# firma solo, sin tocar este archivo.
-# Este set debe espejar la UNION de HOOK_TYPES | CLIMAX_TYPES | CTA_TYPES del
-# validador (todas las puntas posibles del arco); si abres un slot a un tipo
-# nuevo alla, agregalo aqui para que R11 lo gobierne y NO la recencia R10.
-SIGNATURE_EXCLUDE = {
-    "BeatKinetic",      # hook: kinetic word-by-word (R4)
-    "BeatStatCallout",  # hook alterno: cifra-shock de apertura
-    "BeatNapkin",       # hook set-piece: formula en servilleta (la castea el director; la rota R11, no la firma)
-    "BeatNewspaper",    # hook set-piece: titular de periodico (director; rota R11)
-    "BeatPhone",        # hook set-piece: notificacion de telefono (director; rota R11)
-    "BeatChalkboard",   # hook set-piece: leccion en pizarron (director; rota R11)
-    "BeatTicket",       # hook set-piece: recibo/ticket (director; rota R11)
-    "BeatBigNumber",    # climax: la cifra protagonista
-    "BeatHeroCoin",     # climax alterno: cifra protagonista en moneda 3D
-    "BeatCta",          # cierre: siempre el ultimo beat (R5)
+# La FIRMA visual de un video = SOLO sus beats de ESPECTACULO "wow" (mapa, multi-
+# mapa, tarjeta de noticia, caricatura, debate, muro de logos). Es lo UNICO que de
+# verdad rota de un video a otro, asi que es lo unico que R9-combo (no repetir la
+# mezcla) y R10 (recencia) deben vigilar.
+#
+# Lo que QUEDA FUERA de la firma a proposito:
+#   - Graficas y datos (LineChart, Bars, Pictogram, Versus, ...): son el LENGUAJE
+#     VISUAL CONSTANTE del canal. La linea verde->rojo sale en casi todos los
+#     videos A PROPOSITO (regla locked "UN solo theme consistente"); contarla como
+#     "repeticion" la prohibiria al 2o dia. Constante != repetido.
+#   - Las puntas del arco (hook / climax-cifra / cierre): R4/R5 las obligan en cada
+#     video; su variedad la gobierna R11, no la firma.
+#
+# (Opcion A del fork del freeze, 2026-06-19, decidida por Manuel: al congelar el
+# catalogo al kit-10 la firma "todo el medio" deadlockeaba -R8 exige >=1 grafica y
+# la unica grafica frozen es LineChart, que R10 bloqueaba al 2o dia-. Acotar la
+# firma al espectaculo wow rompe el deadlock SIN apagar la anti-fatiga: la grafica
+# constante deja de contar, pero el wow del dia si rota.)
+#
+# Este set ESPEJA (validator.WOW menos validator.DATA_VISUAL menos las puntas): los
+# visuales potentes que NO son grafica de datos. El ledger se mantiene independiente
+# de n8n/ a proposito (la fuente de verdad del ledger sirve con o sin validador),
+# por eso este set va a mano en vez de importar el validador. Si agregas un visual
+# de espectaculo NUEVO que NO sea grafica al WOW del validador, agregalo aqui.
+SIGNATURE_WOW = {
+    "BeatMapZoom",    # zoom cinematico a un pais
+    "BeatMultiMap",   # varios paises a la vez
+    "BeatNewsCard",   # tarjeta de noticia (carril noticia)
+    "BeatDebate",     # split de dos posturas enfrentadas
+    "BeatLogoWall",   # muro de logos/marcas
+    "BeatCharacter",  # caricatura del roster
 }
 
 _STOPWORDS = {
@@ -88,16 +101,15 @@ def _jaccard(a, b):
 
 
 def signature_types(beats):
-    """Tipos de beat que forman la FIRMA visual del video (los del medio).
-
-    Cuenta cualquier `Beat*` salvo las puntas del arco (SIGNATURE_EXCLUDE), asi
-    que es autosostenible: un beat nuevo del catalogo entra sin tocar nada.
-    `beats` = lista de tipos (str) o de dicts con 'type'.
+    """Tipos de beat que forman la FIRMA visual del video = SOLO los visuales de
+    ESPECTACULO 'wow' (SIGNATURE_WOW). Las graficas/datos y las puntas del arco
+    quedan FUERA a proposito (ver la nota larga en SIGNATURE_WOW). `beats` = lista
+    de tipos (str) o de dicts con 'type'.
     """
     out = []
     for b in beats:
         t = b.get("type") if isinstance(b, dict) else b
-        if isinstance(t, str) and t.startswith("Beat") and t not in SIGNATURE_EXCLUDE:
+        if isinstance(t, str) and t in SIGNATURE_WOW:
             out.append(t)
     return out
 
@@ -106,6 +118,31 @@ def _visual_signature(beats):
     """Firma de combinacion (multiset ordenado de beats de firma) para comparar
     dos videos: misma firma == misma mezcla visual del medio."""
     return tuple(sorted(signature_types(beats)))
+
+
+def atomic_write_text(path, text, encoding="utf-8"):
+    """Escribe `text` de forma ATOMICA: a un tmp en el MISMO dir + os.replace().
+
+    Si el proceso muere a media escritura, un lector ve SIEMPRE el archivo viejo
+    entero o el nuevo entero, nunca un JSON truncado (lo que corrompia ledger.json
+    / temas_cola.json). El tmp va en el mismo dir para que os.replace() sea atomico
+    (mismo filesystem) en Windows y POSIX.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=path.name + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding=encoding) as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 class Ledger:
@@ -186,9 +223,9 @@ class Ledger:
         return entry
 
     def save(self):
-        self.path.write_text(
-            json.dumps(self.data, ensure_ascii=False, indent=2),
-            encoding="utf-8")
+        atomic_write_text(
+            self.path,
+            json.dumps(self.data, ensure_ascii=False, indent=2))
 
 
 # ----------------------------- CLI -----------------------------

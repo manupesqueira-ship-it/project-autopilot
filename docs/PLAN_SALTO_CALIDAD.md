@@ -1,5 +1,12 @@
 # Plan — Salto de calidad visual (Dinero LATAM)
 
+> ⚠️ **SUPERSEDED (2026-06-19) → la verdad viva es [`PLAN_SALTO_CALIDAD_v2.md`](PLAN_SALTO_CALIDAD_v2.md).**
+> Este v1 es el LOG de la fase de build (Track A–D, técnicamente completa). Se conserva como
+> historial; NO es el plan vigente. Nota de API: las menciones a `ledger.SIGNATURE_EXCLUDE`
+> (lista-NEGRA) reflejan el diseño de ESE momento — el freeze (Opción A) lo reemplazó por la
+> lista-BLANCA `ledger.SIGNATURE_WOW`. La afirmación de fondo sigue válida (los hooks de
+> set-piece los rota R11, NO son parte de la firma), solo cambió el mecanismo.
+
 > **Objetivo:** subir DRÁSTICAMENTE la calidad visual (superar a 0x100x por ingenio,
 > no por volumen). Todo $0 salvo gastos puntuales marcados **[👁️ avisar costo]**.
 >

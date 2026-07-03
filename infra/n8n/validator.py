@@ -29,8 +29,9 @@ Reglas duras (errors) -> rechazan el guion:
   R9  (si hay ledger) tema NO repetido y combinacion visual NO repetida
   R10 (si hay ledger) recencia: ningun visual de FIRMA usado en los ultimos
       RECENCY_WINDOW videos (rota el medio dia a dia para no cansar al espectador)
-  R11 (si hay ledger) rota las PUNTAS del arco (hook/climax/cierre) respecto al
-      video anterior; un slot con <2 tipos validos se omite (se auto-activa luego)
+  R11 (si hay ledger) rota las PUNTAS del arco (hook/cierre) respecto al video
+      anterior; un slot con <2 tipos validos se omite (se auto-activa luego). El
+      climax NO entra: BeatHeroCoin es solo-cripto, default BeatBigNumber
 
 Reglas blandas (warnings, no rechazan salvo --strict):
   W-num  cifra mostrada que no aparece en el brief (posible dato inventado)
@@ -59,15 +60,16 @@ LATE_FRAC = 0.5         # el sub-evento que "cubre el final" debe caer pasada
 #                          esta fraccion de las palabras del vo
 KINETIC_COVER = 0.5     # un hook kinetic debe revelar >= este % de su vo
 
-MIN_BEATS, MAX_BEATS = 3, 7   # El Salvador aprobado tiene 7 beats
+MIN_BEATS, MAX_BEATS = 3, 10  # banda 7-9 beats (45-65s) para el arco de retencion (Manuel 2026-06-24); techo 10; El Salvador aprobado tenia 7
 
-# R10 (recencia): a 3 videos/dia, no reusar un visual de FIRMA que ya salio en
-# los ultimos N videos -> rota el medio para que el espectador diario no se
-# canse (las puntas del arco -hook/climax/cierre- se excluyen de la firma en
-# ledger.py, asi que rotan aparte). Ventana conservadora: con ~20+ visuales en
-# el pool y ~3 datos por video, 3 deja amplio margen al proposer. Subir N = mas
-# variedad, mas presion al planner. 0 desactiva la regla.
-RECENCY_WINDOW = 3
+# R10 (recencia): a 3 videos/dia, no reusar un visual de FIRMA (= espectaculo wow,
+# ver ledger.SIGNATURE_WOW) que ya salio en los ultimos N videos -> rota el wow del
+# dia para que el espectador diario no se canse. Las graficas/datos NO entran a la
+# firma (son el lenguaje constante del canal) ni las puntas del arco (esas las rota
+# R11). Ventana = 2 (Opcion A del freeze): con el kit-10 frozen quedan 3 wow
+# rotables {MapZoom, MultiMap, NewsCard}; window=2 prohibe los 2 ultimos y deja
+# SIEMPRE >=1 libre (sin deadlock) maximizando la separacion. 0 desactiva la regla.
+RECENCY_WINDOW = 2
 
 # W-round: la NARRACION debe redondear cifras grandes ("alrededor de 200 M")
 # mientras el VISUAL muestra la cifra exacta del brief.
@@ -101,6 +103,7 @@ CORE_TYPES = {
     "BeatBarRace", "BeatTimeline", "BeatCta", "BeatMapZoom",
     "BeatCharacter", "BeatRecovery",
     "BeatDonut", "BeatWaterfall", "BeatBubble", "BeatCandlestick",
+    "BeatHeroShot",
 }
 ROOT_TSX = HERE.parent / "remotion-render" / "src" / "Root.tsx"
 
@@ -136,18 +139,19 @@ WOW = {
     "BeatTrendBreak", "BeatBarRace", "BeatRecovery", "BeatTimeline",
     "BeatCandlestick", "BeatWaterfall", "BeatBubble", "BeatDonut",
     "BeatSankey", "BeatTreemap", "BeatHeatmap", "BeatRadar",
-    "BeatStackedArea", "BeatTickerTape",
+    "BeatStackedArea", "BeatTickerTape", "BeatHeroShot",
 }
 
 # Puntas del arco (R4/R5). Cada slot (hook / climax / cierre) tiene un SET de
 # tipos validos; R11 obliga a ROTAR la punta respecto al video anterior
 # (variedad en secuencia: que no todo abra/cierre igual). Un slot con un solo
 # tipo no se puede rotar -> R11 lo OMITE hasta que gane un 2o tipo (auto-activo).
-# OJO: estos tres sets deben espejar SIGNATURE_EXCLUDE de ledger.py (las puntas
-# se gobiernan con R11, NO con la firma/recencia R9-R10).
+# OJO: estas puntas quedan FUERA de la firma visual del ledger (ledger.SIGNATURE_WOW
+# solo lista espectaculos wow); se gobiernan con R11, NO con la firma/recencia R9-R10.
 HOOK_TYPES = {"BeatKinetic", "BeatStatCallout", "BeatNapkin",
-              "BeatNewspaper", "BeatPhone", "BeatChalkboard", "BeatTicket"}  # hook (beat 0): kinetic, cifra-shock o set-pieces del director (servilleta/periodico/telefono/pizarron/ticket)
-CLIMAX_TYPES = {"BeatBigNumber", "BeatHeroCoin"}   # clima: cifra protagonista (numero o moneda 3D)
+              "BeatNewspaper", "BeatPhone", "BeatChalkboard", "BeatTicket",
+              "BeatHeroShot"}  # hook (beat 0): kinetic, cifra-shock, set-pieces del director (servilleta/periodico/telefono/pizarron/ticket) o el clip que SE MUEVE (firma del canal)
+CLIMAX_TYPES = {"BeatBigNumber", "BeatHeroCoin"}   # clima: cifra protagonista. Default BeatBigNumber; BeatHeroCoin SOLO cripto (moneda Bitcoin). R11 NO rota este slot.
 CTA_TYPES = {"BeatCta"}                             # cierre (ultimo beat); 2o cierre pendiente
 # "datos": beats de visualizacion que sostienen la parte media del arco.
 DATA_VISUAL = CHARTS | {"BeatPictogram", "BeatVersus", "BeatAssetCard",
@@ -160,7 +164,21 @@ DATA_VISUAL = CHARTS | {"BeatPictogram", "BeatVersus", "BeatAssetCard",
 LANDING = {"BeatBigNumber", "BeatAssetCard", "BeatVersus", "BeatBars",
            "BeatHeroCoin"}
 
-ROSTER = {"bukele"}   # caricaturas ya generadas (sincronizar con public/characters)
+def _load_roster():
+    """ROSTER = slugs CASTEABLES del elenco. Fuente de verdad unica =
+    character_roster.json (entradas con en_roster=true), mismo patron que
+    hero_assets.json. Fallback a {bukele} si el archivo falta/esta roto:
+    nunca tumbar la validacion por un registro ausente."""
+    try:
+        data = json.loads((HERE / "character_roster.json").read_text(encoding="utf-8-sig"))
+        slugs = {p["slug"] for p in data.get("personajes", [])
+                 if p.get("en_roster") and p.get("slug")}
+        return slugs or {"bukele"}
+    except Exception:
+        return {"bukele"}
+
+
+ROSTER = _load_roster()   # elenco casteable; fuente = character_roster.json (en_roster=true)
 
 _CUR_TOKENS = ("usd", "mxn", "dolares", "pesos", "dolar", "peso", "us$", "$mxn")
 
@@ -459,8 +477,8 @@ def validate(guion, brief=None, ledger=None, strict=False):
         distinct_data = set(data_types)
         if len(distinct_data) < 2:
             errors.append(f"R4 se necesitan >=2 datos visuales DISTINTOS en la parte media (hay {len(distinct_data)})")
-        if len(distinct_data) > 3:
-            warnings.append(f"R4 hay {len(distinct_data)} tipos de dato en la parte media (el arco pide 2-3)")
+        if len(distinct_data) > 4:
+            warnings.append(f"R4 hay {len(distinct_data)} tipos de dato en la parte media (el arco de retencion pide 2-4)")
         # climax numero: debe existir un BeatBigNumber despues de algun dato
         bignum_idx = [i for i, t in enumerate(types) if t in CLIMAX_TYPES]
         first_data_idx = next((i for i, t in enumerate(types) if t in DATA_VISUAL), None)
@@ -571,9 +589,15 @@ def validate(guion, brief=None, ledger=None, strict=False):
         rep_t, slug_t, sim = ledger.is_tema_repeated(tema)
         if rep_t:
             errors.append(f"R9 tema repetido (sim {sim}) vs video '{slug_t}'")
-        rep_c, slug_c = ledger.is_combo_repeated(beats)
-        if rep_c:
-            errors.append(f"R9 combinacion visual de beats repetida vs video '{slug_c}'")
+        # R9-combo (no repetir NUNCA la misma mezcla de espectaculo) solo aplica a
+        # firmas RICAS (>=2 visuales wow): con la firma wow-only un video del freeze
+        # trae 1 solo wow, y is_combo_repeated lo bloquearia para siempre tras agotar
+        # los pocos wow. La rotacion dia-a-dia del wow unico la gobierna R10 (ventana);
+        # R9-combo queda para videos ricos que repiten un combo multi-wow entero.
+        if len(set(signature_types(beats))) >= 2:
+            rep_c, slug_c = ledger.is_combo_repeated(beats)
+            if rep_c:
+                errors.append(f"R9 combinacion visual de beats repetida vs video '{slug_c}'")
         if ledger.has_slug(slug):
             errors.append(f"R9 slug '{slug}' ya existe en el ledger")
 
@@ -584,20 +608,20 @@ def validate(guion, brief=None, ledger=None, strict=False):
                 f"R10 '{t}' se uso en los ultimos {RECENCY_WINDOW} videos; rota a "
                 f"otro visual para no cansar al espectador (variedad en secuencia)")
 
-        # R11: rotar las PUNTAS del arco (hook/climax/cierre) respecto al video
-        # anterior, para que no todo abra/cierre igual (variedad en secuencia).
-        # Ventana = 1 (solo el inmediato anterior): con >=2 opciones por slot la
-        # alternancia siempre es posible; una ventana mayor podria bloquear el
-        # slot. Un slot con un solo tipo (hoy el cierre) se OMITE -> la regla se
-        # auto-activa el dia que ese slot gane un 2o tipo.
+        # R11: rotar las PUNTAS del arco (hook/cierre) respecto al video anterior,
+        # para que no todo abra/cierre igual (variedad en secuencia). Ventana = 1
+        # (solo el inmediato anterior): con >=2 opciones por slot la alternancia
+        # siempre es posible; una ventana mayor podria bloquear el slot. Un slot
+        # con un solo tipo (hoy el cierre) se OMITE -> la regla se auto-activa el
+        # dia que ese slot gane un 2o tipo. El CLIMAX queda FUERA: BeatHeroCoin
+        # esta acotado a cripto (la moneda en pantalla ES Bitcoin), asi que para
+        # temas no-cripto BeatBigNumber es el unico climax valido y forzar su
+        # rotacion bloquearia el caso comun.
         if ledger.videos:
             prev = ledger.videos[-1].get("beats_usados", [])
             prev_slug = ledger.videos[-1].get("slug")
-            cur_climax = next((t for t in types if t in CLIMAX_TYPES), None)
-            pre_climax = next((t for t in prev if t in CLIMAX_TYPES), None)
             slots = (
                 ("hook", HOOK_TYPES, types[0] if types else None, prev[0] if prev else None),
-                ("climax", CLIMAX_TYPES, cur_climax, pre_climax),
                 ("cierre", CTA_TYPES, types[-1] if types else None, prev[-1] if prev else None),
             )
             for label, pool, cur, pre in slots:

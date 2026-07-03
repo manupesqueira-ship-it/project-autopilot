@@ -21,8 +21,10 @@ OUT_DIR = ROOT / "infra" / "remotion-render" / "public" / "setpieces"
 EXPENSES = ROOT / "docs" / "EXPENSES.md"
 
 sys.path.insert(0, str(ROOT / "infra" / "voz"))
-from tts_timestamps import load_env  # noqa: E402
+from tts_timestamps import (  # noqa: E402
+    RETRY_STATUS, RetryableError, load_env, with_retries)
 
+import urllib.error  # noqa: E402
 import urllib.request  # noqa: E402
 
 # Look comun de marca: foto-real, premium, fondo oscuro (paleta #0D1117), DoF
@@ -75,8 +77,19 @@ def gen(slug: str, n: int = 2, force: bool = False):
         method="POST",
     )
     print(f"SETPIECE gen {slug} x{n} (gpt-image-1, high, 1024x1536)...")
-    with urllib.request.urlopen(req, timeout=300) as r:
-        data = json.loads(r.read().decode("utf-8"))
+
+    def _call():
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            if e.code in RETRY_STATUS:
+                raise RetryableError(f"HTTP {e.code}")
+            raise SystemExit(f"gpt-image HTTP {e.code}: {e.read()[:200]}")
+        except (urllib.error.URLError, TimeoutError) as e:
+            raise RetryableError(f"red/timeout: {e}")
+
+    data = with_retries(_call, what=f"gpt-image[{slug}]")
     outs = []
     for i, item in enumerate(data["data"], 1):
         out = OUT_DIR / f"{slug}_{i}.png"

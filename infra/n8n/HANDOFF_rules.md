@@ -11,11 +11,11 @@ gasta API ~$0.03-0.05 USD/guion) NO se corre sin tu OK.
 
 | Archivo | Qué hace |
 |---|---|
-| `infra/assembler/ledger.py` | Módulo Python: registro de videos producidos. API `Ledger()`, `is_tema_repeated`, `is_combo_repeated`, `recent_beats`, `append_video`. También CLI. La FIRMA visual de un video = sus beats del medio (lista-NEGRA `SIGNATURE_EXCLUDE` = unión de `HOOK_TYPES∪CLIMAX_TYPES∪CTA_TYPES` del validador: excluye las PUNTAS, que rota R11 aparte); cualquier beat nuevo del catálogo cuenta solo. |
+| `infra/assembler/ledger.py` | Módulo Python: registro de videos producidos. API `Ledger()`, `is_tema_repeated`, `is_combo_repeated`, `recent_beats`, `append_video`. También CLI. La FIRMA visual de un video = SOLO sus beats de espectáculo wow (lista-BLANCA `SIGNATURE_WOW` = mapa/multi-mapa/tarjeta-noticia/debate/muro-logos/caricatura; Opción A del freeze 2026-06-19). Las gráficas/datos (lenguaje constante del canal) y las PUNTAS (que rota R11) quedan FUERA; un beat nuevo cuenta para la firma SOLO si lo agregas a `SIGNATURE_WOW`. |
 | `infra/assembler/ledger.json` | Fuente de verdad del ledger. **Empieza VACÍO** a propósito (los 6 guiones viejos NO se sembraron). |
 | `infra/n8n/validator.py` | Lógica PURA de validación (fuente de verdad de las reglas). Importable + CLI. |
-| `infra/n8n/proposer.py` | Arma un ESQUELETO de guion (tipos de beat + huecos `<<rellenar>>`) a partir de un tema. Muestrea del catálogo VIVO (`registered_beat_types()` lee Root.tsx), corre `validate()` y reintenta hasta que pase R1–R9. `$0`, NO llama a la API. |
-| `infra/n8n/test_validator.py` | QC offline: 31 casos pass/fail con guiones-fixture inventados + tests de ledger, recencia (R10) y rotación de puntas (R11). `$0`, no llama API. |
+| `infra/n8n/proposer.py` | Arma un ESQUELETO de guion (tipos de beat + huecos `<<rellenar>>`) a partir de un tema. Muestrea SOLO del **kit congelado** (`FROZEN` ∩ catálogo vivo de Root.tsx, menos los LANDING), corre `validate()` y reintenta hasta que pase R1–R9 (y R10/R11 si le pasas `--ledger`). `$0`, NO llama a la API. |
+| `infra/n8n/test_validator.py` | QC offline: 34 casos pass/fail con guiones-fixture inventados + tests de ledger, recencia (R10), rotación de puntas (R11) y la regresión `run_freeze_deadlock` (20 videos seguidos bajo el kit congelado × n_data 2 y 3, exige 0 deadlocks). `$0`, no llama API. |
 | `infra/n8n/test_planner.py` | Igual que antes, PERO ya no duplica reglas: importa `validate()` + `Ledger()`. (Este sí llama a la API; correr solo con tu OK.) |
 | `infra/n8n/workflow_dinero_ia.json` | El validador JS inline se reemplazó por un nodo que llama a `validator.py` (Python = única fuente de verdad). |
 | `infra/n8n/planner_system_prompt.txt` | Actualizado con el arco obligatorio, visual wow, cobertura de movimiento, moneda explícita y novedad. |
@@ -59,12 +59,14 @@ python ..\assembler\ledger.py append guion_X.json               # registrar (gat
 - **R8** Tipos válidos, ≥1 gráfica de datos, caricatura dentro del roster,
   máx 1 espectáculo, beat sin vo (heredadas de test_planner).
 - **R9** (con ledger) tema NO repetido y combinación visual de beats NO repetida.
-- **R10** (con ledger) **recencia del MEDIO**: ningún visual de FIRMA (los beats
-  del medio) usado en los últimos `RECENCY_WINDOW` videos. R9 solo bloquea la
-  repetición EXACTA del combo; R10 evita que tu visual favorito salga día tras día.
-  A 3 videos/día esto es lo que mantiene fresco el medio (variedad en secuencia).
-  Las puntas del arco (hook, clímax-cifra, CTA) NO cuentan para la recencia: las
-  rota R11 aparte.
+- **R10** (con ledger) **recencia del ESPECTÁCULO wow**: ningún visual de FIRMA
+  (lista-BLANCA `SIGNATURE_WOW`: mapa / multi-mapa / tarjeta-noticia / debate /
+  muro-logos / caricatura) usado en los últimos `RECENCY_WINDOW` videos. R9 solo
+  bloquea la repetición EXACTA del combo; R10 evita que tu wow favorito salga día
+  tras día. Tras el freeze (Opción A, 2026-06-19) las GRÁFICAS/DATOS quedan EXENTAS:
+  son el lenguaje constante del canal (theme locked) y DEBEN repetirse; la variedad
+  vive en el slot wow. Las puntas del arco (hook, clímax-cifra, CTA) tampoco cuentan
+  para la recencia: las rota R11 aparte.
 - **R11** (con ledger) **rotación de PUNTAS**: el hook, el clímax y el cierre deben
   DIFERIR del video ANTERIOR (ventana = 1). Hoy hook ∈ {Kinetic, StatCallout} y
   clímax ∈ {BigNumber, HeroCoin} → alternan video a video. El cierre tiene un solo
@@ -81,18 +83,21 @@ Warnings (no rechazan salvo `--strict`):
 ## Perillas (constantes en `validator.py`, arriba del archivo)
 
 `SPEAKING_RATE_WPS=2.6`, `STATIC_MAX_S=2.5`, `LATE_FRAC=0.5`, `KINETIC_COVER=0.5`,
-`MIN_BEATS=3`, `MAX_BEATS=7`, `RECENCY_WINDOW=3` (R10: cuántos videos atrás mira la
-recencia; subir = más variedad, más presión al planner; 0 la desactiva),
+`MIN_BEATS=3`, `MAX_BEATS=7`, `RECENCY_WINDOW=2` (R10: cuántos videos atrás mira la
+recencia del wow; subir = más variedad, más presión al planner; 0 la desactiva.
+Bajó de 3→2 en el freeze: con la firma reducida a SOLO wow, 2 ya basta),
 `ROUND_THRESHOLD=1_000_000`, `HEDGE_WORDS`, los sets
 `WOW`, `LANDING`, `SPECT`, `CHARTS`, `DATA_VISUAL`, y las PUNTAS del arco
 `HOOK_TYPES` / `CLIMAX_TYPES` / `CTA_TYPES` (abrir un slot a un tipo nuevo lo suma
-a la rotación R11; recuerda espejarlo en `SIGNATURE_EXCLUDE` de ledger.py).
+a la rotación R11; las puntas quedan FUERA de la firma por diseño —lista-BLANCA
+`SIGNATURE_WOW`—, así que NO toques ledger.py al abrir un slot de punta).
 La duración de cada beat se ESTIMA (palabras ÷ tasa de habla) porque el validador
 no tiene la voz real; por eso R1 es la regla más heurística.
 
 **Catálogo VIVO:** los tipos válidos NO están hardcodeados — `registered_beat_types()`
-lee los `id="Beat..."` de `remotion-render/src/Root.tsx` en cada corrida (hoy ~39
-beats). Cuando agregues un beat nuevo a Root.tsx, el validador lo acepta solo; si
+lee los `id="Beat..."` de `remotion-render/src/Root.tsx` en cada corrida (hoy ~44
+beats). El VALIDADOR acepta todos; el PROPOSER, en cambio, solo muestrea el subconjunto
+`FROZEN` (kit-10 + mini-set noticia). Cuando agregues un beat nuevo a Root.tsx, el validador lo acepta solo; si
 quieres que cuente como gráfica/wow/dato, súmalo al set correspondiente arriba del
 archivo (`CHARTS`/`WOW`/`DATA_VISUAL`).
 
@@ -106,9 +111,11 @@ archivo (`CHARTS`/`WOW`/`DATA_VISUAL`).
    existían y están registrados en Root.tsx, **$0, sin componente nuevo, sin tocar
    la FORMA del arco R4**). El proposer y el planner alternan las puntas solos.
    **PENDIENTE: 2º CTA.** El cierre no rota porque solo existe `BeatCta`; rotarlo
-   necesita un componente nuevo (arte = gate de Manuel). Cuando exista: agrégalo a
-   `CTA_TYPES` (validator) **y** a `SIGNATURE_EXCLUDE` (ledger), y R11 se auto-activa
-   para el cierre. Falta también el visto bueno visual de Manuel a StatCallout-como-hook
+   necesita un componente nuevo (arte = gate de Manuel). Cuando exista: agrégalo SOLO
+   a `CTA_TYPES` (validator) y R11 se auto-activa para el cierre. **NO lo agregues a la
+   firma de ledger.py:** con la lista-BLANCA `SIGNATURE_WOW`, un CTA ya queda fuera de
+   la firma por omisión (meterlo en esa whitelist sería un bug). Falta también el visto
+   bueno visual de Manuel a StatCallout-como-hook
    y HeroCoin-como-clímax en un render real.
 
 2. **R1 marcó el BeatBigNumber final de El Salvador como "estático".**

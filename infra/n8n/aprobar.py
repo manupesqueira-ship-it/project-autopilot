@@ -24,7 +24,7 @@ ASSEMBLER = HERE.parent / "assembler"
 DEFAULT_COLA = HERE / "temas_cola.json"
 
 sys.path.insert(0, str(ASSEMBLER))
-from ledger import Ledger  # noqa: E402  (fuente de verdad del ledger)
+from ledger import Ledger, atomic_write_text  # noqa: E402  (fuente de verdad del ledger)
 
 
 def _guion_path(slug):
@@ -70,8 +70,8 @@ def aprobar(slug, fecha=None, dry_run=False, cola=DEFAULT_COLA):
                 t["estado"] = "producido"
                 if fecha:
                     t["producido_fecha"] = fecha
-                cola.write_text(
-                    json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+                atomic_write_text(
+                    cola, json.dumps(data, ensure_ascii=False, indent=2))
                 print(f"  cola: '{slug}' marcado como producido")
     else:
         print(f"  cola: no existe {cola} (se omite el marcado)")
@@ -106,7 +106,7 @@ def rechazar(slug, fecha=None, cola=DEFAULT_COLA):
     t["estado"] = "rechazado"
     if fecha:
         t["rechazado_fecha"] = fecha
-    cola.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_write_text(cola, json.dumps(data, ensure_ascii=False, indent=2))
     print(f"  cola: '{slug}' marcado RECHAZADO (la proxima corrida salta al siguiente)")
     return 0
 

@@ -13,6 +13,16 @@ from pathlib import Path
 
 import cache
 from post_finish import finish_chain  # acabado filmico opcional (A5); no-op sin "finish"
+from audio_master import master_audio  # cadena de master de audio (modulo aislado)
+
+# ffmpeg/ffprobe (Gyan) NO estan en PATH (ver CLAUDE.md) -> ruta completa o
+# FFMPEG_BIN/FFPROBE_BIN. Mismo patron que post_finish.py / encode_host.py.
+FFMPEG = os.environ.get("FFMPEG_BIN") or r"C:\Users\manup\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.1-full_build\bin\ffmpeg.exe"
+if not os.path.exists(FFMPEG):
+    FFMPEG = "ffmpeg"
+FFPROBE = os.environ.get("FFPROBE_BIN") or str(Path(FFMPEG).with_name("ffprobe.exe"))
+if not os.path.exists(FFPROBE):
+    FFPROBE = "ffprobe"
 
 HERE = Path(__file__).parent
 ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
@@ -84,9 +94,14 @@ def run(args, cwd=None):
 
 
 def dur(path):
-    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+    r = subprocess.run([FFPROBE, "-v", "error", "-show_entries", "format=duration",
                         "-of", "csv=p=0", str(path)], capture_output=True, text=True)
-    return float(r.stdout.strip())
+    out = r.stdout.strip()
+    if r.returncode != 0 or not out:
+        print("FFPROBE ERR (dur):", path)
+        print((r.stderr or r.stdout)[-2000:])
+        raise SystemExit(1)
+    return float(out)
 
 
 # ---------- etapa 1: voz con timestamps ----------
@@ -150,6 +165,10 @@ def apply_cues(b, props, out_dir: Path, frames: int):
         f = word_frame(cues["countEndWord"], "end")
         if f is not None:
             props["countEndFrame"] = f
+    if cues.get("gainWord"):
+        f = word_frame(cues["gainWord"], "start")
+        if f is not None:
+            props["gainFrame"] = f
     if cues.get("breakWord"):
         f = word_frame(cues["breakWord"], "start")
         if f is not None:
@@ -206,10 +225,56 @@ def ensure_caricatures(guion):
         gen(s)
 
 
+def ensure_moving_clips(guion):
+    # beats que SE MUEVEN (BeatHeroShot) reproducen un clip i2v a pantalla
+    # completa desde public/i2v/<shot_id>.mp4. El clip es un ACTIVO DE PAGA (still
+    # gpt-image-1 + i2v Kling); se genera APARTE con su cotizacion + OK explicito
+    # (i2v_engine, doble candado de gasto). Aqui NO se gasta nunca: si el render
+    # i2v ya existe en out/_i2v/<shot_id>.mp4 se COPIA a public ($0, reuso); si no
+    # existe, se ABORTA fuerte (no disparar gasto en silencio durante un
+    # ensamblado). Setea props["clip"] para el componente MovingHero.
+    import shutil
+    hero = [b for b in guion["beats"] if b["type"] == "BeatHeroShot"]
+    if not hero:
+        return
+    pub = REMOTION_DIR / "public" / "i2v"
+    pub.mkdir(parents=True, exist_ok=True)
+    cached = HERE / "out" / "_i2v"
+    photos = REMOTION_DIR / "public" / "photos"
+    for b in hero:
+        # motor FOTO REAL (b-roll de figura publica, $0): el jpg vive commiteado en
+        # public/photos/<photo>.jpg. No hay i2v, no se gasta -> verifica y sigue.
+        ph = b["props"].get("photo")
+        if ph:
+            img = photos / f"{ph}.jpg"
+            if not img.exists():
+                raise SystemExit(
+                    f"falta la foto del hero '{ph}': no esta en "
+                    f"public/photos/{ph}.jpg (b-roll de foto real, $0).")
+            print(f"MOVING photo {ph} (foto real, $0)")
+            continue
+        sid = b["props"]["shot_id"]
+        b["props"]["clip"] = sid
+        dst = pub / f"{sid}.mp4"
+        if dst.exists():
+            print(f"MOVING skip {sid} (cache public)")
+            continue
+        src = cached / f"{sid}.mp4"
+        if not src.exists():
+            raise SystemExit(
+                f"falta el clip i2v de '{sid}': no esta en public/i2v/ ni en "
+                f"out/_i2v/. Es un activo de PAGA -> generalo aparte con su "
+                f"cotizacion + OK (i2v_engine) ANTES de ensamblar; build916 no "
+                f"gasta.")
+        shutil.copy2(src, dst)
+        print(f"MOVING copy {sid} (reuso render i2v, $0) -> {dst}")
+
+
 def render_beats(guion, out_dir: Path):
     raw_dir = out_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     ensure_caricatures(guion)
+    ensure_moving_clips(guion)
     beats = guion["beats"]
     # sha del arbol de fuentes Remotion (una vez por corrida): si se edita
     # CUALQUIER componente/theme/StudioScene, el key de TODO render cambia y se
@@ -221,6 +286,30 @@ def render_beats(guion, out_dir: Path):
         frames = int(round((LEAD + vo_d + TAIL) * FPS))
         props = apply_cues(b, dict(b["props"], durationInFrames=frames),
                            out_dir, frames)
+        # Componente Remotion a renderizar: por defecto el "type" del beat (que
+        # ademas es la CLAVE de los cues en apply_cues), pero "render_as" permite
+        # redirigir a un componente premium distinto SIN perder esa clave de cue
+        # (p.ej. type=BeatKinetic -> sync de palabras, render_as=KineticTextPremium
+        # -> el mundo PremiumStage). Sin "render_as", se renderiza el propio type.
+        comp = b.get("render_as") or b["type"]
+        # Clip i2v (BeatHeroShot) en camara lenta para LLENAR el beat: el clip
+        # (activo de paga, ya cacheado por ensure_moving_clips) suele ser mas
+        # corto que la voz; playbackRate = dur_clip/dur_beat (<=1) lo estira en
+        # vez de congelar el ultimo frame. Movimiento push-in lentisimo -> la
+        # camara lenta es imperceptible. >1 nunca (no acelerar el i2v).
+        if b["type"] == "BeatHeroShot" and b["props"].get("clip"):
+            clip_path = REMOTION_DIR / "public" / "i2v" / f"{b['props']['clip']}.mp4"
+            if clip_path.exists():
+                clip_d, beat_d = dur(clip_path), frames / FPS
+                if clip_d > 0 and beat_d > 0:
+                    props["playbackRate"] = round(min(1.0, clip_d / beat_d), 4)
+        # Remotion MERGEA los defaultProps del <Composition> (Root.tsx) con los
+        # --props: si el guion NO trae "kicker", el placeholder de defaultProps
+        # ("Antes de invertir, necesitas esto") se cuela como titular sobre el
+        # i2v. El guion manda: sin kicker en el guion = sin kicker en pantalla
+        # (restriccion igloo.inc, el rostro y la voz cargan el beat).
+        if b["type"] == "BeatHeroShot" and "kicker" not in b["props"]:
+            props["kicker"] = ""
         # Whips de costura DESACTIVADOS: las transiciones ahora son xfade real
         # en assemble() (disolvencia + dip de musica). Hornear los whips peleaba
         # con la disolvencia. b["trans"] queda en el guion pero se ignora.
@@ -233,7 +322,7 @@ def render_beats(guion, out_dir: Path):
         # componente, src_sha cambia -> se re-renderiza (antes el mp4 viejo se
         # reusaba y props.json / el .tsx divergian en silencio). Recipe v2 = se
         # agrego src_sha al key (invalida los renders viejos una vez).
-        ck = cache.key("remo.v2", b["type"], props_json,
+        ck = cache.key("remo.v2", comp, props_json,
                        cache.file_sha(out_dir / "vo" / f"{b['id']}.words.json"),
                        src_sha, "scale2", "crf16", LEAD, TAIL, FPS)
         # adopt=False en renders: si NO hay sidecar (migracion / git clean / 1a
@@ -253,7 +342,7 @@ def render_beats(guion, out_dir: Path):
         # tab el callback de carga de la fuente se queda sin turno (starvation),
         # no por cuelgue real. Con timeout amplio ese tab resuelve la fuente en
         # cuanto los otros terminan y liberan CPU. 180s reventaba en beats largos.
-        run(["npx.cmd", "remotion", "render", b["type"], str(dst),
+        run(["npx.cmd", "remotion", "render", comp, str(dst),
              f"--props={props_file}", "--concurrency=4", "--crf=16",
              "--scale=2", "--timeout=600000"],
             cwd=str(REMOTION_DIR))
@@ -263,16 +352,20 @@ def render_beats(guion, out_dir: Path):
 
 # ---------- etapa 3: ensamblado (mezcla validada de build.py) ----------
 def norm_vo(src, dst, I=-16.0, TP=-1.5, LRA=11.0):
-    p = subprocess.run(["ffmpeg", "-i", str(src), "-af",
+    p = subprocess.run([FFMPEG, "-i", str(src), "-af",
                         f"loudnorm=I={I}:TP={TP}:LRA={LRA}:print_format=json",
                         "-f", "null", "-"], capture_output=True, text=True)
     m = re.search(r"\{[^{}]*\"input_i\"[\s\S]*?\}", p.stderr)
+    if not m:
+        print("LOUDNORM ERR: no se pudo medir el VO:", src)
+        print((p.stderr or p.stdout)[-2000:])
+        raise SystemExit(1)
     d = json.loads(m.group(0))
     af = (f"loudnorm=I={I}:TP={TP}:LRA={LRA}:measured_I={d['input_i']}"
           f":measured_TP={d['input_tp']}:measured_LRA={d['input_lra']}"
           f":measured_thresh={d['input_thresh']}"
           f":offset={d['target_offset']}:linear=true")
-    run(["ffmpeg", "-y", "-i", str(src), "-af", af, "-ar", "48000", str(dst)])
+    run([FFMPEG, "-y", "-i", str(src), "-af", af, "-ar", "48000", str(dst)])
 
 
 def assemble(guion, out_dir: Path):
@@ -378,7 +471,7 @@ def assemble(guion, out_dir: Path):
     else:
         chain.append(f"{base},{fades}[v]")
     fc_v = ";".join(chain)
-    run(["ffmpeg", "-y"] + vins + ["-filter_complex", fc_v, "-map", "[v]",
+    run([FFMPEG, "-y"] + vins + ["-filter_complex", fc_v, "-map", "[v]",
          "-c:v", "libx264", "-preset", "slow", "-crf", "15",
          "-pix_fmt", "yuv420p", str(silent)])
 
@@ -407,76 +500,55 @@ def assemble(guion, out_dir: Path):
                 f"Borra out/<slug>/_asm/vn_*.wav y re-ensambla.")
         norm.append(npath)
 
-    inputs = ["-i", pick_music(guion)]
+    # --- VOZ colocada en timeline -> vo_stem (PCM 48k): insumo del master
+    # (cadena broadcast) Y del QC de entrega (silencedetect sobre la voz SIN
+    # musica para ver los huecos REALES entre voces). Corrida ffmpeg barata; se
+    # exporta ANTES de masterizar. Mismo amix+apad de siempre, sin musica en [0].
+    vo_stem = out_dir / f"{guion['slug']}.vo_stem.wav"
+    vins = []
     for npth in norm:
-        inputs += ["-i", str(npth)]
-    sfx_inputs = []
-    for s in segs:
-        if s.get("sfx"):
-            sfx_inputs.append((pick_sfx(s["sfx"]), s["start"]))
-    for sf, _ in sfx_inputs:
-        inputs += ["-i", str(sf)]
-
-    # dip de musica (~-5 dB, ~0.4s) centrado en cada costura = respiro audible
-    # (hoy el sidechain SUBE la musica en los huecos del VO; el dip lo compensa)
-    # respiro: dip de musica centrado en el HUECO real entre voces (medio del
-    # silencio [fin VO_m, inicio VO_{m+1}]), no en el centro del xfade de video.
-    # respiro centrado en el HUECO AUDIBLE real (fin de la ultima palabra de m ->
-    # inicio de la primera palabra de m+1), NO en el borde del mp3.
-    breaths = [(segs[m]["aud_end"] + segs[m + 1]["aud_start"]) / 2
-               for m in range(n - 1)]
-    if breaths:
-        # super-gaussiana exp(-u^8), u=(t-S)/1.05: fondo PLANO y ANCHO con paredes
-        # casi verticales. El dip se aplica ANTES del sidechain (que solo REDUCE)
-        # -> el dip es el TECHO de la musica en el hueco. El bottom plano cubre
-        # TODO el hueco audible: ~-23 dB en +-0.5s (huecos de 1.0s) y aun ~-18 dB
-        # en +-0.74s (el hueco ancho de 1.48s tras b2_pais). Las paredes recuperan
-        # la musica ~0.6s DENTRO de la voz (ahi el sidechain la agacha). El SFX de
-        # transicion cae en el hueco y puntua el respiro -> no un dropout muerto.
-        def _sg(S):
-            u = f"((t-{S:.3f})/1.05)"
-            q = f"(({u}*{u})*({u}*{u}))"   # u^4
-            return f"exp(-{q}*{q})"          # exp(-u^8)
-        bumps = "+".join(_sg(S) for S in breaths)
-        dip = f",volume=eval=frame:volume='1-0.93*({bumps})'"
-    else:
-        dip = ""
-    fc = [f"[0:a]aloop=loop=-1:size=2e9,atrim=0:{total:.3f},volume=0.30{dip},"
-          f"afade=t=out:st={total - 0.8:.3f}:d=0.8[mus]"]
-    vo_labels = []
+        vins += ["-i", str(npth)]
+    vfc, vlabels = [], []
     for i, s in enumerate(segs):
         ms = int(s["vo_start"] * 1000)
-        fc.append(f"[{i + 1}:a]adelay={ms}|{ms}[v{i}]")
-        vo_labels.append(f"[v{i}]")
-    # apad: sidechaincompress termina cuando se acaba el sidechain; sin pad
-    # el audio queda corto (TAIL del ultimo beat) y el mux -t total dejaria un
-    # tail mudo (video hasta total, audio cortado antes)
-    fc.append("".join(vo_labels)
-              + f"amix=inputs={len(vo_labels)}:normalize=0,"
-              + f"apad=whole_dur={total:.3f}[vo]")
-    fc.append("[vo]asplit=3[vo_mix][vo_sc][vo_stem]")
-    fc.append("[mus][vo_sc]sidechaincompress=threshold=0.03:ratio=6:attack=5:release=260[ducked]")
-    mix_in = ["[ducked]", "[vo_mix]"]
-    for j, (_, st) in enumerate(sfx_inputs):
-        idx = 1 + len(norm) + j
-        ms = int(st * 1000)
-        fc.append(f"[{idx}:a]volume=0.45,adelay={ms}|{ms}[s{j}]")
-        mix_in.append(f"[s{j}]")
-    fc.append("".join(mix_in) + f"amix=inputs={len(mix_in)}:normalize=0[mix]")
-    # loudnorm hace limiting de TRUE-peak (inter-sample), no solo sample-peak
-    # como alimiter: TP=-1.5 garantiza el <= -1 dBTP que exige el QC. I=-16 deja
-    # el integrado en target sin pumpear (LRA del mix ya es bajo).
-    fc.append("[mix]loudnorm=I=-16:TP=-1.5:LRA=11[aout]")
+        vfc.append(f"[{i}:a]adelay={ms}|{ms}[v{i}]")
+        vlabels.append(f"[v{i}]")
+    vfc.append("".join(vlabels)
+               + f"amix=inputs={len(vlabels)}:normalize=0,"
+               + f"apad=whole_dur={total:.3f}[vo]")
+    run([FFMPEG, "-y"] + vins + ["-filter_complex", ";".join(vfc),
+         "-map", "[vo]", "-t", f"{total:.3f}",
+         "-c:a", "pcm_s16le", "-ar", "48000", str(vo_stem)])
+
+    # --- MASTER de audio (modulo audio_master): voz con presencia broadcast +
+    # bed LUFS-relativo + dip super-gaussiano + sidechain validados + loudnorm
+    # 2-pasadas con limitador. El modulo calcula los huecos del dip desde el
+    # timeline. Reusa el vo_stem ($0). Saca AAC 192k con el TP ya controlado ->
+    # el mux final sigue siendo -c:a copy (no re-mete picos > -1 dBTP).
+    # SFX con PRESENCIA (Manuel: "no escuché ningún sfx"): gain por tipo para que
+    # peguen sobre el bed+voz. tick = acento sutil; impact/whoosh deben sentirse.
+    sfx_gain = {"impact": -3.0, "whoosh": -4.0, "tick": -7.0}
+    def _sfx_gain(name):
+        return sfx_gain.get(str(name).split(".")[0].split("_")[0], -4.0)
+    sfx_cues = [{"file": str(pick_sfx(s["sfx"])), "t": s["start"],
+                 "gain_db": _sfx_gain(s["sfx"])}
+                for s in segs if s.get("sfx")]
+    # RISER hacia el clímax: un beat con "riser": true en el guion -> el swell CRECE
+    # y revienta justo al arrancar ese beat (su cola cae sobre el impact del beat).
+    for s in segs:
+        if s.get("riser"):
+            rf = pick_sfx("riser")
+            try:
+                rd = dur(rf)
+            except Exception:
+                rd = 2.0
+            sfx_cues.append({"file": str(rf),
+                             "t": max(0.0, s["start"] - rd + 0.12),
+                             "gain_db": -3.5})
+            print(f"SFX riser -> climax '{s['id']}' (revienta en {s['start']:.2f}s)")
     audio = tmp / "audio.m4a"
-    vo_stem = out_dir / f"{guion['slug']}.vo_stem.wav"
-    # 2 salidas en UNA corrida: el master de audio (AAC) + el vo_stem (SOLO voz,
-    # PCM, antes de musica/sidechain) que el QC de entrega mide con silencedetect
-    # para ver los huecos REALES entre voces sin la musica encima.
-    run(["ffmpeg", "-y"] + inputs + ["-filter_complex", ";".join(fc),
-         "-map", "[aout]", "-t", f"{total:.3f}", "-c:a", "aac", "-b:a", "192k",
-         "-ar", "48000", str(audio),
-         "-map", "[vo_stem]", "-t", f"{total:.3f}", "-c:a", "pcm_s16le",
-         "-ar", "48000", str(vo_stem)])
+    master_audio(vo_stem, timeline_path, pick_music(guion),
+                 sfx_cues, total, audio)
 
     final = out_dir / f"{guion['slug']}_FINAL_916.mp4"
     # -c:a copy: audio.m4a ya es AAC 192k con el true-peak controlado por
@@ -485,7 +557,7 @@ def assemble(guion, out_dir: Path):
     # los B-frames (DTS!=PTS) y deja el video ~4 frames corto del audio
     # (av_match FAIL). Audio y video ya estan acotados a `total` por construccion
     # (apad whole_dur + tpad/trim), asi que -t total casa ambos sin truncar.
-    run(["ffmpeg", "-y", "-i", str(silent), "-i", str(audio),
+    run([FFMPEG, "-y", "-i", str(silent), "-i", str(audio),
          "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy",
          "-c:a", "copy", "-dn", "-t", f"{total:.3f}", str(final)])
     print("WROTE", final, f"{dur(final):.2f}s")

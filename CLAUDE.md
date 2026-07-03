@@ -126,7 +126,7 @@ luego se parametriza con los datos exactos del guion.
 ## 🎯 Foco actual (verificar contra Style Bible + `git log`, cambia rápido)
 
 - **Objetivo:** 3 posts/día en horarios estratégicos → el cuello de botella es **MATERIAL** (banco de temas), no la calidad del medio.
-- ✅ **Cortes abruptos RESUELTOS** (xfade real en `build916.py`, `XFADE=0.35`, dip de música en el silencio real entre voces). Catálogo de ~39 beats + director (`validator.py` R1–R11 31/31, `ledger.py`, lane A/B de rotación) ya existen.
+- ✅ **Cortes abruptos RESUELTOS** (xfade real en `build916.py`, `XFADE=0.35`, dip de música en el silencio real entre voces). Catálogo de ~44 beats + director (`validator.py` R1–R11 34/34, `ledger.py`, lane A/B de rotación) ya existen.
 - Plan vigente (2026-06-15): Fase 1 limpieza→`_archive/` ✅ → Fase 2 doc baseline "lo que funciona" → Fase 3 **banco de temas** (`infra/n8n/temas_cola.json`) → Fase 4 n8n semi-auto con gate humano. NO re-sembrar los guiones viejos ("esos ya fueron") ni re-proponer caminos muertos.
 - **REALIDAD de orquestación (2026-06-16, verificado en la DB de n8n):** `workflow_dinero_ia.json` está IMPORTADO en n8n pero con **0 ejecuciones** — n8n NUNCA ha producido un video. El motor real = scripts Python (`cola.py`→planner→`validator.py`→`build916.py`→`filter_delivery.py`→`aprobar.py`) corridos a mano/en-sesión. El workflow NO tiene nodo de caption/hashtags/publicar y su trigger es manual. **Recomendación abierta:** reemplazar n8n por UN orquestador Python (`producir.py`) + Windows Task Scheduler ($0, más ágil, más fácil de tocar) en vez de levantar n8n como servidor. Distribución/posteo: `infra/distribution/publish_ig.py` ($0, listo, falta OAuth de Manuel + host de URL pública).
 

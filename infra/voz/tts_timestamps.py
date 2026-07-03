@@ -15,11 +15,42 @@ import argparse
 import base64
 import json
 import sys
+import time
 from pathlib import Path
 
 import requests
 
 ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
+
+# Codigos HTTP que vale la pena REINTENTAR (transitorios del lado del server o
+# rate-limit). Un 4xx "real" (401 auth, 422 body malo) NO entra: reintentarlo
+# solo re-falla. Reintentar un transitorio NO re-cobra: una request fallida no
+# es una generacion exitosa (las APIs de paga cobran por exito).
+RETRY_STATUS = {429, 500, 502, 503, 504}
+
+
+class RetryableError(Exception):
+    """La marca un caller cuando detecta un fallo TRANSITORIO (red/timeout/5xx).
+    `with_retries` la atrapa y reintenta; cualquier otra excepcion aborta ya."""
+
+
+def with_retries(fn, *, tries=4, base_delay=2.0, what="API"):
+    """Llama fn() con backoff exponencial ante RetryableError.
+
+    fn() devuelve el resultado en exito y lanza RetryableError para reintentar.
+    Tras agotar `tries`, aborta con SystemExit(1). Cualquier otra excepcion de
+    fn() (p.ej. SystemExit por 401) sube intacta sin reintentar.
+    """
+    for attempt in range(1, tries + 1):
+        try:
+            return fn()
+        except RetryableError as e:
+            if attempt == tries:
+                print(f"{what}: agotados {tries} intentos ({e})")
+                raise SystemExit(1)
+            delay = base_delay * (2 ** (attempt - 1))
+            print(f"{what}: intento {attempt}/{tries} fallo ({e}); reintento en {delay:.0f}s")
+            time.sleep(delay)
 
 # Asgard — confirmado por Manuel 2026-06-11 (Norberto Falcon = RviUET0nhAzUw2NH93OJ)
 # Para cambiar de voz: edita estas 2 lineas, borra los out/<slug>/vo/*.mp3 y
@@ -65,17 +96,27 @@ def chars_to_words(alignment: dict) -> list[dict]:
 
 
 def tts_beat(key: str, voice: str, text: str, mp3_path: Path) -> list[dict]:
-    r = requests.post(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps"
-        "?output_format=mp3_44100_128",
-        headers={"xi-api-key": key},
-        json={"text": text, "model_id": MODEL, "voice_settings": VOICE_SETTINGS},
-        timeout=120,
-    )
-    if r.status_code != 200:
-        print("ELEVENLABS ERR", r.status_code, r.text[:300])
-        raise SystemExit(1)
-    data = r.json()
+    def _call() -> dict:
+        try:
+            r = requests.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps"
+                "?output_format=mp3_44100_128",
+                headers={"xi-api-key": key},
+                json={"text": text, "model_id": MODEL, "voice_settings": VOICE_SETTINGS},
+                timeout=120,
+            )
+        except requests.exceptions.RequestException as e:
+            raise RetryableError(f"red/timeout: {e}")
+        if r.status_code in RETRY_STATUS:
+            raise RetryableError(f"HTTP {r.status_code}: {r.text[:200]}")
+        if r.status_code != 200:
+            print("ELEVENLABS ERR", r.status_code, r.text[:300])
+            raise SystemExit(1)
+        return r.json()
+
+    # solo la LLAMADA se reintenta; decodificar/escribir el mp3 ya con datos en
+    # mano NO (un 200 ya se cobro -> no re-llamar por un fallo local).
+    data = with_retries(_call, what=f"ElevenLabs[{mp3_path.stem}]")
     mp3_path.write_bytes(base64.b64decode(data["audio_base64"]))
     return chars_to_words(data["alignment"])
 

@@ -121,7 +121,7 @@ Probado empíricamente: **generar-desde-cero topa por debajo de la barra de Manu
 La forma de ADQUIRIR craft sin generar de cero ni pagar plantillas es **clonar el trabajo de un pro plano por plano**: cada beat recrea un plano real de la referencia 0x100x (cuya dirección de arte ya está resuelta) y luego se **parametriza con los datos exactos del guion**. No se inventa dirección de arte: se hereda de la referencia y se rellena con el dato LATAM.
 
 **El motor (todo local, $0):**
-1. **Render 2D:** Remotion 4.x local. Cada beat = un componente en `infra/remotion-render/src/beats/` (la **fuente viva del catálogo**, ~39 beats — leer la carpeta, no fiarse de un número fijo). Theme y paleta semántica en `src/theme.ts`.
+1. **Render 2D:** Remotion 4.x local. Cada beat = un componente en `infra/remotion-render/src/beats/` (la **fuente viva del catálogo**, ~44 beats — leer la carpeta, no fiarse de un número fijo). Theme y paleta semántica en `src/theme.ts`.
 2. **3D hero (cuando aplica):** Blender 5.1, OptiX en la RTX 4060 → PNG alpha → WebM VP9 yuva420p → Remotion `<OffthreadVideo transparent>`. Para objetos hero y set-pieces con volumen real.
 3. **Voz:** ElevenLabs `/with-timestamps`, voz **Asgard `eleven_v3`** (id `lJtjZw9ZjSbD9Zs9bOWq`). Los timestamps atan cada beat al audio (§7).
 4. **Ensamblado:** FFmpeg vía `infra/assembler/build916.py` — VO + renders + música ducked + SFX + xfade en costuras → `out/{slug}/{slug}_FINAL_916.mp4` (9:16).

@@ -1,3 +1,9 @@
+> ⚠️ **SUPERSEDED 2026-06-24 — estrategia MUERTA (el código de data-viz NO).** Esta era la
+> estrategia "kit Remotion estático de 10 arquetipos = el producto". Manuel pivoteó: el producto
+> es **EL MOVIMIENTO** (motor AI dirigido + datos en código + director LLM). El código Remotion de
+> gráficas/tipografía SOBREVIVE como la capa "datos = código" de v3. **Verdad viva:
+> `PLAN_MOTOR_AI_v3.md`.** Esto se conserva solo como audit trail — NO ejecutar A1–A6 como plan.
+
 # PLAN SALTO DE CALIDAD v2 — Dinero IA
 
 > **Acción de implementación de este plan:** escribir este contenido en
@@ -157,6 +163,81 @@ LATAM; los dependientes de PNG/caricatura (Character/Debate/Testimonial) y de lo
   (nueva carpeta), `src/CatalogGallery.tsx`, `infra/n8n/proposer.py` (pools `WOW`/`DATA_VISUAL`/
   `CHARTS`/`LANDING`), `infra/n8n/validator.py` (`TYPES`, `HOOK_TYPES`, `WOW`, `DATA_VISUAL`).
 - **Esfuerzo:** 1 día. **Impacto:** ALTÍSIMO — define el sistema; sin esto todo lo demás flota.
+
+> ### ✅ RESUELTO (2026-06-19, sesión siguiente) — Manuel eligió **Opción A**; implementado y verificado **0 deadlocks**.
+>
+> El ⛔ BLOQUEO de abajo está **CERRADO**. Manuel autorizó la **Opción A** (reinterpretar la
+> anti-fatiga para el kit congelado). Implementado en el checkout local (working tree, sin
+> commitear aún — pendiente del OK de Manuel para commit):
+> - **Firma visual = SOLO espectáculo wow** (`ledger.SIGNATURE_WOW` = MapZoom/MultiMap/NewsCard/
+>   Debate/LogoWall/Character). Gráficas/datos EXENTOS (lenguaje constante del canal); las puntas
+>   hook/clímax/cierre las gobierna R11, no la firma. `signature_types()` reescrito a whitelist.
+> - **`RECENCY_WINDOW` 3 → 2** (`validator.py`): con 3 wow rotables {MapZoom, MultiMap, NewsCard}
+>   siempre queda ≥1 libre → sin deadlock.
+> - **R9-combo solo aplica a firmas ricas (≥2 wow)** (`validator.py`): un video del freeze trae 1
+>   wow; `is_combo_repeated` lo bloquearía para siempre. R10 (ventana) gobierna la rotación
+>   día-a-día del wow único; R9-combo queda como anti-clon de videos multi-wow.
+> - **Freeze del proposer** (`proposer.py`): `FROZEN` = kit-10 evergreen + mini-set noticia
+>   (NewsCard/Timeline/MultiMap); los pools wow/data/chart se intersectan con FROZEN.
+>
+> **Verificación empírica (la sim multi-video es la autoridad, no los unit tests):** la sim de
+> N-videos-consecutivos-vs-ledger-vivo se promovió al suite como `run_freeze_deadlock()` → **0
+> deadlocks en 40 videos** (20 n_data=2 + 20 n_data=3). Suite completo **34/34**.
+>
+> **Desviaciones del texto A1 de abajo (por las 3 decisiones de producto que aprobó Manuel):**
+> 1. **"Archivar" = sacar del auto-pick del proposer, NO desregistrar.** Los componentes siguen
+>    en `Root.tsx` (los guiones edu ya commiteados deben seguir renderizando). **NO** se movió
+>    nada a `_archive/` ni se tocó `Root.tsx`. El freeze vive solo en los pools de `proposer.py`.
+> 2. **El kit cubre 2 carriles:** kit-10 evergreen **+ mini-set de noticia** → **Timeline SÍ
+>    está en el kit** (no es "opcional provisional" como dice A1 línea 142).
+> 3. **ROLE enum (`solution:purple`) queda BLOQUEADO** aparte (A3): choca con la paleta locked de
+>    CLAUDE.md (morado=solución). No se decide solo.
+>
+> **2 observaciones del freeze (no son bugs; decisión de Manuel si actuar):**
+> - **Bars/Versus** están en el kit frozen pero son LANDING → el auto-pick del MEDIO los OMITE
+>   (solo el clímax aterriza, R1). Auto-pick de datos efectivo = {LineChart, Pictogram, Timeline}.
+>   Disponibles para guiones a mano/planner; meterlos a la rotación del medio pide un camino
+>   R1-safe (decisión de diseño, no la tomo solo).
+> - **BeatNapkin** (set-piece de hook del director, estado 'listo') puede salir en temas de
+>   fórmula vía trigger de `director.py` — fuera de FROZEN A PROPÓSITO (carril deliberado, no
+>   fuga del freeze). newspaper/phone/chalkboard/ticket siguen 'planeado' → no se castean.
+>
+> ---
+>
+> > ### ⛔ BLOQUEO A1/A2 [CERRADO — ver ✅ arriba] — el kit congelado choca de frente con la anti-repetición (R9/R10). DECISIÓN DE MANUEL.
+>
+> **Hallazgo (2026-06-19, verificado empíricamente, NO afirmado):** congelar el proposer al kit
+> de 10 (probé con `FROZEN = kit-10 + mini-set noticia`) **rompe el sistema anti-repetición.**
+> Simulé 10 videos consecutivos contra el ledger real → **9/10 deadlocks** (cada propuesta
+> dispara R9/R10). Causa raíz estructural:
+> - R10 (recencia, `RECENCY_WINDOW=3`) fue afinado para **"~20+ visuales en el pool"** (lo dice
+>   el comentario en `validator.py:67`). El freeze deja el pool de DATOS en **2 visuales rotables**
+>   (Pictogram, Timeline) — el kit-10 puro es aún peor: **1 WOW** (MapZoom). Con 2 datos rotables
+>   y ventana 3, el slot de dato queda recency-bloqueado a partir del 2º video.
+> - R8 obliga ≥1 gráfica/video y la única gráfica del kit es `LineChartSemantic` → R10 la
+>   bloquearía el día 2 mientras R8 la exige = deadlock duro. (Lo confirmé: exenté la línea de
+>   la firma — necesario pero **insuficiente**; el pool de datos sigue muy fino.)
+>
+> **La tensión es de DISEÑO, no un bug:** la filosofía de A1 ("perfeccionar 10, NO crecer el
+> catálogo", línea 327) es lo OPUESTO a la de R9/R10 (variedad = rotar TIPOS de beat sobre un
+> catálogo grande). Con un kit chico, "no repetir el demo" ya **no puede** significar "rota el
+> tipo de gráfica" — debe significar **rota el TEMA + el hook/clímax + los DATOS**, con el lenguaje
+> visual constante (que es justo lo que pide la regla locked "UN theme constante").
+>
+> **Toca decisión LOCKED ("no re-litigar anti-repetición sin Manuel") → NO lo decido solo.** Opciones:
+> - **(A) Reinterpretar la anti-fatiga para kit congelado (recom):** la firma R9/R10 se calcula
+>   solo sobre el slot **WOW** (que sí tiene opciones); el vocabulario de DATOS/gráfica del kit se
+>   exenta de recencia (paleta fija por diseño). Anti-fatiga viva = R9-TEMA + R11 (hook/clímax) +
+>   datos nuevos. Bajar `RECENCY_WINDOW` a 1-2. Alineado con "UN theme constante" y con A1.
+> - **(B) Ensanchar el kit** hasta que R9/R10 respiren (~15-20 visuales) → **contradice A1** ("el
+>   kit es 10; crecer el catálogo es el síntoma, no la solución").
+> - **(C) Apagar R10 entero** bajo freeze y confiar anti-fatiga a R9-TEMA + R11 (lo más simple).
+>
+> **Estado del código:** revertí el experimento `FROZEN` (proposer.py) y la exención de la línea
+> (ledger.py) → working tree limpio en HEAD, anti-repetición intacta como la dejó Manuel.
+> Re-aplicar es trivial una vez que él elija A/B/C. El `FROZEN` exacto que probé queda en mi
+> memoria de proyecto. **A2/A3/A4 que NO tocan el proposer (endurecer componentes, fail-loud,
+> backend) avanzan en paralelo sin esperar esta decisión.**
 
 ### A3 — Endurecer los 10 para que el output feo sea IMPOSIBLE
 

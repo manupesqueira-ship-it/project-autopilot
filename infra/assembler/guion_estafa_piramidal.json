@@ -1,0 +1,98 @@
+{
+  "slug": "estafa_piramidal",
+  "title": "Por que TODA piramide colapsa: la estafa que promete el doble",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatKinetic",
+      "vo": "Te prometen el doble en treinta dias sin riesgo. Eso no es una inversion, es una piramide que siempre colapsa.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "lines": [
+          [
+            { "text": "Te" },
+            { "text": "prometen" },
+            { "text": "el" },
+            { "text": "doble", "accent": true }
+          ],
+          [
+            { "text": "en" },
+            { "text": "treinta" },
+            { "text": "días" },
+            { "text": "sin" },
+            { "text": "riesgo" }
+          ],
+          [
+            { "text": "es" },
+            { "text": "una" },
+            { "text": "pirámide", "accent": true }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b2_pictogram",
+      "type": "BeatPictogram",
+      "vo": "De cada cien personas que entran a uno de estos esquemas, nueve de cada diez terminan perdiendo todo lo que metieron.",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "props": {
+        "total": 100,
+        "highlight": 90,
+        "caption": "9 de cada 10 pierden su dinero"
+      }
+    },
+    {
+      "id": "b3_trendbreak",
+      "type": "BeatTrendBreak",
+      "vo": "Al principio funciona: los primeros cobran y presumen. El dinero entra cada vez mas rapido. Hasta que un dia ya no hay suficientes personas nuevas, y todo se desploma a cero.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "breakWord": "desploma",
+        "countEndWord": "cero"
+      },
+      "props": {
+        "caption": "Asi crece y revienta todo esquema piramidal (ilustrativo)",
+        "points": [10000, 25000, 60000, 140000, 320000, 700000, 50000, 0],
+        "peakIndex": 5,
+        "counterLabel": "Dinero en el esquema",
+        "countFrom": 700000,
+        "countTo": 0,
+        "countPrefix": "$",
+        "pctLabel": "−100%",
+        "peakLabel": "$700,000",
+        "troughLabel": "$0"
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Para seguir pagando, en el nivel diez harian falta mas de diez mil millones de personas. Mas que toda la poblacion de la Tierra. Por eso siempre, siempre revienta.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "personas"
+      },
+      "props": {
+        "value": 10000000000,
+        "suffix": " personas",
+        "caption": "Personas necesarias en el nivel 10",
+        "subline": "Mas que toda la poblacion mundial",
+        "color": "#FF6B6B"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Si te prometen ganar sin que nadie pierda, huye. Siguenos y aprende a oler una estafa antes de caer.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Si suena a magia, es una piramide.",
+        "boldWord": "magia",
+        "sub": "mañana: las tres señales de una estafa cripto"
+      }
+    }
+  ]
+}

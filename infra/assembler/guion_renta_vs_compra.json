@@ -1,0 +1,85 @@
+{
+  "slug": "renta_vs_compra",
+  "title": "Lo que el banco no te dice de comprar casa a credito",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Te repiten que rentar es tirar el dinero. Pero casi nadie hace la cuenta de cuanto cuesta de verdad comprar a credito. El numero final te va a sorprender.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "stat": "30 años",
+        "context": "lo que dura una hipoteca... y casi nadie hace la cuenta",
+        "statColor": "#D4A574",
+        "caption": "Rentar vs comprar: la cuenta completa"
+      }
+    },
+    {
+      "id": "b2_bars",
+      "type": "BeatBars",
+      "vo": "Una casa de un millon y medio de pesos, a treinta años, termina costandote alrededor de cinco millones. Pagas tu casa mas de tres veces.",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "cues": {
+        "growWords": ["medio", "millones"]
+      },
+      "props": {
+        "caption": "Precio de la casa vs total pagado en 30 años",
+        "prefix": "$",
+        "suffix": " MXN",
+        "bars": [
+          { "label": "Precio de la casa", "value": 1500000 },
+          { "label": "Total a 30 años", "value": 5142546 }
+        ]
+      }
+    },
+    {
+      "id": "b3_timeline",
+      "type": "BeatTimeline",
+      "vo": "Mira como crece la deuda: en el primer año ya regalaste alrededor de ciento sesenta mil pesos solo en intereses. A la mitad del camino, mas de dos millones. Y al final, casi tres millones y medio.",
+      "sfx": "tick",
+      "trans": "scrollUp",
+      "cues": {
+        "growWords": ["año", "mitad", "final"]
+      },
+      "props": {
+        "caption": "Intereses pagados al banco por etapa",
+        "nodes": [
+          { "year": "Año 1", "title": "Intereses pagados", "amount": "$164,666 MXN", "tone": "white" },
+          { "year": "Año 15", "title": "Intereses pagados", "amount": "$2,328,082 MXN", "tone": "gold" },
+          { "year": "Año 30", "title": "Intereses pagados", "amount": "$3,642,546 MXN", "tone": "gold" }
+        ]
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Alrededor de tres millones seiscientos mil pesos. Eso es lo que el banco te cobro de mas, solo en intereses.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "intereses"
+      },
+      "props": {
+        "value": 3642546,
+        "prefix": "$",
+        "suffix": " MXN",
+        "caption": "Intereses pagados en 30 años",
+        "subline": "Mas del doble del precio de la casa",
+        "color": "#D4A574"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Comprar no es malo. Comprar sin hacer la cuenta, si. Siguenos para que el dinero trabaje para ti, no para el banco.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Haz la cuenta antes de firmar.",
+        "boldWord": "cuenta",
+        "sub": "mañana: cuanto deberias invertir al mes para comprar de contado"
+      }
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "slug": "emprender_finanzas",
+  "title": "El error de dinero que quiebra negocios sanos",
+  "beats": [
+    {
+      "id": "b1_hook",
+      "type": "BeatStatCallout",
+      "vo": "Ocho de cada diez negocios pequeños cierran antes de cinco años. Y muchos no quiebran por vender poco, sino por un error de dinero que casi nadie ve.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "stat": "8 de 10",
+        "context": "negocios pequeños cierran antes de 5 años",
+        "statColor": "#FF6B6B",
+        "caption": "El error casi nadie lo ve"
+      }
+    },
+    {
+      "id": "b2_bars",
+      "type": "BeatBars",
+      "vo": "Sacas mil pesos al dia de la caja para tus gastos. Parece nada. Pero al mes son treinta mil, y al año trescientos sesenta y cinco mil pesos que salieron del negocio sin que lo registraras.",
+      "sfx": "tick",
+      "trans": "zoomPunch",
+      "cues": {
+        "growWords": ["día", "mes", "año"]
+      },
+      "props": {
+        "caption": "Retiros hormiga: lo que sale sin que lo notes",
+        "prefix": "$",
+        "suffix": " MXN",
+        "bars": [
+          { "label": "Al día", "value": 1000 },
+          { "label": "Al mes", "value": 30000 },
+          { "label": "Al año", "value": 365000 }
+        ]
+      }
+    },
+    {
+      "id": "b3_recovery",
+      "type": "BeatRecovery",
+      "vo": "Muchos negocios caen aqui: parecen sanos por las ventas, pero se quedan sin dinero y por poco quiebran. Los que separan la cuenta del negocio de la personal, se recuperan.",
+      "sfx": "impact",
+      "trans": "scrollUp",
+      "props": {
+        "caption": "Caja del negocio: la caida y la recuperacion",
+        "points": [100000, 90000, 70000, 50000, 30000, 15000, 8000, 20000, 45000, 70000, 95000, 120000],
+        "troughIndex": 6,
+        "troughLabel": "$8,000 MXN",
+        "endLabel": "$120,000 MXN",
+        "labels": [
+          { "text": "Casi quiebra", "index": 6, "color": "#FF6B6B" },
+          { "text": "Separo cuentas", "index": 11, "color": "#00D9A5" }
+        ]
+      }
+    },
+    {
+      "id": "b4_climax",
+      "type": "BeatBigNumber",
+      "vo": "Ese hueco que casi nadie ve tiene numero. En cinco años, los retiros hormiga suman alrededor de un millon ochocientos mil pesos. No te hunden las ventas: te hunde la caja sin reglas.",
+      "sfx": "impact",
+      "trans": "flashWhite",
+      "cues": {
+        "countEndWord": "pesos"
+      },
+      "props": {
+        "value": 1825000,
+        "prefix": "$",
+        "suffix": " MXN",
+        "caption": "Retiros sin control en 5 años",
+        "subline": "El hueco que hunde el negocio",
+        "color": "#D4A574"
+      }
+    },
+    {
+      "id": "b5_cta",
+      "type": "BeatCta",
+      "vo": "Tu negocio y tu bolsillo no son la misma caja. Siguenos y haz que tu negocio por fin te pague un sueldo.",
+      "sfx": "whoosh",
+      "props": {
+        "text": "Pagate un sueldo, no agarres de la caja.",
+        "boldWord": "sueldo",
+        "sub": "mañana: el sistema de tres cuentas para tu negocio"
+      }
+    }
+  ]
+}

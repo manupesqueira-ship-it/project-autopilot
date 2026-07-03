@@ -22,12 +22,14 @@
   dorado=dinero · morado=solución. UN solo theme, consistente, profesional (NO
   viral): nunca cambiar fondo ni tamaño de número de forma decorativa.
 - **Director (capa de decisión editorial codificada):** `infra/n8n/validator.py`
-  R1–R11 (**31/31 tests**, catálogo VIVO leyendo los `id="Beat..."` de `Root.tsx`)
+  R1–R11 (**34/34 tests**, validador lee el catálogo VIVO de `id="Beat..."` de
+  `Root.tsx`; el `proposer` solo muestrea el subconjunto `FROZEN`)
   + `proposer.py` (esqueleto de guion $0 offline) + `ledger.py`+`ledger.json`
   (gate humano: solo registra un video tras OK de Manuel y recién ahí bloquea
-  tema/combo) + Lane A (R10 recencia del medio) y Lane B (R11 rotación de puntas
-  hook/clímax).
-- **Catálogo de ~39 beats** (la verdad viva = leer `src/beats/` / los `id` de
+  tema/combo) + Lane A (R10 recencia del **espectáculo wow** — tras el freeze
+  Opción A 2026-06-19 las gráficas/datos quedan EXENTAS, son el lenguaje constante
+  del canal) y Lane B (R11 rotación de puntas hook/clímax).
+- **Catálogo de ~44 beats** (la verdad viva = leer `src/beats/` / los `id` de
   `Root.tsx`). **Rotación > cantidad:** el catálogo BASTA; el cansancio venía de
   falta de rotación, no de pocos tipos. No hace falta seguir agregando gráficas
   para escalar.

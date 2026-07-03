@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "actualizado": "2026-06-24",
+  "_doc": "ELENCO (roster) del lane Caricatura-personaje (arquetipo 4, Dinero IA). FUENTE DE VERDAD del roster: validator.py R8 carga ESTE archivo (no la lista hardcodeada). Mismo espiritu que hero_assets.json: REGISTRAR un personaje = el acto de VERIFICAR su estilo/licencia/consistencia, puesto en codigo y no en prosa. Un BeatCharacter cuya imageSlug no este aqui con en_roster=true -> validator R8 lo RECHAZA. Anadir un personaje = una entrada en 'personajes' (Manuel lo puede hacer el mismo, sin tocar Python).",
+
+  "_reglas": {
+    "en_roster": "true SOLO si el personaje cumple estilo Y tiene un still canonico verificado en public/characters/<slug>.png. validator R8 construye ROSTER = {slugs con en_roster=true}. Un personaje registrado con en_roster=false existe en disco pero NO se puede castear (p.ej. estilo no conforme, pendiente de regenerar).",
+    "estilo_ok": "true SOLO si el still cumple el _estilo de la casa (ver abajo): caricatura-fino, FONDO TRANSPARENTE, encuadre de busto. Un still con fondo horneado (degradado/escena) = false: CharacterCard.tsx ya pone su propio StudioScene+halo, un fondo horneado los DUPLICA.",
+    "figura_publica": "true si es una persona real reconocible (lider/CEO/figura). Obliga a la _politica_figuras: SOLO caricatura claramente estilizada (nunca foto-real), SOLO en contexto editorial/noticia, una 'quote' jamas se atribuye como cita real sin fuente en el brief.",
+    "verificado": "fecha (YYYY-MM-DD) en que Claude/Manuel miro el still POR PIXELES y confirmo estilo+encuadre+fondo. Sin esto no se confia en la entrada.",
+    "consistencia": "como se REPRODUCE identico el personaje. Ver _consistencia. El still canonico cacheado ES el ancla principal (un solo archivo, reusado en todo video estatico Y como input del i2v)."
+  },
+
+  "_estilo": {
+    "_doc": "ESTILO DE LA CASA bloqueado para TODA caricatura (arq 4). Referencia viva = public/characters/bukele.png. Premium != foto-realista: caricatura-fino. Este bloque es el prompt-spec que GATE 2 (Seedream/SDXL) debe cumplir para que el elenco sea coherente consigo mismo.",
+    "look": "caricatura vectorial limpia, sombreado plano (cel-shading suave, sin pintura realista), contorno definido y consistente, proporciones de busto ligeramente estilizadas (no caricatura grotesca de cabezon).",
+    "fondo": "TRANSPARENTE (PNG con alpha). PROHIBIDO fondo horneado: el componente pone su propio estudio+halo. Recorte limpio al borde del personaje.",
+    "encuadre": "busto: cabeza + hombros + brazos cruzados a la altura del pecho, mirando a camara o 3/4. Centrado, deja aire arriba.",
+    "iluminacion": "neutra y pareja sobre el sujeto (el dramatismo lo da el StudioScene del beat, no el still). Sin sombras duras horneadas salvo la base.",
+    "prompt_base": "clean flat vector caricature, fine cel-shaded cartoon, bold consistent outline, bust framing (head + shoulders + crossed arms), neutral even lighting, TRANSPARENT background, no scene, no baked backdrop, premium editorial style, 9:16 portrait safe",
+    "negativo": "photorealistic, 3d render, baked background, gradient backdrop, scene, watermark, text, logo, harsh baked shadows, grotesque bobblehead proportions"
+  },
+
+  "_consistencia": {
+    "_doc": "DECISION F4 (2026-06-24): como mantener al personaje IDENTICO entre videos. Clave: la consistencia del still canonico es GRATIS (es UN archivo cacheado, se reusa). El i2v (arq 4 que se mueve) anima ESE mismo still -> Kling mueve los pixeles literales, la identidad se preserva sola. El metodo de abajo solo importa para GENERAR el still canonico y poses nuevas.",
+    "ancla_principal": "still_cacheado: 1 still canonico por personaje en public/characters/<slug>.png, generado UNA vez, verificado por ojo, reusado en todo. Resuelve estatico (CharacterCard) e i2v (input de Kling) sin costo recurrente.",
+    "poses_nuevas": "si algun dia se necesita otra pose/angulo del MISMO personaje: LoRA por personaje entrenado LOCAL en SDXL ($0, reproducible offline, lo posee Manuel) a partir del still canonico. Es la opcion $0-first.",
+    "fallback_pago": "Seedream 4.5 sequential / multi-referencia (pay-per-use, en GATE 2) si la calidad del LoRA local sobre el estilo fino no alcanza la barra.",
+    "descartado": "Higgsfield Soul ID -> es suscripcion y NO se necesita: el still-cacheado + i2v ya da identidad gratis, y el LoRA local cubre poses nuevas a $0. No pagar suscripcion por esto.",
+    "regla_oro": "1 still canonico bueno por personaje = identidad resuelta para estatico + movimiento. NO regenerar al personaje cada video."
+  },
+
+  "_politica_figuras": {
+    "_doc": "POLITICA F4 para figuras publicas reales (Milei, Trump, Bukele, Michael Dell, etc.).",
+    "permitido": "caricatura claramente ESTILIZADA (caricatura-fino) en contexto editorial/noticioso de finanzas. Es practica estandar de comentario editorial.",
+    "prohibido": "retrato foto-realista / deepfake; atribuir una 'quote' como cita textual real sin que la cifra/frase venga del brief con fuente; cualquier uso que sugiera respaldo/patrocinio de la figura.",
+    "gate_2": "ANTES del primer pago, confirmar la content-policy del proveedor i2v puntual (Kling/Seedream) sobre figuras publicas. El estilo fino (no foto-real) es el lado seguro de casi toda ToS. El sistema YA publica a Bukele caricaturizado."
+  },
+
+  "_como_anadir": "1) generar el still con _estilo.prompt_base (GATE 2: Seedream 4.5 o SDXL local); 2) recortar a PNG TRANSPARENTE de busto; 3) mirar los pixeles (estilo+fondo+encuadre); 4) guardar en infra/remotion-render/public/characters/<slug>.png; 5) agregar la entrada aqui con estilo_ok/en_roster/verificado reales. Recien entonces el director lo puede castear.",
+
+  "personajes": [
+    {
+      "slug": "bukele",
+      "name": "Nayib Bukele",
+      "role": "Presidente de El Salvador",
+      "still": "infra/remotion-render/public/characters/bukele.png",
+      "figura_publica": true,
+      "estilo_ok": true,
+      "en_roster": true,
+      "consistencia": { "metodo": "still_cacheado", "lora": null, "ancla": "el propio still canonico" },
+      "verificado": "2026-06-24",
+      "nota": "Still canonico conforme: caricatura-fino, fondo TRANSPARENTE, encuadre de busto (gorra, barba, saco oscuro, brazos cruzados). Es la referencia viva del _estilo de la casa."
+    },
+    {
+      "slug": "economista",
+      "name": "Economista (generico)",
+      "role": "voz de analisis (no es una figura real)",
+      "still": "infra/remotion-render/public/characters/economista.png",
+      "figura_publica": false,
+      "estilo_ok": false,
+      "en_roster": false,
+      "consistencia": { "metodo": "still_cacheado", "lora": null, "ancla": "still a regenerar" },
+      "verificado": "2026-06-24",
+      "nota": "REGISTRADO pero NO casteable (en_roster=false). El still trae un FONDO HORNEADO (degradado oscuro + halo teal/dorado) que DUPLICA el StudioScene+halo de CharacterCard.tsx -> rompe _reglas.estilo_ok. Ademas el encuadre es mas de torso que de busto. Regenerar con _estilo (fondo transparente) en GATE 2 antes de activarlo. Mismo patron que vintage_pocket_watch en hero_assets.json: registrado-pero-rechazado para dejar la razon en codigo."
+    }
+  ]
+}
