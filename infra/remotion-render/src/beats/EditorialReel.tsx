@@ -77,7 +77,7 @@ export type Scene =
   | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string }
   | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string }
   | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string }
-  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string; anim?: "comet" | "spring" | "pulse" }
+  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string; anim?: "comet" | "spring" | "pulse" | "hero" }
   | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
   | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string }
   | { type: "divergence"; kicker?: string; label?: string; a: number[]; b: number[]; labelA?: string; labelB?: string; colorA?: "green" | "accent" | "ink"; colorB?: "green" | "accent" | "ink"; note?: string }
@@ -711,11 +711,61 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
     const line = smoothPath(xy);
     const area = `${line} L ${cx1} ${cyBot} L ${cx0} ${cyBot} Z`;
     const col = scene.color === "accent" ? ACCENT : GREEN;
+    const at = (t: number): [number, number] => { const fi = t * (n - 1), a = Math.floor(fi), b = Math.min(n - 1, a + 1), f = fi - a; return [xy[a][0] + (xy[b][0] - xy[a][0]) * f, xy[a][1] + (xy[b][1] - xy[a][1]) * f]; };
     const anim = scene.anim ?? "comet";
+    if (anim === "hero") {
+      const dE = 66;
+      const ease = Easing.bezier(0.62, 0, 0.66, 0.25);   // arranca lento, DESPEGA al final (drama exponencial)
+      const progAt = (f: number) => interpolate(f, [10, dE], [0, 1], { ...CL, easing: ease });
+      const prog = progAt(frame);
+      const clipW = cx0 + prog * W;
+      const [dotX, dotY] = at(prog);
+      const peak = xy[n - 1];
+      const done = frame - dE;
+      const endPop = spring({ frame: frame - (dE - 8), fps, config: { damping: 10, stiffness: 150 } });
+      body = (
+        <>
+          {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: col, ...reveal(frame, 4) }}>{scene.kicker}</div>}
+          {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 68, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
+          <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
+            <defs>
+              <linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity="0.36" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient>
+              <filter id="cglow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="7" /></filter>
+              <clipPath id="curveclip"><rect x="0" y="0" width={clipW} height="1920" /></clipPath>
+            </defs>
+            <line x1={cx0} y1={cyBot} x2={cx1} y2={cyBot} stroke={HAIR} strokeWidth={3} />
+            <g clipPath="url(#curveclip)">
+              <path d={area} fill="url(#agrad)" />
+              <path d={line} fill="none" stroke={col} strokeWidth={22} strokeLinecap="round" opacity={0.32} filter="url(#cglow)" />
+              <path d={line} fill="none" stroke={col} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+            {Array.from({ length: 22 }).map((_, j) => {
+              const fe = 12 + j * 2.2;
+              if (frame < fe || fe > dE) return null;
+              const age = frame - fe; if (age > 38) return null;
+              const [ex, ey] = at(progAt(fe));
+              const dx = (((j * 29) % 9) - 4) * 1.2;
+              return <circle key={`t${j}`} cx={ex + dx * (age / 12)} cy={ey - age * 1.7} r={Math.max(0, 6.5 * (1 - age / 42))} fill={col} opacity={Math.max(0, 0.5 * (1 - age / 38))} />;
+            })}
+            {done > 0 && Array.from({ length: 16 }).map((_, b) => {
+              const age = done; if (age > 26) return null;
+              const ang = (b / 16) * 2 * Math.PI, dist = interpolate(age, [0, 26], [12, 155], CL);
+              return <circle key={`b${b}`} cx={peak[0] + Math.cos(ang) * dist} cy={peak[1] + Math.sin(ang) * dist} r={Math.max(0, 7 * (1 - age / 26))} fill={col} opacity={Math.max(0, 1 - age / 26)} />;
+            })}
+            {done > 0 && [0, 22].map((off, k) => { const pf = (done + off) % 44; if (pf > 24) return null; return <circle key={`r${k}`} cx={peak[0]} cy={peak[1]} r={interpolate(pf, [0, 24], [16, 150], CL)} fill="none" stroke={col} strokeWidth={3} opacity={interpolate(pf, [0, 24], [0.5, 0], CL)} />; })}
+            <circle cx={dotX} cy={dotY} r={46} fill={col} opacity={0.3} filter="url(#cglow)" />
+            <circle cx={dotX} cy={dotY} r={16} fill={col} />
+            <circle cx={dotX} cy={dotY} r={7} fill="#FFFFFF" />
+          </svg>
+          {scene.startLabel && <div style={{ position: "absolute", top: cyBot + 22, left: M, fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 12) }}>{scene.startLabel}</div>}
+          {scene.endLabel && <div style={{ position: "absolute", top: Math.max(560, peak[1] - 104), left: Math.min(cx1 - 300, peak[0] - 40), width: 360, fontSize: 52, fontWeight: 800, letterSpacing: "-0.02em", color: col, opacity: Math.min(1, endPop), transform: `scale(${Math.max(0, endPop)})`, transformOrigin: "left center" }}>{scene.endLabel}</div>}
+          {scene.note && <div style={{ position: "absolute", top: cyBot + 90, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, dE + 6) }}>{scene.note}</div>}
+        </>
+      );
+    } else {
     const dEnd = anim === "spring" ? 46 : 80;
     const prog = interpolate(frame, [12, dEnd], [0, 1], { ...CL, easing: Easing.inOut(Easing.cubic) });
     const clipW = cx0 + prog * W;
-    const at = (t: number): [number, number] => { const fi = t * (n - 1), a = Math.floor(fi), b = Math.min(n - 1, a + 1), f = fi - a; return [xy[a][0] + (xy[b][0] - xy[a][0]) * f, xy[a][1] + (xy[b][1] - xy[a][1]) * f]; };
     const [dotX, dotY] = at(prog);
     const endIn = interpolate(prog, [0.85, 1], [0, 1], CL);
     const done = frame - dEnd;
@@ -756,6 +806,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         {scene.note && <div style={{ position: "absolute", top: cyBot + 90, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
+    }
   }
 
   if (scene.type === "donut") {
