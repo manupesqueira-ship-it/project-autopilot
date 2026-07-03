@@ -1,5 +1,5 @@
 {
-  "$description": "MOTION TOKENS CONGELADOS — mundo de la página (igloo/Terminal). Fuentes: Heer&Robertson 2007, Material 3, IBM Carbon, Netflix es-MX 17cps, Bostock bar-chart-race; ajustados por el tablero aprobado por Manuel 2026-07-03 (Tendril=cámara con masa · Fallen=dwell sin estirar · FT=racing legible). REGLA DURA: ningún código de escena escribe duraciones/beziers literales — todo sale de aquí. El director LLM no puede emitir motion por schema.",
+  "$description": "MOTION TOKENS CONGELADOS — mundo de la página (igloo/Terminal). Fuentes: Heer&Robertson 2007, Material 3, IBM Carbon, Netflix es-MX 17cps, Bostock bar-chart-race; ajustados por el tablero aprobado por Manuel 2026-07-03 (Tendril=cámara con masa · Fallen=dwell sin estirar · FT=racing legible). Gates de Manuel que re-congelaron valores: lineDrawF 27→66 (2.2s: 'sube demasiado rápido', 2026-07-03 — su barra vive en el extremo LENTO del rango publicado, como Apple ~2s) · accentFlashF 12→16. REGLA DURA: ningún código de escena escribe duraciones/beziers literales — todo sale de aquí. El director LLM no puede emitir motion por schema.",
   "fps": 30,
   "curve": {
     "enter": { "$type": "cubicBezier", "$value": [0.05, 0.7, 0.1, 1], "$description": "MD3 emphasized-decelerate — TODA entrada" },
@@ -12,7 +12,7 @@
     "sceneTransitionF": 28,
     "stageF": 30,
     "barRevealF": 17,
-    "lineDrawF": 27,
+    "lineDrawF": 66,
     "countupF": 52,
     "enterF": 14,
     "exitF": 10,
