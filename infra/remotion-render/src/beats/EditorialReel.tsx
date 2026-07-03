@@ -77,7 +77,7 @@ export type Scene =
   | { type: "level"; kicker?: string; label?: string; fillPct: number; bigSuffix?: string; color?: "accent" | "green"; note?: string }
   | { type: "timeline"; kicker?: string; label?: string; events: { year: string; text: string; accent?: boolean }[]; note?: string }
   | { type: "donut"; kicker?: string; label?: string; segments: { tag: string; pct: number; color?: "accent" | "green" | "ink" | "mute" }[]; centerBig?: string; centerSub?: string; note?: string }
-  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string }
+  | { type: "curve"; kicker?: string; label?: string; points: number[]; color?: "accent" | "green"; endLabel?: string; startLabel?: string; note?: string; anim?: "comet" | "spring" | "pulse" }
   | { type: "bubbles"; kicker?: string; label?: string; items: { label: string; value: number; suffix?: string; color?: "accent" | "green" | "ink" }[]; note?: string }
   | { type: "gauge"; kicker?: string; label?: string; pct: number; leftLabel?: string; rightLabel?: string; centerBig?: string; centerSub?: string; color?: "accent" | "green"; note?: string }
   | { type: "divergence"; kicker?: string; label?: string; a: number[]; b: number[]; labelA?: string; labelB?: string; colorA?: "green" | "accent" | "ink"; colorB?: "green" | "accent" | "ink"; note?: string }
@@ -701,54 +701,58 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
   }
 
   if (scene.type === "curve") {
-    // CURVA / ÁREA: curva SUAVE (bezier) que se dibuja izq->der con relleno degradado que fluye
-    // + punto luminoso viajando en la punta. Fluida, no una línea recta sosa. $0.
-    const cx0 = M, cx1 = 1080 - M, W = cx1 - cx0, cyTop = 690, cyBot = 1200, H = cyBot - cyTop;
+    // CURVA / ÁREA: curva bezier suave que se dibuja. anim = motion premium-minimalista:
+    //   comet (cometa+estela+anillo que pulsa) · spring (rebote+brillo que barre) · pulse (rejilla+ripples+respira).
+    const CL = { extrapolateLeft: "clamp" as const, extrapolateRight: "clamp" as const };
+    const cx0 = M, cx1 = 1080 - M, W = cx1 - cx0, cyBot = 1200, H = 510;
     const pts = scene.points, n = pts.length;
-    const maxV = Math.max(...pts), minV = Math.min(...pts, 0);
-    const rng = maxV - minV || 1;
-    const X = (i: number) => cx0 + (i / (n - 1)) * W;
-    const Y = (v: number) => cyBot - ((v - minV) / rng) * H * 0.92;
-    const xy = pts.map((v, i) => [X(i), Y(v)] as [number, number]);
-    const smooth = (p: [number, number][]) => {
-      let d = `M ${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
-      for (let i = 0; i < p.length - 1; i++) {
-        const [x0, y0] = p[Math.max(0, i - 1)], [x1, y1] = p[i], [x2, y2] = p[i + 1], [x3, y3] = p[Math.min(p.length - 1, i + 2)];
-        const c1x = x1 + (x2 - x0) / 6, c1y = y1 + (y2 - y0) / 6, c2x = x2 - (x3 - x1) / 6, c2y = y2 - (y3 - y1) / 6;
-        d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
-      }
-      return d;
-    };
-    const line = smooth(xy);
+    const maxV = Math.max(...pts), minV = Math.min(...pts, 0), rng = maxV - minV || 1;
+    const xy = pts.map((v, i) => [cx0 + (i / (n - 1)) * W, cyBot - ((v - minV) / rng) * H * 0.92] as [number, number]);
+    const line = smoothPath(xy);
     const area = `${line} L ${cx1} ${cyBot} L ${cx0} ${cyBot} Z`;
     const col = scene.color === "accent" ? ACCENT : GREEN;
-    const prog = interpolate(frame, [12, 78], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
+    const anim = scene.anim ?? "comet";
+    const dEnd = anim === "spring" ? 46 : 80;
+    const prog = interpolate(frame, [12, dEnd], [0, 1], { ...CL, easing: Easing.inOut(Easing.cubic) });
     const clipW = cx0 + prog * W;
-    const fi = prog * (n - 1), i0 = Math.floor(fi), i1 = Math.min(n - 1, i0 + 1), f = fi - i0;
-    const dotX = xy[i0][0] + (xy[i1][0] - xy[i0][0]) * f, dotY = xy[i0][1] + (xy[i1][1] - xy[i0][1]) * f;
-    const endIn = interpolate(prog, [0.86, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    const at = (t: number): [number, number] => { const fi = t * (n - 1), a = Math.floor(fi), b = Math.min(n - 1, a + 1), f = fi - a; return [xy[a][0] + (xy[b][0] - xy[a][0]) * f, xy[a][1] + (xy[b][1] - xy[a][1]) * f]; };
+    const [dotX, dotY] = at(prog);
+    const endIn = interpolate(prog, [0.85, 1], [0, 1], CL);
+    const done = frame - dEnd;
+    const sy = anim === "spring" ? Math.max(0.001, spring({ frame: frame - 12, fps, config: { damping: 9, stiffness: 120 } }))
+      : anim === "pulse" && done > 4 ? 1 + Math.sin((frame - dEnd) / 15) * 0.014 : 1;
+    const gm = `matrix(1,0,0,${sy.toFixed(4)},0,${(cyBot * (1 - sy)).toFixed(1)})`;
+    const tipPulse = anim === "pulse" ? Math.sin(frame / 9) * 3 : 0;
     body = (
       <>
         {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: col, ...reveal(frame, 4) }}>{scene.kicker}</div>}
         {scene.label && <div style={{ position: "absolute", top: 372, left: M, right: M, fontSize: 68, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 6) }}>{scene.label}</div>}
         <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
           <defs>
-            <linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={col} stopOpacity="0.34" /><stop offset="1" stopColor={col} stopOpacity="0" />
-            </linearGradient>
+            <linearGradient id="agrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity="0.34" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient>
             <clipPath id="curveclip"><rect x="0" y="0" width={clipW} height="1920" /></clipPath>
           </defs>
+          {anim === "pulse" && [0.66, 0.42, 0.16].map((g, k) => <line key={k} x1={cx0} y1={cyBot - H * g} x2={cx1} y2={cyBot - H * g} stroke={HAIR} strokeWidth={1.5} opacity={0.5 * interpolate(frame, [8 + k * 4, 22 + k * 4], [0, 1], CL)} />)}
           <line x1={cx0} y1={cyBot} x2={cx1} y2={cyBot} stroke={HAIR} strokeWidth={3} />
-          <g clipPath="url(#curveclip)">
-            <path d={area} fill="url(#agrad)" />
-            <path d={line} fill="none" stroke={col} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
+          <g transform={gm}>
+            <g clipPath="url(#curveclip)">
+              <path d={area} fill="url(#agrad)" />
+              <path d={line} fill="none" stroke={col} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+            {anim === "spring" && done > 0 && (
+              <path d={line} pathLength={1} fill="none" stroke="#FFFFFF" strokeWidth={7} strokeLinecap="round" strokeDasharray="0.05 0.95" strokeDashoffset={1 - interpolate(frame, [dEnd, dEnd + 26], [0, 1], CL)} opacity={interpolate(frame, [dEnd, dEnd + 4, dEnd + 26], [0, 0.85, 0], CL)} />
+            )}
           </g>
-          <circle cx={dotX} cy={dotY} r={30} fill={col} opacity={0.22} />
+          {anim === "comet" && prog > 0.03 && prog < 0.999 && [1, 2, 3, 4, 5, 6].map((k) => { const [gx, gy] = at(Math.max(0, prog - k * 0.022)); return <circle key={k} cx={gx} cy={gy} r={13 - k * 1.5} fill={col} opacity={0.3 * (1 - k / 7)} />; })}
+          {anim === "pulse" && xy.map(([px, py], i) => { const a = frame - (12 + (i / (n - 1)) * (dEnd - 12)); if (a < 0 || a > 18) return null; return <circle key={i} cx={px} cy={py} r={interpolate(a, [0, 18], [3, 30], CL)} fill="none" stroke={col} strokeWidth={2.5} opacity={interpolate(a, [0, 18], [0.6, 0], CL)} />; })}
+          {anim === "pulse" && prog > 0.99 && xy.map(([px, py], i) => <circle key={`d${i}`} cx={px} cy={py} r={6} fill={col} opacity={0.9} />)}
+          {anim === "comet" && done > 0 && (() => { const pf = done % 40; if (pf > 22) return null; const [ex, ey] = xy[n - 1]; return <circle cx={ex} cy={ey} r={interpolate(pf, [0, 22], [16, 130], CL)} fill="none" stroke={col} strokeWidth={3} opacity={interpolate(pf, [0, 22], [0.5, 0], CL)} />; })()}
+          <circle cx={dotX} cy={dotY} r={(anim === "comet" ? 42 : 30) + tipPulse} fill={col} opacity={anim === "comet" ? 0.2 : 0.22} />
           <circle cx={dotX} cy={dotY} r={15} fill={col} />
           <circle cx={dotX} cy={dotY} r={15} fill="none" stroke={PAPER} strokeWidth={4} />
         </svg>
         {scene.startLabel && <div style={{ position: "absolute", top: cyBot + 22, left: M, fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 12) }}>{scene.startLabel}</div>}
-        {scene.endLabel && <div style={{ position: "absolute", top: Math.max(600, dotY - 96), left: Math.min(cx1 - 260, dotX - 60), width: 320, fontSize: 46, fontWeight: 800, letterSpacing: "-0.02em", color: col, opacity: endIn }}>{scene.endLabel}</div>}
+        {scene.endLabel && <div style={{ position: "absolute", top: Math.max(600, dotY - 96), left: Math.min(cx1 - 260, dotX - 60), width: 320, fontSize: 46, fontWeight: 800, letterSpacing: "-0.02em", color: col, opacity: endIn, transform: `scale(${0.8 + 0.2 * endIn})`, transformOrigin: "left center" }}>{scene.endLabel}</div>}
         {scene.note && <div style={{ position: "absolute", top: cyBot + 90, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
