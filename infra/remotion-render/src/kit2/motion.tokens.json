@@ -40,9 +40,11 @@
     "dim": "#9AA3AD",
     "faint": "#5C636B",
     "accent": "#2ECB4F",
+    "accentDeep": "#1B9E3C",
     "bad": "#C75146",
     "warn": "#C9A44C",
     "lineSoft": "rgba(233,231,224,0.13)",
-    "$description": "idéntica a la página (plan maestro §06). bad SOLO pérdida."
+    "cool": ["#3E5C76", "#2E4658", "#223442", "#1B2A36"],
+    "$description": "idéntica a la página (plan maestro §06) + azules fríos del look bible. bad SOLO pérdida. Gate 2026-07-03 (barras 'demasiado empresarial'): EL protagonista de la escena puede REPOSAR en esmeralda (como el stat verde del plan maestro); referencias en escalera cool, no gris puro. El destello sigue siendo el único esmeralda de TRANSICIÓN."
   }
 }

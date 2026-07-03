@@ -118,7 +118,11 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
             const valueColor = isP
               ? (frame < landAt ? PAL.faint : inkFlash(flashT, PAL.ink))
               : PAL.faint;
-            const barFill = isP ? PAL.ink : "rgba(233,231,224,0.16)";
+            // gate "demasiado empresarial": protagonista REPOSA en esmeralda
+            // (gradiente sutil), referencias en azul frío del look bible
+            const barFill = isP
+              ? `linear-gradient(90deg, ${PAL.accentDeep} 0%, ${PAL.accent} 100%)`
+              : PAL.cool[Math.min(i, PAL.cool.length - 1)];
             return (
               <div key={i}>
                 {/* label mono arriba del riel */}
@@ -139,7 +143,8 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
                     position: "absolute", top: y, left: MX,
                     width: Math.max(0, barMaxW * (b.value / maxV) * grow),
                     height: ROW_H,
-                    background: barFill,
+                    backgroundImage: isP ? barFill : undefined,
+                    backgroundColor: isP ? undefined : barFill,
                   }}
                 />
                 {/* valor tabular a la derecha; el protagonista CUENTA y flashea */}
