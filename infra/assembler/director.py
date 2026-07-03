@@ -33,6 +33,9 @@ I2V_MANIFEST = {
     "i2v/oil_barril.mp4": "barril de petróleo con crudo desbordándose",
     "i2v/oil_surtidor.mp4": "surtidor de gasolina, dígitos en la noche",
     "i2v/oil_billete.mp4": "billete de 100 ardiendo en llamas",
+    "i2v/bank_ink_bloom.mp4": "tinta negra difundiéndose en agua (abstracto: mercados, incertidumbre, contagio)",
+    "i2v/bank_gold_liquid.mp4": "líquido dorado fluyendo, brillante (riqueza, dinero abstracto, lujo)",
+    "i2v/bank_city_dusk.mp4": "skyline de ciudad moderna al atardecer con luces (economía, país, urbano)",
 }
 
 
