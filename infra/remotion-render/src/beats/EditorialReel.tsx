@@ -8,12 +8,14 @@ import { MapZoomEditorial } from "./MapZoomEditorial";
 // Datos exactos; color semántico (oxblood = pérdida/acento). Timing por escena =
 // duración de la voz (se pasa en props desde el timing de ElevenLabs).
 
-const INK = "#1B1712";
-const PAPER = "#F1ECE1";
-const ACCENT = "#9E2B22";
-const GREEN = "#1F7A4D"; // ganancia real (verde editorial apagado, no neón)
-const MUTE = "#7A7264";
-const HAIR = "#CDC4B2";
+// paleta THEME-AWARE (claro/oscuro). applyTheme() se llama al render con el theme del reel.
+let INK = "#1B1712", PAPER = "#F1ECE1", ACCENT = "#9E2B22", GREEN = "#1F7A4D", MUTE = "#7A7264", HAIR = "#CDC4B2", SUB = "#5A544A", EMPTY = "#E6DFD0";
+let DARK = false;
+const applyTheme = (dark: boolean) => {
+  DARK = dark;
+  if (dark) { INK = "#F3EFE7"; PAPER = "#0A0B0D"; ACCENT = "#E45B4E"; GREEN = "#43B980"; MUTE = "#8A909B"; HAIR = "#2B2F38"; SUB = "#9AA0AA"; EMPTY = "#1A1D22"; }
+  else { INK = "#1B1712"; PAPER = "#F1ECE1"; ACCENT = "#9E2B22"; GREEN = "#1F7A4D"; MUTE = "#7A7264"; HAIR = "#CDC4B2"; SUB = "#5A544A"; EMPTY = "#E6DFD0"; }
+};
 const FONT = "InterVar, Inter, Georgia, serif";
 const M = 96;
 
@@ -114,7 +116,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           ))}
         </div>
         {scene.foot && (
-          <div style={{ position: "absolute", top: 1120, left: M, right: M, fontSize: 38, fontWeight: 400, lineHeight: 1.4, color: "#4A443B", maxWidth: 860, ...reveal(frame, 16 + scene.lines.length * 8 + 6) }}>
+          <div style={{ position: "absolute", top: 1120, left: M, right: M, fontSize: 38, fontWeight: 400, lineHeight: 1.4, color: SUB, maxWidth: 860, ...reveal(frame, 16 + scene.lines.length * 8 + 6) }}>
             {scene.foot}
           </div>
         )}
@@ -131,7 +133,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           {scene.prefix ?? ""}{fmtNum(shown)}{scene.suffix ? <span style={{ fontSize: "0.4em", fontWeight: 700, marginLeft: 12, color: MUTE }}>{scene.suffix}</span> : null}
         </div>
         {scene.sublabel && (
-          <div style={{ position: "absolute", top: 930, left: M, right: M, fontSize: 40, fontWeight: 400, color: "#4A443B", maxWidth: 860, ...reveal(frame, 40) }}>{scene.sublabel}</div>
+          <div style={{ position: "absolute", top: 930, left: M, right: M, fontSize: 40, fontWeight: 400, color: SUB, maxWidth: 860, ...reveal(frame, 40) }}>{scene.sublabel}</div>
         )}
       </>
     );
@@ -179,7 +181,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           <span style={{ fontSize: 84, fontWeight: 800, color: ACCENT, letterSpacing: "-0.03em" }}>−{scene.prefix ?? "$"}{fmtNum(scene.delta)}</span>
           <span style={{ fontSize: 38, fontWeight: 500, color: INK }}>{scene.deltaLabel}</span>
         </div>
-        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, fontSize: 33, fontWeight: 400, lineHeight: 1.4, color: "#4A443B", maxWidth: 840, ...reveal(frame, 90) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, fontSize: 33, fontWeight: 400, lineHeight: 1.4, color: SUB, maxWidth: 840, ...reveal(frame, 90) }}>{scene.note}</div>}
       </>
     );
   }
@@ -220,7 +222,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         {bar(scene.right.value, M + half + 80, half, scene.winner === "right", gR)}
         <div style={{ position: "absolute", top: colY + 20, left: M, width: half, textAlign: "center", fontSize: 30, fontWeight: 600, color: MUTE }}>{scene.left.tag}</div>
         <div style={{ position: "absolute", top: colY + 20, left: M + half + 80, width: half, textAlign: "center", fontSize: 30, fontWeight: 600, color: scene.winner === "right" ? GREEN : MUTE }}>{scene.right.tag}</div>
-        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, fontSize: 33, fontWeight: 400, lineHeight: 1.4, color: "#4A443B", maxWidth: 840, ...reveal(frame, 70) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, fontSize: 33, fontWeight: 400, lineHeight: 1.4, color: SUB, maxWidth: 840, ...reveal(frame, 70) }}>{scene.note}</div>}
       </>
     );
   }
@@ -234,7 +236,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           {scene.prefix ?? "$"}{fmtNum(shown)}{scene.suffix ? <span style={{ fontSize: "0.36em", fontWeight: 700, marginLeft: 12, color: MUTE }}>{scene.suffix}</span> : null}
         </div>
         <div style={{ position: "absolute", top: 940, left: M, fontSize: 52, fontWeight: 700, color: ACCENT, ...reveal(frame, 50) }}>{scene.deltaText}</div>
-        {scene.body && <div style={{ position: "absolute", top: 1050, left: M, right: M, fontSize: 38, fontWeight: 400, lineHeight: 1.42, color: "#4A443B", maxWidth: 860, ...reveal(frame, 58) }}>{scene.body}</div>}
+        {scene.body && <div style={{ position: "absolute", top: 1050, left: M, right: M, fontSize: 38, fontWeight: 400, lineHeight: 1.42, color: SUB, maxWidth: 860, ...reveal(frame, 58) }}>{scene.body}</div>}
       </>
     );
   }
@@ -247,7 +249,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             <div key={i} style={{ fontSize: 104, fontWeight: 800, lineHeight: 1.04, letterSpacing: "-0.03em", color: l.accent ? ACCENT : INK, ...reveal(frame, 8 + i * 8, 26) }}>{l.text}</div>
           ))}
         </div>
-        {scene.sub && <div style={{ position: "absolute", top: 900, left: M, right: M, fontSize: 40, fontWeight: 400, lineHeight: 1.4, color: "#4A443B", maxWidth: 860, ...reveal(frame, 8 + scene.headline.length * 8 + 6) }}>{scene.sub}</div>}
+        {scene.sub && <div style={{ position: "absolute", top: 900, left: M, right: M, fontSize: 40, fontWeight: 400, lineHeight: 1.4, color: SUB, maxWidth: 860, ...reveal(frame, 8 + scene.headline.length * 8 + 6) }}>{scene.sub}</div>}
         <div style={{ position: "absolute", top: 1150, left: M, display: "flex", alignItems: "center", gap: 22, ...reveal(frame, 8 + scene.headline.length * 8 + 14) }}>
           <div style={{ width: 54, height: 54, border: `4px solid ${ACCENT}`, borderRadius: 6, position: "relative" }}>
             <div style={{ position: "absolute", left: 12, right: 12, top: 6, bottom: 14, borderLeft: `4px solid ${ACCENT}`, borderRight: `4px solid ${ACCENT}` }} />
@@ -280,7 +282,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           </AbsoluteFill>
           <div style={{ position: "absolute", left: 24, bottom: 20, fontSize: 26, fontWeight: 600, color: "#EDE6D8", letterSpacing: "0.06em", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{scene.caption}</div>
         </div>
-        {scene.note && <div style={{ position: "absolute", top: 1420, left: M, right: M, fontSize: 36, fontWeight: 400, lineHeight: 1.4, color: "#4A443B", maxWidth: 860, ...reveal(frame, 30) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1420, left: M, right: M, fontSize: 36, fontWeight: 400, lineHeight: 1.4, color: SUB, maxWidth: 860, ...reveal(frame, 30) }}>{scene.note}</div>}
       </>
     );
   }
@@ -312,7 +314,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         {/* pie de foto editorial DEBAJO de la figura */}
         <div style={{ position: "absolute", top: PLT_T + PLT_H + 34, left: M, right: M }}>
           {scene.caption && <div style={{ fontSize: 62, fontWeight: 800, lineHeight: 1.06, letterSpacing: "-0.02em", color: INK, ...reveal(frame, 20, 20) }}>{scene.caption}</div>}
-          {scene.punch && <div style={{ marginTop: 16, fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 30) }}>{scene.punch}</div>}
+          {scene.punch && <div style={{ marginTop: 16, fontSize: 32, fontWeight: 400, color: SUB, ...reveal(frame, 30) }}>{scene.punch}</div>}
         </div>
       </>
     );
@@ -340,7 +342,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           <span style={{ fontSize: 168, fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1, color: fillColor }}>{bigN}{scene.suffix ?? ""}</span>
           <span style={{ fontSize: 52, fontWeight: 700, color: INK }}>de {total}</span>
         </div>
-        {scene.label && <div style={{ position: "absolute", top: 600, left: M, right: M, fontSize: 40, fontWeight: 500, color: "#4A443B", ...reveal(frame, 10) }}>{scene.label}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 600, left: M, right: M, fontSize: 40, fontWeight: 500, color: SUB, ...reveal(frame, 10) }}>{scene.label}</div>}
         {Array.from({ length: total }).map((_, i) => {
           const r = Math.floor(i / cols), c = i % cols;
           const x = gridLeft + c * (DOT + GAP), y = gridTop + r * (DOT + GAP);
@@ -352,7 +354,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             <div key={i} style={{ position: "absolute", left: x, top: y, width: DOT, height: DOT, borderRadius: 11, opacity: s, transform: `scale(${s * (1 + 0.12 * Math.min(1, pop) * (1 - Math.min(1, pop)) * 4)})`, background: on ? fillColor : "transparent", border: on ? "none" : `2.5px solid ${HAIR}` }} />
           );
         })}
-        {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: gridTop + rows * (DOT + GAP) + 34, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, t0 + scene.highlight * perDot) }}>{scene.note}</div>}
       </>
     );
   }
@@ -383,8 +385,8 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             return <div key={i} style={{ height: DH, lineHeight: `${DH}px`, fontSize: FS, fontWeight: 800, letterSpacing: "-0.02em", color: ch === "," ? MUTE : INK, padding: ch === "," ? "0 3px" : "0 4px" }}>{ch}</div>;
           })}
         </div>
-        {scene.sublabel && <div style={{ position: "absolute", top: 800 + DH + 30, left: M, right: M, textAlign: "center", fontSize: 36, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.sublabel}</div>}
-        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 70) }}>{scene.note}</div>}
+        {scene.sublabel && <div style={{ position: "absolute", top: 800 + DH + 30, left: M, right: M, textAlign: "center", fontSize: 36, fontWeight: 400, color: SUB, ...reveal(frame, 60) }}>{scene.sublabel}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 70) }}>{scene.note}</div>}
       </>
     );
   }
@@ -396,7 +398,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
     body = (
       <>
         {scene.kicker && <div style={{ position: "absolute", top: 300, left: M, fontSize: 30, fontWeight: 700, letterSpacing: "0.2em", color: ACCENT, ...reveal(frame, 4) }}>{scene.kicker}</div>}
-        {scene.label && <div style={{ position: "absolute", top: 400, left: M, right: M, fontSize: 40, fontWeight: 500, color: "#4A443B", ...reveal(frame, 6) }}>{scene.label}</div>}
+        {scene.label && <div style={{ position: "absolute", top: 400, left: M, right: M, fontSize: 40, fontWeight: 500, color: SUB, ...reveal(frame, 6) }}>{scene.label}</div>}
         <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
           <defs>
             <path id="txtarc" d="M 30 1030 Q 540 740 1050 1030" fill="none" />
@@ -408,8 +410,8 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             </text>
           </g>
         </svg>
-        {scene.sub && <div style={{ position: "absolute", top: 1120, left: M, right: M, textAlign: "center", fontSize: 40, fontWeight: 400, color: "#4A443B", ...reveal(frame, 46) }}>{scene.sub}</div>}
-        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.note}</div>}
+        {scene.sub && <div style={{ position: "absolute", top: 1120, left: M, right: M, textAlign: "center", fontSize: 40, fontWeight: 400, color: SUB, ...reveal(frame, 46) }}>{scene.sub}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 60) }}>{scene.note}</div>}
       </>
     );
   }
@@ -441,7 +443,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         </div>
         {scene.fromLabel && <div style={{ position: "absolute", top: byBot + 24, left: bx - 260, width: 240, textAlign: "right", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.fromLabel}</div>}
         {scene.toLabel && <div style={{ position: "absolute", top: byBot + 24, left: bx + bw + 20, width: 240, fontSize: 30, fontWeight: 600, color: ACCENT, ...reveal(frame, 70) }}>{scene.toLabel}</div>}
-        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 80) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
   }
@@ -474,7 +476,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             {scene.centerSub && <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.12em", color: MUTE }}>{scene.centerSub}</div>}
           </div>
         )}
-        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
@@ -501,7 +503,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             {scene.centerSub && <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: "0.12em", color: MUTE }}>{scene.centerSub}</div>}
           </div>
         )}
-        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 90) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 90) }}>{scene.note}</div>}
       </>
     );
   }
@@ -526,7 +528,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           <circle cx={stemPts[4][0]} cy={stemPts[4][1]} r={Math.min(1, interpolate(prog, [0.9, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })) * 30} fill={ACCENT} />
         </svg>
         {scene.topLabel && <div style={{ position: "absolute", top: 640, left: 0, width: 1080, textAlign: "center", fontSize: 40, fontWeight: 800, color: ACCENT, opacity: interpolate(prog, [0.9, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>{scene.topLabel}</div>}
-        {scene.note && <div style={{ position: "absolute", top: 1400, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 80) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1400, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
   }
@@ -555,7 +557,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         </svg>
         {scene.labelA && <div style={{ position: "absolute", top: ta[1] - 66, left: Math.min(cx1 - 300, ta[0] - 30), width: 320, fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", color: colA, opacity: endIn }}>{scene.labelA}</div>}
         {scene.labelB && <div style={{ position: "absolute", top: tb[1] + 22, left: Math.min(cx1 - 300, tb[0] - 30), width: 320, fontSize: 40, fontWeight: 800, letterSpacing: "-0.02em", color: colB, opacity: endIn }}>{scene.labelB}</div>}
-        {scene.note && <div style={{ position: "absolute", top: cyBot + 70, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 84) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: cyBot + 70, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 84) }}>{scene.note}</div>}
       </>
     );
   }
@@ -593,7 +595,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             {t.sub && <div style={{ fontSize: 26, fontWeight: 400, color: MUTE }}>{t.sub}</div>}
           </div>
         ))}
-        {scene.note && <div style={{ position: "absolute", top: 1300, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 60) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1300, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 60) }}>{scene.note}</div>}
       </>
     );
   }
@@ -610,7 +612,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
     const pan = (px: number, py: number, val: number, lab: string, i: number) => (
       <div key={i} style={{ position: "absolute", top: py + 40, left: px - 160, width: 320, textAlign: "center", ...reveal(frame, 26) }}>
         <div style={{ fontSize: 66, fontWeight: 800, letterSpacing: "-0.03em", color: INK }}>{scene.prefix ?? ""}{fmtNum(val)}</div>
-        <div style={{ fontSize: 32, fontWeight: 500, color: "#5A544A", marginTop: 2 }}>{lab}</div>
+        <div style={{ fontSize: 32, fontWeight: 500, color: SUB, marginTop: 2 }}>{lab}</div>
       </div>
     );
     body = (
@@ -629,7 +631,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         </svg>
         {pan(lx, ly + 100, lv, scene.leftLabel, 0)}
         {pan(rx, ry + 100, rv, scene.rightLabel, 1)}
-        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1330, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
@@ -659,7 +661,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         </div>
         {scene.leftLabel && <div style={{ position: "absolute", top: cy + 20, left: cx - R - 30, width: 220, textAlign: "center", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.leftLabel}</div>}
         {scene.rightLabel && <div style={{ position: "absolute", top: cy + 20, left: cx + R - 190, width: 220, textAlign: "center", fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 16) }}>{scene.rightLabel}</div>}
-        {scene.note && <div style={{ position: "absolute", top: cy + 110, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 34) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: cy + 110, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 34) }}>{scene.note}</div>}
       </>
     );
   }
@@ -693,7 +695,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             </React.Fragment>
           );
         })}
-        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
@@ -747,7 +749,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         </svg>
         {scene.startLabel && <div style={{ position: "absolute", top: cyBot + 22, left: M, fontSize: 30, fontWeight: 600, color: MUTE, ...reveal(frame, 12) }}>{scene.startLabel}</div>}
         {scene.endLabel && <div style={{ position: "absolute", top: Math.max(600, dotY - 96), left: Math.min(cx1 - 260, dotX - 60), width: 320, fontSize: 46, fontWeight: 800, letterSpacing: "-0.02em", color: col, opacity: endIn }}>{scene.endLabel}</div>}
-        {scene.note && <div style={{ position: "absolute", top: cyBot + 90, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 80) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: cyBot + 90, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 80) }}>{scene.note}</div>}
       </>
     );
   }
@@ -756,7 +758,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
     // DONA / ANILLO: cada sector se dibuja en arco (barrido) en secuencia. Redondo, no cuadrado. $0.
     const cx = 540, cy = 838, R = 276, SW = 70;
     const C = 2 * Math.PI * R;
-    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? "#B8AE9B" : ACCENT);
+    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? MUTE : ACCENT);
     let accP = 0;
     const segs = scene.segments.map((s, i) => { const start = accP; accP += s.pct; return { ...s, start, i }; });
     body = (
@@ -784,7 +786,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
             </div>
           ))}
         </div>
-        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 40) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1360, left: M, right: M, textAlign: "center", fontSize: 32, fontWeight: 400, color: SUB, ...reveal(frame, 40) }}>{scene.note}</div>}
       </>
     );
   }
@@ -814,12 +816,12 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
               <div style={{ position: "absolute", left: lineX - 13, top: y - 13, width: 26, height: 26, borderRadius: "50%", background: col, transform: `scale(${s})`, boxShadow: `0 0 0 6px ${PAPER}` }} />
               <div style={{ position: "absolute", left: lineX + 46, top: y - 52, right: M, opacity: s, transform: `translateX(${(1 - s) * 22}px)` }}>
                 <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: "0.02em", color: col }}>{e.year}</div>
-                <div style={{ fontSize: 35, fontWeight: 400, lineHeight: 1.25, color: "#3B372F", marginTop: 4 }}>{e.text}</div>
+                <div style={{ fontSize: 35, fontWeight: 400, lineHeight: 1.25, color: SUB, marginTop: 4 }}>{e.text}</div>
               </div>
             </React.Fragment>
           );
         })}
-        {scene.note && <div style={{ position: "absolute", top: 1430, left: M, right: M, fontSize: 32, fontWeight: 400, color: "#5A544A", ...reveal(frame, 12 + N * 16) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1430, left: M, right: M, fontSize: 32, fontWeight: 400, color: SUB, ...reveal(frame, 12 + N * 16) }}>{scene.note}</div>}
       </>
     );
   }
@@ -827,7 +829,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
   if (scene.type === "proportion") {
     // PROPORCIÓN: barra 100% segmentada; cada segmento crece desde su borde en secuencia. $0.
     const barL = M, barW = 1080 - 2 * M, barY = 800, barH = 156;
-    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? "#B8AE9B" : ACCENT);
+    const colOf = (c?: string) => (c === "green" ? GREEN : c === "ink" ? INK : c === "mute" ? MUTE : ACCENT);
     let accP = 0;
     const segs = scene.segments.map((s, i) => { const start = accP; accP += s.pct; return { ...s, start, i }; });
     body = (
@@ -846,11 +848,11 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
           return (
             <div key={`l${s.i}`} style={{ position: "absolute", top: barY + barH + 26, left: cx - 130, width: 260, textAlign: "center", ...reveal(frame, 16 + s.i * 11 + 10) }}>
               <div style={{ fontSize: 64, fontWeight: 800, letterSpacing: "-0.02em", color: colOf(s.color) }}>{s.pct}%</div>
-              <div style={{ fontSize: 30, fontWeight: 500, color: "#5A544A", marginTop: 4 }}>{s.tag}</div>
+              <div style={{ fontSize: 30, fontWeight: 500, color: SUB, marginTop: 4 }}>{s.tag}</div>
             </div>
           );
         })}
-        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 44) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: 1290, left: M, right: M, fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 44) }}>{scene.note}</div>}
       </>
     );
   }
@@ -875,7 +877,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         <svg width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
           <clipPath id="vclip"><rect x={vx} y={vy} width={vw} height={vh} rx={26} /></clipPath>
           <g clipPath="url(#vclip)">
-            <rect x={vx} y={vy} width={vw} height={vh} fill="#E6DFD0" />
+            <rect x={vx} y={vy} width={vw} height={vh} fill={EMPTY} />
             <path d={wave} fill={col} />
           </g>
           <rect x={vx} y={vy} width={vw} height={vh} rx={26} fill="none" stroke={INK} strokeWidth={3} />
@@ -883,7 +885,7 @@ const SceneView: React.FC<{ scene: Scene; durF: number; inFade?: boolean }> = ({
         <div style={{ position: "absolute", top: vy + vh / 2 - 90, left: 0, width: 1080, textAlign: "center" }}>
           <span style={{ fontSize: 150, fontWeight: 800, letterSpacing: "-0.04em", color: onFill ? PAPER : INK }}>{Math.round(pct)}{scene.bigSuffix ?? "%"}</span>
         </div>
-        {scene.note && <div style={{ position: "absolute", top: vy + vh + 40, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: "#5A544A", ...reveal(frame, 30) }}>{scene.note}</div>}
+        {scene.note && <div style={{ position: "absolute", top: vy + vh + 40, left: M, right: M, textAlign: "center", fontSize: 34, fontWeight: 400, color: SUB, ...reveal(frame, 30) }}>{scene.note}</div>}
       </>
     );
   }
@@ -904,7 +906,9 @@ export const EditorialReel: React.FC<{
   edition: string;
   source: string;
   scenes: { scene: Scene; durF: number }[];
-}> = ({ edition, source, scenes }) => {
+  theme?: "light" | "dark";
+}> = ({ edition, source, scenes, theme }) => {
+  applyTheme(theme === "dark");           // fija la paleta ANTES de que rendericen las escenas
   const gf = useCurrentFrame();
   let acc = 0;
   const starts = scenes.map((s) => { const st = acc; acc += s.durF; return st; });
@@ -917,6 +921,15 @@ export const EditorialReel: React.FC<{
 
   return (
     <AbsoluteFill style={{ backgroundColor: PAPER, fontFamily: FONT, color: INK }}>
+      {/* FONDO con luz volumétrica (energía de reel, no plano de presentación) */}
+      {DARK ? (
+        <>
+          <div style={{ position: "absolute", left: 540 - 560 + Math.sin(gf / 44) * 16, top: 300, width: 1120, height: 1120, borderRadius: "50%", background: "radial-gradient(circle, #34507E4D 0%, #34507E14 42%, transparent 68%)" }} />
+          <div style={{ position: "absolute", left: 540 - 400 - Math.sin(gf / 52) * 14, top: 1180, width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, #C9772E3A 0%, transparent 62%)" }} />
+        </>
+      ) : (
+        <div style={{ position: "absolute", left: 540 - 520 + Math.sin(gf / 44) * 12, top: 560, width: 1040, height: 1040, borderRadius: "50%", background: `radial-gradient(circle, ${ACCENT}14 0%, ${ACCENT}07 44%, transparent 68%)` }} />
+      )}
       {/* escenas (con deriva constante) */}
       <AbsoluteFill style={{ transform: `translate(${dx}px, ${dy}px) scale(${sc})`, transformOrigin: "50% 46%" }}>
         {scenes.map((s, i) => (
@@ -941,8 +954,8 @@ export const EditorialReel: React.FC<{
         </Sequence>
       ))}
 
-      {/* textura papel */}
-      <AbsoluteFill style={{ opacity: 0.05, mixBlendMode: "multiply", pointerEvents: "none" }}>
+      {/* grano (screen en oscuro, multiply en claro) */}
+      <AbsoluteFill style={{ opacity: DARK ? 0.07 : 0.05, mixBlendMode: DARK ? "screen" : "multiply", pointerEvents: "none" }}>
         <svg width="1080" height="1920"><filter id="pr"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" /></filter><rect width="1080" height="1920" filter="url(#pr)" /></svg>
       </AbsoluteFill>
     </AbsoluteFill>
