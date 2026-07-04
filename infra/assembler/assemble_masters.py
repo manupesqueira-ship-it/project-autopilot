@@ -9,9 +9,10 @@ frame exacto donde cada cifra/palabra-acento aterriza.
 Uso:  python assemble_masters.py treatment.json <slug>
 Treatment beat: {type: hook|cifra|linea|barras|carrera|cierre, vo, props,
                  target_word?, trans?: cut|dip, transF?, min_s?, tail_s?}
-Voz: edge-tts es-MX placeholder mientras ELEVENLABS_API_KEY siga vencida.
+Voz: ElevenLabs con timestamps por palabra — ALBERTO RODRÍGUEZ (serio narrativo,
+voz 2 de la audición, elegida por Manuel 2026-07-04). Reusa la plomería probada
+de infra/voz/tts_timestamps.py (with-timestamps + retries).
 """
-import asyncio
 import json
 import re
 import subprocess
@@ -23,14 +24,19 @@ ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
 REMOTION = ROOT / "infra" / "remotion-render"
 QC = ROOT / "infra" / "qc"
 SFX = Path(r"C:\Users\manup\envato_audio\sfx")
-MUSIC = Path(r"C:\Users\manup\envato_audio\music\music_minimal_04.mp3")
+# Gate 07-04: minimal_04 rechazada ("no me gustó") → Dark Minimal Techno driving
+MUSIC = Path(r"C:\Users\manup\envato_audio\music\music_minimaltechno_01.mp3")
 FPS = 30
 COMP = "MastersReel"
-VOICE = "es-MX-JorgeNeural"
+# LA VOZ DEL CANAL (audición msgs 138-144, Manuel eligió la 2): Alberto Rodríguez
+VOICE_ID = "l1zE9xgNpUTaQCZzpNJa"
 JCUT = 0.40
 LEAD0 = 0.30
 TAIL = 0.70
 TRANS_F_DEFAULT = 14
+
+sys.path.insert(0, str(ROOT / "infra" / "voz"))
+from tts_timestamps import load_env as _load_env, tts_beat  # noqa: E402
 
 
 def ffprobe_dur(p: Path) -> float:
@@ -44,27 +50,18 @@ def norm(w: str) -> str:
     return re.sub(r"[^a-z0-9ñ]", "", w)
 
 
-async def tts_words(text: str, mp3: Path, tries: int = 6):
-    import edge_tts
-    for a in range(tries):
-        try:
-            com = edge_tts.Communicate(text, VOICE, rate="-4%", boundary="WordBoundary")
-            audio = bytearray()
-            words = []
-            async for chunk in com.stream():
-                if chunk["type"] == "audio":
-                    audio.extend(chunk["data"])
-                elif chunk["type"] == "WordBoundary":
-                    s = chunk["offset"] / 1e7
-                    words.append({"word": chunk["text"], "start": round(s, 3),
-                                  "end": round(s + chunk["duration"] / 1e7, 3)})
-            if len(audio) > 1000:
-                mp3.write_bytes(bytes(audio))
-                return words
-        except Exception as e:
-            print(f"  tts retry {a}: {type(e).__name__}")
-            await asyncio.sleep(2 * (a + 1))
-    raise SystemExit(f"TTS falló: {text[:40]}")
+def tts_words(text: str, mp3: Path):
+    """ElevenLabs with-timestamps (voz Alberto) → [{word,start,end}]. CACHE: si el
+    mp3 y words ya existen para el MISMO texto, no re-cobra (idempotencia de voz)."""
+    wjson = mp3.with_suffix(".words.json")
+    tjson = mp3.with_suffix(".text.txt")
+    if mp3.exists() and wjson.exists() and tjson.exists() and tjson.read_text(encoding="utf-8") == text:
+        return json.loads(wjson.read_text(encoding="utf-8"))
+    key = _load_env()["ELEVENLABS_API_KEY"]
+    words = tts_beat(key, VOICE_ID, text, mp3)
+    wjson.write_text(json.dumps(words, ensure_ascii=False), encoding="utf-8")
+    tjson.write_text(text, encoding="utf-8")
+    return words
 
 
 def find_word(words, target: str) -> float | None:
@@ -82,11 +79,11 @@ def main():
     (out / "vo").mkdir(parents=True, exist_ok=True)
     beats = tr["beats"]
 
-    print("── VO (edge-tts, word boundaries)")
+    print("── VO (ElevenLabs Alberto, word timestamps)")
     vo_meta = []
     for i, b in enumerate(beats):
         mp3 = out / "vo" / f"b{i}.mp3"
-        words = asyncio.run(tts_words(b["vo"], mp3))
+        words = tts_words(b["vo"], mp3)
         dur = ffprobe_dur(mp3)
         vo_meta.append({"mp3": mp3, "words": words, "dur": dur})
         print(f"  b{i} {dur:5.2f}s  {b['vo'][:46]}…")
@@ -148,13 +145,14 @@ def main():
     inputs += ["-i", str(MUSIC)]
     n_vo = len(vo_meta)
     mus_idx = n_vo + 1
+    # Gate 07-04 "no vi ningún SFX": volúmenes con PRESENCIA real
     sfx_list = []
     for i in range(1, len(specs)):
-        sfx_list.append((SFX / "whoosh_02.wav", starts[i] - 0.10, 0.26))
+        sfx_list.append((SFX / "whoosh_02.wav", starts[i] - 0.10, 0.55))
     for i, t in lands_abs.items():
-        sfx_list.append((SFX / "riser_02.wav", None, 0.26, t))
-        sfx_list.append((SFX / "impact_02.wav", t - 0.02, 0.48))
-    sfx_list.append((SFX / "impact_04.wav", close_start + 0.55, 0.36))
+        sfx_list.append((SFX / "riser_02.wav", None, 0.50, t))
+        sfx_list.append((SFX / "impact_02.wav", t - 0.02, 0.75))
+    sfx_list.append((SFX / "impact_04.wav", close_start + 0.55, 0.60))
 
     fc, labels = "", []
     for i, m in enumerate(vo_meta):
