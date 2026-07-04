@@ -18,15 +18,25 @@ loadFont({ family: "ChivoMono", url: staticFile("fonts/ChivoMono-Var.ttf"), weig
 export const MONO = "ChivoMono, 'Cascadia Mono', Consolas, monospace";
 export const SANS = "InterVar, Inter, 'Segoe UI', sans-serif";
 
-// Fondo: negro mate + respiración volumétrica fría MUY contenida (igloo, no neón)
+// Fondo: negro mate + respiración volumétrica fría contenida pero VIVA (igloo).
+// Dos ondas desfasadas + centro que deriva: ningún frame idéntico al anterior
+// (doctrina "movimiento constante" — los holds largos nunca quedan muertos).
 export const PageBg: React.FC<{ energy?: number }> = ({ energy = 0.05 }) => {
   const frame = useCurrentFrame();
-  const breathe = 1 + 0.12 * Math.sin(frame / 46);
+  const breathe = 1 + 0.24 * Math.sin(frame / 38);
+  const breathe2 = 1 + 0.18 * Math.sin(frame / 61 + 2.1);
+  const cx = 50 + 3.5 * Math.sin(frame / 83);
+  const cy = 38 + 2.5 * Math.sin(frame / 67 + 1.2);
   return (
     <AbsoluteFill style={{ backgroundColor: PAL.bg }}>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(${58 * breathe}% ${40 * breathe}% at 50% 38%, rgba(62,92,118,${energy}) 0%, transparent 64%)`,
+          background: `radial-gradient(${58 * breathe}% ${40 * breathe}% at ${cx}% ${cy}%, rgba(62,92,118,${energy * 1.4}) 0%, transparent 64%)`,
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(${70 * breathe2}% ${30 * breathe2}% at ${100 - cx}% 82%, rgba(46,203,79,${energy * 0.35}) 0%, transparent 58%)`,
         }}
       />
       <AbsoluteFill
@@ -55,18 +65,22 @@ export const Grain: React.FC<{ grain?: number; vignette?: number }> = ({ grain =
   );
 };
 
-// Cámara con MASA (token camera + curve.mass): push-in lento en TODA la escena.
-// Nada llega a su pose rápido; drift determinista mínimo.
+// Cámara con MASA (token camera + curve.mass): push-in que NUNCA se detiene.
+// 70% del push con masa + 30% lineal hasta el último frame (la curva de masa
+// saturaba al final → cola estática en beats largos, gate anti-slideshow 2026-07-03)
+// + drift orgánico lento y respiración micro de escala. Ningún frame quieto.
 export const MassCamera: React.FC<{ children: React.ReactNode; durF: number; seed?: number }> = ({
   children,
   durF,
   seed = 1,
 }) => {
   const frame = useCurrentFrame();
-  const t = CURVE.mass(Math.min(1, frame / Math.max(1, durF)));
-  const scale = 1 + TOK.camera.pushScale * t;
-  const dx = noise2D(`k2x${seed}`, frame * 0.011, 0) * TOK.camera.driftPx;
-  const dy = noise2D(`k2y${seed}`, 0, frame * 0.009) * TOK.camera.driftPx;
+  const lin = Math.min(1, frame / Math.max(1, durF));
+  const t = 0.7 * CURVE.mass(lin) + 0.3 * lin;
+  const microScale = 0.004 * Math.sin(frame / 47 + seed);
+  const scale = 1 + TOK.camera.pushScale * t + microScale;
+  const dx = noise2D(`k2x${seed}`, frame * 0.028, 0) * TOK.camera.driftPx * 1.6;
+  const dy = noise2D(`k2y${seed}`, 0, frame * 0.023) * TOK.camera.driftPx * 1.6;
   return (
     <AbsoluteFill style={{ transform: `scale(${scale}) translate(${dx}px, ${dy}px)`, transformOrigin: "50% 44%" }}>
       {children}

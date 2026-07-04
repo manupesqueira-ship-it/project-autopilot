@@ -53,9 +53,11 @@ export const LineaHero: React.FC<LineaHeroProps> = ({
   const kickerAt = ruleAt + Math.round(D.ruleDrawF * 0.6);
   const labelsAt = ruleAt + D.ruleDrawF;                    // etapa 1: ejes/labels (Apple)
   const drawAt = labelsAt + D.enterF + 2;                   // etapa 2: el dato
-  const drawEnd = drawAt + D.lineDrawF;
-  // clamp: el endTag NUNCA aterriza antes de que el trazo termine (si la palabra
-  // del VO cae antes, el tag espera al trazo — el motion congelado no se comprime)
+  // el trazo se ESTIRA hasta la voz: si el ancla llega tarde, la línea se dibuja
+  // LENTA durante toda la narración (tokens = mínimos; nunca un hold muerto).
+  // Si el ancla cae antes del mínimo, el tag espera al trazo (no se comprime).
+  const minDrawEnd = drawAt + D.lineDrawF;
+  const drawEnd = Math.max(minDrawEnd, (land ?? minDrawEnd + 8) - 6);
   const landAt = Math.max(land ?? drawEnd + 8, drawEnd + 4);
   const subAt = landAt + 10;
   const exitAt = total - D.exitF - 2;

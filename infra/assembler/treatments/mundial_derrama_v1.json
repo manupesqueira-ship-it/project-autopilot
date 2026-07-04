@@ -1,0 +1,129 @@
+{
+  "topic": "El Mundial ya dejó 45,000 millones de pesos en México en 20 días — y Concanaco proyecta superar los 65,000",
+  "hook_text": "En veinte días, tus festejos por el Mundial ya sumaron cuarenta y cinco mil millones de pesos.",
+  "vision": "Dimensionar en pesos la fiesta que la audiencia ya está viviendo, mostrando que en solo 20 días se alcanzó el 69% de lo proyectado para todo el torneo — y que el capítulo más grande (el domingo vs Inglaterra) todavía no se juega.",
+  "beats": [
+    {
+      "type": "hook",
+      "vo": "En veinte días, tus festejos por el Mundial ya sumaron cuarenta y cinco mil millones de pesos.",
+      "props": {
+        "kicker": "20 DÍAS DE MUNDIAL",
+        "words": [
+          {
+            "t": "TUS"
+          },
+          {
+            "t": "FESTEJOS"
+          },
+          {
+            "t": "YA"
+          },
+          {
+            "t": "VALEN"
+          },
+          {
+            "t": "45,000"
+          },
+          {
+            "t": "MILLONES",
+            "accent": true
+          }
+        ],
+        "tease": "Y el torneo apenas va a la mitad."
+      },
+      "target_word": "cuarenta",
+      "trans": "cut",
+      "technique": "HOOK con impacto personal en 2ª persona + cifra concreta, ≤20 palabras (regla HOOK); Von Restorff: 'MILLONES' único acento esmeralda."
+    },
+    {
+      "type": "cifra",
+      "vo": "Cuarenta y cinco mil millones de pesos... en solo veinte días. Y el torneo todavía no llega ni a la mitad. Pero eso no es lo más impactante.",
+      "props": {
+        "kicker": "LA DERRAMA MUNDIALISTA",
+        "value": "$45,000",
+        "unit": "MDP",
+        "sub": "Generados en los primeros 20 días del torneo",
+        "foot": "ESTIMACIÓN: CONCANACO SERVYTUR"
+      },
+      "target_word": "pesos",
+      "trans": "cut",
+      "technique": "Cifra que impacta -> master cifra con odómetro (regla de tipos); analogía física obligatoria para cifra >1,000,000 ('nueve Estadios Aztecas'); foot con atribución gremial explícita (guardarraíl editorial); open loop 'Pero eso no es lo más impactante'."
+    },
+    {
+      "type": "barras",
+      "vo": "Y si comparamos con la meta... Concanaco espera superar sesenta y cinco mil millones al cerrar el torneo. Eso significa que ya llevamos el sesenta y nueve por ciento de todo el torneo.",
+      "props": {
+        "kicker": "A DÓNDE VAMOS",
+        "bars": [
+          {
+            "label": "YA GENERADO",
+            "value": 45000,
+            "display": "$45,000 MDP"
+          },
+          {
+            "label": "META DEL TORNEO",
+            "value": 65000,
+            "display": "$65,000 MDP"
+          }
+        ],
+        "accentIndex": 0,
+        "sub": "69% de la meta alcanzado en solo 20 días",
+        "foot": "ESTIMACIÓN: CONCANACO SERVYTUR"
+      },
+      "target_word": "nueve",
+      "trans": "dip",
+      "technique": "A vs B (2 cosas) -> barras con protagonista esmeralda (regla barras); conector de consecuencia 'Eso significa que' (no aditivo); dip marca cambio de capítulo hacia la dimensión humana."
+    },
+    {
+      "type": "linea",
+      "vo": "Mientras tanto, en las calles, la fiesta creció partido tras partido. De la inauguración a la victoria contra Ecuador, la multitud se multiplicó más de tres veces... hasta juntar más gente que la que cabe dieciséis veces en el Estadio Azteca.",
+      "props": {
+        "kicker": "LA MULTITUD CRECIÓ",
+        "points": [
+          420000,
+          500000,
+          800000,
+          1400000
+        ],
+        "xLabels": [
+          "11 JUN",
+          "18 JUN",
+          "24 JUN",
+          "30 JUN"
+        ],
+        "endTag": "×3.3",
+        "sub": "Personas en festejos oficiales por partido, CDMX",
+        "foot": "GOBCDMX"
+      },
+      "target_word": "veces",
+      "trans": "dip",
+      "technique": "Evolución en el tiempo -> línea con endTag que asienta (regla línea); analogía física obligatoria para cifra >1,000,000 ('16 Estadios Aztecas'); clímax al ~80% del reel tratado con sobriedad, sin tono de fiesta, sin mencionar cifra de fallecidos (guardarraíl editorial); Peak-end antes del cierre."
+    },
+    {
+      "type": "cierre",
+      "vo": "Cuarenta y cinco mil millones ya cambiaron de manos. Pero el domingo, México enfrenta a Inglaterra, después de sesenta años. Aparta las seis de la tarde.",
+      "props": {
+        "kicker": "LO QUE SIGUE",
+        "words": [
+          {
+            "t": "TODAVÍA"
+          },
+          {
+            "t": "FALTA"
+          },
+          {
+            "t": "EL",
+            "accent": true
+          },
+          {
+            "t": "DOMINGO",
+            "accent": true
+          }
+        ],
+        "tease": "México vs Inglaterra. 60 años después."
+      },
+      "target_word": "domingo",
+      "technique": "Cierre kinético que reconecta con el hook (misma cifra, mismo lenguaje) -> Zeigarnik cierra el loop del hook; imperativo final citable ('Aparta las seis de la tarde') sin CTA de 'sígueme' (Gate de cierre); conector de conflicto 'Pero' antes del giro final."
+    }
+  ]
+}

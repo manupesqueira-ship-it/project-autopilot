@@ -125,11 +125,18 @@ def main():
 
     print(f"── render {COMP} (una pieza)")
     visual = out / f"{slug}_visual.mp4"
-    r = subprocess.run(["npx", "remotion", "render", COMP, str(visual),
-                        f"--props={props_path}", "--crf=17", "--concurrency=2",
-                        "--timeout=600000", "--log=error"], cwd=str(REMOTION), shell=True)
-    if r.returncode != 0:
-        raise SystemExit("render falló")
+    # concurrency=1: la máquina de Manuel vive con ~30+ procesos de Chrome; a 2
+    # tabs el delayRender de fuentes se muere de hambre (colgado 10 min, 2026-07-03).
+    # El cuelgue de "Loading font InterVar" es INTERMITENTE (~50%) → hasta 3 intentos.
+    for attempt in range(3):
+        r = subprocess.run(["npx", "remotion", "render", COMP, str(visual),
+                            f"--props={props_path}", "--crf=17", "--concurrency=1",
+                            "--timeout=600000", "--log=error"], cwd=str(REMOTION), shell=True)
+        if r.returncode == 0:
+            break
+        print(f"  ⚠ render intento {attempt + 1} falló (¿cuelgue de fuente?); reintento…")
+    else:
+        raise SystemExit("render falló 3 veces")
     total = ffprobe_dur(visual)
     print(f"  visual {total:.2f}s")
 

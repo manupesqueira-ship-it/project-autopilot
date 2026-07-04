@@ -69,10 +69,13 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
     growStart[barIdx] = railsAt + D.enterF + 4 + k * overlapF;
   });
   // ancla del VO: el protagonista TERMINA en land (clamp: nunca antes de que
-  // los rieles existan + su propia rodada completa)
+  // los rieles existan + su propia rodada completa). Si la voz llega TARDE,
+  // el crecimiento se ESTIRA para llenar la espera (los tokens son MÍNIMOS;
+  // el tiempo viene de la voz — nunca un hold muerto esperando el ancla).
   const protagDefaultEnd = growStart[accentIndex] + D.barRevealF;
   const landAt = Math.max(land ?? protagDefaultEnd, railsAt + D.enterF + 4 + D.barRevealF);
-  const protagStart = landAt - D.barRevealF;
+  const protagStart = Math.min(landAt - D.barRevealF, growStart[accentIndex]);
+  const protagDur = landAt - protagStart;
   growStart[accentIndex] = protagStart;
 
   const subAt = landAt + 10;
@@ -110,11 +113,13 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
             const isP = i === accentIndex;
             // etapa 1: riel + label (stagger corto)
             const railT = tprog(frame, railsAt + i * 2, railsAt + i * 2 + D.enterF, "standard");
-            // etapa 2: la barra crece con MASA (slow-in)
-            const grow = tprog(frame, growStart[i], growStart[i] + D.barRevealF, "mass");
+            // etapa 2: la barra crece con MASA (slow-in); el protagonista puede
+            // crecer LENTO durante toda la espera hasta el ancla de la voz
+            const growDur = isP ? protagDur : D.barRevealF;
+            const grow = tprog(frame, growStart[i], growStart[i] + growDur, "mass");
             const { prefix, decimals, suffix } = parseDisplay(b.display);
             const shown = isP
-              ? `${prefix}${(b.value * grow).toFixed(decimals)}${suffix}`
+              ? `${prefix}${(b.value * grow).toLocaleString("es-MX", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${suffix}`
               : b.display;
             const valueColor = isP
               ? (frame < landAt ? PAL.faint : inkFlash(flashT, PAL.ink))
