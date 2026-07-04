@@ -1,0 +1,99 @@
+{
+  "topic": "El Mundial ya dejó 45,000 millones MXN en 20 días — ¿y quién cobra de verdad?",
+  "hook_text": "Tus festejos por el Mundial ya valen cuarenta y cinco mil millones de pesos.",
+  "vision": "v2 con dirección: heroes i2v (estadio/billetes/multitud/trofeo) alternados con masters de datos; clímax = el giro FIFA (quién cobra) al ~80%; cierre con el domingo.",
+  "beats": [
+    {
+      "type": "hook",
+      "vo": "En veinte días, tus festejos por el Mundial ya sumaron cuarenta y cinco mil millones de pesos.",
+      "props": {
+        "kicker": "20 DÍAS DE MUNDIAL",
+        "words": [
+          { "t": "TUS" }, { "t": "FESTEJOS" }, { "t": "YA" }, { "t": "VALEN" },
+          { "t": "45,000" }, { "t": "MILLONES", "accent": true }
+        ],
+        "tease": "Y el torneo no llega ni a la mitad.",
+        "bgClip": "heroes/hero_estadio.mp4"
+      },
+      "target_word": "cuarenta",
+      "trans": "dip",
+      "technique": "Hook visual-first: hero estadio + titular kinético sobre scrim; 2ª persona + cifra (regla HOOK)."
+    },
+    {
+      "type": "cifra",
+      "vo": "Cuarenta y cinco mil millones de pesos... en solo veinte días. Casi lo suficiente para comprarte México completo... dos veces. Pero eso no es lo más impactante.",
+      "props": {
+        "kicker": "LA DERRAMA MUNDIALISTA",
+        "value": "$45,000",
+        "unit": "MDP",
+        "sub": "Generados en los primeros 20 días del torneo",
+        "foot": "ESTIMACIÓN: CONCANACO SERVYTUR",
+        "bgClip": "heroes/hero_billetes_mxn.mp4"
+      },
+      "target_word": "pesos",
+      "trans": "cut",
+      "technique": "Cifra héroe SOBRE el mundo (billetes cayendo tratados); odómetro aterriza con la voz; atribución gremial en foot; open loop."
+    },
+    {
+      "type": "barras",
+      "vo": "Concanaco espera superar sesenta y cinco mil millones al cerrar el torneo. Eso significa que ya llevamos el sesenta y nueve por ciento... en la mitad del tiempo.",
+      "props": {
+        "kicker": "A DÓNDE VAMOS",
+        "bars": [
+          { "label": "YA GENERADO", "value": 45000, "display": "$45,000 MDP" },
+          { "label": "META DEL TORNEO", "value": 65000, "display": "$65,000 MDP" }
+        ],
+        "accentIndex": 0,
+        "sub": "69% de la meta en solo 20 días",
+        "foot": "ESTIMACIÓN: CONCANACO SERVYTUR"
+      },
+      "target_word": "nueve",
+      "trans": "dip",
+      "technique": "Beat de DATO puro entre dos heroes (alternancia mundo↔dato); protagonista esmeralda."
+    },
+    {
+      "type": "cifra",
+      "vo": "Y en las calles, la fiesta creció partido tras partido... hasta juntar a un millón cuatrocientas mil personas en un solo día. La concentración más grande en la historia de la capital.",
+      "props": {
+        "kicker": "30 DE JUNIO · CDMX",
+        "value": "1,400,000",
+        "unit": "PERSONAS",
+        "sub": "la concentración más grande registrada en la capital",
+        "foot": "GOBCDMX · SERIE OFICIAL",
+        "bgClip": "heroes/hero_multitud_angel.mp4"
+      },
+      "target_word": "millón",
+      "trans": "dip",
+      "technique": "La multitud REAL (hero aéreo del Ángel) con el contador encima — el dato se VE, no se cuenta (gate 07-04). Tono sobrio (guardarraíl editorial)."
+    },
+    {
+      "type": "cifra",
+      "vo": "Pero ojo... el gran ganador no es México. La FIFA se lleva casi nueve mil millones de dólares por este Mundial... y aquí no paga un solo peso de impuestos. Lo que sí se queda... es lo que gastas tú.",
+      "props": {
+        "kicker": "¿Y QUIÉN COBRA?",
+        "value": "$8,900",
+        "unit": "MDD · FIFA",
+        "sub": "y en México no paga impuestos — exención total",
+        "foot": "FORBES · FIFA · JUL 2026"
+      },
+      "target_word": "nueve",
+      "trans": "dip",
+      "technique": "CLÍMAX al ~80% (peak-end): el giro '¿para quién es el dinero?' (pregunta directa de Manuel). bgClip trofeo pendiente de saldo fal."
+    },
+    {
+      "type": "cierre",
+      "vo": "Cuarenta y cinco mil millones ya cambiaron de manos. Pero el domingo... México enfrenta a Inglaterra, después de sesenta años. Aparta las seis de la tarde.",
+      "props": {
+        "kicker": "LO QUE SIGUE",
+        "words": [
+          { "t": "TODAVÍA" }, { "t": "FALTA" }, { "t": "EL", "accent": true }, { "t": "DOMINGO", "accent": true }
+        ],
+        "tease": "México vs Inglaterra. 60 años después.",
+        "bgClip": "heroes/hero_estadio.mp4"
+      },
+      "target_word": "domingo",
+      "trans": "cut",
+      "technique": "Cierre kinético sobre el estadio; reconecta con el hook y abre el loop del domingo; imperativo citable."
+    }
+  ]
+}

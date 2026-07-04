@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { inkFlash, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS } from "../kit2/world";
+import { Grain, MassCamera, MONO, PageBg, SANS, WorldPlate } from "../kit2/world";
 
 // ============================================================================
 // MASTER #5 — HOOK KINÉTICO (mundo de la página).
@@ -18,6 +18,7 @@ export type HookKineticoProps = {
   words?: { t: string; accent?: boolean }[];
   tease?: string;
   foot?: string;
+  bgClip?: string;      // hero i2v (public/heroes/x.mp4) tratado con WorldPlate
   land?: number;        // frame donde entra la PRIMERA palabra acento (ancla VO)
   durF?: number;
 };
@@ -31,6 +32,7 @@ export const HookKinetico: React.FC<HookKineticoProps> = ({
   words = [],
   tease = "",
   foot = "",
+  bgClip,
   land,
   durF,
 }) => {
@@ -61,6 +63,7 @@ export const HookKinetico: React.FC<HookKineticoProps> = ({
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.06} />
+      {bgClip ? <WorldPlate src={bgClip} /> : null}
       <MassCamera durF={total} seed={5}>
         <div style={{ opacity: exitO }}>
           <div style={{ position: "absolute", top: 560, left: MX, width: (1080 - 2 * MX) * rule, height: 1, background: PAL.lineSoft }} />

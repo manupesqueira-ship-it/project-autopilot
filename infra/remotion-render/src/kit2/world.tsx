@@ -1,7 +1,7 @@
 import { loadFont } from "@remotion/fonts";
 import { noise2D } from "@remotion/noise";
 import React from "react";
-import { AbsoluteFill, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
 import { CURVE, PAL, TOK } from "./tokens";
 
 // MUNDO DE LA PÁGINA — base compartida de los masters (plan maestro §06 + tablero
@@ -47,6 +47,29 @@ export const PageBg: React.FC<{ energy?: number }> = ({ energy = 0.05 }) => {
     </AbsoluteFill>
   );
 };
+
+// PLACA DE MUNDO — hero clip (Kling/i2v) TRATADO al mundo de la página: grade
+// oscuro contenido + viñeta + scrim uniforme para que el TEXTO viva encima sin
+// empalme (regla dura: texto sobre scrim, nunca sobre imagen ocupada). El clip
+// se loopea si el beat dura más que él. Los assets vienen de public/heroes/.
+export const WorldPlate: React.FC<{ src: string; dim?: number }> = ({ src, dim = 0.45 }) => (
+  <AbsoluteFill>
+    <OffthreadVideo
+      src={staticFile(src)}
+      loop
+      muted
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        filter: "brightness(0.78) saturate(0.85) contrast(1.06)",
+      }}
+    />
+    {/* scrim del mundo: funde el clip al negro mate y abre el carril de texto */}
+    <AbsoluteFill style={{ background: `rgba(7,7,7,${dim})` }} />
+    <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(7,7,7,0.72) 0%, transparent 30%, transparent 62%, rgba(7,7,7,0.8) 100%)" }} />
+  </AbsoluteFill>
+);
 
 // Grano vivo + viñeta (óptica global; va al FINAL del árbol)
 export const Grain: React.FC<{ grain?: number; vignette?: number }> = ({ grain = 0.045, vignette = 0.34 }) => {

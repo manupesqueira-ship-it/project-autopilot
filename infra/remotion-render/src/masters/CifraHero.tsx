@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { holdF, inkFlash, lprog, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS } from "../kit2/world";
+import { Grain, MassCamera, MONO, PageBg, SANS, WorldPlate } from "../kit2/world";
 
 // ============================================================================
 // MASTER #1 — CIFRA HÉROE / ODÓMETRO (mundo de la página).
@@ -19,6 +19,7 @@ export type CifraHeroProps = {
   unit?: string;          // unidad chica junto a la cifra ("MXN")
   sub?: string;           // frase de contexto (grotesca fina)
   foot?: string;          // pie mono chiquito (fuente/fecha o marca demo)
+  bgClip?: string;        // hero i2v (public/heroes/x.mp4) tratado con WorldPlate
   land?: number;          // frame donde ATERRIZA la cifra (el assembler lo ancla a la palabra del VO)
   durF?: number;
 };
@@ -31,6 +32,7 @@ export const CifraHero: React.FC<CifraHeroProps> = ({
   unit = "",
   sub = "",
   foot = "",
+  bgClip,
   land,
   durF,
 }) => {
@@ -78,6 +80,7 @@ export const CifraHero: React.FC<CifraHeroProps> = ({
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.05} />
+      {bgClip ? <WorldPlate src={bgClip} /> : null}
       <MassCamera durF={total} seed={2}>
         <div style={{ opacity: exitO }}>
           {/* regla fina — se dibuja antes que todo */}
