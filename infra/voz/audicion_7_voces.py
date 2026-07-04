@@ -104,8 +104,11 @@ def pick_voices(key: str) -> list[dict]:
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     key = get_key()
-    sub = api("/v1/user/subscription", key)
-    print(f"key viva · tier {sub.get('tier')} · {sub.get('character_count')}/{sub.get('character_limit')} chars")
+    try:
+        sub = api("/v1/user/subscription", key)
+        print(f"key viva · tier {sub.get('tier')} · {sub.get('character_count')}/{sub.get('character_limit')} chars")
+    except Exception:
+        print("key scoped (sin permiso de subscription) — seguimos: TTS y voces sí responden")
     OUT.mkdir(parents=True, exist_ok=True)
     voices = pick_voices(key)
     if not voices:
@@ -116,10 +119,18 @@ if __name__ == "__main__":
         gender = v.get("gender", "?")
         acc = v.get("accent", "?")
         mp3 = OUT / f"voz{i}_{name[:16].replace(' ', '_')}.mp3"
-        tts(key, vid, SAMPLE, mp3)
-        cap = (f"VOZ {i}/7 · {name} ({gender}, {acc})\nvoice_id: {vid}\n\n"
-               "Misma línea en todas. Contesta con el número de las que SÍ.")
-        mid = send_audio(mp3, cap)
-        print(f"  {i}/7 {name} -> msg {mid}")
+        # red intermitente (WinError 10054): reintentos en TTS y en el envío
+        for attempt in range(4):
+            try:
+                if not mp3.exists() or mp3.stat().st_size < 20000:
+                    tts(key, vid, SAMPLE, mp3)
+                cap = (f"VOZ {i}/7 · {name} ({gender}, {acc})\nvoice_id: {vid}\n\n"
+                       "Misma línea en todas. Contesta con el número de las que SÍ.")
+                mid = send_audio(mp3, cap)
+                print(f"  {i}/7 {name} -> msg {mid}")
+                break
+            except Exception as e:
+                print(f"  {i}/7 intento {attempt + 1}: {type(e).__name__}")
+                time.sleep(4 * (attempt + 1))
         time.sleep(2)
     print("AUDICIÓN ENVIADA — Manuel elige por número")
