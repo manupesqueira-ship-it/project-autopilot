@@ -138,3 +138,5 @@ Barrido de los 3 buzones (mexonoma, manupesqueira, aibrieflatam.media). Resultad
 - 2026-07-04 · ElevenLabs (key nueva de Manuel) · audición 7 voces (~900 chars) + VO reel mundial voz Alberto (~800 chars, con cache idempotente) · costo en chars del plan · Dinero IA voz del canal elegida: Alberto Rodríguez l1zE9xgNpUTaQCZzpNJa
 
 - 2026-07-04 · fal.ai A/B ciego Kling v3 Pro (~$0.56) vs Seedance 2.0 1080p (~$3.40) · mismo still estadio (gpt-image ~$0.17) · ~$4.13 USD · decisión de motor de volumen Dinero IA- 2026-07-04 · fal.ai TOP-UP $50 USD (~$950 MXN) · BOLSA COMPARTIDA de las 4 terminales (pago por uso, no caduca): reels=Kling v3 Pro $0.56/clip · páginas award=Seedance 2.0 $3.40/clip · reemplaza los top-ups de Higgsfield ($3.75-5.60 el mismo clip, expiran 90d). Cada terminal loguea sus cargos en su propio EXPENSES al generar
+
+- 2026-07-04 · Google Veo 3.1 fast (Gemini API) · clip 8s 1080p 9:16 'hero_trofeo' · ~$0.96 USD · motor alterno (fal bloqueado)
