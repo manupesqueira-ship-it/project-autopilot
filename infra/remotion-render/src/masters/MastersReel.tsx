@@ -8,6 +8,7 @@ import { CarreraBars } from "./CarreraBars";
 import { CifraHero } from "./CifraHero";
 import { CompararBarras } from "./CompararBarras";
 import { HookKinetico } from "./HookKinetico";
+import { Leaderboard } from "./Leaderboard";
 import { LineaHero } from "./LineaHero";
 
 // ============================================================================
@@ -19,7 +20,7 @@ import { LineaHero } from "./LineaHero";
 // ============================================================================
 
 export type MasterBeat = {
-  type: "hook" | "cifra" | "linea" | "barras" | "carrera" | "cierre";
+  type: "hook" | "cifra" | "linea" | "barras" | "carrera" | "leaderboard" | "cierre";
   props: Record<string, unknown>;
   durF: number;
   // "cut" | "dip" | cualquier nombre del TRANS_CATALOG (kit2/transitions)
@@ -49,6 +50,7 @@ const MAP: Record<MasterBeat["type"], React.FC<Record<string, unknown>>> = {
   linea: LineaHero as never,
   barras: CompararBarras as never,
   carrera: CarreraBars as never,
+  leaderboard: Leaderboard as never,
   cierre: HookKinetico as never,   // el cierre habla el mismo lenguaje del hook
 };
 

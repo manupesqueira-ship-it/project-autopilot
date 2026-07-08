@@ -31,6 +31,7 @@ import { CompararBarras } from "./masters/CompararBarras";
 import { CarreraBars } from "./masters/CarreraBars";
 import { HookKinetico } from "./masters/HookKinetico";
 import { MastersReel, calcMastersReel } from "./masters/MastersReel";
+import { Leaderboard } from "./masters/Leaderboard";
 import { TransGallery, calcTransGallery } from "./kit2/TransGallery";
 import { MultitudSim } from "./masters/MultitudSim";
 import { BanderasSede } from "./masters/BanderasSede";
@@ -478,6 +479,8 @@ export const RemotionRoot: React.FC = () => {
       <Composition id="MastersReel" component={MastersReel as never} durationInFrames={900} fps={30} width={1080} height={1920} defaultProps={{ beats: [] } as never} calculateMetadata={calcMastersReel as never} />
       {/* GALERÍA DE TRANSICIONES — gate de Manuel antes de abrir el menú al director */}
       <Composition id="TransGallery" component={TransGallery as never} durationInFrames={2000} fps={30} width={1080} height={1920} defaultProps={{} as never} calculateMetadata={calcTransGallery as never} />
+      {/* MASTER #6 — leaderboard (retro 07-07); motion test con datos demo */}
+      <Composition id="Leaderboard" component={Leaderboard as never} durationInFrames={250} fps={30} width={1080} height={1920} defaultProps={{ kicker: "¿QUIÉN GANA CON EL MUNDIAL?", rows: [{ label: "FIFA", value: 8900, display: "$8,900 MDD" }, { label: "CDMX (SEDE)", value: 1200, display: "$1,200 MDD" }, { label: "SELECCIÓN MX", value: 16.5, display: "$16.5 MDD" }], accentIndex: 0, sub: "el torneo reparte — pero no parejo", foot: "MOTION TEST · DATOS DEMO", land: 130 } as never} />
       <Composition id="MultitudSim" component={MultitudSim as never} durationInFrames={430} fps={30} width={1080} height={1920} defaultProps={{ kicker: "ASÍ SE VE MEDIO MILLÓN... Y LUEGO 1.4", steps: [{ label: "11 JUN · INAUGURACIÓN", count: 420000 }, { label: "18 JUN · VS COREA", count: 500000 }, { label: "24 JUN · VS CHEQUIA", count: 800000 }, { label: "30 JUN · VS ECUADOR", count: 1400000 }], perDot: 100, sub: "la concentración más grande registrada en CDMX", foot: "MOTION TEST · SERIE OFICIAL GOBCDMX" } as never} />
       <Composition id="BanderasSede" component={BanderasSede as never} durationInFrames={240} fps={30} width={1080} height={1920} defaultProps={{ kicker: "TRES PAÍSES, UNA COPA", items: [{ iso2: "US", name: "EE.UU.", stat: "78 PARTIDOS·11 SEDES" }, { iso2: "CA", name: "CANADÁ", stat: "13 PARTIDOS·2 SEDES" }, { iso2: "MX", name: "MÉXICO", stat: "13 PARTIDOS·3 SEDES", accent: true }], sub: "México tiene el 12.5% de los partidos — y toda la fiesta", foot: "MOTION TEST · FIFA CALENDARIO OFICIAL" } as never} />
       <Composition id="CarreraBars" component={CarreraBars as never} durationInFrames={365} fps={30} width={1080} height={1920} defaultProps={{ kicker: "LA CARRERA CRIPTO", steps: [{ period: "2018", values: { BTC: 65, ETH: 14, XRP: 13, BNB: 1, SOL: 0 } }, { period: "2020", values: { BTC: 350, ETH: 84, XRP: 10, BNB: 5, SOL: 1 } }, { period: "2022", values: { BTC: 320, ETH: 147, XRP: 17, BNB: 44, SOL: 12 } }, { period: "2024", values: { BTC: 1350, ETH: 400, XRP: 35, BNB: 85, SOL: 105 } }], accentName: "BTC", prefix: "$", suffix: " mil M", sub: "el líder nunca soltó la corona (demo)", foot: "MOTION TEST · DATOS DEMO" } as never} />
