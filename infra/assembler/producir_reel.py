@@ -122,7 +122,13 @@ def main():
     send = "--no-send" not in sys.argv
     brief = json.loads(brief_path.read_text(encoding="utf-8-sig"))
 
-    print("═ 1/4 DIRECTOR")
+    print("═ 0/4 DIRECTOR CREATIVO (agente — gusto del fundador)")
+    r = run([sys.executable, "creative_director.py", str(brief_path)])
+    print(r.stdout[-800:] if r.stdout else r.stderr[-600:])
+    if r.returncode != 0:
+        raise SystemExit("director creativo falló")
+
+    print("═ 1/4 DIRECTOR MECÁNICO (ejecuta la visión)")
     r = run([sys.executable, "news_director.py", str(brief_path)])
     print(r.stdout[-1200:] if r.stdout else r.stderr[-600:])
     if r.returncode != 0:

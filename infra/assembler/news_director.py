@@ -149,11 +149,25 @@ Reglas duras:
 
 def direct(brief):
     facts = brief.get("facts", {})
+    # VISIÓN CREATIVA del agente creativo (creative_director.py) — si existe, el
+    # mecánico la EJECUTA: la creatividad ya está decidida desde el gusto del
+    # fundador; aquí solo se llena el tratamiento técnico dentro del schema.
+    creative_txt = ""
+    cs = ROOT / "infra" / "assembler" / "out" / "_treatments" / "creative_spec.json"
+    if cs.exists():
+        creative_txt = (
+            "\n\nVISIÓN CREATIVA (OBLIGATORIA — la diseñó el director creativo desde el "
+            "TASTE LEDGER del fundador; tu trabajo es EJECUTARLA, no reinventarla):\n"
+            + cs.read_text(encoding="utf-8")
+            + "\n\nMapa de trans_intent→trans (menú aprobado hoy): continuidad→cut · "
+              "capitulo→dip · energia→cut · firma→dip. Los heroes de la visión van como "
+              "bgClip en el beat correspondiente (nombre de archivo lo asigna el pipeline; "
+              "escribe props.bgClip = 'heroes/<slug_descriptivo>.mp4' según la escena).")
     user = (f"NOTICIA (titular): {brief.get('headline','')}\n\n"
             f"HECHOS VERIFICADOS (usa estos valores exactos):\n{json.dumps(facts, ensure_ascii=False, indent=2)}\n\n"
-            f"POR QUÉ IMPORTA / ángulo LATAM: {brief.get('why_matters','')}\n\n"
-            "Diseña el TRATAMIENTO del reel (JSON). Sé ultra creativo en el hook y en la elección "
-            "de beat + transición por relación narrativa.")
+            f"POR QUÉ IMPORTA / ángulo LATAM: {brief.get('why_matters','')}"
+            f"{creative_txt}\n\n"
+            "Diseña el TRATAMIENTO del reel (JSON del schema exacto).")
     body = json.dumps({"model": MODEL, "max_tokens": 16000, "system": SYSTEM,
                        "messages": [{"role": "user", "content": user}]}).encode("utf-8")
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, method="POST")
