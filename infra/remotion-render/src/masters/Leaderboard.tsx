@@ -88,7 +88,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const exitO = 1 - tprog(frame, exitAt, exitAt + D.exitF, "exit");
 
   const topRows = 640;
-  const barMax = 1080 - 2 * MX - 96 - 24; // ancho útil tras chip de identidad
+  const barMax = 1080 - 2 * MX - 128 - 24; // ancho útil tras chip de identidad
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
@@ -119,23 +119,24 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               : PAL.dim;
             return (
               <div key={i} style={{ position: "absolute", top: topRows + i * ROW_H, left: MX, right: MX, opacity: entered, transform: `translateY(${(1 - entered) * 14}px)` }}>
-                {/* identidad: logo vectorial REAL (asset) o monograma tipográfico */}
-                <div style={{ position: "absolute", top: 6, left: 0, width: 72, height: 72, borderRadius: 36, background: "#121412", border: `1px solid ${PAL.lineSoft}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                {/* identidad: logo/bandera REAL (asset del banco) o monograma tipográfico.
+                    Chip rectangular: los wordmarks (FIFA) son anchos, un círculo los mata. */}
+                <div style={{ position: "absolute", top: 4, left: 0, width: 104, height: 74, borderRadius: 14, background: "#15171500", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                   {r.icon ? (
-                    <Img src={staticFile(r.icon)} style={{ width: 44, height: 44, objectFit: "contain" }} />
+                    <Img src={staticFile(r.icon)} style={{ maxWidth: 96, maxHeight: 62, objectFit: "contain", filter: "grayscale(0.15) brightness(1.06)" }} />
                   ) : (
-                    <span style={{ fontFamily: MONO, fontWeight: 500, fontSize: 30, color: isAccent ? PAL.ink : PAL.dim }}>
+                    <span style={{ fontFamily: MONO, fontWeight: 500, fontSize: 30, color: isAccent ? PAL.ink : PAL.dim, border: `1px solid ${PAL.lineSoft}`, borderRadius: 14, width: 72, height: 62, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {r.label.slice(0, 1)}
                     </span>
                   )}
                 </div>
-                <div style={{ position: "absolute", left: 96, top: 0, fontFamily: MONO, fontWeight: 500, fontSize: 26, letterSpacing: "0.2em", textTransform: "uppercase", color: isAccent ? PAL.ink : PAL.dim }}>
+                <div style={{ position: "absolute", left: 128, top: 0, fontFamily: MONO, fontWeight: 500, fontSize: 26, letterSpacing: "0.2em", textTransform: "uppercase", color: isAccent ? PAL.ink : PAL.dim }}>
                   {r.label}
                 </div>
-                <div style={{ position: "absolute", left: 96, top: 44, width: barMax, height: 16, background: "rgba(233,231,224,0.05)", borderRadius: 2 }}>
+                <div style={{ position: "absolute", left: 128, top: 44, width: barMax, height: 16, background: "rgba(233,231,224,0.05)", borderRadius: 2 }}>
                   <div style={{ width: w, height: "100%", borderRadius: 2, background: isAccent ? `linear-gradient(90deg, ${PAL.accentDeep}, ${barColor})` : barColor }} />
                 </div>
-                <div style={{ position: "absolute", left: 96, top: 74, fontFamily: MONO, fontWeight: 500, fontSize: 38, fontVariantNumeric: "tabular-nums", color: valColor }}>
+                <div style={{ position: "absolute", left: 128, top: 74, fontFamily: MONO, fontWeight: 500, fontSize: 38, fontVariantNumeric: "tabular-nums", color: valColor }}>
                   {shown}
                 </div>
               </div>

@@ -24,8 +24,13 @@ ROOT = Path(r"C:\Users\manup\projects\project-autopilot")
 REMOTION = ROOT / "infra" / "remotion-render"
 QC = ROOT / "infra" / "qc"
 SFX = Path(r"C:\Users\manup\envato_audio\sfx")
-# Gate 07-04: minimal_04 rechazada ("no me gustó") → Dark Minimal Techno driving
-MUSIC = Path(r"C:\Users\manup\envato_audio\music\music_minimaltechno_01.mp3")
+# Gate 07-08: rotación aprobada por Manuel — M1 "me encantan" + M2 "muy buena";
+# M3/minimal_04/minimaltechno_01 RECHAZADAS. "No siempre lo mismo en cada reel"
+# → rotación determinista por slug. La elección fina la puede pedir el creativo.
+MUSIC_POOL = [
+    Path(r"C:\Users\manup\envato_audio\music\music_tension_03.mp3"),      # M1 dramático
+    Path(r"C:\Users\manup\envato_audio\music\music_techabstract_02.mp3"),  # M2 neutro-premium
+]
 FPS = 30
 COMP = "MastersReel"
 # LA VOZ DEL CANAL (audición msgs 138-144, Manuel eligió la 2): Alberto Rodríguez
@@ -180,10 +185,12 @@ def main():
 
     print("── audio dirigido")
     close_start = starts[-1]
+    music = MUSIC_POOL[sum(ord(c) for c in slug) % len(MUSIC_POOL)]  # rotación por slug
+    print(f"  música: {music.name}")
     inputs = ["-i", str(visual)]
     for m in vo_meta:
         inputs += ["-i", str(m["mp3"])]
-    inputs += ["-i", str(MUSIC)]
+    inputs += ["-i", str(music)]
     n_vo = len(vo_meta)
     mus_idx = n_vo + 1
     # Gate 07-04 "no vi ningún SFX": volúmenes con PRESENCIA real
@@ -200,8 +207,14 @@ def main():
         d = int(vo_at[i] * 1000)
         fc += f"[{i + 1}:a]adelay={d}|{d},volume=1.0[vo{i}];"
         labels.append(f"vo{i}")
-    dips = "".join(f"*if(between(t,{t - 0.55:.2f},{t + 0.12:.2f}),0.28,1)" for t in lands_abs.values())
-    vol_expr = f"(if(lt(t,{starts[1] if len(starts) > 1 else 3}),0.15,if(lt(t,{close_start}),0.10,0.035))){dips}"
+    # Gate 07-08 ("que no obstruya a la persona que habla"): DUCKING determinista
+    # desde el timeline de VO — cama a 0.045 mientras Alberto habla (con colchón
+    # 0.15s), 0.13 en los huecos/cierre; dip extra suave en cada aterrizaje.
+    speech = "".join(
+        f"*if(between(t,{vo_at[i] - 0.15:.2f},{vo_at[i] + m['dur'] + 0.15:.2f}),0.35,1)"
+        for i, m in enumerate(vo_meta))
+    dips = "".join(f"*if(between(t,{t - 0.55:.2f},{t + 0.12:.2f}),0.5,1)" for t in lands_abs.values())
+    vol_expr = f"(0.13){speech}{dips}"
     fc += f"[{mus_idx}:a]atrim=0:{total:.2f},volume='{vol_expr}':eval=frame,afade=t=in:d=0.8,afade=t=out:st={total - 1.4:.2f}:d=1.3[mus];"
     labels.append("mus")
     base = mus_idx + 1

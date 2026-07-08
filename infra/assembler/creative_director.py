@@ -55,6 +55,12 @@ REGLAS DE TU OUTPUT:
 - Piensas el ARCO DE LUZ del reel completo (dónde abre oscuro, dónde se enriquece, el pico).
 - Nombras EL MOMENTO WOW del reel (uno solo, específico) y por qué frena el scroll.
 - intent de transición por escena: continuidad | capitulo | energia | firma (el mecánico mapea).
+- IDENTIDAD REAL ES TU TRABAJO (gate 07-08 del fundador: "pudiste haber puesto el logo de la FIFA,
+  la bandera de Méx y el logo de la selección — ese debe ser trabajo del director creativo"): si una
+  escena compara/rankea entidades (países, empresas, instituciones), especifica su identidad en
+  "identity": [{{"slug": "fifa", "fetch": "wiki:FIFA"}}, {{"slug": "mx", "fetch": "flag:mx"}}] —
+  fetch = "flag:<iso2>" para países o "wiki:<Título del artículo EN>" para logos/escudos oficiales.
+  El pipeline los descarga reales (logo_fetch.py); NUNCA describas un logo para generarlo con IA.
 - 4-6 escenas. Sé ESPECÍFICO y visual ("la multitud como marea de luces que la cámara descubre al
   elevarse sobre el Ángel"), nunca genérico ("un video del tema").
 - El barrido de ideas: da 2 CONCEPTOS de reel distintos primero, elige el mejor y justifica en una
@@ -71,6 +77,7 @@ Devuelve SOLO JSON:
      "idea": "la metáfora/idea visual específica",
      "hero": {{"subject": "...", "camera": "movimiento narrativo y qué revela", "light": "..."}} | null,
      "chart": {{"kind": "cifra|linea|barras|carrera|leaderboard", "twist": "qué la hace memorable"}} | null,
+     "identity": [{{"slug": "...", "fetch": "flag:mx|wiki:Título"}}] | null,
      "text_breathing": "cuándo respira el hero sin texto encima",
      "trans_intent": "continuidad|capitulo|energia|firma"}}
  ]
