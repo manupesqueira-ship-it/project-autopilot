@@ -136,6 +136,29 @@ def main():
     treatment_path = ASSEMBLER / "out" / "_treatments" / "news_treatment.json"
     treatment = json.loads(treatment_path.read_text(encoding="utf-8-sig"))
 
+    dst = ASSEMBLER / "treatments" / f"{slug}.json"
+    dst.write_text(json.dumps(treatment, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print("═ 1.5/4 GUIONISTA (estilo D) + SCRIPT DOCTOR")
+    r = run([sys.executable, "guionista.py", str(dst), str(brief_path)])
+    print(r.stdout.strip()[-300:] if r.stdout else r.stderr[-400:])
+    if r.returncode != 0:
+        raise SystemExit("guionista falló")
+    r = run([sys.executable, "critico_guion.py", str(dst)])
+    print(r.stdout.strip()[-500:] if r.stdout else "")
+    if r.returncode != 0:
+        # una ronda de corrección con la crítica; si vuelve a fallar, se aborta
+        crit = ASSEMBLER / "out" / "_treatments" / "critica_guion.json"
+        print("  ↻ ronda 2 del guionista con la crítica")
+        r = run([sys.executable, "guionista.py", str(dst), str(brief_path), str(crit)])
+        if r.returncode != 0:
+            raise SystemExit("guionista r2 falló")
+        r = run([sys.executable, "critico_guion.py", str(dst)])
+        print(r.stdout.strip()[-500:] if r.stdout else "")
+        if r.returncode != 0:
+            raise SystemExit("SCRIPT DOCTOR: FAIL tras 2 rondas — guion no pasa la barra")
+    treatment = json.loads(dst.read_text(encoding="utf-8-sig"))
+
     print("═ 2/4 QC DE DATOS (props vs brief) + ANTI-REPETICIÓN")
     issues = qc_datos(brief, treatment) + qc_repeticion(treatment)
     for x in issues:
@@ -143,9 +166,6 @@ def main():
     if issues:
         raise SystemExit("QC falló — revisar tratamiento antes de producir")
     print("  ✔ cifras rastreadas al brief · sin repeticiones en el VO")
-
-    dst = ASSEMBLER / "treatments" / f"{slug}.json"
-    dst.write_text(json.dumps(treatment, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print("═ 3/4 ENSAMBLE (VO → render → mezcla → gates)")
     r = run([sys.executable, "assemble_masters.py", str(dst), slug])
@@ -155,6 +175,13 @@ def main():
         raise SystemExit("ensamble/gates fallaron — no hay entrega")
 
     final = ASSEMBLER / "out" / slug / f"{slug}_FINAL_916.mp4"
+
+    print("═ 3.5/4 CRÍTICO VISUAL (ojos vs TASTE_LEDGER — muere aquí lo que Manuel rechazaría)")
+    r = run([sys.executable, "critico_visual.py", str(final)])
+    print(r.stdout.strip()[-500:] if r.stdout else r.stderr[-400:])
+    if r.returncode != 0:
+        raise SystemExit("CRÍTICO VISUAL: FAIL — corregir antes de gastar el gate de Manuel")
+
     if not send:
         print(f"═ LISTO (sin enviar): {final}")
         return 0
