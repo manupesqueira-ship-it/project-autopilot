@@ -108,6 +108,10 @@ RETRO DEL FUNDADOR 2026-07-07 (obligatorias, costaron un rechazo):
   del encuadre es tu trabajo.
 - SUJETOS RECONOCIBLES: si el tema tiene un objeto icónico (la Copa del Mundo, el Ángel), el hero
   muestra ESE objeto reconocible, no una versión genérica.
+- ESTILO DE VOZ "D" (audición 07-07, elegido por el fundador): el VO se escribe CONVERSACIONAL, como
+  si le contaras a un amigo — preguntas directas al viewer ("¿Sabes cuánto…?"), giros hablados ("Pero
+  aquí viene lo bueno—"), repetición natural de énfasis ("Esa… esa es la historia"), contracciones
+  mexicanas. PROHIBIDO el tono locutor/boletín. Los "…" y "—" son pausas reales del TTS: úsalos.
 """
 
 SYSTEM = f"""Eres el DIRECTOR de un canal premium de finanzas/noticias LATAM (reels 9:16, look A:

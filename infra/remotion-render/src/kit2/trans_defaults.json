@@ -1,0 +1,18 @@
+{
+  "$doc": "Duración default (frames) por transición — ÚNICA fuente: la leen transitions.tsx (render) y assemble_masters.py (timeline). dip vive aquí también.",
+  "dip": 14,
+  "inkSweep_L": 14, "inkSweep_R": 14, "inkSweep_U": 14, "inkSweep_D": 14,
+  "inkSweep_Lf": 9, "inkSweep_Rf": 9,
+  "ruleWipe_H": 16, "ruleWipe_V": 16,
+  "split_H": 15, "split_V": 15,
+  "whip_L": 10, "whip_R": 10, "whip_U": 10, "whip_D": 10,
+  "whip_Ls": 15, "whip_Rs": 15,
+  "push_in": 13, "push_out": 13, "push_in_s": 19, "push_out_s": 19,
+  "slide_L": 14, "slide_R": 14, "slide_U": 14, "slide_D": 14,
+  "slide_Ls": 20, "slide_Us": 20,
+  "blurX": 14, "blurX_f": 9, "blurX_s": 22,
+  "grainX": 14, "grainX_s": 20,
+  "lumaDip": 12, "lumaDip_s": 18,
+  "roll_U": 13, "roll_D": 13, "roll_Us": 19,
+  "flash": 5, "flash_s": 8
+}

@@ -39,6 +39,20 @@ LEAD0 = 0.30
 TAIL = 0.80
 MIN_VO_GAP = 0.50
 TRANS_F_DEFAULT = 14
+# duraciones default por transición — misma fuente que el render (kit2)
+TRANS_DEFAULTS = {
+    k: v for k, v in json.loads(
+        (REMOTION / "src" / "kit2" / "trans_defaults.json").read_text(encoding="utf-8")
+    ).items() if isinstance(v, int)
+}
+
+
+def trans_frames(b: dict) -> int:
+    """Frames de la transición SALIENTE de un beat (0 si es cut)."""
+    t = b.get("trans", "cut")
+    if t == "cut":
+        return 0
+    return int(b.get("transF", TRANS_DEFAULTS.get(t, TRANS_F_DEFAULT)))
 
 sys.path.insert(0, str(ROOT / "infra" / "voz"))
 import tts_timestamps as _tts  # noqa: E402
@@ -112,16 +126,16 @@ def main():
     specs = []
     for i, (b, m) in enumerate(zip(beats, vo_meta)):
         lead = LEAD0 if i == 0 else 0.0
-        # el dip encima el visual siguiente ~transF/FPS: se lo devolvemos al tail
-        # para que el AIRE DE VOZ sea constante sin importar la transición
-        ov_own = (b.get("transF", TRANS_F_DEFAULT) / FPS) if b.get("trans", "cut") == "dip" else 0.0
+        # TODA transición no-cut encima el visual siguiente ~transF/FPS: se lo
+        # devolvemos al tail para que el AIRE DE VOZ sea constante siempre
+        ov_own = trans_frames(b) / FPS
         vis_dur = max(b.get("min_s", 4.0), lead + m["dur"] - (0 if i == 0 else JCUT) + b.get("tail_s", TAIL) + ov_own)
         durF = round(vis_dur * FPS)
         specs.append({"type": b["type"], "props": dict(b.get("props", {})), "durF": durF,
-                      "trans": b.get("trans", "cut"), "transF": b.get("transF", TRANS_F_DEFAULT)})
+                      "trans": b.get("trans", "cut"), "transF": trans_frames(b) or TRANS_F_DEFAULT})
     starts = [0.0]
     for i in range(1, len(specs)):
-        ov = (specs[i - 1]["transF"] / FPS) if specs[i - 1]["trans"] == "dip" else 0.0
+        ov = trans_frames(beats[i - 1]) / FPS
         starts.append(round(starts[-1] + specs[i - 1]["durF"] / FPS - ov, 3))
     vo_at = [max(0.0, starts[i] - JCUT) if i > 0 else LEAD0 for i in range(len(specs))]
 
