@@ -1,7 +1,40 @@
 # Expenses Tracker — Project Autopilot
 
-**Last updated:** 2026-06-28
+**Last updated:** 2026-07-08
 **Owner:** Manuel · **Rule:** registrar ABSOLUTAMENTE todo. No perder cuenta de ningún gasto. Si aparece un cargo nuevo, va aquí el mismo día.
+
+## ═══ CORTE Y CONCILIACIÓN 2026-07-08 ("que no se me vaya un solo toque") ═══
+
+### SUSCRIPCIONES RECURRENTES ACTIVAS (mensuales)
+- **ElevenLabs CREATOR — $22 USD/mes (~$420 MXN)** · activado 2026-07-08 · desbloquea clon
+  instantáneo + clon Professional + 100k chars/mes (~100 reels de VO) · para la voz del canal
+  (clon de Manuel; Alberto mientras)
+- **Higgsfield ULTRA — monto/ciclo POR CONFIRMAR** ($99 USD/mes anual o $129 mensual según pricing
+  público) · el upgrade desde plan plus $50 (28-jun) NO estaba logueado · créditos del ciclo
+  AGOTADOS (~23.88 al 07-04); esperar renovación
+- APIs pago-por-uso (sin suscripción): Anthropic (agentes) · OpenAI (seeds) · fal.ai (bolsa) ·
+  Gemini (prepago)
+
+### TOP-UPS / CARGOS NO LOGUEADOS ANTES (conciliación)
+- 2026-07-04 · Higgsfield TOP-UP **$26 USD = 500 créditos** (~$495 MXN) · consumido en ~16h
+  mayormente por la terminal VARVE (clips Seedance 72-108cr) · NOTA (no es congelamiento, es
+  precio): el mismo clip Seedance sale más barato vía fal y los top-ups expiran a 90d — usar
+  top-up solo si conviene por contexto; TODO gasto se loguea aquí, nada se bloquea
+- 2026-07-08 · Google Gemini AI Studio PREPAGO — recarga que desbloqueó los heroes Veo ·
+  **MONTO POR CONFIRMAR con Manuel** (proyecto gen-lang-client-0128960349)
+- 2026-07-08 · Google Gemini AI Studio PREPAGO — recarga adicional mencionada hoy ·
+  **MONTO POR CONFIRMAR con Manuel**
+- 2026-07-07/08 · Anthropic API (estudio de agentes) · corridas de prueba: creative_director ×2 +
+  guionista ×1 + critico_guion ×2 + hero_director ×1 + critico_visual ×1 (visión, 8 frames) ·
+  ~$0.45 USD total
+- 2026-07-07 · ElevenLabs · audición settings Alberto A-E (5 síntesis ~1,100 chars) · chars del plan
+- 2026-07-08 · ElevenLabs · clon instantáneo Manuel (creación) + A/B test ~600 chars · chars del plan
+
+### BALANCES AL CORTE (2026-07-08)
+- fal.ai: **~$45.9 USD** de la bolsa de $50 (consumido: A/B ciego $3.96 + 2 heroes Kling $1.12)
+- Higgsfield: **~23.88 créditos** (insuficiente para Seedance; esperar renovación de ciclo)
+- Gemini prepago: recargado hoy (monto por confirmar) − $4.16 consumidos (5 clips Veo)
+- ElevenLabs Creator: 100k chars/mes desde hoy · usados ~2k
 
 > ## 🔒 CONGELAMIENTO DE GASTOS (2026-06-03)
 > Manuel: *"esta va a ser la última cosa que pago para esto."*
@@ -143,3 +176,4 @@ Barrido de los 3 buzones (mexonoma, manupesqueira, aibrieflatam.media). Resultad
 - 2026-07-07 · Google Veo 3.1 lite (Gemini API) · clip 8s 1080p 9:16 'hero_boleto_lite' · ~$0.64 USD · motor alterno (fal bloqueado)
 - 2026-07-07 · Google Veo 3.1 lite (Gemini API) · clip 8s 1080p 9:16 'hero_azteca_lite' · ~$0.64 USD · motor alterno (fal bloqueado)
 - 2026-07-07 · Google Veo 3.1 fast (Gemini API) · clip 8s 1080p 9:16 'hero_boleto_fast' · ~$0.96 USD · motor alterno (fal bloqueado)
+- 2026-07-07 · Google Veo 3.1 fast (Gemini API) · clip 8s 1080p 9:16 'hero_azteca_fast' · ~$0.96 USD · motor alterno (fal bloqueado)- 2026-07-08 · ElevenLabs Instant Voice Clone CREADO — voz 'Manuel (canal)' voice_id U4xDVDOtd2gY3oGD1273 (6 bloques ~9.3 min) + A/B test clon-vs-Alberto (~600 chars del plan Creator) · $0 adicional (incluido en Creator $22/mes) · candidata a VOZ DEL CANAL
