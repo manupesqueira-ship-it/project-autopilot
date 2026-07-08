@@ -52,7 +52,9 @@ export const PageBg: React.FC<{ energy?: number }> = ({ energy = 0.05 }) => {
 // oscuro contenido + viñeta + scrim uniforme para que el TEXTO viva encima sin
 // empalme (regla dura: texto sobre scrim, nunca sobre imagen ocupada). El clip
 // se loopea si el beat dura más que él. Los assets vienen de public/heroes/.
-export const WorldPlate: React.FC<{ src: string; dim?: number }> = ({ src, dim = 0.45 }) => (
+// RETRO 07-07 ("demasiado oscuro TODO el video"): grade menos apagado + scrim
+// uniforme más ligero — el clip SE VE; los gradientes protegen el carril de texto.
+export const WorldPlate: React.FC<{ src: string; dim?: number }> = ({ src, dim = 0.34 }) => (
   <AbsoluteFill>
     <OffthreadVideo
       src={staticFile(src)}
@@ -62,7 +64,7 @@ export const WorldPlate: React.FC<{ src: string; dim?: number }> = ({ src, dim =
         width: "100%",
         height: "100%",
         objectFit: "cover",
-        filter: "brightness(0.78) saturate(0.85) contrast(1.06)",
+        filter: "brightness(0.9) saturate(0.96) contrast(1.04)",
       }}
     />
     {/* scrim del mundo: funde el clip al negro mate y abre el carril de texto */}

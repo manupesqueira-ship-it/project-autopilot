@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { inkFlash, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS } from "../kit2/world";
+import { Grain, MONO, PageBg, SANS } from "../kit2/world";
 
 // ============================================================================
 // MASTER #4 — CARRERA DE BARRAS (mundo de la página).
@@ -100,7 +100,7 @@ export const CarreraBars: React.FC<CarreraBarsProps> = ({
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.05} />
-      <MassCamera durF={total} seed={6}>
+      <AbsoluteFill>
         <div style={{ opacity: exitO }}>
           <div style={{ position: "absolute", top: 636, left: MX, width: railW * rule, height: 1, background: PAL.lineSoft }} />
           <div
@@ -191,7 +191,7 @@ export const CarreraBars: React.FC<CarreraBarsProps> = ({
             </div>
           ) : null}
         </div>
-      </MassCamera>
+      </AbsoluteFill>
       <Grain />
     </AbsoluteFill>
   );

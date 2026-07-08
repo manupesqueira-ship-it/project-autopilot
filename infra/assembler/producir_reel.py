@@ -85,6 +85,37 @@ def _isnum(s: str) -> bool:
         return False
 
 
+def qc_repeticion(treatment: dict) -> list[str]:
+    """RETRO 07-07 ('ya dijiste dos veces… ya ahí me perdiste, se ve hecho con AI'):
+    una cifra/frase se dice UNA vez en todo el reel. Detecta (a) el mismo 5-grama
+    de palabras en el VO de DOS beats distintos, (b) el mismo número-en-palabras
+    largo repetido. El hook puede adelantar la cifra UNA vez; el beat que la
+    desarrolla debe decirla distinto (contexto/consecuencia, no repetición)."""
+    import re as _re
+    import unicodedata as _ud
+
+    def _norm(t: str) -> list[str]:
+        t = _ud.normalize("NFD", t.lower())
+        t = _re.sub(r"[^a-z0-9ñ ]", " ", t)
+        return [w for w in t.split() if w]
+
+    issues = []
+    grams: dict[tuple, int] = {}
+    for i, b in enumerate(treatment.get("beats", [])):
+        ws = _norm(b.get("vo", ""))
+        seen_this_beat = set()
+        for j in range(len(ws) - 4):
+            g = tuple(ws[j:j + 5])
+            if g in seen_this_beat:
+                continue
+            seen_this_beat.add(g)
+            if g in grams and grams[g] != i:
+                issues.append(f"b{grams[g]}→b{i}: frase repetida en el VO: «{' '.join(g)}…» "
+                              f"(cada beat AVANZA; una cifra se dice UNA vez)")
+            grams[g] = i
+    return issues
+
+
 def main():
     brief_path = Path(sys.argv[1])
     slug = sys.argv[2]
@@ -99,13 +130,13 @@ def main():
     treatment_path = ASSEMBLER / "out" / "_treatments" / "news_treatment.json"
     treatment = json.loads(treatment_path.read_text(encoding="utf-8-sig"))
 
-    print("═ 2/4 QC DE DATOS (props vs brief)")
-    issues = qc_datos(brief, treatment)
+    print("═ 2/4 QC DE DATOS (props vs brief) + ANTI-REPETICIÓN")
+    issues = qc_datos(brief, treatment) + qc_repeticion(treatment)
     for x in issues:
         print("  ⚠", x)
     if issues:
-        raise SystemExit("QC de datos falló — revisar tratamiento antes de producir")
-    print("  ✔ toda cifra de props rastreada al brief")
+        raise SystemExit("QC falló — revisar tratamiento antes de producir")
+    print("  ✔ cifras rastreadas al brief · sin repeticiones en el VO")
 
     dst = ASSEMBLER / "treatments" / f"{slug}.json"
     dst.write_text(json.dumps(treatment, ensure_ascii=False, indent=2), encoding="utf-8")

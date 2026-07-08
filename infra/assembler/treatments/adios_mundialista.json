@@ -1,0 +1,105 @@
+{
+  "topic": "El adiós mundialista de México en números — reventa 26x, primera derrota en el Azteca, y quién ganó de verdad",
+  "hook_text": "Alguien pagó hasta 2.3 millones de pesos por ver a México perder.",
+  "vision": "Hero-driven: boleto dorado enfriándose (el símbolo del adiós) + Azteca nocturno vacío; datos en masters puros; clímax = la ciudad ganó 79 veces más que el equipo; cierre pregunta directa (engagement).",
+  "beats": [
+    {
+      "type": "hook",
+      "vo": "Alguien pagó hasta dos punto tres millones de pesos... por ver a México perder en el Azteca.",
+      "props": {
+        "kicker": "EL ADIÓS MUNDIALISTA",
+        "words": [
+          { "t": "PAGARON" }, { "t": "2.3" }, { "t": "MILLONES", "accent": true },
+          { "t": "POR" }, { "t": "VERLO" }, { "t": "PERDER", "accent": true }
+        ],
+        "tease": "Los números exactos del domingo más caro del Tri.",
+        "bgClip": "heroes/hero_boleto.mp4"
+      },
+      "target_word": "millones",
+      "trans": "dip",
+      "technique": "Hook visual-first: boleto dorado enfriándose + titular kinético; cifra + giro doloroso en 2ª persona colectiva."
+    },
+    {
+      "type": "cifra",
+      "vo": "La reventa para el México Inglaterra llegó a listarse en dos millones trescientos mil pesos... por UN boleto categoría uno, cerca de la cancha.",
+      "props": {
+        "kicker": "REVENTA · MÉXICO VS INGLATERRA",
+        "value": "$2,300,000",
+        "unit": "MXN",
+        "sub": "un boleto Categoría 1 — el más caro jamás listado para el Tri",
+        "foot": "STUBHUB · LISTADOS 01 JUL · LA JORNADA",
+        "bgClip": "heroes/hero_boleto.mp4"
+      },
+      "target_word": "trescientos",
+      "trans": "cut",
+      "technique": "Odómetro aterriza con la voz sobre el boleto tratado; 'llegó a listarse' (guardarraíl: listado, no venta)."
+    },
+    {
+      "type": "barras",
+      "vo": "El boleto más barato ese mismo día costaba ochenta y nueve mil pesos. El más caro... veintiséis veces más.",
+      "props": {
+        "kicker": "LA ESCALERA DE LA REVENTA",
+        "bars": [
+          { "label": "EL MÁS BARATO", "value": 89000, "display": "$89,000 MXN" },
+          { "label": "CATEGORÍA 1", "value": 2300000, "display": "$2,300,000 MXN" }
+        ],
+        "accentIndex": 1,
+        "sub": "26 veces la diferencia, el mismo día, el mismo partido",
+        "foot": "STUBHUB · LISTADOS 01 JUL",
+        "durF": 200
+      },
+      "target_word": "veces",
+      "trans": "dip",
+      "technique": "Beat de DATO puro; protagonista (Cat 1) crece al final anclado a 'veces'."
+    },
+    {
+      "type": "hook",
+      "vo": "Y el contexto duele. En tres mundiales como sede, el Azteca jamás había visto perder a México... hasta el domingo. Tres a dos contra Inglaterra.",
+      "props": {
+        "kicker": "5 DE JULIO · ESTADIO AZTECA",
+        "words": [
+          { "t": "PRIMERA" }, { "t": "DERROTA", "accent": true },
+          { "t": "MUNDIALISTA" }, { "t": "EN EL" }, { "t": "AZTECA", "accent": true }
+        ],
+        "tease": "3 mundiales. 12 partidos invicto. 56 años. Se acabó.",
+        "bgClip": "heroes/hero_azteca.mp4"
+      },
+      "target_word": "domingo",
+      "trans": "dip",
+      "technique": "Beat histórico kinético sobre el Azteca nocturno vacío; tono sobrio (guardarraíl: sin burla)."
+    },
+    {
+      "type": "barras",
+      "vo": "¿Y quién sí ganó? A México, la FIFA le manda casi doscientos noventa millones de pesos de consolación. Pero la ciudad generó veintidós mil seiscientos setenta y ocho millones como sede... casi ochenta veces el premio del equipo.",
+      "props": {
+        "kicker": "¿QUIÉN GANÓ DE VERDAD?",
+        "bars": [
+          { "label": "PREMIO FIFA AL TRI", "value": 287.7, "display": "$287.7 MDP" },
+          { "label": "DERRAMA CDMX SEDE", "value": 22678, "display": "$22,678 MDP" }
+        ],
+        "accentIndex": 1,
+        "sub": "79 veces más — la sede ganó, el equipo se fue",
+        "foot": "FIFA · ESTIMACIÓN: CANACO CDMX",
+        "durF": 240
+      },
+      "target_word": "ochenta",
+      "trans": "dip",
+      "technique": "CLÍMAX al ~80%: el giro económico (la ciudad ganó aunque el equipo perdió); barras con escala brutal 1:79."
+    },
+    {
+      "type": "cierre",
+      "vo": "Dos punto tres millones por una derrota histórica. ¿El boleto más caro del dolor... o el precio de un momento que se contará por décadas? Tú dime.",
+      "props": {
+        "kicker": "LA PREGUNTA",
+        "words": [
+          { "t": "¿LO" }, { "t": "HABRÍAS", "accent": true }, { "t": "PAGADO?", "accent": true }
+        ],
+        "tease": "El Mundial sigue: Inglaterra vs Noruega en cuartos.",
+        "bgClip": "heroes/hero_boleto.mp4"
+      },
+      "target_word": "dime",
+      "trans": "cut",
+      "technique": "Cierre = pregunta directa (engagement/comentarios); reconecta con el hook; loop del torneo que sigue."
+    }
+  ]
+}

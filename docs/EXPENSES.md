@@ -140,3 +140,6 @@ Barrido de los 3 buzones (mexonoma, manupesqueira, aibrieflatam.media). Resultad
 - 2026-07-04 · fal.ai A/B ciego Kling v3 Pro (~$0.56) vs Seedance 2.0 1080p (~$3.40) · mismo still estadio (gpt-image ~$0.17) · ~$4.13 USD · decisión de motor de volumen Dinero IA- 2026-07-04 · fal.ai TOP-UP $50 USD (~$950 MXN) · BOLSA COMPARTIDA de las 4 terminales (pago por uso, no caduca): reels=Kling v3 Pro $0.56/clip · páginas award=Seedance 2.0 $3.40/clip · reemplaza los top-ups de Higgsfield ($3.75-5.60 el mismo clip, expiran 90d). Cada terminal loguea sus cargos en su propio EXPENSES al generar
 
 - 2026-07-04 · Google Veo 3.1 fast (Gemini API) · clip 8s 1080p 9:16 'hero_trofeo' · ~$0.96 USD · motor alterno (fal bloqueado)
+- 2026-07-07 · Google Veo 3.1 lite (Gemini API) · clip 8s 1080p 9:16 'hero_boleto_lite' · ~$0.64 USD · motor alterno (fal bloqueado)
+- 2026-07-07 · Google Veo 3.1 lite (Gemini API) · clip 8s 1080p 9:16 'hero_azteca_lite' · ~$0.64 USD · motor alterno (fal bloqueado)
+- 2026-07-07 · Google Veo 3.1 fast (Gemini API) · clip 8s 1080p 9:16 'hero_boleto_fast' · ~$0.96 USD · motor alterno (fal bloqueado)

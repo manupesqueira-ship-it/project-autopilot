@@ -30,13 +30,30 @@ FPS = 30
 COMP = "MastersReel"
 # LA VOZ DEL CANAL (audición msgs 138-144, Manuel eligió la 2): Alberto Rodríguez
 VOICE_ID = "l1zE9xgNpUTaQCZzpNJa"
-JCUT = 0.40
+# RETRO 07-07 ("interrumpiste… ni medio segundo entre palabras"): el J-cut de
+# 0.40s encimaba la voz del beat siguiente sobre la cola del anterior. FUERA
+# J-cut: cada VO entra CON su visual; siempre queda TAIL de aire tras la última
+# palabra, y un check DURO aborta el reel si el gap real baja de MIN_VO_GAP.
+JCUT = 0.0
 LEAD0 = 0.30
-TAIL = 0.70
+TAIL = 0.80
+MIN_VO_GAP = 0.50
 TRANS_F_DEFAULT = 14
 
 sys.path.insert(0, str(ROOT / "infra" / "voz"))
+import tts_timestamps as _tts  # noqa: E402
 from tts_timestamps import load_env as _load_env, tts_beat  # noqa: E402
+
+# RETRO 07-07 ("la voz sigue siendo obvio que es AI"): tuning para Alberto —
+# stability más baja (más expresivo/menos parejo) + style para intención. El
+# cache por texto invalida solo cuando cambia el TEXTO; si cambias settings,
+# borra out/<slug>/vo/ para re-generar con la voz nueva.
+_tts.VOICE_SETTINGS = {
+    "stability": 0.30,
+    "similarity_boost": 0.8,
+    "style": 0.40,
+    "use_speaker_boost": True,
+}
 
 
 def ffprobe_dur(p: Path) -> float:
@@ -95,7 +112,10 @@ def main():
     specs = []
     for i, (b, m) in enumerate(zip(beats, vo_meta)):
         lead = LEAD0 if i == 0 else 0.0
-        vis_dur = max(b.get("min_s", 4.0), lead + m["dur"] - (0 if i == 0 else JCUT) + b.get("tail_s", TAIL))
+        # el dip encima el visual siguiente ~transF/FPS: se lo devolvemos al tail
+        # para que el AIRE DE VOZ sea constante sin importar la transición
+        ov_own = (b.get("transF", TRANS_F_DEFAULT) / FPS) if b.get("trans", "cut") == "dip" else 0.0
+        vis_dur = max(b.get("min_s", 4.0), lead + m["dur"] - (0 if i == 0 else JCUT) + b.get("tail_s", TAIL) + ov_own)
         durF = round(vis_dur * FPS)
         specs.append({"type": b["type"], "props": dict(b.get("props", {})), "durF": durF,
                       "trans": b.get("trans", "cut"), "transF": b.get("transF", TRANS_F_DEFAULT)})
@@ -104,6 +124,13 @@ def main():
         ov = (specs[i - 1]["transF"] / FPS) if specs[i - 1]["trans"] == "dip" else 0.0
         starts.append(round(starts[-1] + specs[i - 1]["durF"] / FPS - ov, 3))
     vo_at = [max(0.0, starts[i] - JCUT) if i > 0 else LEAD0 for i in range(len(specs))]
+
+    # D6 (retro 07-07): NUNCA una voz pisa a la anterior — gap real >= MIN_VO_GAP.
+    for i in range(1, len(specs)):
+        gap = vo_at[i] - (vo_at[i - 1] + vo_meta[i - 1]["dur"])
+        if gap < MIN_VO_GAP:
+            raise SystemExit(f"D6 FAIL: gap de VO b{i-1}→b{i} = {gap:.2f}s < {MIN_VO_GAP}s "
+                             f"(sube tail_s del beat {i-1} en el treatment)")
 
     lands_abs = {}
     for i, (b, m) in enumerate(zip(beats, vo_meta)):

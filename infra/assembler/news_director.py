@@ -92,6 +92,22 @@ REGLAS DE ESCRITURA es-MX (obligatorias, minadas y verificadas):
 - GATE DE CIERRE: ¿el cuerpo responde LITERAL lo que el hook promete? ¿loops cerrados? ¿revelación
   final en los últimos 15s? ¿el "entonces qué hago yo" en una frase imperativa? PROHIBIDO "sígueme
   para más", resúmenes y despedidas. La última frase debe poder citarse sola.
+
+RETRO DEL FUNDADOR 2026-07-07 (obligatorias, costaron un rechazo):
+- CERO REPETICIÓN: una cifra se DICE una sola vez en todo el reel. Si el hook la adelanta, el beat
+  que la desarrolla aporta contexto/consecuencia NUEVA, jamás la re-enuncia ("ya me perdiste, se ve
+  hecho con AI"). Hay un QC automático que rechaza el guion si repites un 5-grama.
+- FUENTES DESCONOCIDAS fuera del VO: Nvidia/Apple/Banxico se dicen; Concanaco/Canaco/organismos
+  gremiales NO se nombran en la voz (nadie los conoce) — se describen ("las cámaras de comercio
+  estiman...") y la sigla vive solo en el foot de pantalla.
+- ARCO DE LUZ: el reel ABRE oscuro pero NO se queda oscuro; el mundo se enriquece hacia el clímax.
+  Escríbelo en la visión y elige heroes/beats que suban la luz (el fundador: "demasiado oscuro TODO
+  el video" = rechazo).
+- HERO CON INTENCIÓN DE CÁMARA: al describir un hero visual, pide un movimiento NARRATIVO (ej.
+  establecer amplio → zoom dramático a los miles de fans), no un push-in genérico. La creatividad
+  del encuadre es tu trabajo.
+- SUJETOS RECONOCIBLES: si el tema tiene un objeto icónico (la Copa del Mundo, el Ángel), el hero
+  muestra ESE objeto reconocible, no una versión genérica.
 """
 
 SYSTEM = f"""Eres el DIRECTOR de un canal premium de finanzas/noticias LATAM (reels 9:16, look A:

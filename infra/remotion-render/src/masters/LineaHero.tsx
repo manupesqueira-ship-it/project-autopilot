@@ -3,7 +3,7 @@ import { curveMonotoneX, line as d3line } from "d3-shape";
 import React, { useMemo } from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { inkFlash, lprog, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS } from "../kit2/world";
+import { Grain, MONO, PageBg, SANS } from "../kit2/world";
 
 // ============================================================================
 // MASTER #2 — LÍNEA HÉROE (mundo de la página).
@@ -95,7 +95,7 @@ export const LineaHero: React.FC<LineaHeroProps> = ({
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.05} />
-      <MassCamera durF={total} seed={3}>
+      <AbsoluteFill>
         <div style={{ opacity: exitO }}>
           {/* regla del kicker — antes del contenido */}
           <div style={{ position: "absolute", top: 636, left: MX, width: (1080 - 2 * MX) * rule, height: 1, background: PAL.lineSoft }} />
@@ -201,7 +201,7 @@ export const LineaHero: React.FC<LineaHeroProps> = ({
             </div>
           ) : null}
         </div>
-      </MassCamera>
+      </AbsoluteFill>
       <Grain />
     </AbsoluteFill>
   );

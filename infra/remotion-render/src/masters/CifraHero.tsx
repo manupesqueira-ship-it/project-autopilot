@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { holdF, inkFlash, lprog, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS, WorldPlate } from "../kit2/world";
+import { Grain, MONO, PageBg, SANS, WorldPlate } from "../kit2/world";
 
 // ============================================================================
 // MASTER #1 — CIFRA HÉROE / ODÓMETRO (mundo de la página).
@@ -74,14 +74,20 @@ export const CifraHero: React.FC<CifraHeroProps> = ({
     }
   }
   const numColor = frame < landAt ? PAL.faint : inkFlash(flashT, PAL.ink);
-  const numSize = Math.min(210, Math.floor((1080 - 2 * MX) / (value.length * 0.62)));
+  // RETRO 07-07 ("PERSONAS" cortado): la cifra debe ceder espacio a la UNIDAD.
+  // Reservamos el ancho real de la unidad (mono 34px + tracking + gap) ANTES de
+  // dimensionar los dígitos — nada puede salirse del carril 1080-2*MX.
+  const unitReserve = unit ? Math.ceil(unit.length * 34 * 0.78) + 18 : 0;
+  const numSize = Math.min(210, Math.floor((1080 - 2 * MX - unitReserve) / (value.length * 0.64)));
   const H = Math.round(numSize * 1.08);
 
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.05} />
       {bgClip ? <WorldPlate src={bgClip} /> : null}
-      <MassCamera durF={total} seed={2}>
+      {/* RETRO 07-07: el CONTENIDO va ESTÁTICO (los números "temblaban" con la
+          cámara de masa); el mundo vive en el FONDO (PageBg/WorldPlate). */}
+      <AbsoluteFill>
         <div style={{ opacity: exitO }}>
           {/* regla fina — se dibuja antes que todo */}
           <div style={{ position: "absolute", top: 636, left: MX, width: (1080 - 2 * MX) * rule, height: 1, background: PAL.lineSoft }} />
@@ -190,7 +196,7 @@ export const CifraHero: React.FC<CifraHeroProps> = ({
             </div>
           ) : null}
         </div>
-      </MassCamera>
+      </AbsoluteFill>
       <Grain />
     </AbsoluteFill>
   );

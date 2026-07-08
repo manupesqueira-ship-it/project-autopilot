@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { inkFlash, lprog, PAL, TOK, tprog } from "../kit2/tokens";
-import { Grain, MassCamera, MONO, PageBg, SANS } from "../kit2/world";
+import { Grain, MONO, PageBg, SANS } from "../kit2/world";
 
 // ============================================================================
 // MASTER #3 — COMPARACIÓN DE BARRAS (mundo de la página).
@@ -94,7 +94,7 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
   return (
     <AbsoluteFill style={{ fontFamily: SANS }}>
       <PageBg energy={0.05} />
-      <MassCamera durF={total} seed={4}>
+      <AbsoluteFill>
         <div style={{ opacity: exitO }}>
           <div style={{ position: "absolute", top: 636, left: MX, width: railW * rule, height: 1, background: PAL.lineSoft }} />
           <div
@@ -196,7 +196,7 @@ export const CompararBarras: React.FC<CompararBarrasProps> = ({
             </div>
           ) : null}
         </div>
-      </MassCamera>
+      </AbsoluteFill>
       <Grain />
     </AbsoluteFill>
   );
